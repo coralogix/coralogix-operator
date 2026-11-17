@@ -1,0 +1,29 @@
+[
+  {
+    "step": "create from a ConfigMap without the key",
+    "spec": {
+      "configMapRef": {
+        "key": "json",
+        "name": "dashboard-definition"
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "step": "create from gzip content that is not gzip",
+    "spec": {
+      "gzipJson": "cGxhaW4gdGV4dA=="
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

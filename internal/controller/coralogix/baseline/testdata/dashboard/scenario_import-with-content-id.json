@@ -1,0 +1,34 @@
+[
+  {
+    "step": "import with an id in the content: rejected before a request",
+    "spec": {
+      "json": "{\"name\":\"Imported dashboard\",\"layout\":{\"sections\":[]},\"id\":\"contentDashboardId001\"}"
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]
