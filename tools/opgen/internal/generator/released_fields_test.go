@@ -167,17 +167,21 @@ func TestSameValidationAtTwoPathsSharesOneStruct(t *testing.T) {
 // the live API requires and the released CR keeps optional inside a group.
 func TestMinimalSetsAnOptionalFieldOfARequiredGroup(t *testing.T) {
 	for _, tc := range []struct {
-		name, minimal string
-		valid         bool
+		name, fields, minimal string
+		valid                 bool
+		want                  []string
 	}{
-		{"an optional field of the group", "minimal:\n  options: {description: kept}\n", true},
-		{"a field that is not in the group", "minimal:\n  options: {quota: '5'}\n", false},
-		{"an empty object", "minimal:\n  options: {}\n", false},
-		{"a value that is not an object", "minimal:\n  options: kept\n", false},
+		{"an optional field of the group", "[description]", "minimal:\n  options: {description: kept}\n", true, []string{`"description": "kept"`}},
+		// The required name stays in the minimal group beside the optional field.
+		{"a group with a required field", "[name, description]", "minimal:\n  options: {description: kept}\n", true, []string{`"description": "kept"`, `"name": "sample-name"`}},
+		{"a required field of the group", "[name, description]", "minimal:\n  options: {name: other}\n", false, nil},
+		{"a field that is not in the group", "[description]", "minimal:\n  options: {quota: '5'}\n", false, nil},
+		{"an empty object", "[description]", "minimal:\n  options: {}\n", false, nil},
+		{"a value that is not an object", "[description]", "minimal:\n  options: kept\n", false, nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			root, input := skipRoot(t, nil, nil)
-			writeOverrides(t, root, "resource: Thing\nmode: existing\nvalidators: {inferred: true}\ngroups:\n  options: {fields: [description]}\n")
+			writeOverrides(t, root, "resource: Thing\nmode: existing\nvalidators: {inferred: true}\ngroups:\n  options: {fields: "+tc.fields+"}\n")
 			e2e := "values:\n  destinations: [https://example.com]\n" + tc.minimal
 			if err := os.WriteFile(filepath.Join(root, kindsDir, "thing", e2eFileName), []byte(e2e), 0o644); err != nil {
 				t.Fatal(err)
@@ -193,8 +197,10 @@ func TestMinimalSetsAnOptionalFieldOfARequiredGroup(t *testing.T) {
 			test := readGenerated(t, root, "tests/e2e/thing_generated_test.go")
 			minimal := test[strings.Index(test, "thingMinimalSpec = `"):]
 			minimal = minimal[:strings.Index(minimal, "}`")]
-			if !strings.Contains(minimal, `"description": "kept"`) {
-				t.Errorf("the minimal spec has no group field:\n%s", minimal)
+			for _, want := range tc.want {
+				if !strings.Contains(minimal, want) {
+					t.Errorf("the minimal spec has no %s:\n%s", want, minimal)
+				}
 			}
 		})
 	}
@@ -214,5 +220,23 @@ func TestEnumDefaultIsTheFirstBusinessValue(t *testing.T) {
 	sample := readGenerated(t, root, "config/samples/v1alpha1/generated/thing.yaml")
 	if !strings.Contains(sample, "priority: low") || strings.Contains(sample, "priority: unspecified") {
 		t.Errorf("the sample does not send the first business value:\n%s", sample)
+	}
+}
+
+// An ignored field of a oneOf component is not an arm: the exactly-one rule names only the API arms.
+func TestIgnoredFieldIsNotAOneOfArm(t *testing.T) {
+	root, input := skipRoot(t, nil, nil)
+	writeThingOverrides(t, root, strings.Replace(ignoredLine, "HttpThingConfig", "ThingConfig", 1))
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	types := readGenerated(t, root, apiDir+"/thing_types.go")
+	config := types[strings.Index(types, "type ThingConfig struct"):]
+	config = config[:strings.Index(config, "\n}\n")]
+	if !strings.Contains(config, "LegacyHeaders []string") {
+		t.Fatalf("the oneOf struct has no ignored field:\n%s", config)
+	}
+	if strings.Contains(types, "has(self.legacyHeaders)") || !strings.Contains(types, "Exactly one of http, queue must be set") {
+		t.Errorf("the ignored field is an arm of the oneOf:\n%s", types)
 	}
 }

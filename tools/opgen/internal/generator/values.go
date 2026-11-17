@@ -228,7 +228,7 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	}
 	for _, name := range sortedKeys(file.Minimal) {
 		value := file.Minimal[name]
-		known := false
+		known, inGroup := false, false
 		for _, field := range d.Spec.Fields {
 			// The list of an overwrite resource is required, and its items need the fields that the
 			// API needs.
@@ -237,11 +237,19 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			}
 			// A required group holds optional fields. The value names them.
 			if field.JSON == name && field.group && optionalGroupFields(field, value) {
-				known = true
+				known, inGroup = true, true
 			}
 		}
 		if !known {
 			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":minimal." + name, msg: "not an optional spec field, or a group object of its optional fields"}
+		}
+		if group, ok := minimal.get(name).(*omap); ok && inGroup {
+			// The minimal group keeps its required fields. The value adds optional ones.
+			fields := value.(map[string]any)
+			for _, key := range sortedKeys(fields) {
+				group.set(key, fields[key])
+			}
+			continue
 		}
 		minimal.set(name, value)
 	}

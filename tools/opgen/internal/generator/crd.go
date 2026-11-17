@@ -62,7 +62,6 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
 	}
-	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
 	if err != nil {
@@ -77,6 +76,8 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		return nil, err
 	}
 	splitReferenceRules(spec)
+	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
+	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	if err := b.applyValidation(spec, "spec", map[*crType]bool{}, true); err != nil {
 		return nil, err
 	}
@@ -995,7 +996,6 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
 	}
-	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	groups := settableGroups(t, inlined)
 	if t.Kind == model.OneOf {
 		arms := make([]string, len(obj.Fields))
@@ -1016,6 +1016,8 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		return nil, err
 	}
 	splitReferenceRules(obj)
+	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
+	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	return obj, nil
 }
 
