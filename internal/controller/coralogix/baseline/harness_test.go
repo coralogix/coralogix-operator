@@ -176,6 +176,8 @@ type step struct {
 	Result   reconcileResult   `json:"result"`
 	// Object is the CR after the step. It is null when the CR no longer exists.
 	Object *objectState `json:"object"`
+	// Remote is what the fake API holds after the step, for a step that records it.
+	Remote any `json:"remote,omitempty"`
 }
 
 type reconcileResult struct {
@@ -281,6 +283,13 @@ func (h *harness) StatusID() string {
 		h.t.Fatalf("the CR has no status.id (err: %v)", err)
 	}
 	return id
+}
+
+// RecordRemote adds a step that sends no request and records what the fake API holds, such as a
+// remote resource that no CR tracks any more.
+func (h *harness) RecordRemote(name string, remote any) {
+	h.t.Helper()
+	h.steps = append(h.steps, step{Step: name, Requests: h.server.takeRequests(), Object: h.observe(), Remote: remote})
 }
 
 // API returns the fake API, for a scenario that changes the remote state.

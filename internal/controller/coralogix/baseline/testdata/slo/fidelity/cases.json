@@ -469,6 +469,148 @@
           "capture": "id"
         }
       ]
+    },
+    {
+      "name": "every comparison operator",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-h",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m]))"
+              },
+              "window": "WINDOW_SLO_WINDOW_1_MINUTE",
+              "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN_OR_EQUALS",
+              "threshold": 1
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-h",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m]))"
+              },
+              "window": "WINDOW_SLO_WINDOW_1_MINUTE",
+              "comparisonOperator": "COMPARISON_OPERATOR_LESS_THAN",
+              "threshold": 1
+            },
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-h",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m]))"
+              },
+              "window": "WINDOW_SLO_WINDOW_1_MINUTE",
+              "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS",
+              "threshold": 1
+            },
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-h",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "windowBasedMetricSli": {
+              "query": {
+                "query": "sum(rate(errors_total[5m]))"
+              },
+              "window": "WINDOW_SLO_WINDOW_1_MINUTE",
+              "comparisonOperator": "COMPARISON_OPERATOR_GREATER_THAN",
+              "threshold": 1
+            },
+            "id": "{{id}}"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "the same name twice",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-i",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            }
+          },
+          "capture": "first"
+        },
+        {
+          "method": "POST",
+          "path": "/slo/slos/v1",
+          "body": {
+            "name": "cxo-fidelity-i",
+            "sloTimeFrame": "SLO_TIME_FRAME_7_DAYS",
+            "targetThresholdPercentage": 99,
+            "requestBasedMetricSli": {
+              "goodEvents": {
+                "query": "sum(rate(good_total[1m]))"
+              },
+              "totalEvents": {
+                "query": "sum(rate(all_total[1m]))"
+              }
+            }
+          },
+          "capture": "second"
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{first}}"
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{second}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{second}}"
+        },
+        {
+          "method": "GET",
+          "path": "/slo/slos/v1/{{first}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/slo/slos/v1/{{first}}"
+        }
+      ]
     }
   ]
 }

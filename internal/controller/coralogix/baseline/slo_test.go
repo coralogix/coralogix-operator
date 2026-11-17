@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 
@@ -427,6 +428,41 @@ var sloScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again: the API answers as it should")
 	},
 
+	// Every comparison operator sends its API value.
+	"comparison-operators": func(h *harness) {
+		window := func(op string) map[string]any {
+			return sloSpec(map[string]any{"sliType": map[string]any{"windowBasedMetric": map[string]any{
+				"query":              map[string]any{"query": "sum(rate(errors_total[5m]))"},
+				"window":             "1m",
+				"comparisonOperator": op,
+				"threshold":          "1",
+			}}})
+		}
+		h.Create("create a window-based SLO with lessThanOrEquals", sloManifest(`  sliType:
+    windowBasedMetric:
+      query:
+        query: sum(rate(errors_total[5m]))
+      window: 1m
+      comparisonOperator: lessThanOrEquals
+      threshold: "1"
+`, ""))
+		for _, op := range []string{"lessThan", "greaterThanOrEquals", "greaterThan"} {
+			h.SetSpec("change comparisonOperator to "+op, window(op))
+		}
+	},
+
+	// A CR that loses status.id, but not its finalizer, takes the create path again. The API accepts
+	// a second SLO with the same name ("the same name twice"), so the first one stays, and no CR
+	// tracks it: deleting the CR deletes only the second one.
+	"status-id-lost": func(h *harness) {
+		h.Create("create", sloRequestManifest)
+		clearSLOStatusID(h)
+		h.Reconcile("reconcile a CR that has a finalizer and no status id")
+		h.RecordRemote("the remote SLOs after the second create", sloAPI(h).list())
+		h.Delete("delete the CR")
+		h.RecordRemote("the remote SLOs after the delete: the first SLO stays", sloAPI(h).list())
+	},
+
 	"bad-status-id": func(h *harness) {
 		h.Create("create", sloRequestManifest)
 		setSLOStatusID(h, "not-a-uuid")
@@ -504,6 +540,21 @@ func (f *sloFake) answerNext(method string, body any) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.next[method] = body
+}
+
+// list returns the id and name of each stored SLO, in creation order.
+func (f *sloFake) list() []map[string]any {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	out := []map[string]any{}
+	for _, slo := range f.slos {
+		out = append(out, map[string]any{"id": slo["id"], "name": slo["name"], "createTime": slo["createTime"]})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i]["createTime"].(string) < out[j]["createTime"].(string) })
+	for _, slo := range out {
+		delete(slo, "createTime")
+	}
+	return out
 }
 
 // forget deletes an SLO without a request, as if it was deleted outside the operator.
