@@ -96,7 +96,7 @@ func TestContentKindChecksTheRequestValueLines(t *testing.T) {
 		{
 			name: "a field source that the request requires",
 			edit: func(s string) string {
-				return strings.Replace(s, "policy: {source: field}", "requestId: {source: field}", -1)
+				return strings.ReplaceAll(s, "policy: {source: field}", "requestId: {source: field}")
 			},
 			code: codeOverrideInvalid,
 		},
