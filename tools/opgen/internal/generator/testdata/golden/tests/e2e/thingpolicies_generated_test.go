@@ -71,11 +71,24 @@ var _ = Describe("ThingPolicies (generated)", Ordered, Serial, func() {
 		full        *coralogixv1alpha1.ThingPolicies
 	)
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().ThingPolicies()
 		fullName = uniqueName("e2e-thingpolicies")
 		minimalName = uniqueName("e2e-thingpolicies-min")
+		{
+			fixture := &coralogixv1alpha1.Thing{ObjectMeta: metav1.ObjectMeta{Name: fullName + "-thing", Namespace: testNamespace}}
+			decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll(`{"name":"@{run}"}`, "@{run}", fullName)))
+			decoder.DisallowUnknownFields()
+			Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
+			Expect(crClient.Create(ctx, fixture)).To(Succeed())
+			DeferCleanup(func(ctx context.Context) { _ = crClient.Delete(ctx, fixture) })
+			Eventually(func(g Gomega) {
+				current := &coralogixv1alpha1.Thing{}
+				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
+				g.Expect(current.Status.ID).NotTo(BeNil())
+			}, time.Minute, time.Second).Should(Succeed())
+		}
 		DeferCleanup(func(ctx context.Context) {
 			for _, name := range []string{fullName, minimalName} {
 				_ = crClient.Delete(ctx, &coralogixv1alpha1.ThingPolicies{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}})

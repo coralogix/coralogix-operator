@@ -330,7 +330,7 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 			continue
 		}
 		if children := inlineChildren(cr, rf.Name); len(children) != 0 {
-			code, err := b.inlineObject(cr, sdkType, rf, children, path)
+			code, err := b.inlineObject(sdkType, rf, children, path)
 			if err != nil {
 				return "", err
 			}
@@ -493,7 +493,7 @@ func inlineChildren(cr *crType, api string) []*crField {
 
 // inlineObject writes the code that rebuilds an inlined object from the CR fields that show its
 // fields. An optional object is left out when the CR sets none of them.
-func (b *builder) inlineObject(cr *crType, sdkType string, rf *model.Field, children []*crField, path string) (string, error) {
+func (b *builder) inlineObject(sdkType string, rf *model.Field, children []*crField, path string) (string, error) {
 	if rf.Type.Kind != model.Object {
 		return "", unsupported(path+"."+rf.Name, "an inlined field must be an object in the request")
 	}

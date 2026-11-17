@@ -40,6 +40,11 @@ func TestOverwriteKindHasNoStatusID(t *testing.T) {
 	if !strings.Contains(e2e, "Ordered, Serial") {
 		t.Error("the e2e test of an overwrite resource runs alone")
 	}
+	for _, want := range []string{`fullName + "-thing"`, "DeferCleanup(func(ctx context.Context) { _ = crClient.Delete(ctx, fixture) })", "current.Status.ID"} {
+		if !strings.Contains(e2e, want) {
+			t.Errorf("the e2e test of an overwrite resource must create its fixtures; it lacks %q", want)
+		}
+	}
 	script := readGenerated(t, root, "scripts/upgrade-check-thingpolicies.sh")
 	if strings.Contains(script, "status.id") || !strings.Contains(script, "--type json") {
 		t.Errorf("the upgrade check of an overwrite resource has no id and patches the list:\n%s", script)
