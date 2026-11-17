@@ -19814,14 +19814,9 @@ with respect to the current state of the instance.<br/>
 
 
 
-TCOLogsPolicies is the Schema for the TCOLogsPolicies API.
-NOTE: This resource performs an atomic overwrite of all existing TCO logs policies
-in the backend. Any existing policies not defined in this resource will be
-removed. Use with caution as this operation is destructive.
-
-See also https://coralogix.com/docs/tco-optimizer-api
-
-**Added in v0.4.0**
+TCOLogsPolicies is the Schema for the tcologspolicies API.
+NOTE: The TCOLogsPolicies is the whole list of the API. Each write replaces every item of the list,
+so an item that the spec does not have is removed. Deleting the TCOLogsPolicies removes every item.
 
 <table>
     <thead>
@@ -19853,14 +19848,14 @@ See also https://coralogix.com/docs/tco-optimizer-api
         <td><b><a href="#tcologspoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.<br/>
+          TCOLogsPoliciesSpec defines the desired state of a TCOLogsPolicies.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesstatus">status</a></b></td>
         <td>object</td>
         <td>
-          TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.<br/>
+          TCOLogsPoliciesStatus defines the observed state of a TCOLogsPolicies.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19872,7 +19867,7 @@ See also https://coralogix.com/docs/tco-optimizer-api
 
 
 
-TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
+TCOLogsPoliciesSpec defines the desired state of a TCOLogsPolicies.
 
 <table>
     <thead>
@@ -19887,7 +19882,7 @@ TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
         <td><b><a href="#tcologspoliciesspecpoliciesindex">policies</a></b></td>
         <td>[]object</td>
         <td>
-          Coralogix TCO-Policies-List.<br/>
+          List of policies.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -19899,7 +19894,7 @@ TCOLogsPoliciesSpec defines the desired state of Coralogix TCO logs policies.
 
 
 
-A TCO policy for logs.
+TCOLogsPoliciesPolicy is the Policy object of the API.
 
 <table>
     <thead>
@@ -19914,83 +19909,82 @@ A TCO policy for logs.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the policy.<br/>
+          Human-readable name for the policy. Only Latin-1 characters are accepted.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
-          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          Matches the specified retention.<br/>
+          Archive retention.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description of the policy.<br/>
+          Optional free-text description of the policy's purpose. Only Latin-1 characters are accepted. A policy that `POST /dataplans/policies/v1` created without a description returns an empty string. A policy that an atomic overwrite created without a description can return none.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>disabled</b></td>
         <td>boolean</td>
         <td>
-          Whether the policy is disabled.<br/>
+          Indicates whether the policy is actively evaluated and applied. A create or atomic-overwrite request sets it as the opposite of its `disabled` value; `PUT /dataplans/policies/v1` sets `enabled` directly.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>dpxlExpression</b></td>
         <td>string</td>
         <td>
-          A DPXL expression to match logs on. Mutually exclusive with severities, applications and subsystems.<br/>
+          The DataPrime expression that selects the data. It starts with a version tag, for example `<v1> $d.severity == 'INFO'`; the service rejects an expression without one.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          The policy priority. Required when targets is not set. Mutually exclusive with targets, which carry their own per-target priorities.<br/>
+          TCO priority level assigned to a policy, controlling how data is routed and archived.<br/>
           <br/>
-            <i>Enum</i>: block, high, medium, low<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverride">priorityOverride</a></b></td>
         <td>object</td>
         <td>
-          Dynamic quota-based priority override for the policy. Use with the policy-level priority;
-mutually exclusive with per-target priority overrides.<br/>
+          Priority override.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severities</b></td>
         <td>[]enum</td>
         <td>
-          The severities to apply the policy on. Mutually exclusive with dpxlExpression.<br/>
+          The severities. A request without `dpxlExpression` needs at least one, and a request with it must have none. A response with `dpxlExpression` has an empty list.<br/>
           <br/>
-            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
+            <i>Enum</i>: debug, verbose, info, warning, error, critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
-          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindex">targets</a></b></td>
         <td>[]object</td>
         <td>
-          Targets defines the datasets to route matched data to, each with its own required priority.
-Setting targets requires omitting the policy-level priority; the two are mutually exclusive.<br/>
+          List of data targets/destinations to which this policy routes data. A log policy created without targets has one target: the `logs` dataset of the `default` dataspace, with the priority and the override of the policy. A span policy has one `spans` target. A RUM policy has none.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -20002,7 +19996,7 @@ Setting targets requires omitting the policy-level priority; the two are mutuall
 
 
 
-The applications to apply the policy on. Applies the policy on all the applications by default.
+Rule.
 
 <table>
     <thead>
@@ -20017,14 +20011,15 @@ The applications to apply the policy on. Applies the policy on all the applicati
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -20038,7 +20033,8 @@ The applications to apply the policy on. Applies the policy on all the applicati
 
 
 
-Matches the specified retention.
+Archive retention.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.
 
 <table>
     <thead>
@@ -20101,8 +20097,7 @@ Reference to the retention policy
 
 
 
-Dynamic quota-based priority override for the policy. Use with the policy-level priority;
-mutually exclusive with per-target priority overrides.
+Priority override.
 
 <table>
     <thead>
@@ -20117,7 +20112,7 @@ mutually exclusive with per-target priority overrides.
         <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverridequotabased">quotaBased</a></b></td>
         <td>object</td>
         <td>
-          TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.<br/>
+          Quota based.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -20129,7 +20124,7 @@ mutually exclusive with per-target priority overrides.
 
 
 
-TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+Quota based.
 
 <table>
     <thead>
@@ -20144,7 +20139,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
         <td><b><a href="#tcologspoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Ordered list of usage tiers that map daily quota consumption percentages to priority levels. Percentages must be strictly increasing and priorities strictly decreasing, using only LOW, MEDIUM, or HIGH.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -20156,7 +20151,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
 
 
 
-TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+TCOLogsPoliciesUsageTier is the UsageTier object of the API.
 
 <table>
     <thead>
@@ -20171,7 +20166,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td><b>dailyQuotaPercentage</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          The daily quota percentage. Must be between 0 and 100.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -20180,7 +20175,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: block, high, low, medium<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -20192,7 +20187,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
 
 
 
-The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
+Rule.
 
 <table>
     <thead>
@@ -20207,14 +20202,15 @@ The subsystems to apply the policy on. Applies the policy on all the subsystems 
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -20228,7 +20224,7 @@ The subsystems to apply the policy on. Applies the policy on all the subsystems 
 
 
 
-TCOPolicyTarget defines a dataset destination with its own priority for matched log data.
+TCOLogsPoliciesV1Target is the v1.Target object of the API.
 
 <table>
     <thead>
@@ -20243,37 +20239,38 @@ TCOPolicyTarget defines a dataset destination with its own priority for matched 
         <td><b>dataset</b></td>
         <td>string</td>
         <td>
-          The dataset to route data to.<br/>
+          The dataset.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          Per-target priority. Required on every target. Mutually exclusive with the policy-level priority.<br/>
+          The base priority for the target.<br/>
           <br/>
-            <i>Enum</i>: block, high, low, medium<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          Matches the specified archive retention for this target.<br/>
+          Optional archive retention configuration for the target. The service accepts it and does not store it: a target never returns it.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>dataspace</b></td>
         <td>string</td>
         <td>
-          The dataspace within the dataset.<br/>
+          The dataspace. Only `default` is supported, in any letter case; the service rejects another value with `400`. A log policy target reads back with the value as sent, and with `default` when it is omitted. Span and RUM policies reject targets in a request: a span policy reads back with one `spans` target in `default`, and a RUM policy with none.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexpriorityoverride">priorityOverride</a></b></td>
         <td>object</td>
         <td>
-          Dynamic quota-based priority override for this target.<br/>
+          Optional quota-based tiered priority override for the target.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -20285,7 +20282,8 @@ TCOPolicyTarget defines a dataset destination with its own priority for matched 
 
 
 
-Matches the specified archive retention for this target.
+Optional archive retention configuration for the target. The service accepts it and does not store it: a target never returns it.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.
 
 <table>
     <thead>
@@ -20348,7 +20346,7 @@ Reference to the retention policy
 
 
 
-Dynamic quota-based priority override for this target.
+Optional quota-based tiered priority override for the target.
 
 <table>
     <thead>
@@ -20363,7 +20361,7 @@ Dynamic quota-based priority override for this target.
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexpriorityoverridequotabased">quotaBased</a></b></td>
         <td>object</td>
         <td>
-          TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.<br/>
+          Quota based.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -20375,7 +20373,7 @@ Dynamic quota-based priority override for this target.
 
 
 
-TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+Quota based.
 
 <table>
     <thead>
@@ -20390,7 +20388,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
         <td><b><a href="#tcologspoliciesspecpoliciesindextargetsindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Ordered list of usage tiers that map daily quota consumption percentages to priority levels. Percentages must be strictly increasing and priorities strictly decreasing, using only LOW, MEDIUM, or HIGH.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -20402,7 +20400,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
 
 
 
-TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+TCOLogsPoliciesUsageTier is the UsageTier object of the API.
 
 <table>
     <thead>
@@ -20417,7 +20415,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td><b>dailyQuotaPercentage</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          The daily quota percentage. Must be between 0 and 100.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -20426,7 +20424,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: block, high, low, medium<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -20438,7 +20436,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
 
 
 
-TCOLogsPoliciesStatus defines the observed state of TCOLogsPolicies.
+TCOLogsPoliciesStatus defines the observed state of a TCOLogsPolicies.
 
 <table>
     <thead>
@@ -20551,14 +20549,9 @@ with respect to the current state of the instance.<br/>
 
 
 
-TCORumPolicies is the Schema for the TCORumPolicies API.
-NOTE: This resource performs an atomic overwrite of all existing TCO RUM policies
-in the backend. Any existing policies not defined in this resource will be
-removed. Use with caution as this operation is destructive.
-
-See also https://coralogix.com/docs/tco-optimizer-api
-
-**Added in v0.5.0**
+TCORumPolicies is the Schema for the tcorumpolicies API.
+NOTE: The TCORumPolicies is the whole list of the API. Each write replaces every item of the list,
+so an item that the spec does not have is removed. Deleting the TCORumPolicies removes every item.
 
 <table>
     <thead>
@@ -20590,14 +20583,14 @@ See also https://coralogix.com/docs/tco-optimizer-api
         <td><b><a href="#tcorumpoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCORumPoliciesSpec defines the desired state of Coralogix TCO RUM policies.<br/>
+          TCORumPoliciesSpec defines the desired state of a TCORumPolicies.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcorumpoliciesstatus">status</a></b></td>
         <td>object</td>
         <td>
-          TCORumPoliciesStatus defines the observed state of TCORumPolicies.<br/>
+          TCORumPoliciesStatus defines the observed state of a TCORumPolicies.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -20609,7 +20602,7 @@ See also https://coralogix.com/docs/tco-optimizer-api
 
 
 
-TCORumPoliciesSpec defines the desired state of Coralogix TCO RUM policies.
+TCORumPoliciesSpec defines the desired state of a TCORumPolicies.
 
 <table>
     <thead>
@@ -20624,7 +20617,7 @@ TCORumPoliciesSpec defines the desired state of Coralogix TCO RUM policies.
         <td><b><a href="#tcorumpoliciesspecpoliciesindex">policies</a></b></td>
         <td>[]object</td>
         <td>
-          Coralogix TCO-Policies-List.<br/>
+          List of policies.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -20636,7 +20629,7 @@ TCORumPoliciesSpec defines the desired state of Coralogix TCO RUM policies.
 
 
 
-A TCO policy for RUM (browser/mobile) events.
+TCORumPoliciesPolicy is the Policy object of the API.
 
 <table>
     <thead>
@@ -20651,76 +20644,75 @@ A TCO policy for RUM (browser/mobile) events.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the policy.<br/>
+          Human-readable name for the policy. Only Latin-1 characters are accepted.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          The policy priority.<br/>
+          TCO priority level assigned to a policy, controlling how data is routed and archived.<br/>
           <br/>
-            <i>Enum</i>: block, high, medium, low<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#tcorumpoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
-          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcorumpoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          Matches the specified retention.<br/>
+          Archive retention.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description of the policy.<br/>
+          Optional free-text description of the policy's purpose. Only Latin-1 characters are accepted. A policy that `POST /dataplans/policies/v1` created without a description returns an empty string. A policy that an atomic overwrite created without a description can return none.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>disabled</b></td>
         <td>boolean</td>
         <td>
-          Whether the policy is disabled.<br/>
+          Indicates whether the policy is actively evaluated and applied. A create or atomic-overwrite request sets it as the opposite of its `disabled` value; `PUT /dataplans/policies/v1` sets `enabled` directly.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>dpxlExpression</b></td>
         <td>string</td>
         <td>
-          A DPXL expression to match RUM events on. Mutually exclusive with severities; exactly one of the two is required.
-The expression must carry a <v1> version prefix and use the canonical $d.* schema (NOT $d.cx_rum.*),
-otherwise it fails to compile.<br/>
+          The DataPrime expression that selects the data. It starts with a version tag, for example `<v1> $d.severity == 'INFO'`; the service rejects an expression without one.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcorumpoliciesspecpoliciesindexpriorityoverride">priorityOverride</a></b></td>
         <td>object</td>
         <td>
-          Dynamic quota-based priority override for the policy.<br/>
+          Priority override.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>severities</b></td>
         <td>[]enum</td>
         <td>
-          The severities to apply the policy on. Mutually exclusive with dpxlExpression; exactly one of the two is required.<br/>
+          The severities. A request without `dpxlExpression` needs at least one, and a request with it must have none. A response with `dpxlExpression` has an empty list.<br/>
           <br/>
-            <i>Enum</i>: info, warning, critical, error, debug, verbose<br/>
+            <i>Enum</i>: debug, verbose, info, warning, error, critical<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcorumpoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
-          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -20732,7 +20724,7 @@ otherwise it fails to compile.<br/>
 
 
 
-The applications to apply the policy on. Applies the policy on all the applications by default.
+Rule.
 
 <table>
     <thead>
@@ -20747,14 +20739,15 @@ The applications to apply the policy on. Applies the policy on all the applicati
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -20768,7 +20761,8 @@ The applications to apply the policy on. Applies the policy on all the applicati
 
 
 
-Matches the specified retention.
+Archive retention.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.
 
 <table>
     <thead>
@@ -20831,7 +20825,7 @@ Reference to the retention policy
 
 
 
-Dynamic quota-based priority override for the policy.
+Priority override.
 
 <table>
     <thead>
@@ -20846,7 +20840,7 @@ Dynamic quota-based priority override for the policy.
         <td><b><a href="#tcorumpoliciesspecpoliciesindexpriorityoverridequotabased">quotaBased</a></b></td>
         <td>object</td>
         <td>
-          TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.<br/>
+          Quota based.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -20858,7 +20852,7 @@ Dynamic quota-based priority override for the policy.
 
 
 
-TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+Quota based.
 
 <table>
     <thead>
@@ -20873,7 +20867,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
         <td><b><a href="#tcorumpoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Ordered list of usage tiers that map daily quota consumption percentages to priority levels. Percentages must be strictly increasing and priorities strictly decreasing, using only LOW, MEDIUM, or HIGH.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -20885,7 +20879,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
 
 
 
-TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+TCORumPoliciesUsageTier is the UsageTier object of the API.
 
 <table>
     <thead>
@@ -20900,7 +20894,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td><b>dailyQuotaPercentage</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          The daily quota percentage. Must be between 0 and 100.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -20909,7 +20903,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: block, high, low, medium<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -20921,7 +20915,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
 
 
 
-The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
+Rule.
 
 <table>
     <thead>
@@ -20936,14 +20930,15 @@ The subsystems to apply the policy on. Applies the policy on all the subsystems 
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -20957,7 +20952,7 @@ The subsystems to apply the policy on. Applies the policy on all the subsystems 
 
 
 
-TCORumPoliciesStatus defines the observed state of TCORumPolicies.
+TCORumPoliciesStatus defines the observed state of a TCORumPolicies.
 
 <table>
     <thead>
@@ -21071,13 +21066,8 @@ with respect to the current state of the instance.<br/>
 
 
 TCOTracesPolicies is the Schema for the tcotracespolicies API.
-NOTE: This resource performs an atomic overwrite of all existing TCO traces policies
-in the backend. Any existing policies not defined in this resource will be
-removed. Use with caution as this operation is destructive.
-
-See also https://coralogix.com/docs/tco-optimizer-api
-
-**Added in v0.4.0**
+NOTE: The TCOTracesPolicies is the whole list of the API. Each write replaces every item of the list,
+so an item that the spec does not have is removed. Deleting the TCOTracesPolicies removes every item.
 
 <table>
     <thead>
@@ -21109,14 +21099,14 @@ See also https://coralogix.com/docs/tco-optimizer-api
         <td><b><a href="#tcotracespoliciesspec">spec</a></b></td>
         <td>object</td>
         <td>
-          TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.<br/>
+          TCOTracesPoliciesSpec defines the desired state of a TCOTracesPolicies.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesstatus">status</a></b></td>
         <td>object</td>
         <td>
-          TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.<br/>
+          TCOTracesPoliciesStatus defines the observed state of a TCOTracesPolicies.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -21128,7 +21118,7 @@ See also https://coralogix.com/docs/tco-optimizer-api
 
 
 
-TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for traces.
+TCOTracesPoliciesSpec defines the desired state of a TCOTracesPolicies.
 
 <table>
     <thead>
@@ -21143,7 +21133,7 @@ TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for tr
         <td><b><a href="#tcotracespoliciesspecpoliciesindex">policies</a></b></td>
         <td>[]object</td>
         <td>
-          Coralogix TCO-Policies-List.<br/>
+          List of policies.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -21155,7 +21145,7 @@ TCOTracesPoliciesSpec defines the desired state of Coralogix TCO policies for tr
 
 
 
-Coralogix TCO policy for traces.
+TCOTracesPoliciesPolicy is the Policy object of the API.
 
 <table>
     <thead>
@@ -21170,86 +21160,87 @@ Coralogix TCO policy for traces.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the policy.<br/>
+          Human-readable name for the policy. Only Latin-1 characters are accepted.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>priority</b></td>
         <td>enum</td>
         <td>
-          The policy priority.<br/>
+          TCO priority level assigned to a policy, controlling how data is routed and archived.<br/>
           <br/>
-            <i>Enum</i>: block, high, medium, low<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexactions">actions</a></b></td>
         <td>object</td>
         <td>
-          The actions to apply the policy on. Applies the policy on all the actions by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexapplications">applications</a></b></td>
         <td>object</td>
         <td>
-          The applications to apply the policy on. Applies the policy on all the applications by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexarchiveretention">archiveRetention</a></b></td>
         <td>object</td>
         <td>
-          Matches the specified retention.<br/>
+          Archive retention.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description of the policy.<br/>
+          Optional free-text description of the policy's purpose. Only Latin-1 characters are accepted. A policy that `POST /dataplans/policies/v1` created without a description returns an empty string. A policy that an atomic overwrite created without a description can return none.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>disabled</b></td>
         <td>boolean</td>
         <td>
-          Whether the policy is disabled.<br/>
+          Indicates whether the policy is actively evaluated and applied. A create or atomic-overwrite request sets it as the opposite of its `disabled` value; `PUT /dataplans/policies/v1` sets `enabled` directly.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>dpxlExpression</b></td>
         <td>string</td>
         <td>
-          A DPXL expression to match spans on. Mutually exclusive with services, actions, tags, applications and subsystems.<br/>
+          The DataPrime expression that selects the spans. It starts with a version tag, for example `<v1> $l.serviceName == 'checkout'`. The service rejects it next to an application, subsystem, service, action, or tag rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexpriorityoverride">priorityOverride</a></b></td>
         <td>object</td>
         <td>
-          Dynamic quota-based priority override for the policy.<br/>
+          Priority override.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexservices">services</a></b></td>
         <td>object</td>
         <td>
-          The services to apply the policy on. Applies the policy on all the services by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindexsubsystems">subsystems</a></b></td>
         <td>object</td>
         <td>
-          The subsystems to apply the policy on. Applies the policy on all the subsystems by default.<br/>
+          Rule.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#tcotracespoliciesspecpoliciesindextagsindex">tags</a></b></td>
         <td>[]object</td>
         <td>
-          The tags to apply the policy on. Applies the policy on all the tags by default.<br/>
+          The tag rules. The service does not keep their order.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -21261,7 +21252,7 @@ Coralogix TCO policy for traces.
 
 
 
-The actions to apply the policy on. Applies the policy on all the actions by default.
+Rule.
 
 <table>
     <thead>
@@ -21276,14 +21267,15 @@ The actions to apply the policy on. Applies the policy on all the actions by def
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -21297,7 +21289,7 @@ The actions to apply the policy on. Applies the policy on all the actions by def
 
 
 
-The applications to apply the policy on. Applies the policy on all the applications by default.
+Rule.
 
 <table>
     <thead>
@@ -21312,14 +21304,15 @@ The applications to apply the policy on. Applies the policy on all the applicati
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -21333,7 +21326,8 @@ The applications to apply the policy on. Applies the policy on all the applicati
 
 
 
-Matches the specified retention.
+Archive retention.
+It refers to a ArchiveRetention by backend id, backend name, or custom resource.
 
 <table>
     <thead>
@@ -21396,7 +21390,7 @@ Reference to the retention policy
 
 
 
-Dynamic quota-based priority override for the policy.
+Priority override.
 
 <table>
     <thead>
@@ -21411,7 +21405,7 @@ Dynamic quota-based priority override for the policy.
         <td><b><a href="#tcotracespoliciesspecpoliciesindexpriorityoverridequotabased">quotaBased</a></b></td>
         <td>object</td>
         <td>
-          TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.<br/>
+          Quota based.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -21423,7 +21417,7 @@ Dynamic quota-based priority override for the policy.
 
 
 
-TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
+Quota based.
 
 <table>
     <thead>
@@ -21438,7 +21432,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
         <td><b><a href="#tcotracespoliciesspecpoliciesindexpriorityoverridequotabasedusagetiersindex">usageTiers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Ordered list of usage tiers that map daily quota consumption percentages to priority levels. Percentages must be strictly increasing and priorities strictly decreasing, using only LOW, MEDIUM, or HIGH.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -21450,7 +21444,7 @@ TCOPolicyQuotaBased maps daily quota consumption percentages to priority levels.
 
 
 
-TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
+TCOTracesPoliciesUsageTier is the UsageTier object of the API.
 
 <table>
     <thead>
@@ -21465,7 +21459,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td><b>dailyQuotaPercentage</b></td>
         <td>int or string</td>
         <td>
-          <br/>
+          The daily quota percentage. Must be between 0 and 100.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -21474,7 +21468,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: block, high, low, medium<br/>
+            <i>Enum</i>: block, low, medium, high<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -21486,7 +21480,7 @@ TCOPolicyUsageTier maps a daily quota threshold percentage to a priority.
 
 
 
-The services to apply the policy on. Applies the policy on all the services by default.
+Rule.
 
 <table>
     <thead>
@@ -21501,14 +21495,15 @@ The services to apply the policy on. Applies the policy on all the services by d
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -21522,7 +21517,7 @@ The services to apply the policy on. Applies the policy on all the services by d
 
 
 
-The subsystems to apply the policy on. Applies the policy on all the subsystems by default.
+Rule.
 
 <table>
     <thead>
@@ -21537,14 +21532,15 @@ The subsystems to apply the policy on. Applies the policy on all the subsystems 
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          Names to match.<br/>
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Type of matching for the name.<br/>
+          Rule type id.<br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -21558,7 +21554,7 @@ The subsystems to apply the policy on. Applies the policy on all the subsystems 
 
 
 
-TCO Policy tag matching rule.
+TCOTracesPoliciesTagRule is the TagRule object of the API.
 
 <table>
     <thead>
@@ -21573,14 +21569,14 @@ TCO Policy tag matching rule.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Tag names to match.<br/>
+          The tag name. Must start with "tags.".<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>ruleType</b></td>
         <td>enum</td>
         <td>
-          Operator to match with.<br/>
+          <br/>
           <br/>
             <i>Enum</i>: is, is_not, start_with, includes<br/>
         </td>
@@ -21589,7 +21585,8 @@ TCO Policy tag matching rule.
         <td><b>values</b></td>
         <td>[]string</td>
         <td>
-          Values to match for<br/>
+          The tag value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values.
+The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -21601,7 +21598,7 @@ TCO Policy tag matching rule.
 
 
 
-TCOTracesPoliciesStatus defines the observed state of TCOTracesPolicies.
+TCOTracesPoliciesStatus defines the observed state of a TCOTracesPolicies.
 
 <table>
     <thead>

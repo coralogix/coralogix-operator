@@ -34,9 +34,9 @@ func init() {
 		newFake:  newTCOFake(tcoLogs),
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
 			return &v1alpha1controllers.TCOLogsPoliciesReconciler{
-				TCOPoliciesClient:       cs.TCOPolicies(),
-				ArchiveRetentionsClient: cs.ArchiveRetentions(),
-				Interval:                reconcileInterval,
+				Client:    cs.TCOPolicies(),
+				ClientSet: cs,
+				Interval:  reconcileInterval,
 			}
 		},
 		scenarios: tcoLogsScenarios(),
@@ -271,11 +271,11 @@ func tcoLogsAdmission() map[string]string {
 		return tcoManifest(tcoLogsKind, "  policies:\n    - name: policy\n"+fields)
 	}
 	return map[string]string{
-		"more than 50 subsystem names": policy("      priority: low\n      severities: [info]\n      subsystems:\n        names: [" + tcoNames("subsystem", 51) + "]\n        ruleType: is\n"),
-		"exactly 50 subsystem names":   policy("      priority: low\n      severities: [info]\n      subsystems:\n        names: [" + tcoNames("subsystem", 50) + "]\n        ruleType: is\n"),
-		"no subsystem names":           policy("      priority: low\n      severities: [info]\n      subsystems:\n        names: []\n        ruleType: is\n"),
-		"target with an empty dataset": policy("      severities: [info]\n      targets:\n        - dataset: \"\"\n          priority: low\n"),
-		"valid target":                 policy("      severities: [info]\n      targets:\n        - dataset: myDataset\n          priority: low\n"),
+		"more than 50 subsystem names":                             policy("      priority: low\n      severities: [info]\n      subsystems:\n        names: [" + tcoNames("subsystem", 51) + "]\n        ruleType: is\n"),
+		"exactly 50 subsystem names":                               policy("      priority: low\n      severities: [info]\n      subsystems:\n        names: [" + tcoNames("subsystem", 50) + "]\n        ruleType: is\n"),
+		"no subsystem names":                                       policy("      priority: low\n      severities: [info]\n      subsystems:\n        names: []\n        ruleType: is\n"),
+		"target with an empty dataset":                             policy("      severities: [info]\n      targets:\n        - dataset: \"\"\n          priority: low\n"),
+		"valid target":                                             policy("      severities: [info]\n      targets:\n        - dataset: myDataset\n          priority: low\n"),
 		"targets that each have a priority and no policy priority": policy("      severities: [info]\n      targets:\n        - dataset: ds1\n          priority: low\n        - dataset: ds2\n          priority: medium\n"),
 		"target without a priority":                                policy("      severities: [info]\n      targets:\n        - dataset: myDataset\n"),
 		"target with a dataspace longer than 50":                   policy("      severities: [info]\n      targets:\n        - dataset: myDataset\n          dataspace: " + strings.Repeat("d", 51) + "\n          priority: low\n"),

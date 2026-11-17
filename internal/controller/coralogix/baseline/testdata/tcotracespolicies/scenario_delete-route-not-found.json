@@ -56,7 +56,7 @@
         "method": "PUT",
         "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
         "body": {
-          "policies": null
+          "policies": []
         },
         "status": 404
       }
@@ -88,7 +88,7 @@
         "method": "PUT",
         "path": "/mgmt/openapi/5/dataplans/span-policies/v1",
         "body": {
-          "policies": null
+          "policies": []
         },
         "status": 200
       }

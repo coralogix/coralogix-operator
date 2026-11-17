@@ -49,6 +49,27 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.PresetKind, err)
 	}
+	if err := (&TCOLogsPoliciesReconciler{
+		Client:    clientSet.TCOPolicies(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.TCOLogsPoliciesKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.TCOLogsPoliciesKind, err)
+	}
+	if err := (&TCORumPoliciesReconciler{
+		Client:    clientSet.TCOPolicies(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.TCORumPoliciesKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.TCORumPoliciesKind, err)
+	}
+	if err := (&TCOTracesPoliciesReconciler{
+		Client:    clientSet.TCOPolicies(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.TCOTracesPoliciesKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.TCOTracesPoliciesKind, err)
+	}
 	if err := (&ViewReconciler{
 		Client:   clientSet.Views(),
 		Interval: intervals[utils.ViewKind],

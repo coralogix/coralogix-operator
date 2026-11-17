@@ -32,9 +32,9 @@ func init() {
 		newFake:  newTCOFake(tcoSpans),
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
 			return &v1alpha1controllers.TCOTracesPoliciesReconciler{
-				TCOPoliciesClient:       cs.TCOPolicies(),
-				ArchiveRetentionsClient: cs.ArchiveRetentions(),
-				Interval:                reconcileInterval,
+				Client:    cs.TCOPolicies(),
+				ClientSet: cs,
+				Interval:  reconcileInterval,
 			}
 		},
 		scenarios: tcoTracesScenarios(),

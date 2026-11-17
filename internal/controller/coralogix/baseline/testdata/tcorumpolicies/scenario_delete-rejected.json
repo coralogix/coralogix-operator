@@ -65,7 +65,7 @@
         "method": "PUT",
         "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
         "body": {
-          "policies": null
+          "policies": []
         },
         "status": 500
       }
@@ -97,7 +97,7 @@
         "method": "PUT",
         "path": "/mgmt/openapi/5/dataplans/rum-policies/v1",
         "body": {
-          "policies": null
+          "policies": []
         },
         "status": 200
       }

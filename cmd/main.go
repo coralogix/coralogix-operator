@@ -204,30 +204,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.TCOLogsPoliciesReconciler{
-		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
-		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),
-		Interval:                cfg.ReconcileIntervals[utils.TCOLogsPoliciesKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "TCOLogsPolicies")
-		os.Exit(1)
-	}
-	if err = (&v1alpha1controllers.TCOTracesPoliciesReconciler{
-		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
-		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),
-		Interval:                cfg.ReconcileIntervals[utils.TCOTracesPoliciesKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "TCOTracesPolicies")
-		os.Exit(1)
-	}
-	if err = (&v1alpha1controllers.TCORumPoliciesReconciler{
-		TCOPoliciesClient:       oapiClientSet.TCOPolicies(),
-		ArchiveRetentionsClient: oapiClientSet.ArchiveRetentions(),
-		Interval:                cfg.ReconcileIntervals[utils.TCORumPoliciesKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "TCORumPolicies")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.QuotaAllocationRuleSetReconciler{
 		QuotaAllocationRulesClient: oapiClientSet.Quotas(),
 		Interval:                   cfg.ReconcileIntervals[utils.QuotaAllocationRuleSetKind],

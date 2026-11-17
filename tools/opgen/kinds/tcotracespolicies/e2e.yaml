@@ -1,0 +1,41 @@
+# The e2e values of TCOTracesPolicies that the contract cannot state.
+#
+# The API rejects a dpxlExpression next to services, actions, tags, applications, or subsystems, so
+# the full spec leaves out dpxlExpression. A tier priority must be above the policy priority. The
+# archive retention "Default" exists in every team.
+omit: [policies.dpxlExpression]
+values:
+  policies.tags.name: tags.env
+  policies.archiveRetention: {backendRef: {name: Default}}
+  policies.priorityOverride:
+    quotaBased:
+      usageTiers:
+        - {dailyQuotaPercentage: 30, priority: high}
+        - {dailyQuotaPercentage: 60, priority: medium}
+when:
+  # The policy priority must be more restrictive than every tier (block, low, medium, high).
+  - match: {policies.priority: block}
+    set: {policies.description: e2e block policy}
+  - match: {policies.priority: low}
+    set: {policies.description: e2e low policy}
+  - match: {policies.priority: medium}
+    set:
+      policies.priorityOverride:
+        quotaBased:
+          usageTiers:
+            - {dailyQuotaPercentage: 30, priority: high}
+skipValues:
+  quota.v1.Priority:
+    values: [PRIORITY_TYPE_HIGH]
+    reason: >-
+      A high policy can have no usage tiers, since every tier must be less restrictive than the policy
+      priority, and the full spec sends tiers. The tiers send the high value.
+# The spec that chart 0.5 accepts. Each write replaces every span policy of the team.
+upgrade:
+  from: '0.5'
+  spec:
+    policies:
+      - name: '@{run}'
+        priority: medium
+  field: policies/0/description
+  value: TCOTracesPolicies updated after the operator upgrade
