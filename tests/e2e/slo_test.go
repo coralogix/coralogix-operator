@@ -183,7 +183,7 @@ var _ = Describe("SLO validation", func() {
 
 		err := crClient.Create(ctx, slo)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of requestBasedMetric, windowBasedMetric, apmSli must be set"))
 	})
 
 	It("Should be rejected when two SLI types are set", func(ctx context.Context) {
@@ -196,7 +196,7 @@ var _ = Describe("SLO validation", func() {
 
 		err := crClient.Create(ctx, slo)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of requestBasedMetric, windowBasedMetric or apmSli must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of requestBasedMetric, windowBasedMetric, apmSli must be set"))
 	})
 
 	It("Should be rejected when productType is apm without an apmSli", func(ctx context.Context) {
