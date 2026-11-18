@@ -115,6 +115,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-preset.sh before
+      - name: Create a Dashboard with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-dashboard.sh before
       # The Events2Metric name is also a metric name, which cannot have a dot, so its NAME has no "1.0".
       - name: Create an Events2Metric with the released operator
         if: inputs.operator_version != '0.5'
@@ -215,6 +219,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-preset.sh after
+      - name: Check the Dashboard of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-dashboard.sh after
       - name: Check the Events2Metric of the released operator
         if: inputs.operator_version != '0.5'
         env:
@@ -232,6 +240,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-slo.sh cleanup
+      - name: Delete the Dashboard of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-dashboard.sh cleanup
       - name: Delete the Events2Metric of the upgrade test
         if: always() && inputs.operator_version != '0.5'
         env:

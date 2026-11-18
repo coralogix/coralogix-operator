@@ -11,6 +11,11 @@
     },
     "requests": [
       {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
+        "status": 404
+      },
+      {
         "method": "POST",
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
@@ -22,6 +27,7 @@
                 "api"
               ]
             },
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -49,7 +55,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -69,7 +75,7 @@
                 "api"
               ]
             },
-            "id": "baselineDashboard0001",
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -97,7 +103,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }

@@ -24,6 +24,7 @@ import (
 	"maps"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -43,11 +44,31 @@ const dashboardPath = "/dashboards/dashboards/v1"
 
 // Ids that the scenarios write themselves. maskIDs keeps the UUID one. A dashboard id is 21
 // characters and not a UUID: the SDK rejects a path id of another length before it sends the
-// request. The fake makes them in order (baselineDashboard0001, ...), so goldens need no mask.
+// request. The fake makes them in order (baselineDashboard0001, ...) for a Create without an id.
+// The operator asks for an id that comes from the UID of the CR; maskDashboardIDs replaces it.
 const (
 	dashboardFolderID   = fixedIDPrefix + "0000000000d1"
 	importedDashboardID = "baselineImportedDash1"
 )
+
+// dashboardIDPattern matches a dashboard id. The ids that the scenarios or the fake write start
+// with baseline or content and stay as they are.
+var dashboardIDPattern = regexp.MustCompile(`\b[0-9A-Za-z]{21}\b`)
+
+// maskDashboardIDs replaces each id that the operator made with <dashboard-id-N>, in order of
+// first appearance.
+func maskDashboardIDs(golden []byte) []byte {
+	seen := map[string]string{}
+	return dashboardIDPattern.ReplaceAllFunc(golden, func(id []byte) []byte {
+		if bytes.HasPrefix(id, []byte("baseline")) || bytes.HasPrefix(id, []byte("content")) {
+			return id
+		}
+		if _, ok := seen[string(id)]; !ok {
+			seen[string(id)] = fmt.Sprintf("<dashboard-id-%d>", len(seen)+1)
+		}
+		return []byte(seen[string(id)])
+	})
+}
 
 // dashboardDefaultAccessPolicy is the policy that the API stores for a dashboard created
 // without one (fidelity/recorded.json).
@@ -62,9 +83,10 @@ func init() {
 		resource: "dashboards",
 		newFake:  newDashboardFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.DashboardReconciler{DashboardsClient: cs.Dashboards(), Interval: reconcileInterval}
+			return &v1alpha1controllers.DashboardReconciler{Client: cs.Dashboards(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: dashboardScenarios,
+		mask:      maskDashboardIDs,
 		fidelity: fidelityConfig{
 			captureField: "dashboardId",
 			deletePath:   func(id string) string { return dashboardPath + "/" + id },
@@ -412,6 +434,16 @@ var dashboardScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again: the API answers as it should")
 	},
 
+	"create-stored-without-id": func(h *harness) {
+		fake := dashboards(h)
+		fake.mu.Lock()
+		fake.hideNextCreateID = true
+		fake.mu.Unlock()
+		h.Create("create: the API stores the dashboard and answers without its id", dashboardJSONManifest(dashboardContent("Baseline dashboard")))
+		h.Reconcile("reconcile again: the dashboard of the first attempt is adopted, not created twice")
+		h.Reconcile("reconcile again: the adopted dashboard is replaced with the spec")
+	},
+
 	"create-malformed-response": func(h *harness) {
 		dashboards(h).answerNext(http.MethodPost, "not a dashboard")
 		h.Create("create: the answer cannot be decoded", dashboardJSONManifest(dashboardContent("Baseline dashboard")))
@@ -524,6 +556,9 @@ type dashboardFake struct {
 	// next holds one 200 body per method. The next request with that method gets it, and the
 	// fake does not run the request.
 	next map[string]any
+	// hideNextCreateID makes the next Create store the dashboard and answer without its id, as a
+	// lost response would.
+	hideNextCreateID bool
 }
 
 type storedDashboard struct {
@@ -586,8 +621,15 @@ func (f *dashboardFake) handle(method, path string, _ url.Values, body any) (int
 		if status, errBody := f.check(d); status != 0 {
 			return status, errBody
 		}
-		f.created++
-		id := fmt.Sprintf("baselineDashboard%04d", f.created)
+		// The API keeps a client id, and rejects a second dashboard with it (probed in EU2).
+		id, _ := d["id"].(string)
+		if _, ok := f.dashboards[id]; ok {
+			return http.StatusBadRequest, map[string]any{"code": 400, "message": "Bad Request: dashboard with id " + id + " already exists"}
+		}
+		if id == "" {
+			f.created++
+			id = fmt.Sprintf("baselineDashboard%04d", f.created)
+		}
 		// A copy: the request body stays as the operator sent it in the golden.
 		d = maps.Clone(d)
 		d["id"] = id
@@ -596,6 +638,10 @@ func (f *dashboardFake) handle(method, path string, _ url.Values, body any) (int
 			policy = p
 		}
 		f.dashboards[id] = &storedDashboard{dashboard: d, accessPolicy: policy}
+		if f.hideNextCreateID {
+			f.hideNextCreateID = false
+			return http.StatusOK, map[string]any{}
+		}
 		return http.StatusOK, map[string]any{"dashboardId": id}
 
 	case method == http.MethodPut && rest == "":

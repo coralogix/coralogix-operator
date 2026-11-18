@@ -206,7 +206,7 @@ var _ = Describe("Dashboard import", Ordered, func() {
 			return fmt.Errorf("Dashboard ID is not set")
 		}, time.Minute, time.Second).Should(Succeed())
 		Expect(*fetchedDashboard.Status.ID).To(Equal(dashboardID))
-		Expect(fetchedDashboard.Status.Imported).To(BeTrue())
+		Expect(ptr.Deref(fetchedDashboard.Status.Imported, false)).To(BeTrue())
 
 		By("Verifying an omitted CR policy does not change the imported remote policy")
 		Eventually(func(g Gomega) error {

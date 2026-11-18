@@ -1,0 +1,19 @@
+# The CR holds the dashboard as JSON text. The live API needs a name and a layout.
+values:
+  json: '{"name":"e2e-dashboard","description":"Dashboard created by the generated e2e test","layout":{"sections":[]}}'
+  accessPolicy: '{"version":"2025-01-01","default":{"permissions":{"team-dashboards:Read":"grant","team-dashboards:ReadAccessPolicy":"grant","team-dashboards:Update":"grant","team-dashboards:UpdateAccessPolicy":"grant"}},"rules":[]}'
+# json, gzipJson, and configMapRef are three sources of the same content. A folder needs a
+# DashboardsFolder or an existing folder of the team.
+omit: [gzipJson, configMapRef, folderRef]
+minimal:
+  json: '{"name":"e2e-dashboard-minimal","layout":{"sections":[]}}'
+update:
+  field: json
+  value: '{"name":"e2e-dashboard-updated","description":"Dashboard updated by the generated e2e test","layout":{"sections":[]}}'
+  check: name
+upgrade:
+  from: '0.5'
+  spec:
+    json: '{"name":"@{run}","layout":{"sections":[]}}'
+  field: json
+  value: '{"name":"@{run}-updated","layout":{"sections":[]}}'

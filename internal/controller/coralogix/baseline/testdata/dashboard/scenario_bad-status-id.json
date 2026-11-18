@@ -6,10 +6,16 @@
     },
     "requests": [
       {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
+        "status": 404
+      },
+      {
         "method": "POST",
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
           "dashboard": {
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -37,7 +43,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -86,17 +92,8 @@
     "step": "reconcile again: the dashboard is created again",
     "requests": [
       {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
-        "body": {
-          "dashboard": {
-            "layout": {
-              "sections": []
-            },
-            "name": "Baseline dashboard"
-          },
-          "requestId": "cx-operator-create-<id-3>"
-        },
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
         "status": 200
       }
     ],
@@ -117,7 +114,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0002",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -127,7 +124,7 @@
     "requests": [
       {
         "method": "DELETE",
-        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/baselineDashboard0002",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
         "status": 200
       }
     ],

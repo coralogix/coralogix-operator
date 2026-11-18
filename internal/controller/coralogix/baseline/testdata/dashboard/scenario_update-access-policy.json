@@ -6,10 +6,16 @@
     },
     "requests": [
       {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
+        "status": 404
+      },
+      {
         "method": "POST",
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
           "dashboard": {
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -37,7 +43,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -55,7 +61,7 @@
         "body": {
           "accessPolicy": "{\"version\":\"2025-01-01\",\"default\":{\"permissions\":{\"team-dashboards:Read\":\"grant\",\"team-dashboards:Update\":\"deny\"}},\"rules\":[]}",
           "dashboard": {
-            "id": "baselineDashboard0001",
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -83,7 +89,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -101,7 +107,7 @@
         "body": {
           "accessPolicy": "",
           "dashboard": {
-            "id": "baselineDashboard0001",
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -129,7 +135,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -145,7 +151,7 @@
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
           "dashboard": {
-            "id": "baselineDashboard0001",
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -173,7 +179,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }

@@ -6,10 +6,16 @@
     },
     "requests": [
       {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
+        "status": 404
+      },
+      {
         "method": "POST",
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
           "dashboard": {
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -37,7 +43,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -56,7 +62,7 @@
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
           "dashboard": {
-            "id": "baselineDashboard0001",
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -84,7 +90,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -92,7 +98,7 @@
   {
     "step": "switch to gzip",
     "spec": {
-      "gzipJson": "H4sIAAAAAAAA/6pWykvMTVWyUnIrys9VSK/KLFDSUcpJrMwvLVGyqlYqTk0uyczPK1ayio6trQUEAAD//4B19NUtAAAA"
+      "gzipJson": "H4sIAAAAAAAA/<dashboard-id-2>/KLFDSUcpJrMwvLVGyqlYqTk0uyczPK1ayio6trQUEAAD//4B19NUtAAAA"
     },
     "requests": [
       {
@@ -100,7 +106,7 @@
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
           "dashboard": {
-            "id": "baselineDashboard0001",
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },
@@ -128,7 +134,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "<dashboard-id-1>",
         "printableStatus": "RemoteSynced"
       }
     }

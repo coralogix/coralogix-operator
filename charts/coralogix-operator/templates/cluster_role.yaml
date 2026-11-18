@@ -64,7 +64,6 @@ rules:
       - connectors
       - customenrichments
       - customroles
-      - dashboards
       - dashboardsfolders
       - enrichments
       - groups
@@ -98,7 +97,6 @@ rules:
       - connectors/finalizers
       - customenrichments/finalizers
       - customroles/finalizers
-      - dashboards/finalizers
       - dashboardsfolders/finalizers
       - enrichments/finalizers
       - groups/finalizers
@@ -126,7 +124,6 @@ rules:
       - connectors/status
       - customenrichments/status
       - customroles/status
-      - dashboards/status
       - dashboardsfolders/status
       - enrichments/status
       - groups/status
@@ -153,6 +150,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - dashboards
       - events2metrics
       - globalrouters
       - presets
@@ -173,6 +171,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - dashboards/finalizers
       - events2metrics/finalizers
       - globalrouters/finalizers
       - presets/finalizers
@@ -187,6 +186,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - dashboards/status
       - events2metrics/status
       - globalrouters/status
       - presets/status

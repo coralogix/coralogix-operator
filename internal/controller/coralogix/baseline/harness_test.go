@@ -79,6 +79,9 @@ type kind struct {
 	// accepts each one, and why it rejects it.
 	admission map[string]string
 	fidelity  fidelityConfig
+	// mask replaces the ids of a golden that change from run to run and are not UUIDs. maskIDs
+	// runs after it.
+	mask func([]byte) []byte
 }
 
 var kinds = map[string]kind{}
@@ -383,7 +386,11 @@ func TestScenarios(t *testing.T) {
 			t.Run(k.name+"/"+name, func(t *testing.T) {
 				h := newHarness(t, k, name)
 				k.scenarios[name](h)
-				checkGolden(t, k.goldenDir(), "scenario_"+name+".json", maskIDs(marshalGolden(t, h.steps)))
+				golden := marshalGolden(t, h.steps)
+				if k.mask != nil {
+					golden = k.mask(golden)
+				}
+				checkGolden(t, k.goldenDir(), "scenario_"+name+".json", maskIDs(golden))
 			})
 		}
 	}

@@ -78,7 +78,7 @@ func TestReconcileResourceSelectorMismatchPreservesDashboardImported(t *testing.
 		},
 		Status: coralogixv1alpha1.DashboardStatus{
 			ID:       &dashboardID,
-			Imported: true,
+			Imported: boolPtr(true),
 			Conditions: []metav1.Condition{
 				{
 					Type:               "RemoteSynced",
@@ -127,5 +127,5 @@ func TestReconcileResourceSelectorMismatchPreservesDashboardImported(t *testing.
 	require.Nil(t, fetched.Status.ID)
 	require.Empty(t, fetched.Status.Conditions)
 	require.Empty(t, fetched.Status.PrintableStatus)
-	require.True(t, fetched.Status.Imported, "status.imported must survive a selector-mismatch status clear")
+	require.True(t, isTrue(fetched.Status.Imported), "status.imported must survive a selector-mismatch status clear")
 }
