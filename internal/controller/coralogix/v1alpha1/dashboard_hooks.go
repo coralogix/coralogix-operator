@@ -16,8 +16,8 @@ package v1alpha1
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
+	"hash/fnv"
 	"math/big"
 	"net/http"
 	"strings"
@@ -107,9 +107,12 @@ func (r *DashboardReconciler) adopt(ctx context.Context, log logr.Logger, cr *co
 // the UID of the CR, so every Create attempt of one CR asks for the same id, and a CR that is
 // created again gets a new one.
 func dashboardCreateID(cr *coralogixv1alpha1.Dashboard) string {
-	sum := sha256.Sum256([]byte(cr.UID))
-	// A SHA-256 sum has 42 or 43 base62 digits.
-	return new(big.Int).SetBytes(sum[:]).Text(62)[:21]
+	// The id needs no secrecy, only a stable spread: a 128-bit FNV-1a sum has up to 22 base62
+	// digits. Left-padded to 22, the first 21 digits keep 125 bits.
+	h := fnv.New128a()
+	_, _ = h.Write([]byte(cr.UID))
+	digits := new(big.Int).SetBytes(h.Sum(nil)).Text(62)
+	return (strings.Repeat("0", 22-len(digits)) + digits)[:21]
 }
 
 func importDashboardID(cr *coralogixv1alpha1.Dashboard) string {
