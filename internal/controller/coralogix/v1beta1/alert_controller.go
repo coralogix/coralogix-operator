@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -36,11 +37,15 @@ import (
 type AlertReconciler struct {
 	ClientSet *cxsdk.ClientSet
 	Interval  time.Duration
+	// Recorder records Warning events for settings that the API accepts but that can miss data.
+	// It is optional: a nil Recorder records nothing.
+	Recorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=coralogix.com,resources=alerts/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *AlertReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1beta1.Alert{}, r)
@@ -56,6 +61,7 @@ func (r *AlertReconciler) FinalizerName() string {
 
 func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alert := obj.(*coralogixv1beta1.Alert)
+	r.warnEvaluationPeriod(alert)
 	props, err := alert.Spec.ExtractAlertDefProperties(
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,
@@ -88,6 +94,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 
 func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	alert := obj.(*coralogixv1beta1.Alert)
+	r.warnEvaluationPeriod(alert)
 	props, err := alert.Spec.ExtractAlertDefProperties(
 		&coralogixv1beta1.GetResourceRefProperties{
 			Ctx:       ctx,

@@ -2302,7 +2302,7 @@ Immediate alerts for DataPrime query results (preview).
         <td>
           How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
 When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
-The API checks the range and that the value does not exceed timeframeMinutes.<br/>
+The API checks the range (1-1440). May exceed timeframeMinutes, in which case data between evaluations is not covered by any evaluation.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -2448,7 +2448,7 @@ Alerts for when a DataPrime query result column crosses a threshold (preview).
         <td>
           How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
 When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
-The API checks the range and that the value does not exceed timeframeMinutes.<br/>
+The API checks the range (1-1440). May exceed timeframeMinutes, in which case data between evaluations is not covered by any evaluation.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -22760,7 +22760,7 @@ Immediate alerts for DataPrime query results (preview).
         <td>
           How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
 When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
-The API checks the range and that the value does not exceed timeframeMinutes.<br/>
+The API checks the range (1-1440). May exceed timeframeMinutes, in which case data between evaluations is not covered by any evaluation.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -22906,7 +22906,7 @@ Alerts for when a DataPrime query result column crosses a threshold (preview).
         <td>
           How often the alert is evaluated, in minutes. Each evaluation runs the query over the last timeframeMinutes.
 When unset, the API uses the smaller of 10 and timeframeMinutes; removing the field resets the period to that default.
-The API checks the range and that the value does not exceed timeframeMinutes.<br/>
+The API checks the range (1-1440). May exceed timeframeMinutes, in which case data between evaluations is not covered by any evaluation.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
