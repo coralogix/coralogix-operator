@@ -39,9 +39,21 @@ func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapp
 					continue
 				}
 				for _, name := range sortedKeys(values) {
+					if values[name].Source == "omit" {
+						continue // the generated code never sets it
+					}
 					refs = append(refs, sdkcheck.Ref{Path: operation + ".body." + name, Kind: sdkcheck.KindField,
 						Pkg: ref.Pkg, Owner: ref.Name, Name: model.GoName(name), Want: "*string", WantValue: "string", Rule: sdkcheck.RuleProperty})
 				}
+				break
+			}
+		}
+	}
+	if id := r.Create.Response.ID; id != "" {
+		for _, ref := range refs {
+			if ref.Path == "create.response" && ref.Kind == sdkcheck.KindType {
+				refs = append(refs, sdkcheck.Ref{Path: "create.response." + id, Kind: sdkcheck.KindField,
+					Pkg: ref.Pkg, Owner: ref.Name, Name: model.GoName(id), Want: "*string", WantValue: "string", Rule: sdkcheck.RuleProperty})
 				break
 			}
 		}
