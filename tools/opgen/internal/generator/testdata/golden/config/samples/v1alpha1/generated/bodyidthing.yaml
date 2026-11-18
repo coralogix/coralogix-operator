@@ -7,4 +7,4 @@ metadata:
 spec:
   title: sample-name
   limit: 1
-  mode: unspecified
+  mode: alerts

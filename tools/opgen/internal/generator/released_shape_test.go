@@ -72,15 +72,17 @@ func TestReleasedShapeGroupMovesTheCRFieldAndConversion(t *testing.T) {
 
 func TestReleasedShapeGroupSuppliesE2EUpdate(t *testing.T) {
 	for _, tt := range []struct {
-		name, update, assignment, assertion string
+		name, update, extra, assignment, assertion string
 	}{
 		{name: "automatic", assignment: `updated.Spec.Routing.Name = fullName + "-updated"`, assertion: `g.Expect(got.Name).To(Equal(fullName + "-updated"))`},
 		{name: "configured", update: "update:\n  field: routing.description\n  value: changed\n", assignment: `updated.Spec.Routing.Description = ptr.To("changed")`, assertion: `g.Expect(ptr.Deref(got.Description, "")).To(Equal("changed"))`},
+		// An ignored field is a top-level string with no API property: the update step passes it.
+		{name: "beside an ignored field", extra: "types:\n  Thing:\n    ignored:\n      legacy: {type: string, doc: Has no effect.}\n", assignment: `updated.Spec.Routing.Name = fullName + "-updated"`, assertion: `g.Expect(got.Name).To(Equal(fullName + "-updated"))`},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			root, input := syntheticRoot(t)
 			kindDir := filepath.Join(root, kindsDir, "thing")
-			override := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\ngroups:\n  routing: {fields: [name, description, enabled, quota]}\n"
+			override := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\ngroups:\n  routing: {fields: [name, description, enabled, quota]}\n" + tt.extra
 			if err := os.WriteFile(filepath.Join(kindDir, "behavior-overrides.yaml"), []byte(override), 0o644); err != nil {
 				t.Fatal(err)
 			}
@@ -106,6 +108,20 @@ func TestReleasedShapeGroupSuppliesE2EUpdate(t *testing.T) {
 			}
 		})
 	}
+}
+
+// An update line cannot name an ignored field: no API property holds it.
+func TestE2EUpdateRejectsAnIgnoredField(t *testing.T) {
+	root, input := syntheticRoot(t)
+	kindDir := filepath.Join(root, kindsDir, "thing")
+	override := "resource: Thing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  Thing:\n    ignored:\n      legacy: {type: string, doc: Has no effect.}\n"
+	if err := os.WriteFile(filepath.Join(kindDir, "behavior-overrides.yaml"), []byte(override), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(kindDir, "e2e.yaml"), []byte("values:\n  destinations: [https://example.com]\nupdate:\n  field: legacy\n  value: changed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	wantCode(t, generateFromInput(input, root, root), codeE2EInvalid)
 }
 
 func TestReleasedShapeGroupRequireOneMovesTheCELRule(t *testing.T) {

@@ -42,7 +42,7 @@ const (
 	bodyIDThingFullSpec = `{
   "title": "sample-name",
   "limit": 1,
-  "mode": "unspecified"
+  "mode": "alerts"
 }`
 	bodyIDThingMinimalSpec = `{
   "title": "sample-name",

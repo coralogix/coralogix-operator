@@ -3,6 +3,7 @@ package generator
 import (
 	"crypto/sha256"
 	"fmt"
+	"maps"
 	"math"
 	"reflect"
 	"slices"
@@ -75,6 +76,8 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		return nil, err
 	}
 	splitReferenceRules(spec)
+	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
+	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	if err := b.applyValidation(spec, "spec", map[*crType]bool{}, true); err != nil {
 		return nil, err
 	}
@@ -1013,6 +1016,8 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		return nil, err
 	}
 	splitReferenceRules(obj)
+	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
+	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	return obj, nil
 }
 
@@ -1136,6 +1141,26 @@ func (b *builder) hasNestedValidation(path string) bool {
 		}
 	}
 	return false
+}
+
+// ignoredFields returns the released CR fields of a component that the API does not have. They
+// have no API property, so the conversions and the generated samples leave them out.
+func (b *builder) ignoredFields(component string) []*crField {
+	if b.file == nil {
+		return nil
+	}
+	ignored := b.file.Types[component].Ignored
+	if len(ignored) == 0 {
+		return nil
+	}
+	b.usedIgnored[component] = true
+	var out []*crField
+	for _, name := range slices.Sorted(maps.Keys(ignored)) {
+		field := ignored[name]
+		out = append(out, &crField{JSON: name, GoName: goName(name), GoType: field.Type, Optional: true,
+			Doc: docLines(field.Doc), Markers: []string{"+optional"}, synthetic: true})
+	}
+	return out
 }
 
 func splitReferenceRules(t *crType) {
