@@ -946,7 +946,9 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		if file.Update != nil && file.Update.Field != candidate.jsonPath {
 			continue
 		}
-		if f.immutable || candidate.inOneOf || f.enum != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||
+		// A synthetic field, such as an ignored field or the CR arm of a split reference, has no API
+		// property for the step to read back, and no contract type.
+		if f.synthetic || f.immutable || candidate.inOneOf || f.enum != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||
 			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, f.typ.Kind) {
 			if file.Update != nil {
 				return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field",
