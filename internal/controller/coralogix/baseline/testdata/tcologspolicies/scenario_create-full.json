@@ -176,7 +176,6 @@
                 },
                 "description": "",
                 "name": "logs-targets",
-                "priority": "PRIORITY_TYPE_UNSPECIFIED",
                 "subsystemRule": {
                   "name": "test",
                   "ruleTypeId": "RULE_TYPE_ID_IS_NOT"

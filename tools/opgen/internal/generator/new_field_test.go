@@ -422,3 +422,89 @@ func withNewE2MField(t *testing.T, spec []byte) []byte {
 	}
 	return out
 }
+
+// A field that a later contract adds to a TCO policy reaches the CRD type, the request, the sample,
+// and the e2e test of each TCO policies kind with no new behavior-overrides line. The request holds
+// the field in the policy wrapper. The released chart upgrade check stays as it is.
+func TestTCOPoliciesNewFieldWithoutOverrides(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		if os.Getenv("CI") != "" {
+			t.Fatal(err)
+		}
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	spec := withNewPolicyField(t, input.OpenAPI)
+	for _, kind := range []string{"TCOLogsPolicies", "TCOTracesPolicies", "TCORumPolicies"} {
+		t.Run(kind, func(t *testing.T) {
+			entry := kindEntry{Kind: kind, Resource: "GetCompanyPoliciesResponse"}
+			dir := filepath.Join(input.ModuleRoot, entry.dir())
+			file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+			if err != nil {
+				t.Fatal(err)
+			}
+			render := func(spec []byte) map[string][]byte {
+				t.Helper()
+				doc, err := model.Load(spec)
+				if err != nil {
+					t.Fatal(err)
+				}
+				v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+				if err != nil {
+					t.Fatal(err)
+				}
+				out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+				if err != nil {
+					t.Fatal(err)
+				}
+				return out.files
+			}
+			before, after := render(input.OpenAPI), render(spec)
+			lower := strings.ToLower(kind)
+			for name, content := range after {
+				if removed := removedLines(string(before[name]), string(content)); len(removed) != 0 {
+					t.Errorf("%s: a new field changed existing lines:\n%s", name, strings.Join(removed, "\n"))
+				}
+			}
+			for _, want := range []struct{ file, text string }{
+				{"api/coralogix/v1alpha1/" + lower + "_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+				{"api/coralogix/v1alpha1/" + lower + "_types.go", "+kubebuilder:validation:MaxLength=20"},
+				{"api/coralogix/v1alpha1/" + lower + "_convert.go", ".ProbeNote = in.ProbeNote"},
+				{"config/samples/v1alpha1/generated/" + lower + ".yaml", "probeNote:"},
+				{"tests/e2e/" + lower + "_generated_test.go", `"probeNote":`},
+			} {
+				if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+					t.Errorf("%s has no %q", want.file, want.text)
+				}
+			}
+			script := "scripts/upgrade-check-" + lower + ".sh"
+			if string(after[script]) != string(before[script]) {
+				t.Error("a new field changed the released chart upgrade check")
+			}
+		})
+	}
+}
+
+// withNewPolicyField adds the optional field probeNote to the policy that a request writes and to
+// the policy that Get returns.
+func withNewPolicyField(t *testing.T, spec []byte) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := yaml.Unmarshal(spec, &doc); err != nil {
+		t.Fatal(err)
+	}
+	schemas := doc["components"].(map[string]any)["schemas"].(map[string]any)
+	for _, name := range []string{"CreateGenericPolicyRequest", "Policy"} {
+		props := schemas[name].(map[string]any)["properties"].(map[string]any)
+		props["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A note.", "maxLength": 20}
+	}
+	out, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}

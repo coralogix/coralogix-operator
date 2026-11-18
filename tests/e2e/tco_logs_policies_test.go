@@ -47,11 +47,11 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+				Policies: []coralogixv1alpha1.TCOLogsPoliciesPolicy{{
 					Name:       "over-limit",
 					Priority:   ptr.To("low"),
-					Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
-					Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+					Severities: []string{"info"},
+					Subsystems: &coralogixv1alpha1.TCOLogsPoliciesQuotaV1Rule{
 						Names:    names,
 						RuleType: "is",
 					},
@@ -70,10 +70,10 @@ var _ = Describe("TCOLogsPolicies schema validation", func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOLogsPolicy{{
+				Policies: []coralogixv1alpha1.TCOLogsPoliciesPolicy{{
 					Name:           "conflicting-rules",
 					Priority:       ptr.To("low"),
-					Severities:     []coralogixv1alpha1.TCOPolicySeverity{"info"},
+					Severities:     []string{"info"},
 					DpxlExpression: ptr.To("<v1>$d.applicationname == 'prod'"),
 				}},
 			},
@@ -105,16 +105,16 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.TCOLogsPoliciesSpec{
-				Policies: []coralogixv1alpha1.TCOLogsPolicy{
+				Policies: []coralogixv1alpha1.TCOLogsPoliciesPolicy{
 					{
 						Name:       "sample policy",
 						Priority:   ptr.To("high"),
-						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
-						Applications: &coralogixv1alpha1.TCOPolicyRule{
+						Severities: []string{"critical", "error"},
+						Applications: &coralogixv1alpha1.TCOLogsPoliciesQuotaV1Rule{
 							Names:    []string{"prod"},
 							RuleType: "start_with",
 						},
-						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Subsystems: &coralogixv1alpha1.TCOLogsPoliciesQuotaV1Rule{
 							Names:    []string{"mobile"},
 							RuleType: "is",
 						},
@@ -128,12 +128,12 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 						Name:       "sample policy 2",
 						Priority:   ptr.To("high"),
 						Disabled:   ptr.To(true),
-						Severities: []coralogixv1alpha1.TCOPolicySeverity{"critical", "error"},
-						Applications: &coralogixv1alpha1.TCOPolicyRule{
+						Severities: []string{"critical", "error"},
+						Applications: &coralogixv1alpha1.TCOLogsPoliciesQuotaV1Rule{
 							Names:    []string{"prod"},
 							RuleType: "start_with",
 						},
-						Subsystems: &coralogixv1alpha1.TCOPolicyRule{
+						Subsystems: &coralogixv1alpha1.TCOLogsPoliciesQuotaV1Rule{
 							Names:    []string{"mobile"},
 							RuleType: "is",
 						},
@@ -145,8 +145,8 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 					},
 					{
 						Name:       "targets policy",
-						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info", "debug"},
-						Targets: []coralogixv1alpha1.TCOPolicyTarget{
+						Severities: []string{"info", "debug"},
+						Targets: []coralogixv1alpha1.TCOLogsPoliciesV1Target{
 							{
 								Dataset:   "cicd",
 								Dataspace: ptr.To("default"),
@@ -156,9 +156,9 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 								Dataset:   "logs",
 								Dataspace: ptr.To("default"),
 								Priority:  "block",
-								PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
-									QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
-										UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+								PriorityOverride: &coralogixv1alpha1.TCOLogsPoliciesPriorityOverride{
+									QuotaBased: &coralogixv1alpha1.TCOLogsPoliciesQuotaBased{
+										UsageTiers: []coralogixv1alpha1.TCOLogsPoliciesUsageTier{
 											{DailyQuotaPercentage: resource.MustParse("80"), Priority: "low"},
 										},
 									},
@@ -174,10 +174,10 @@ var _ = Describe("TCOLogsPolicies", Serial, func() {
 					{
 						Name:       "priority override policy",
 						Priority:   ptr.To("low"),
-						Severities: []coralogixv1alpha1.TCOPolicySeverity{"info"},
-						PriorityOverride: &coralogixv1alpha1.TCOPolicyPriorityOverride{
-							QuotaBased: &coralogixv1alpha1.TCOPolicyQuotaBased{
-								UsageTiers: []coralogixv1alpha1.TCOPolicyUsageTier{
+						Severities: []string{"info"},
+						PriorityOverride: &coralogixv1alpha1.TCOLogsPoliciesPriorityOverride{
+							QuotaBased: &coralogixv1alpha1.TCOLogsPoliciesQuotaBased{
+								UsageTiers: []coralogixv1alpha1.TCOLogsPoliciesUsageTier{
 									{DailyQuotaPercentage: resource.MustParse("30"), Priority: "high"},
 									{DailyQuotaPercentage: resource.MustParse("60"), Priority: "medium"},
 								},

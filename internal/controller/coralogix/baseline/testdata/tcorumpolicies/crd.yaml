@@ -83,9 +83,9 @@ spec:
                     priority:
                       enum:
                       - block
-                      - high
-                      - medium
                       - low
+                      - medium
+                      - high
                       type: string
                     priorityOverride:
                       properties:
@@ -103,9 +103,9 @@ spec:
                                   priority:
                                     enum:
                                     - block
-                                    - high
                                     - low
                                     - medium
+                                    - high
                                     type: string
                                 required:
                                 - dailyQuotaPercentage
@@ -120,12 +120,12 @@ spec:
                     severities:
                       items:
                         enum:
-                        - info
-                        - warning
-                        - critical
-                        - error
                         - debug
                         - verbose
+                        - info
+                        - warning
+                        - error
+                        - critical
                         type: string
                       maxItems: 6
                       minItems: 1

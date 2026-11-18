@@ -212,7 +212,7 @@
       {
         "type": "FieldValueNotSupported",
         "field": "spec.policies[0].priority",
-        "message": "Unsupported value: \"urgent\": supported values: \"block\", \"high\", \"medium\", \"low\""
+        "message": "Unsupported value: \"urgent\": supported values: \"block\", \"low\", \"medium\", \"high\""
       }
     ]
   },
@@ -232,7 +232,7 @@
       {
         "type": "FieldValueNotSupported",
         "field": "spec.policies[0].severities[0]",
-        "message": "Unsupported value: \"fatal\": supported values: \"info\", \"warning\", \"critical\", \"error\", \"debug\", \"verbose\""
+        "message": "Unsupported value: \"fatal\": supported values: \"debug\", \"verbose\", \"info\", \"warning\", \"error\", \"critical\""
       }
     ]
   },
