@@ -11,6 +11,11 @@
     },
     "requests": [
       {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
+        "status": 404
+      },
+      {
         "method": "POST",
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
@@ -18,6 +23,7 @@
             "folderId": {
               "value": "00000000-0000-4000-8000-0000000000f1"
             },
+            "id": "<dashboard-id-1>",
             "layout": {
               "sections": []
             },

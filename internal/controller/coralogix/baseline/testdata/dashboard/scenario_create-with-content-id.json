@@ -38,7 +38,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "contentDashboardId001",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -51,7 +51,7 @@
         "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
         "body": {
           "dashboard": {
-            "id": "baselineDashboard0001",
+            "id": "contentDashboardId001",
             "layout": {
               "sections": []
             },
@@ -79,7 +79,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "baselineDashboard0001",
+        "id": "contentDashboardId001",
         "printableStatus": "RemoteSynced"
       }
     }

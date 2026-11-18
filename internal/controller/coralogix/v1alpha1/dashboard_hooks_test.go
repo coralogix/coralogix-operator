@@ -113,14 +113,44 @@ func TestDashboardFolderHooksAreSafeToRepeat(t *testing.T) {
 
 func TestDashboardAdoptDoesNothingWithoutTheAnnotationOrAfterAnImport(t *testing.T) {
 	r := &DashboardReconciler{} // no client: adopt must not call the API
+	// An id of the content is never adopted, so these calls make no Get.
+	body := &dashboards.CreateDashboardRequestDataStructure{Dashboard: dashboards.Dashboard{Id: ptr.To("contentDashboardId001")}}
 
-	id, err := r.adopt(context.Background(), logr.Discard(), dashboardWithContent(`{}`, nil), nil)
+	id, err := r.adopt(context.Background(), logr.Discard(), dashboardWithContent(`{}`, nil), body)
 	require.NoError(t, err)
 	require.Empty(t, id)
 
 	imported := dashboardWithContent(`{}`, map[string]string{coralogixv1alpha1.ImportDashboardIDAnnotationKey: "some-import-id"})
 	imported.Status.Imported = ptr.To(true)
-	id, err = r.adopt(context.Background(), logr.Discard(), imported, nil)
+	id, err = r.adopt(context.Background(), logr.Discard(), imported, body)
 	require.NoError(t, err)
 	require.Empty(t, id)
+}
+
+func TestDashboardCreateIDComesFromTheUID(t *testing.T) {
+	cr := dashboardWithContent(`{}`, nil)
+	cr.UID = "6f1c2a9e-4b4a-4118-8f2d-1a2b3c4d5e6f"
+	id := dashboardCreateID(cr)
+	require.Regexp(t, `^[0-9A-Za-z]{21}$`, id)
+	require.Equal(t, id, dashboardCreateID(cr.DeepCopy()))
+
+	other := cr.DeepCopy()
+	other.UID = "0b6c1f7e-2d3a-4c5b-9e8f-7a6b5c4d3e2f"
+	require.NotEqual(t, id, dashboardCreateID(other))
+}
+
+func TestDashboardBeforeCreateAsksForTheCreateIDOnlyWithoutAContentID(t *testing.T) {
+	cr := dashboardWithContent(`{}`, nil)
+	cr.UID = "6f1c2a9e-4b4a-4118-8f2d-1a2b3c4d5e6f"
+	r := &DashboardReconciler{}
+
+	body := &dashboards.CreateDashboardRequestDataStructure{}
+	for range 2 {
+		require.NoError(t, r.beforeCreate(context.Background(), logr.Discard(), cr, body))
+		require.Equal(t, dashboardCreateID(cr), *body.Dashboard.Id)
+	}
+
+	withID := &dashboards.CreateDashboardRequestDataStructure{Dashboard: dashboards.Dashboard{Id: ptr.To("contentDashboardId001")}}
+	require.NoError(t, r.beforeCreate(context.Background(), logr.Discard(), cr, withID))
+	require.Equal(t, "contentDashboardId001", *withID.Dashboard.Id)
 }

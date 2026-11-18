@@ -16,7 +16,10 @@ package v1alpha1
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
+	"math/big"
+	"net/http"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -45,8 +48,12 @@ func (r *DashboardReconciler) validate(ctx context.Context, _ logr.Logger, cr *c
 	return nil
 }
 
-// beforeCreate places the dashboard in the folder of spec.folderRef.
+// beforeCreate places the dashboard in the folder of spec.folderRef, and asks for the id of
+// dashboardCreateID when the content has no id.
 func (r *DashboardReconciler) beforeCreate(ctx context.Context, _ logr.Logger, cr *coralogixv1alpha1.Dashboard, body *dashboards.CreateDashboardRequestDataStructure) error {
+	if ptr.Deref(body.Dashboard.Id, "") == "" {
+		body.Dashboard.Id = ptr.To(dashboardCreateID(cr))
+	}
 	return setDashboardFolder(ctx, cr, &body.Dashboard)
 }
 
@@ -63,18 +70,46 @@ func (r *DashboardReconciler) beforeUpdate(ctx context.Context, _ logr.Logger, c
 // the operator is created from the spec, instead of the import retrying a Get of a missing id.
 // Adoption reads the dashboard and changes nothing remote: the next reconcile replaces it with
 // the spec.
-func (r *DashboardReconciler) adopt(ctx context.Context, log logr.Logger, cr *coralogixv1alpha1.Dashboard, _ *dashboards.CreateDashboardRequestDataStructure) (string, error) {
-	id := importDashboardID(cr)
-	if id == "" || ptr.Deref(cr.Status.Imported, false) {
+//
+// Without an import, adopt finds the dashboard of an earlier Create attempt: one whose response
+// was lost, or had no id. That attempt asked for the same id of dashboardCreateID, so the
+// dashboard is adopted instead of created twice. The API does not deduplicate by requestId.
+func (r *DashboardReconciler) adopt(ctx context.Context, log logr.Logger, cr *coralogixv1alpha1.Dashboard, body *dashboards.CreateDashboardRequestDataStructure) (string, error) {
+	if id := importDashboardID(cr); id != "" && !ptr.Deref(cr.Status.Imported, false) {
+		log.Info("Import annotation present, adopting existing remote dashboard", "id", id)
+		_, httpResp, err := r.ClientSet.Dashboards().DashboardsServiceGetDashboard(ctx, id).Execute()
+		if err != nil {
+			return "", fmt.Errorf("error on getting remote dashboard %q for import: %w", id, cxsdk.NewAPIError(httpResp, err))
+		}
+		cr.Status.Imported = ptr.To(true)
+		return id, nil
+	}
+	// An id of the content is not adopted: it can name a dashboard that the CR does not own. The
+	// API rejects its Create while that dashboard exists.
+	id := ptr.Deref(body.Dashboard.Id, "")
+	if id == "" || id != dashboardCreateID(cr) {
 		return "", nil
 	}
-	log.Info("Import annotation present, adopting existing remote dashboard", "id", id)
 	_, httpResp, err := r.ClientSet.Dashboards().DashboardsServiceGetDashboard(ctx, id).Execute()
-	if err != nil {
-		return "", fmt.Errorf("error on getting remote dashboard %q for import: %w", id, cxsdk.NewAPIError(httpResp, err))
+	switch {
+	case err == nil:
+		log.Info("Found the remote dashboard of an earlier Create attempt", "id", id)
+		return id, nil
+	case httpResp != nil && httpResp.StatusCode == http.StatusNotFound:
+		return "", nil
+	default:
+		return "", fmt.Errorf("error on getting remote dashboard %q before Create: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	cr.Status.Imported = ptr.To(true)
-	return id, nil
+}
+
+// dashboardCreateID is the id that Create asks for when the content has none. The API accepts a
+// client id of 21 characters and rejects a second dashboard with the same id. The id comes from
+// the UID of the CR, so every Create attempt of one CR asks for the same id, and a CR that is
+// created again gets a new one.
+func dashboardCreateID(cr *coralogixv1alpha1.Dashboard) string {
+	sum := sha256.Sum256([]byte(cr.UID))
+	// A SHA-256 sum has 42 or 43 base62 digits.
+	return new(big.Int).SetBytes(sum[:]).Text(62)[:21]
 }
 
 func importDashboardID(cr *coralogixv1alpha1.Dashboard) string {
