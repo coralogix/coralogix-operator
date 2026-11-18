@@ -20,6 +20,7 @@ rules:
       - patchthings
       - refthings
       - things
+      - thingpolicies
       - wrappedthings
     verbs:
       - create
@@ -38,6 +39,7 @@ rules:
       - patchthings/finalizers
       - refthings/finalizers
       - things/finalizers
+      - thingpolicies/finalizers
       - wrappedthings/finalizers
     verbs:
       - update
@@ -50,6 +52,7 @@ rules:
       - patchthings/status
       - refthings/status
       - things/status
+      - thingpolicies/status
       - wrappedthings/status
     verbs:
       - get

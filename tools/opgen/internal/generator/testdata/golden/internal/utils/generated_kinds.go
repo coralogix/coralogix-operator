@@ -25,5 +25,6 @@ const (
 	PatchThingKind      = "PatchThing"
 	RefThingKind        = "RefThing"
 	ThingKind           = "Thing"
+	ThingPoliciesKind   = "ThingPolicies"
 	WrappedThingKind    = "WrappedThing"
 )

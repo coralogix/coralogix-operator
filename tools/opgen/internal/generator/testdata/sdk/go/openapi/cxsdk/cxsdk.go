@@ -10,6 +10,7 @@ import (
 	hookthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
+	thingpolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/thing_policies_service"
 	things "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/things_service"
 	wrappedthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/wrapped_things_service"
 )
@@ -73,4 +74,8 @@ func (c *ClientSet) HookThings() *hookthings.HookThingsServiceAPIService {
 
 func (c *ClientSet) HookDeleteThings() *hookdeletethings.HookDeleteThingsServiceAPIService {
 	return hookdeletethings.NewHookDeleteThingsServiceAPIService()
+}
+
+func (c *ClientSet) ThingPolicies() *thingpolicies.ThingPoliciesServiceAPIService {
+	return thingpolicies.NewThingPoliciesServiceAPIService()
 }

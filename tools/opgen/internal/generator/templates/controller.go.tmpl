@@ -51,6 +51,49 @@ func (r *{{.Kind}}Reconciler) FinalizerName() string {
 	return "{{.Finalizer}}"
 }
 
+{{if .Overwrite -}}
+// HandleCreation writes the list. HasIDInStatus is always true, so the shared reconciler calls
+// HandleUpdate instead; this method completes the interface.
+func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+	return r.HandleUpdate(ctx, log, obj)
+}
+
+// HandleUpdate replaces the whole list of the API with the spec, and adds the finalizer. Running it
+// again with the same spec writes the same list.
+func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
+	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+	body, err := cr.UpdateRequest(ctx{{if .HasNameLookup}}, r.ClientSet{{end}})
+	if err != nil {
+		return fmt.Errorf("error on building the request of {{.Kind}}: %w", err)
+	}
+	log.Info("Overwriting remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
+	resp, httpResp, err := r.Client.{{.UpdateMethod}}(ctx).{{.UpdateSetter}}(*body).Execute()
+	if err != nil {
+		return fmt.Errorf("error on overwriting remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
+	}
+	log.Info("Remote {{.Kind}} overwritten", "response", utils.FormatJSON(resp))
+	return coralogixreconciler.AddFinalizer(ctx, log, cr, r)
+}
+
+// HandleDeletion writes an empty list, which removes every item. It runs on deletion, on a selector
+// mismatch, and again after a failure.
+func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logger, _ client.Object) error {
+	log.Info("Deleting remote {{.Kind}}")
+	body := {{.SDKAlias}}.{{.UpdateBody}}{
+{{- range .WriteFields}}
+		{{.Field}}: {{.Empty}},
+{{- end}}
+	}
+	_, httpResp, err := r.Client.{{.DeleteMethod}}(ctx).{{.UpdateSetter}}(body).Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			return fmt.Errorf("error on deleting remote {{.Kind}}: %w", apiErr)
+		}
+	}
+	log.Info("Remote {{.Kind}} deleted")
+	return nil
+}
+{{- else}}
 {{if .Hooks.AfterCreate -}}
 // HandleCreationWithFollowUp creates the remote {{.Kind}} and sets status.id. It returns the step that
 // calls the afterCreate hook. The shared reconciler runs the step after it saves status.id and
@@ -231,6 +274,7 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	log.Info("Remote {{.Kind}} deleted", "id", id)
 	return nil
 }
+{{- end}}
 {{- end}}
 {{- if .Hooks.Any}}
 

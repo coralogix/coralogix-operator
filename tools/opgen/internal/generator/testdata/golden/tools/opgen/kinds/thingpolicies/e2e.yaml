@@ -1,0 +1,15 @@
+# A Thing that the policies of the test could refer to, created before them.
+fixtures:
+  - kind: Thing
+    suffix: -thing
+    statusField: ID
+    spec: {name: '@{run}'}
+omit: [policies.levels]
+upgrade:
+  from: '2.0'
+  spec:
+    policies:
+      - name: '@{run}'
+        pattern: before
+  field: policies/0/pattern
+  value: after
