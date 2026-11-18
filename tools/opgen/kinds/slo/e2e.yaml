@@ -1,0 +1,40 @@
+substitutions:
+  sample-name: '@{run}'
+values:
+  # The live API needs a PromQL query with 1-minute ranges in a request-based SLI.
+  sliType.requestBasedMetric.goodEvents.query: 'sum(rate(coralogix_e2e_events_total{status="ok"}[1m]))'
+  sliType.requestBasedMetric.totalEvents.query: 'sum(rate(coralogix_e2e_events_total[1m]))'
+  sliType.windowBasedMetric.query.query: 'sum(rate(coralogix_e2e_events_total{status="error"}[5m]))'
+  # A dimension takes staticValues or labelKeys, not both, and a static service must be in the
+  # APM Service Catalog of the team.
+  ownershipTags: {environment: {staticValues: [e2e]}, team: {labelKeys: [team]}}
+  targetThresholdPercentage: 99
+# An APM SLI needs a service of the APM Service Catalog. The API answers "One or more APM SLO
+# services not found in catalog" for any other name, and the e2e team has no catalog service.
+skipChoices:
+  SLO:
+    choices: [apmSli]
+    reason: the API rejects an APM service that is not in the catalog, and the e2e team has none
+skipValues:
+  SloProductType:
+    values: [SLO_PRODUCT_TYPE_APM]
+    reason: the API requires apmSli with productType apm, and apmSli is skipped
+# The CRD does not require a time frame. The API does.
+minimal:
+  window: {timeFrame: 7d}
+update:
+  field: description
+  value: SLO updated by the e2e test
+upgrade:
+  from: '2.0'
+  spec:
+    name: '@{run}'
+    description: SLO created before the operator upgrade
+    sliType:
+      requestBasedMetric:
+        goodEvents: {query: 'sum(rate(coralogix_e2e_events_total{status="ok"}[1m]))'}
+        totalEvents: {query: 'sum(rate(coralogix_e2e_events_total[1m]))'}
+    window: {timeFrame: 7d}
+    targetThresholdPercentage: 99
+  field: description
+  value: SLO updated after the operator upgrade

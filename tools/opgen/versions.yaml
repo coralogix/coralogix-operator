@@ -3,6 +3,7 @@
 Events2Metric: v0.1.0-beta.23
 GlobalRouter: v0.1.0-beta.23
 Preset: v0.1.0-beta.23
+SLO: v0.1.0-beta.23
 TCOLogsPolicies: v0.1.0-beta.23
 TCORumPolicies: v0.1.0-beta.23
 TCOTracesPolicies: v0.1.0-beta.23

@@ -18,3 +18,5 @@ kinds:
     resource: GetCompanyPoliciesResponse
   - kind: TCORumPolicies
     resource: GetCompanyPoliciesResponse
+  - kind: SLO
+    resource: Slo

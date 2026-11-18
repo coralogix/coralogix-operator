@@ -5,17 +5,17 @@
   "shards": [
     {
       "name": "coverage-1",
-      "filter": "coverage && (coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-tcologspolicies-1)",
+      "filter": "coverage && (coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-slo-1)",
       "steps": 4
     },
     {
       "name": "coverage-2",
-      "filter": "coverage && (coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
-      "steps": 3
+      "filter": "coverage && (coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
+      "steps": 4
     },
     {
       "name": "coverage-rest",
-      "filter": "coverage && !(coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
+      "filter": "coverage && !(coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-slo-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
       "steps": 0
     }
   ]

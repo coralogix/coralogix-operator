@@ -75,7 +75,6 @@ rules:
       - recordingrulegroupsets
       - rulegroups
       - scopes
-      - slos
     verbs:
       - create
       - delete
@@ -110,7 +109,6 @@ rules:
       - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
       - scopes/finalizers
-      - slos/finalizers
     verbs:
       - update
   - apiGroups:
@@ -139,7 +137,6 @@ rules:
       - recordingrulegroupsets/status
       - rulegroups/status
       - scopes/status
-      - slos/status
     verbs:
       - get
       - patch
@@ -159,6 +156,7 @@ rules:
       - events2metrics
       - globalrouters
       - presets
+      - slos
       - tcologspolicies
       - tcorumpolicies
       - tcotracespolicies
@@ -178,6 +176,7 @@ rules:
       - events2metrics/finalizers
       - globalrouters/finalizers
       - presets/finalizers
+      - slos/finalizers
       - tcologspolicies/finalizers
       - tcorumpolicies/finalizers
       - tcotracespolicies/finalizers
@@ -191,6 +190,7 @@ rules:
       - events2metrics/status
       - globalrouters/status
       - presets/status
+      - slos/status
       - tcologspolicies/status
       - tcorumpolicies/status
       - tcotracespolicies/status
