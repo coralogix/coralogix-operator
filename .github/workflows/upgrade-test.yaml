@@ -122,14 +122,15 @@ jobs:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-events2metric.sh before
       # Each write of a TCO policies kind replaces every log or span policy of the team. The e2e tests
-      # write the same lists, so these checks end before the e2e tests start.
+      # write the same lists, so these checks end before the e2e tests start. NAME is a policy name;
+      # it has no dot, as for Events2Metric.
       - name: Create TCOLogsPolicies with the released operator
         env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '0.5' && '0-5' || inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-tcologspolicies.sh before
       - name: Create TCOTracesPolicies with the released operator
         env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '0.5' && '0-5' || inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-tcotracespolicies.sh before
       # The SLO kind is in charts 2.0 and later.
       - name: Create an SLO with the released operator
@@ -177,21 +178,21 @@ jobs:
           exit 1
       - name: Check the TCOLogsPolicies of the released operator
         env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '0.5' && '0-5' || inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-tcologspolicies.sh after
       - name: Check the TCOTracesPolicies of the released operator
         env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '0.5' && '0-5' || inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-tcotracespolicies.sh after
       - name: Delete the TCOLogsPolicies of the upgrade test
         if: always()
         env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '0.5' && '0-5' || inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-tcologspolicies.sh cleanup
       - name: Delete the TCOTracesPolicies of the upgrade test
         if: always()
         env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ matrix.operator_version }}
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '0.5' && '0-5' || inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-tcotracespolicies.sh cleanup
       - name: Run e2e Tests
         run: bash .github/scripts/ci-account.sh lookup make e2e-tests
