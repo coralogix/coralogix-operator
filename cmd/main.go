@@ -147,6 +147,7 @@ func main() {
 	if err = (&v1beta1controllers.AlertReconciler{
 		ClientSet: oapiClientSet,
 		Interval:  cfg.ReconcileIntervals[utils.AlertKind],
+		Recorder:  mgr.GetEventRecorderFor("coralogix-operator"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Alert")
 		os.Exit(1)
