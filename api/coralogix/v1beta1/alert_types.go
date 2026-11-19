@@ -762,7 +762,7 @@ const (
 )
 
 // Alert type definitions.
-// +kubebuilder:validation:XValidation:rule="(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsImmediate) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1", message="Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set"
+// +kubebuilder:validation:XValidation:rule="(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsResultCount) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1", message="Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsResultCount, analyticsThreshold must be set"
 type AlertTypeDefinition struct {
 
 	// Immediate alerts for logs.
@@ -817,9 +817,9 @@ type AlertTypeDefinition struct {
 	// +optional
 	SloThreshold *SloThreshold `json:"sloThreshold,omitempty"`
 
-	// Immediate alerts for DataPrime query results (preview).
+	// Alerts on the number of rows a DataPrime query returns (preview).
 	// +optional
-	AnalyticsImmediate *AnalyticsImmediate `json:"analyticsImmediate,omitempty"`
+	AnalyticsResultCount *AnalyticsResultCount `json:"analyticsResultCount,omitempty"`
 
 	// Alerts for when a DataPrime query result column crosses a threshold (preview).
 	// +optional
@@ -834,8 +834,8 @@ type DataprimeQuery struct {
 	Query string `json:"query"`
 }
 
-// Immediate alerts for DataPrime query results (preview).
-type AnalyticsImmediate struct {
+// Alerts on the number of rows a DataPrime query returns (preview).
+type AnalyticsResultCount struct {
 	// DataPrime query that triggers the alert when it returns results.
 	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
 
@@ -848,10 +848,6 @@ type AnalyticsImmediate struct {
 	// The API checks the range (1-1440). May exceed timeframeMinutes, in which case data between evaluations is not covered by any evaluation.
 	// +optional
 	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
-
-	// Whether each result row is treated as a separate permutation.
-	// +optional
-	UseRowsAsPermutations *bool `json:"useRowsAsPermutations,omitempty"`
 
 	// Evaluation delay in milliseconds.
 	// +kubebuilder:validation:Minimum=0
@@ -2232,7 +2228,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_SLO_THRESHOLD.Ptr(),
 			SloThreshold:            sloThresholdType,
 		}, nil
-	} else if analyticsImmediate := in.TypeDefinition.AnalyticsImmediate; analyticsImmediate != nil {
+	} else if analyticsResultCount := in.TypeDefinition.AnalyticsResultCount; analyticsResultCount != nil {
 		return &alerts.AlertDefProperties{
 			Name:                    alerts.PtrString(in.Name),
 			Description:             alerts.PtrString(in.Description),
@@ -2247,8 +2243,8 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			EntityLabels:            in.EntityLabels,
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
-			Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_IMMEDIATE.Ptr(),
-			AnalyticsImmediate:      expandAnalyticsImmediate(analyticsImmediate),
+			Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_RESULT_COUNT.Ptr(),
+			AnalyticsResultCount:    expandAnalyticsResultCount(analyticsResultCount),
 		}, nil
 	} else if analyticsThreshold := in.TypeDefinition.AnalyticsThreshold; analyticsThreshold != nil {
 		return &alerts.AlertDefProperties{
@@ -3371,14 +3367,13 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 	return thresholdType
 }
 
-func expandAnalyticsImmediate(immediate *AnalyticsImmediate) *alerts.AnalyticsImmediateType {
-	return &alerts.AnalyticsImmediateType{
-		DataprimeQuery:          expandDataprimeQuery(immediate.DataprimeQuery),
-		TimeframeMinutes:        alerts.PtrInt32(immediate.TimeframeMinutes),
-		EvaluationPeriodMinutes: immediate.EvaluationPeriodMinutes,
-		UseRowsAsPermutations:   immediate.UseRowsAsPermutations,
-		EvaluationDelayMs:       immediate.EvaluationDelayMs,
-		NoDataPolicy:            expandNoDataPolicy(immediate.NoDataPolicy),
+func expandAnalyticsResultCount(resultCount *AnalyticsResultCount) *alerts.AnalyticsResultCountType {
+	return &alerts.AnalyticsResultCountType{
+		DataprimeQuery:          expandDataprimeQuery(resultCount.DataprimeQuery),
+		TimeframeMinutes:        alerts.PtrInt32(resultCount.TimeframeMinutes),
+		EvaluationPeriodMinutes: resultCount.EvaluationPeriodMinutes,
+		EvaluationDelayMs:       resultCount.EvaluationDelayMs,
+		NoDataPolicy:            expandNoDataPolicy(resultCount.NoDataPolicy),
 	}
 }
 

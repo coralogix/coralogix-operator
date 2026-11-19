@@ -76,9 +76,9 @@ spec:
                         alertType:
                           description: Type of alert.
                           properties:
-                            analyticsImmediate:
-                              description: Immediate alerts for DataPrime query results
-                                (preview).
+                            analyticsResultCount:
+                              description: Alerts on the number of rows a DataPrime
+                                query returns (preview).
                               properties:
                                 dataprimeQuery:
                                   description: DataPrime query that triggers the alert
@@ -133,10 +133,6 @@ spec:
                                   format: int32
                                   minimum: 1
                                   type: integer
-                                useRowsAsPermutations:
-                                  description: Whether each result row is treated
-                                    as a separate permutation.
-                                  type: boolean
                               required:
                               - dataprimeQuery
                               - timeframeMinutes
@@ -2343,7 +2339,7 @@ spec:
                               logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold,
                               tracingThreshold, tracingImmediate, flow, logsAnomaly,
                               metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold,
-                              analyticsImmediate, analyticsThreshold must be set
+                              analyticsResultCount, analyticsThreshold must be set
                             rule: '(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold)
                               ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) +
                               (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold)
@@ -2351,8 +2347,8 @@ spec:
                               ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly)
                               ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue)
                               ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold)
-                              ? 1 : 0) + (has(self.analyticsImmediate) ? 1 : 0) +
-                              (has(self.analyticsThreshold) ? 1 : 0) == 1'
+                              ? 1 : 0) + (has(self.analyticsResultCount) ? 1 : 0)
+                              + (has(self.analyticsThreshold) ? 1 : 0) == 1'
                         caseSettings:
                           description: |-
                             Settings for the cases opened by the alert (preview).

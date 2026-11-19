@@ -65,9 +65,23 @@ types:
       id: {readOnly: true}
       targetThresholdPercentage: {required: true}
       # The released CR does not require it. The API rejects an SLO without one.
-      sloTimeFrame: {name: timeFrame, optional: true}
-      requestBasedMetricSli: {name: requestBasedMetric}
-      windowBasedMetricSli: {name: windowBasedMetric}
+      # The contract text names values and fields that the released CR does not have, so these
+      # lines keep the released descriptions.
+      sloTimeFrame:
+        name: timeFrame
+        optional: true
+        description: Rolling evaluation window (fixed-duration lookback).
+      requestBasedMetricSli:
+        name: requestBasedMetric
+        description: Definition of a request-based SLI based on metrics
+      windowBasedMetricSli:
+        name: windowBasedMetric
+        description: Definition of a window-based SLI based on metrics
+      apmSli:
+        description: Definition of an APM-based SLI with automatic query generation
+      # The API's new SLI definition. Its APM latency threshold has an exclusive minimum, which
+      # the generator cannot express. The released CR has no such field.
+      sliDefinition: {skip: true}
   RequestBasedMetricSli:
     ignored:
       groupByLabels:
@@ -89,6 +103,7 @@ enums:
     rejected:
       - {value: SLO_TIME_FRAME_1_DAY, reason: the released CRD never accepted this value}
       - {value: SLO_TIME_FRAME_30_DAYS, reason: the released CRD never accepted this value}
+      - {value: SLO_TIME_FRAME_CALENDAR_MONTH, reason: the released CRD never accepted this value; adding it needs a live test}
     names: {SLO_TIME_FRAME_7_DAYS: 7d, SLO_TIME_FRAME_14_DAYS: 14d, SLO_TIME_FRAME_21_DAYS: 21d, SLO_TIME_FRAME_28_DAYS: 28d}
   WindowSloWindow:
     zero: unspecified

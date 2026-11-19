@@ -43,10 +43,10 @@ func minimalAlert(name string) *coralogixv1beta1.Alert {
 	}
 }
 
-func analyticsImmediateAlert(name string) *coralogixv1beta1.Alert {
+func analyticsResultCountAlert(name string) *coralogixv1beta1.Alert {
 	alert := minimalAlert(name)
 	alert.Spec.TypeDefinition = coralogixv1beta1.AlertTypeDefinition{
-		AnalyticsImmediate: &coralogixv1beta1.AnalyticsImmediate{
+		AnalyticsResultCount: &coralogixv1beta1.AnalyticsResultCount{
 			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count"},
 			TimeframeMinutes: 15,
 		},
@@ -101,8 +101,8 @@ var _ = Describe("Alert validation", func() {
 		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
 	})
 
-	It("should accept a minimal analytics immediate alert", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-immediate-minimal")
+	It("should accept a minimal analytics result count alert", func(ctx context.Context) {
+		alert := analyticsResultCountAlert("analytics-result-count-minimal")
 		alert.Spec.GroupByKeys = []string{"applicationname"}
 
 		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
@@ -119,46 +119,46 @@ var _ = Describe("Alert validation", func() {
 	})
 
 	It("should reject an alert with both analytics types set", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-both-types")
+		alert := analyticsResultCountAlert("analytics-both-types")
 		alert.Spec.TypeDefinition.AnalyticsThreshold = analyticsThresholdAlert("unused", analyticsThresholdRule("1", "p1")).Spec.TypeDefinition.AnalyticsThreshold
 
 		err := k8sClient.Create(ctx, alert)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("analyticsImmediate, analyticsThreshold must be set"))
+		Expect(err.Error()).To(ContainSubstring("analyticsResultCount, analyticsThreshold must be set"))
 	})
 
 	It("should reject an analytics alert combined with another alert type", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-with-logs-immediate")
+		alert := analyticsResultCountAlert("analytics-with-logs-immediate")
 		alert.Spec.TypeDefinition.LogsImmediate = &coralogixv1beta1.LogsImmediate{}
 
 		err := k8sClient.Create(ctx, alert)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("analyticsImmediate, analyticsThreshold must be set"))
+		Expect(err.Error()).To(ContainSubstring("analyticsResultCount, analyticsThreshold must be set"))
 	})
 
 	It("should reject an analytics alert with a zero time frame", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-zero-timeframe")
-		alert.Spec.TypeDefinition.AnalyticsImmediate.TimeframeMinutes = 0
+		alert := analyticsResultCountAlert("analytics-zero-timeframe")
+		alert.Spec.TypeDefinition.AnalyticsResultCount.TimeframeMinutes = 0
 
 		err := k8sClient.Create(ctx, alert)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("timeframeMinutes"))
 	})
 
-	It("should accept an analytics immediate alert with an evaluation period", func(ctx context.Context) {
+	It("should accept an analytics result count alert with an evaluation period", func(ctx context.Context) {
 		for i, period := range []int32{1, 10} {
-			alert := analyticsImmediateAlert(fmt.Sprintf("analytics-immediate-evaluation-period-%d", i))
-			alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes = ptr.To(period)
+			alert := analyticsResultCountAlert(fmt.Sprintf("analytics-result-count-evaluation-period-%d", i))
+			alert.Spec.TypeDefinition.AnalyticsResultCount.EvaluationPeriodMinutes = ptr.To(period)
 
 			Expect(k8sClient.Create(ctx, alert)).To(Succeed())
 			Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
 		}
 	})
 
-	It("should accept an analytics immediate alert whose evaluation period equals the time frame", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-immediate-evaluation-period-equals-timeframe")
-		alert.Spec.TypeDefinition.AnalyticsImmediate.TimeframeMinutes = 5
-		alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes = ptr.To[int32](5)
+	It("should accept an analytics result count alert whose evaluation period equals the time frame", func(ctx context.Context) {
+		alert := analyticsResultCountAlert("analytics-result-count-evaluation-period-equals-timeframe")
+		alert.Spec.TypeDefinition.AnalyticsResultCount.TimeframeMinutes = 5
+		alert.Spec.TypeDefinition.AnalyticsResultCount.EvaluationPeriodMinutes = ptr.To[int32](5)
 
 		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
 		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
@@ -173,8 +173,8 @@ var _ = Describe("Alert validation", func() {
 	})
 
 	It("should reject an analytics alert with an evaluation delay above three hours", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-evaluation-delay-too-big")
-		alert.Spec.TypeDefinition.AnalyticsImmediate.EvaluationDelayMs = ptr.To(int32(10800001))
+		alert := analyticsResultCountAlert("analytics-evaluation-delay-too-big")
+		alert.Spec.TypeDefinition.AnalyticsResultCount.EvaluationDelayMs = ptr.To(int32(10800001))
 
 		err := k8sClient.Create(ctx, alert)
 		Expect(err).To(HaveOccurred())
@@ -182,8 +182,8 @@ var _ = Describe("Alert validation", func() {
 	})
 
 	It("should reject an analytics alert with an empty query", func(ctx context.Context) {
-		alert := analyticsImmediateAlert("analytics-empty-query")
-		alert.Spec.TypeDefinition.AnalyticsImmediate.DataprimeQuery.Query = ""
+		alert := analyticsResultCountAlert("analytics-empty-query")
+		alert.Spec.TypeDefinition.AnalyticsResultCount.DataprimeQuery.Query = ""
 
 		err := k8sClient.Create(ctx, alert)
 		Expect(err).To(HaveOccurred())

@@ -1999,7 +1999,7 @@ Spec defines the alert.
         <td>
           Type of alert.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsImmediate) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set</li>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsResultCount) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsResultCount, analyticsThreshold must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -2140,10 +2140,10 @@ Type of alert.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsimmediate">analyticsImmediate</a></b></td>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsresultcount">analyticsResultCount</a></b></td>
         <td>object</td>
         <td>
-          Immediate alerts for DataPrime query results (preview).<br/>
+          Alerts on the number of rows a DataPrime query returns (preview).<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2252,12 +2252,12 @@ Type of alert.
 </table>
 
 
-### AlertSet.spec.alerts[index].spec.alertType.analyticsImmediate
+### AlertSet.spec.alerts[index].spec.alertType.analyticsResultCount
 <sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttype)</sup></sup>
 
 
 
-Immediate alerts for DataPrime query results (preview).
+Alerts on the number of rows a DataPrime query returns (preview).
 
 <table>
     <thead>
@@ -2269,7 +2269,7 @@ Immediate alerts for DataPrime query results (preview).
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsimmediatedataprimequery">dataprimeQuery</a></b></td>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsresultcountdataprimequery">dataprimeQuery</a></b></td>
         <td>object</td>
         <td>
           DataPrime query that triggers the alert when it returns results.<br/>
@@ -2308,25 +2308,18 @@ The API checks the range (1-1440). May exceed timeframeMinutes, in which case da
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsimmediatenodatapolicy">noDataPolicy</a></b></td>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsresultcountnodatapolicy">noDataPolicy</a></b></td>
         <td>object</td>
         <td>
           Policy for handling missing data.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>useRowsAsPermutations</b></td>
-        <td>boolean</td>
-        <td>
-          Whether each result row is treated as a separate permutation.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### AlertSet.spec.alerts[index].spec.alertType.analyticsImmediate.dataprimeQuery
-<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsimmediate)</sup></sup>
+### AlertSet.spec.alerts[index].spec.alertType.analyticsResultCount.dataprimeQuery
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsresultcount)</sup></sup>
 
 
 
@@ -2352,8 +2345,8 @@ DataPrime query that triggers the alert when it returns results.
 </table>
 
 
-### AlertSet.spec.alerts[index].spec.alertType.analyticsImmediate.noDataPolicy
-<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsimmediate)</sup></sup>
+### AlertSet.spec.alerts[index].spec.alertType.analyticsResultCount.noDataPolicy
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsresultcount)</sup></sup>
 
 
 
@@ -19969,7 +19962,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -20160,7 +20153,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -20697,7 +20690,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -20888,7 +20881,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -21225,7 +21218,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -21262,7 +21255,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -21453,7 +21446,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -21490,7 +21483,7 @@ Rule.
         <td><b>names</b></td>
         <td>[]string</td>
         <td>
-          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+          The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -21543,7 +21536,7 @@ TCOTracesPoliciesTagRule is the TagRule object of the API.
         <td><b>values</b></td>
         <td>[]string</td>
         <td>
-          The tag value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values.
+          The tag value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator.
 The API holds the values as one string, joined by ",".<br/>
         </td>
         <td>true</td>
@@ -22450,7 +22443,7 @@ AlertSpec defines the desired state of a Coralogix Alert. For more info check - 
         <td>
           Type of alert.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsImmediate) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set</li>
+            <i>Validations</i>:<li>(has(self.logsImmediate) ? 1 : 0) + (has(self.logsThreshold) ? 1 : 0) + (has(self.logsRatioThreshold) ? 1 : 0) + (has(self.logsTimeRelativeThreshold) ? 1 : 0) + (has(self.metricThreshold) ? 1 : 0) + (has(self.tracingThreshold) ? 1 : 0) + (has(self.tracingImmediate) ? 1 : 0) + (has(self.flow) ? 1 : 0) + (has(self.logsAnomaly) ? 1 : 0) + (has(self.metricAnomaly) ? 1 : 0) + (has(self.logsNewValue) ? 1 : 0) + (has(self.logsUniqueCount) ? 1 : 0) + (has(self.sloThreshold) ? 1 : 0) + (has(self.analyticsResultCount) ? 1 : 0) + (has(self.analyticsThreshold) ? 1 : 0) == 1: Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsResultCount, analyticsThreshold must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -22591,10 +22584,10 @@ Type of alert.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertspecalerttypeanalyticsimmediate">analyticsImmediate</a></b></td>
+        <td><b><a href="#alertspecalerttypeanalyticsresultcount">analyticsResultCount</a></b></td>
         <td>object</td>
         <td>
-          Immediate alerts for DataPrime query results (preview).<br/>
+          Alerts on the number of rows a DataPrime query returns (preview).<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -22703,12 +22696,12 @@ Type of alert.
 </table>
 
 
-### Alert.spec.alertType.analyticsImmediate
+### Alert.spec.alertType.analyticsResultCount
 <sup><sup>[↩ Parent](#alertspecalerttype)</sup></sup>
 
 
 
-Immediate alerts for DataPrime query results (preview).
+Alerts on the number of rows a DataPrime query returns (preview).
 
 <table>
     <thead>
@@ -22720,7 +22713,7 @@ Immediate alerts for DataPrime query results (preview).
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#alertspecalerttypeanalyticsimmediatedataprimequery">dataprimeQuery</a></b></td>
+        <td><b><a href="#alertspecalerttypeanalyticsresultcountdataprimequery">dataprimeQuery</a></b></td>
         <td>object</td>
         <td>
           DataPrime query that triggers the alert when it returns results.<br/>
@@ -22759,25 +22752,18 @@ The API checks the range (1-1440). May exceed timeframeMinutes, in which case da
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#alertspecalerttypeanalyticsimmediatenodatapolicy">noDataPolicy</a></b></td>
+        <td><b><a href="#alertspecalerttypeanalyticsresultcountnodatapolicy">noDataPolicy</a></b></td>
         <td>object</td>
         <td>
           Policy for handling missing data.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>useRowsAsPermutations</b></td>
-        <td>boolean</td>
-        <td>
-          Whether each result row is treated as a separate permutation.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### Alert.spec.alertType.analyticsImmediate.dataprimeQuery
-<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsimmediate)</sup></sup>
+### Alert.spec.alertType.analyticsResultCount.dataprimeQuery
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsresultcount)</sup></sup>
 
 
 
@@ -22803,8 +22789,8 @@ DataPrime query that triggers the alert when it returns results.
 </table>
 
 
-### Alert.spec.alertType.analyticsImmediate.noDataPolicy
-<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsimmediate)</sup></sup>
+### Alert.spec.alertType.analyticsResultCount.noDataPolicy
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsresultcount)</sup></sup>
 
 
 

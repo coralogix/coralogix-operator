@@ -40,46 +40,44 @@ func analyticsAlertSpec(typeDefinition AlertTypeDefinition) *AlertSpec {
 	}
 }
 
-func TestExtractAlertDefPropertiesAnalyticsImmediate(t *testing.T) {
+func TestExtractAlertDefPropertiesAnalyticsResultCount(t *testing.T) {
 	for _, tc := range []struct {
-		name      string
-		immediate *AnalyticsImmediate
-		want      *alerts.AnalyticsImmediateType
+		name        string
+		resultCount *AnalyticsResultCount
+		want        *alerts.AnalyticsResultCountType
 	}{
 		{
 			name: "minimal leaves optionals unset",
-			immediate: &AnalyticsImmediate{
+			resultCount: &AnalyticsResultCount{
 				DataprimeQuery:   DataprimeQuery{Query: "source logs | count"},
 				TimeframeMinutes: 15,
 			},
-			want: &alerts.AnalyticsImmediateType{
+			want: &alerts.AnalyticsResultCountType{
 				DataprimeQuery:   &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
 				TimeframeMinutes: ptr.To[int32](15),
 			},
 		},
 		{
 			name: "explicit zero values are sent",
-			immediate: &AnalyticsImmediate{
-				DataprimeQuery:        DataprimeQuery{Query: "source logs | count"},
-				TimeframeMinutes:      15,
-				UseRowsAsPermutations: ptr.To(false),
-				EvaluationDelayMs:     ptr.To[int32](0),
+			resultCount: &AnalyticsResultCount{
+				DataprimeQuery:    DataprimeQuery{Query: "source logs | count"},
+				TimeframeMinutes:  15,
+				EvaluationDelayMs: ptr.To[int32](0),
 			},
-			want: &alerts.AnalyticsImmediateType{
-				DataprimeQuery:        &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
-				TimeframeMinutes:      ptr.To[int32](15),
-				UseRowsAsPermutations: ptr.To(false),
-				EvaluationDelayMs:     ptr.To[int32](0),
+			want: &alerts.AnalyticsResultCountType{
+				DataprimeQuery:    &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
+				TimeframeMinutes:  ptr.To[int32](15),
+				EvaluationDelayMs: ptr.To[int32](0),
 			},
 		},
 		{
 			name: "evaluation period is sent when set",
-			immediate: &AnalyticsImmediate{
+			resultCount: &AnalyticsResultCount{
 				DataprimeQuery:          DataprimeQuery{Query: "source logs | count"},
 				TimeframeMinutes:        15,
 				EvaluationPeriodMinutes: ptr.To[int32](5),
 			},
-			want: &alerts.AnalyticsImmediateType{
+			want: &alerts.AnalyticsResultCountType{
 				DataprimeQuery:          &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
 				TimeframeMinutes:        ptr.To[int32](15),
 				EvaluationPeriodMinutes: ptr.To[int32](5),
@@ -87,18 +85,16 @@ func TestExtractAlertDefPropertiesAnalyticsImmediate(t *testing.T) {
 		},
 		{
 			name: "full",
-			immediate: &AnalyticsImmediate{
-				DataprimeQuery:        DataprimeQuery{Query: "source logs | count"},
-				TimeframeMinutes:      45,
-				UseRowsAsPermutations: ptr.To(true),
-				EvaluationDelayMs:     ptr.To[int32](120000),
-				NoDataPolicy:          &NoDataPolicy{State: NoDataPolicyStateAlerting, AutoRetireSeconds: ptr.To[int32](3600)},
+			resultCount: &AnalyticsResultCount{
+				DataprimeQuery:    DataprimeQuery{Query: "source logs | count"},
+				TimeframeMinutes:  45,
+				EvaluationDelayMs: ptr.To[int32](120000),
+				NoDataPolicy:      &NoDataPolicy{State: NoDataPolicyStateAlerting, AutoRetireSeconds: ptr.To[int32](3600)},
 			},
-			want: &alerts.AnalyticsImmediateType{
-				DataprimeQuery:        &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
-				TimeframeMinutes:      ptr.To[int32](45),
-				UseRowsAsPermutations: ptr.To(true),
-				EvaluationDelayMs:     ptr.To[int32](120000),
+			want: &alerts.AnalyticsResultCountType{
+				DataprimeQuery:    &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
+				TimeframeMinutes:  ptr.To[int32](45),
+				EvaluationDelayMs: ptr.To[int32](120000),
 				NoDataPolicy: &alerts.NoDataPolicy{
 					State:             alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING.Ptr(),
 					AutoRetireSeconds: ptr.To[int32](3600),
@@ -107,13 +103,13 @@ func TestExtractAlertDefPropertiesAnalyticsImmediate(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			props, err := analyticsAlertSpec(AlertTypeDefinition{AnalyticsImmediate: tc.immediate}).
+			props, err := analyticsAlertSpec(AlertTypeDefinition{AnalyticsResultCount: tc.resultCount}).
 				ExtractAlertDefProperties(&GetResourceRefProperties{})
 			require.NoError(t, err)
-			require.Equal(t, alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_IMMEDIATE, props.GetType())
+			require.Equal(t, alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_RESULT_COUNT, props.GetType())
 			require.Equal(t, []string{"applicationname"}, props.GroupByKeys)
 			require.Nil(t, props.AnalyticsThreshold)
-			require.Equal(t, tc.want, props.AnalyticsImmediate)
+			require.Equal(t, tc.want, props.AnalyticsResultCount)
 		})
 	}
 }
@@ -130,7 +126,7 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 		}}).ExtractAlertDefProperties(&GetResourceRefProperties{})
 		require.NoError(t, err)
 		require.Equal(t, alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_THRESHOLD, props.GetType())
-		require.Nil(t, props.AnalyticsImmediate)
+		require.Nil(t, props.AnalyticsResultCount)
 		require.Equal(t, &alerts.AnalyticsThresholdType{
 			DataprimeQuery:   &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count as c")},
 			TimeframeMinutes: ptr.To[int32](30),
@@ -370,8 +366,8 @@ func TestExtractAlertDefPropertiesCaseSettingsForEveryAlertType(t *testing.T) {
 			SloDefinition: SloDefinition{SloRef: SloRef{BackendRef: &SloBackendRef{ID: ptr.To("slo-1")}}},
 			ErrorBudget:   &ErrorBudget{},
 		}},
-		"analyticsImmediate": {AnalyticsImmediate: &AnalyticsImmediate{}},
-		"analyticsThreshold": {AnalyticsThreshold: &AnalyticsThreshold{}},
+		"analyticsResultCount": {AnalyticsResultCount: &AnalyticsResultCount{}},
+		"analyticsThreshold":   {AnalyticsThreshold: &AnalyticsThreshold{}},
 	} {
 		t.Run(name, func(t *testing.T) {
 			spec := analyticsAlertSpec(typeDefinition)

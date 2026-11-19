@@ -317,6 +317,10 @@ type Field struct {
 	// JoinedBy shows a string that holds several values as a list. Create and Update join the items
 	// with this separator. Mode existing only.
 	JoinedBy string `yaml:"joinedBy"`
+	// Description replaces the contract description of the CR field, when the contract text does
+	// not fit the released CR, such as a deprecation that points at a field the CR does not have.
+	// Mode existing only.
+	Description string `yaml:"description"`
 }
 
 // Enum records the rejected API values and the custom resource spellings of an enum. The accepted
@@ -460,10 +464,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && !field.Inline && field.JoinedBy == "" {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.Inline || field.JoinedBy != "") {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "") {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Skip && f.Mode != ModeExisting {
@@ -546,8 +550,11 @@ func (f *File) check() error {
 		if f.Mode == ModeNew && field.ReadOnly {
 			return fmt.Errorf("%s.readOnly: a new kind follows the contract", line)
 		}
-		if f.Mode == ModeNew && (field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0) {
+		if f.Mode == ModeNew && (field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Description != "") {
 			return fmt.Errorf("%s: a new kind follows the contract", line)
+		}
+		if field.Description != "" && strings.TrimSpace(field.Description) == "" {
+			return fmt.Errorf("%s.description: the description is blank", line)
 		}
 		if field.Name != "" && !validJSONName(field.Name) {
 			return fmt.Errorf("%s.name: %q is not a CR property name", line, field.Name)
