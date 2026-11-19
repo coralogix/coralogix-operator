@@ -20,6 +20,7 @@ package utils
 // The kinds that the operator generator writes.
 const (
 	DashboardKind         = "Dashboard"
+	DashboardsFolderKind  = "DashboardsFolder"
 	Events2MetricKind     = "Events2Metric"
 	GlobalRouterKind      = "GlobalRouter"
 	PresetKind            = "Preset"

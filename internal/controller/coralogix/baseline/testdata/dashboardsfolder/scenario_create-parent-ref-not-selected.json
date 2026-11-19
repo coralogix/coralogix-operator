@@ -7,38 +7,22 @@
         "name": "parent"
       }
     },
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/dashboards/folders/v1",
-        "body": {
-          "folder": {
-            "name": "Team dashboards",
-            "parentId": "00000000-0000-4000-8000-00000000df01"
-          }
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
-      "finalizers": [
-        "dashboards-folder.coralogix.com/finalizer"
-      ],
+      "finalizers": [],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteCreationFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "id": "<id-1>",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   }

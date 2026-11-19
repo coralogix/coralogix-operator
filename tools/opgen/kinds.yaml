@@ -22,3 +22,5 @@ kinds:
     resource: Slo
   - kind: Dashboard
     resource: Dashboard
+  - kind: DashboardsFolder
+    resource: DashboardFolder

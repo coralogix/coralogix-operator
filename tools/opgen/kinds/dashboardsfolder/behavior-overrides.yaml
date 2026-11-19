@@ -1,0 +1,30 @@
+resource: DashboardFolder
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.name: {inferred: false}
+    spec:
+      remove:
+        - '+kubebuilder:validation:XValidation:rule="!(has(self.parentFolderId) && has(self.parentFolderRef))",message="Only one of parentFolderId or parentFolderRef can be set"'
+      add:
+        - '+kubebuilder:validation:XValidation:rule="!(has(self.parentFolderId) && has(self.parentFolderRef))",message="Only one of parentFolderID or parentFolderRef can be declared at the same time"'
+    spec.customId:
+      inferred: false
+      add:
+        - '+kubebuilder:validation:Pattern=`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$`'
+        - '+kubebuilder:validation:XValidation:rule="self == oldSelf",message="spec.customId is immutable"'
+api:
+  requestWrapper: folder
+  createResponseOnlyIDProperty: folderId
+  idProperty: id
+  clientSetID: true
+  updateIDInBody: true
+  requestValues:
+    create: {requestId: {source: omit}}
+    update: {requestId: {source: omit}}
+types:
+  DashboardFolder:
+    fields:
+      id: {name: customId}
+      parentId: {name: parentFolderId, ref: {kind: DashboardsFolder, form: split, resourceField: parentFolderRef}}

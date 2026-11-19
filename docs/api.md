@@ -12615,9 +12615,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-DashboardsFolder is the Schema for the DashboardsFolders API.
-
-**Added in v0.4.0**
+DashboardsFolder is the Schema for the dashboardsfolders API.
 
 <table>
     <thead>
@@ -12649,8 +12647,7 @@ DashboardsFolder is the Schema for the DashboardsFolders API.
         <td><b><a href="#dashboardsfolderspec">spec</a></b></td>
         <td>object</td>
         <td>
-          DashboardsFolderSpec defines the desired state of Dashboard Folder.
-See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/<br/>
+          DashboardsFolderSpec defines the desired state of a DashboardsFolder.<br/>
           <br/>
             <i>Validations</i>:<li>!(has(self.parentFolderId) && has(self.parentFolderRef)): Only one of parentFolderID or parentFolderRef can be declared at the same time</li>
         </td>
@@ -12659,7 +12656,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         <td><b><a href="#dashboardsfolderstatus">status</a></b></td>
         <td>object</td>
         <td>
-          DashboardsFolderStatus defines the observed state of DashboardsFolder.<br/>
+          DashboardsFolderStatus defines the observed state of a DashboardsFolder.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12671,8 +12668,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
 
 
 
-DashboardsFolderSpec defines the desired state of Dashboard Folder.
-See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-started/
+DashboardsFolderSpec defines the desired state of a DashboardsFolder.
 
 <table>
     <thead>
@@ -12687,14 +12683,14 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Display name. The service rejects a folder without a name, with an empty name, or with a name longer than 100 characters. Folder names are unique in the company.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>customId</b></td>
         <td>string</td>
         <td>
-          A custom ID for the folder. If not provided, a random UUID will be generated. The custom ID is immutable.<br/>
+          Unique identifier. A UUID.<br/>
           <br/>
             <i>Validations</i>:<li>self == oldSelf: spec.customId is immutable</li>
         </td>
@@ -12703,14 +12699,15 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
         <td><b>parentFolderId</b></td>
         <td>string</td>
         <td>
-          A reference to an existing folder by its backend's ID.<br/>
+          The parent id. A UUID that must differ from this folder's own id.
+It holds the backend id of a DashboardsFolder.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#dashboardsfolderspecparentfolderref">parentFolderRef</a></b></td>
         <td>object</td>
         <td>
-          A reference to an existing DashboardsFolder CR.<br/>
+          It refers to a DashboardsFolder custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12722,7 +12719,7 @@ See also https://coralogix.com/docs/user-guides/custom-dashboards/getting-starte
 
 
 
-A reference to an existing DashboardsFolder CR.
+It refers to a DashboardsFolder custom resource.
 
 <table>
     <thead>
@@ -12756,7 +12753,7 @@ A reference to an existing DashboardsFolder CR.
 
 
 
-DashboardsFolderStatus defines the observed state of DashboardsFolder.
+DashboardsFolderStatus defines the observed state of a DashboardsFolder.
 
 <table>
     <thead>

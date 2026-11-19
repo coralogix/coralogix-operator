@@ -11,6 +11,7 @@
         "path": "/mgmt/openapi/5/dashboards/folders/v1",
         "body": {
           "folder": {
+            "id": "00000000-0000-4000-8000-00000000df11",
             "name": "Team dashboards"
           }
         },
@@ -34,7 +35,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "<id-1>",
+        "id": "00000000-0000-4000-8000-00000000df11",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -47,7 +48,7 @@
         "path": "/mgmt/openapi/5/dashboards/folders/v1",
         "body": {
           "folder": {
-            "id": "<id-1>",
+            "id": "00000000-0000-4000-8000-00000000df11",
             "name": "Team dashboards"
           }
         },
@@ -71,7 +72,7 @@
             "type": "RemoteSynced"
           }
         ],
-        "id": "<id-1>",
+        "id": "00000000-0000-4000-8000-00000000df11",
         "printableStatus": "RemoteSynced"
       }
     }

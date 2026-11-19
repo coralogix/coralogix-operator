@@ -1,0 +1,21 @@
+fixtures:
+  - kind: DashboardsFolder
+    suffix: -parent
+    statusField: ID
+    spec:
+      name: '@{run}-parent'
+substitutions:
+  dashboards-folder-parent-sample: '@{run}-parent'
+values:
+  customId: 00000000-0000-4000-8000-0000000e2e01
+  parentFolderRef: {name: dashboards-folder-parent-sample}
+omit: [parentFolderId]
+update:
+  field: name
+  value: e2e-dashboards-folder-updated
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+  field: name
+  value: '@{run}-updated'

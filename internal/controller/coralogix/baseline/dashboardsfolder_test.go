@@ -53,7 +53,7 @@ func init() {
 		resource: "dashboardsfolders",
 		newFake:  newDashboardsFolderFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.DashboardsFolderReconciler{DashboardsFoldersClient: cs.DashboardFolders(), Interval: reconcileInterval}
+			return &v1alpha1controllers.DashboardsFolderReconciler{Client: cs.DashboardFolders(), Interval: reconcileInterval}
 		},
 		scenarios: dashboardsFolderScenarios,
 		admission: dashboardsFolderAdmission(),

@@ -35,7 +35,6 @@ const (
 	IntegrationKind            = "Integration"
 	AlertSchedulerKind         = "AlertScheduler"
 	PrometheusRuleKind         = "PrometheusRule"
-	DashboardsFolderKind       = "DashboardsFolder"
 	ConnectorKind              = "Connector"
 	ArchiveLogsTargetKind      = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind   = "ArchiveMetricsTarget"
