@@ -1,0 +1,140 @@
+{
+  "custom id": {
+    "accepted": true
+  },
+  "custom id and a parent ref": {
+    "accepted": true
+  },
+  "custom id in upper case": {
+    "accepted": true
+  },
+  "custom id of version 1": {
+    "accepted": true
+  },
+  "custom id of version 5": {
+    "accepted": true
+  },
+  "custom id of version 7": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.customId",
+        "message": "Invalid value: \"0190a8b7-c5d9-7c08-bb27-e3de0837a8d2\": spec.customId in body should match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'"
+      }
+    ]
+  },
+  "custom id that is not a UUID": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.customId",
+        "message": "Invalid value: \"not-a-uuid\": spec.customId in body should match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'"
+      }
+    ]
+  },
+  "custom id with variant c": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.customId",
+        "message": "Invalid value: \"efa8b720-c5d9-4c08-cb27-e3de0837a8d2\": spec.customId in body should match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'"
+      }
+    ]
+  },
+  "empty custom id": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.customId",
+        "message": "Invalid value: \"\": spec.customId in body should match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'"
+      }
+    ]
+  },
+  "empty name": {
+    "accepted": true
+  },
+  "empty parent id": {
+    "accepted": true
+  },
+  "empty parent id and parent ref": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec",
+        "message": "Invalid value: \"object\": Only one of parentFolderID or parentFolderRef can be declared at the same time"
+      }
+    ]
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name of 101 characters": {
+    "accepted": true
+  },
+  "name of spaces": {
+    "accepted": true
+  },
+  "name only": {
+    "accepted": true
+  },
+  "no name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "parent id": {
+    "accepted": true
+  },
+  "parent id and parent ref": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec",
+        "message": "Invalid value: \"object\": Only one of parentFolderID or parentFolderRef can be declared at the same time"
+      }
+    ]
+  },
+  "parent id that is not a UUID": {
+    "accepted": true
+  },
+  "parent ref": {
+    "accepted": true
+  },
+  "parent ref in a namespace": {
+    "accepted": true
+  },
+  "parent ref with an empty name": {
+    "accepted": true
+  },
+  "parent ref without a name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.parentFolderRef.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "unknown field is not an error": {
+    "accepted": true
+  }
+}

@@ -1,0 +1,463 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, replace again, delete, delete again, replace after delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-a"
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{id}}",
+              "name": "cxo-fidelity-df-a2"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{id}}",
+              "name": "cxo-fidelity-df-a2"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{id}}"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{id}}",
+              "name": "cxo-fidelity-df-a3"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a parent, a child, moving the child",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-p"
+            }
+          },
+          "capture": "parent"
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-c",
+              "parentId": "{{parent}}"
+            }
+          },
+          "capture": "child"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{child}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-c"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{child}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-c",
+              "parentId": "{{parent}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{child}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-c",
+              "parentId": ""
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{child}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{child}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{parent}}"
+        }
+      ]
+    },
+    {
+      "name": "a parent id that is an empty string",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-e",
+              "parentId": ""
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "delete a parent that has a child",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-dp"
+            }
+          },
+          "capture": "parent"
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-dc",
+              "parentId": "{{parent}}"
+            }
+          },
+          "capture": "child"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{parent}}",
+          "allowForbidden": true
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{child}}"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{parent}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{child}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{parent}}"
+        }
+      ]
+    },
+    {
+      "name": "a custom id",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "00000000-0000-4000-8000-00000000df01",
+              "name": "cxo-fidelity-df-custom"
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/{{id}}"
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "00000000-0000-4000-8000-00000000df01",
+              "name": "cxo-fidelity-df-custom2"
+            }
+          },
+          "capture": "other"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "rejected names and parents",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": ""
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {}
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {}
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "   "
+            }
+          },
+          "capture": "blank"
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-r",
+              "parentId": "00000000-0000-4000-8000-00000000df02"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-r",
+              "parentId": "not-a-uuid"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{id}}",
+              "name": "cxo-fidelity-df-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "parentId": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{id}}",
+              "name": ""
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "a cycle and a duplicate name on replace",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-ca"
+            }
+          },
+          "capture": "a"
+        },
+        {
+          "method": "POST",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "name": "cxo-fidelity-df-cb",
+              "parentId": "{{a}}"
+            }
+          },
+          "capture": "b"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{a}}",
+              "name": "cxo-fidelity-df-ca",
+              "parentId": "{{b}}"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "{{b}}",
+              "name": "cxo-fidelity-df-ca",
+              "parentId": "{{a}}"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{b}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/{{a}}"
+        }
+      ]
+    },
+    {
+      "name": "ids that are unknown or malformed",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/00000000-0000-4000-8000-00000000df03"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/00000000-0000-4000-8000-00000000df03"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "00000000-0000-4000-8000-00000000df03",
+              "name": "cxo-fidelity-df-u"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/dashboards/folders/v1/not-a-uuid"
+        },
+        {
+          "method": "DELETE",
+          "path": "/dashboards/folders/v1/not-a-uuid"
+        },
+        {
+          "method": "PUT",
+          "path": "/dashboards/folders/v1",
+          "body": {
+            "folder": {
+              "id": "not-a-uuid",
+              "name": "cxo-fidelity-df-u"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,429 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, replace again, delete, delete again, replace after delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{id}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{id}}",
+              "name": "cxo-fidelity-df-a",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{id}}",
+              "name": "cxo-fidelity-df-a2",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard folder with id DashboardFolderId({{id}}) does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: folder with id DashboardFolderId({{id}}) does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: folder with id DashboardFolderId({{id}}) does not exist"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a parent, a child, moving the child",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{parent}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{child}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-c",
+              "parentId": "{{parent}}",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-c",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-c",
+              "parentId": "{{parent}}",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-c",
+              "parentId": "{{parent}}",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a parent id that is an empty string",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete a parent that has a child",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{parent}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{child}}"
+          }
+        },
+        {
+          "status": 403,
+          "response": {
+            "code": 403,
+            "message": "Permission Denied: Trying to delete a non empty folder DashboardFolderId({{parent}})"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{child}}",
+              "name": "cxo-fidelity-df-dc",
+              "parentId": "{{parent}}",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{parent}}",
+              "name": "cxo-fidelity-df-dp",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a custom id",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{id}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folder": {
+              "id": "{{id}}",
+              "name": "cxo-fidelity-df-custom",
+              "restrictedGroupIds": []
+            }
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: folder with id DashboardFolderId({{id}}) or name cxo-fidelity-df-custom2 already exist in your company"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "rejected names and parents",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: folder name cannot be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: folder name not found"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: folder is required"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{blank}}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: folder name length is bigger than 100"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{id}}"
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: folder with id DashboardFolderId(\u003cid\u003e) or name cxo-fidelity-df-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx already exist in your company"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: parent folder id DashboardFolderId(00000000-0000-4000-8000-00000000df02) for company CompanyId(\u003credacted\u003e) does not exist"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: folder_id and parent_id can't be equal ({{id}})"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: folder name cannot be empty"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a cycle and a duplicate name on replace",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{a}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "folderId": "{{b}}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: cannot move folder DashboardFolderId({{a}}) under its own descendant DashboardFolderId({{b}})"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "ids that are unknown or malformed",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: dashboard folder with id DashboardFolderId(00000000-0000-4000-8000-00000000df03) does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: folder with id DashboardFolderId(00000000-0000-4000-8000-00000000df03) does not exist"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: folder with id DashboardFolderId(00000000-0000-4000-8000-00000000df03) does not exist"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: invalid uuid"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+[
+  {
+    "step": "create under a parent CR of another namespace",
+    "spec": {
+      "name": "Team dashboards",
+      "parentFolderRef": {
+        "name": "parent",
+        "namespace": "dashboardsfolder-create-parent-ref-other-namespace-folders"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dashboards/folders/v1",
+        "body": {
+          "folder": {
+            "name": "Team dashboards",
+            "parentId": "00000000-0000-4000-8000-00000000df02"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "dashboards-folder.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

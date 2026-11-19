@@ -177,7 +177,10 @@ type harness struct {
 type step struct {
 	Step string `json:"step"`
 	// Spec is the spec that the step applied, if any.
-	Spec     any               `json:"spec,omitempty"`
+	Spec any `json:"spec,omitempty"`
+	// Rejected is the answer of the API server to an update of the CR that it refused. Such a
+	// step runs no reconcile, so its Result is empty, as in a step that only records the remote.
+	Rejected *admissionResult  `json:"rejected,omitempty"`
 	Requests []recordedRequest `json:"requests"`
 	Result   reconcileResult   `json:"result"`
 	// Object is the CR after the step. It is null when the CR no longer exists.
@@ -255,6 +258,26 @@ func (h *harness) SetSpec(name string, spec map[string]any) {
 		h.t.Fatalf("%s: update: %v", name, err)
 	}
 	h.reconcile(name, spec)
+}
+
+// SetSpecRejected tries to replace the spec of the CR, and records that the API server refuses it
+// and why. It runs no reconcile: a refused update starts none.
+func (h *harness) SetSpecRejected(name string, spec map[string]any) {
+	h.t.Helper()
+	obj := h.get()
+	obj.Object["spec"] = spec
+	err := h.client.Update(context.Background(), obj)
+	if err == nil {
+		h.t.Fatalf("%s: the API server accepted the update", name)
+	}
+	rejected := admissionAnswer(h.t, name, err)
+	h.steps = append(h.steps, step{
+		Step:     name,
+		Spec:     spec,
+		Rejected: &rejected,
+		Requests: h.server.takeRequests(),
+		Object:   h.observe(),
+	})
 }
 
 // Reconcile reconciles once, as a periodic resync or a retry does.
