@@ -62,6 +62,9 @@ type fidelityStep struct {
 	Body any    `json:"body,omitempty"`
 	// Capture names the id in the response, for use in later steps.
 	Capture string `json:"capture,omitempty"`
+	// AllowForbidden records a 403 answer instead of stopping. By default the recorder reads a 403
+	// as a missing permission. Set it on a step where the API itself refuses with 403.
+	AllowForbidden bool `json:"allowForbidden,omitempty"`
 }
 
 type fidelityCases struct {
@@ -170,7 +173,9 @@ func TestRecordFidelity(t *testing.T) {
 
 	var created []string
 	t.Cleanup(func() {
-		for _, id := range created {
+		// The last resource goes first, so a child is deleted before its parent.
+		for i := len(created) - 1; i >= 0; i-- {
+			id := created[i]
 			status, resp, err := sendRecordRequest(base, apiKey, http.MethodDelete, k.fidelity.deletePath(id), nil)
 			if problem := cleanupProblem(status, resp, err); problem != "" {
 				t.Errorf("cleanup: DELETE %s %s; delete it by hand", k.fidelity.deletePath(id), problem)
@@ -187,7 +192,7 @@ func TestRecordFidelity(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s: %s %s: %v", c.Name, s.Method, s.Path, err)
 			}
-			if status == http.StatusUnauthorized || status == http.StatusForbidden {
+			if status == http.StatusUnauthorized || (status == http.StatusForbidden && !s.AllowForbidden) {
 				t.Fatalf("%s: %s %s returned %d. The API key needs permission to manage %s.", c.Name, s.Method, s.Path, status, k.name)
 			}
 			if s.Capture != "" && succeeded(status) {
