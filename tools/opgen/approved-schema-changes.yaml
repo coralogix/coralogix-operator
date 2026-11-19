@@ -1,13 +1,4 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes:
-  - kind: SLO
-    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec
-    before: c2ab24e31bf208a7
-    after: 84e327debe6d0434
-    reason: >-
-      The new field sliDefinition replaces sliType, so sliType is no longer required, and the spec
-      has a rule that exactly one of the two is set. Every CR that was valid stays valid: a CR
-      with sliType and no sliDefinition passes both rules. The productType apm rule also accepts
-      a sliDefinition.
+changes: []
