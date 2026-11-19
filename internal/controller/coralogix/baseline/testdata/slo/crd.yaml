@@ -91,6 +91,242 @@ spec:
                 - unspecified
                 - apm
                 type: string
+              sliDefinition:
+                properties:
+                  requestBased:
+                    properties:
+                      apm:
+                        properties:
+                          availability:
+                            type: object
+                          latency:
+                            properties:
+                              thresholdMs:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            required:
+                            - thresholdMs
+                            type: object
+                          selector:
+                            properties:
+                              filters:
+                                items:
+                                  properties:
+                                    key:
+                                      minLength: 1
+                                      type: string
+                                    matchOperator:
+                                      enum:
+                                      - unspecified
+                                      - is
+                                      - startsWith
+                                      - endsWith
+                                      - includes
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - key
+                                  type: object
+                                maxItems: 20
+                                type: array
+                              groupingKeys:
+                                items:
+                                  maxLength: 256
+                                  minLength: 1
+                                  type: string
+                                maxItems: 6
+                                type: array
+                              services:
+                                items:
+                                  maxLength: 256
+                                  minLength: 1
+                                  type: string
+                                maxItems: 1
+                                minItems: 1
+                                type: array
+                            required:
+                            - services
+                            type: object
+                        required:
+                        - selector
+                        type: object
+                      custom:
+                        properties:
+                          goodEvents:
+                            properties:
+                              query:
+                                minLength: 1
+                                type: string
+                            required:
+                            - query
+                            type: object
+                          groupByLabels:
+                            items:
+                              type: string
+                            type: array
+                          totalEvents:
+                            properties:
+                              query:
+                                minLength: 1
+                                type: string
+                            required:
+                            - query
+                            type: object
+                        required:
+                        - goodEvents
+                        - totalEvents
+                        type: object
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of apm, custom must be set
+                      rule: '(has(self.apm) ? 1 : 0) + (has(self.custom) ? 1 : 0)
+                        == 1'
+                  windowBased:
+                    properties:
+                      apm:
+                        properties:
+                          availability:
+                            properties:
+                              thresholdRatio:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            required:
+                            - thresholdRatio
+                            type: object
+                          latency:
+                            properties:
+                              average:
+                                type: object
+                              quantile:
+                                properties:
+                                  percentile:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    default: "0"
+                                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                    x-kubernetes-int-or-string: true
+                                type: object
+                              thresholdMs:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                            required:
+                            - thresholdMs
+                            type: object
+                          selector:
+                            properties:
+                              filters:
+                                items:
+                                  properties:
+                                    key:
+                                      minLength: 1
+                                      type: string
+                                    matchOperator:
+                                      enum:
+                                      - unspecified
+                                      - is
+                                      - startsWith
+                                      - endsWith
+                                      - includes
+                                      type: string
+                                    values:
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - key
+                                  type: object
+                                maxItems: 20
+                                type: array
+                              groupingKeys:
+                                items:
+                                  maxLength: 256
+                                  minLength: 1
+                                  type: string
+                                maxItems: 6
+                                type: array
+                              services:
+                                items:
+                                  maxLength: 256
+                                  minLength: 1
+                                  type: string
+                                maxItems: 1
+                                minItems: 1
+                                type: array
+                            required:
+                            - services
+                            type: object
+                        required:
+                        - selector
+                        type: object
+                        x-kubernetes-validations:
+                        - message: Exactly one of availability, latency must be set
+                          rule: '(has(self.availability) ? 1 : 0) + (has(self.latency)
+                            ? 1 : 0) == 1'
+                      custom:
+                        properties:
+                          comparisonOperator:
+                            enum:
+                            - greaterThan
+                            - greaterThanOrEquals
+                            - lessThan
+                            - lessThanOrEquals
+                            type: string
+                          query:
+                            properties:
+                              query:
+                                minLength: 1
+                                type: string
+                            required:
+                            - query
+                            type: object
+                          threshold:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                            x-kubernetes-int-or-string: true
+                        required:
+                        - comparisonOperator
+                        - query
+                        - threshold
+                        type: object
+                      missingDataStrategy:
+                        default: uncounted
+                        enum:
+                        - uncounted
+                        - good
+                        - bad
+                        type: string
+                      window:
+                        enum:
+                        - 1m
+                        - 5m
+                        type: string
+                    required:
+                    - window
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of custom, apm must be set
+                      rule: '(has(self.custom) ? 1 : 0) + (has(self.apm) ? 1 : 0)
+                        == 1'
+                type: object
+                x-kubernetes-validations:
+                - message: Exactly one of requestBased, windowBased must be set
+                  rule: '(has(self.requestBased) ? 1 : 0) + (has(self.windowBased)
+                    ? 1 : 0) == 1'
               sliType:
                 properties:
                   apmSli:
@@ -245,13 +481,16 @@ spec:
                 type: object
             required:
             - name
-            - sliType
             - targetThresholdPercentage
             - window
             type: object
             x-kubernetes-validations:
+            - message: Exactly one of sliType, sliDefinition must be set
+              rule: '(has(self.sliType) ? 1 : 0) + (has(self.sliDefinition) ? 1 :
+                0) == 1'
             - message: productType 'apm' requires sliType.apmSli
-              rule: '!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)'
+              rule: '!(has(self.productType) && self.productType == ''apm'') || has(self.sliDefinition)
+                || (has(self.sliType) && has(self.sliType.apmSli))'
           status:
             properties:
               conditions:

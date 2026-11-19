@@ -103,7 +103,11 @@ type documents struct {
 func (d *documents) forKind(entry kindEntry, file *overrides.File) (docType, error) {
 	if file == nil || file.Content == nil {
 		if d.shared == nil {
-			doc, err := model.Load(d.raw)
+			raw, err := exclusiveBoundsExact(d.raw)
+			if err != nil {
+				return nil, err
+			}
+			doc, err := model.Load(raw)
 			if err != nil {
 				return nil, err
 			}
