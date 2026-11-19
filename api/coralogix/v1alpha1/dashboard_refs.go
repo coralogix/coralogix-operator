@@ -14,6 +14,15 @@
 
 package v1alpha1
 
+import (
+	"context"
+	"fmt"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+)
+
 // The handwritten parts of the generated Dashboard kind: the folder reference that the
 // beforeCreate and beforeUpdate hooks read, and the import annotation that the adopt hook reads.
 
@@ -38,3 +47,26 @@ type DashboardFolderRef struct {
 // deleted outside the operator, it is recreated from spec instead of the import path
 // retrying a Get for an ID that no longer exists.
 const ImportDashboardIDAnnotationKey = "app.coralogix.com/import-id"
+
+type DashboardFolderRefBackendRef struct {
+	// Reference to a folder by its backend's ID.
+	// +optional
+	ID *string `json:"id,omitempty"`
+	// Reference to a folder by its path (<parent-folder-name-1>/<parent-folder-name-2>/<folder-name>).
+	// +optional
+	Path *string `json:"path,omitempty"`
+}
+
+func GetFolderIdFromFolderCR(ctx context.Context, namespace string, parentRef ResourceRef) (*string, error) {
+	df := &DashboardsFolder{}
+	if parentRef.Namespace != nil {
+		namespace = *parentRef.Namespace
+	}
+	if err := config.GetClient().Get(ctx, client.ObjectKey{Name: parentRef.Name, Namespace: namespace}, df); err != nil {
+		return nil, fmt.Errorf("failed to get DashboardsFolder: %w", err)
+	}
+	if df.Status.ID == nil || *df.Status.ID == "" {
+		return nil, fmt.Errorf("failed to get DashboardsFolder ID")
+	}
+	return df.Status.ID, nil
+}

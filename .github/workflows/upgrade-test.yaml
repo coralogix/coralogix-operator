@@ -101,6 +101,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh before
+      - name: Create a DashboardsFolder with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-dashboardsfolder.sh before
       - name: Create a View with the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -205,6 +209,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh after
+      - name: Check the DashboardsFolder of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-dashboardsfolder.sh after
       - name: Check the View of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -270,6 +278,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-viewfolder.sh cleanup
+      - name: Delete the DashboardsFolder of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-dashboardsfolder.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |
