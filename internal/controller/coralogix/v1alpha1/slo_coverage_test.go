@@ -123,24 +123,28 @@ var sLOCoverageSpecs = []sLOCoverageSpec{
     }
   },
   "productType": "unspecified",
-  "targetThresholdPercentage": 99,
-  "sliType": {
-    "windowBasedMetric": {
-      "comparisonOperator": "greaterThan",
-      "missingDataStrategy": "uncounted",
-      "query": {
-        "query": "sum(rate(coralogix_e2e_events_total{status=\"error\"}[5m]))"
+  "sliDefinition": {
+    "windowBased": {
+      "custom": {
+        "comparisonOperator": "greaterThan",
+        "query": {
+          "query": "sum(rate(coralogix_e2e_events_total{status=\"error\"}[5m]))"
+        },
+        "threshold": 1
       },
-      "threshold": 1,
+      "missingDataStrategy": "uncounted",
       "window": "1m"
     }
   },
+  "targetThresholdPercentage": 99,
   "window": {
     "timeFrame": "14d"
   }
 }`,
 		expect: []string{
-			"\"windowBasedMetricSli\":",
+			"\"sliDefinition\":",
+			"\"windowBased\":",
+			"\"custom\":",
 			"\"COMPARISON_OPERATOR_GREATER_THAN\"",
 			"\"MISSING_DATA_STRATEGY_UNCOUNTED\"",
 			"\"WINDOW_SLO_WINDOW_1_MINUTE\"",
@@ -149,6 +153,51 @@ var sLOCoverageSpecs = []sLOCoverageSpec{
 	},
 	{
 		name: "step 1 copy 2",
+		spec: `{
+  "description": "sample-description",
+  "labels": {
+    "key": "sample-labels"
+  },
+  "name": "sample-name",
+  "ownershipTags": {
+    "environment": {
+      "staticValues": [
+        "e2e"
+      ]
+    },
+    "team": {
+      "labelKeys": [
+        "team"
+      ]
+    }
+  },
+  "productType": "unspecified",
+  "sliDefinition": {
+    "requestBased": {
+      "custom": {
+        "goodEvents": {
+          "query": "sum(rate(coralogix_e2e_events_total{status=\"ok\"}[1m]))"
+        },
+        "totalEvents": {
+          "query": "sum(rate(coralogix_e2e_events_total[1m]))"
+        }
+      }
+    }
+  },
+  "targetThresholdPercentage": 99,
+  "window": {
+    "timeFrame": "21d"
+  }
+}`,
+		expect: []string{
+			"\"sliDefinition\":",
+			"\"requestBased\":",
+			"\"custom\":",
+			"\"SLO_TIME_FRAME_21_DAYS\"",
+		},
+	},
+	{
+		name: "step 1 copy 3",
 		spec: `{
   "description": "sample-description",
   "labels": {
@@ -181,19 +230,19 @@ var sLOCoverageSpecs = []sLOCoverageSpec{
     }
   },
   "window": {
-    "timeFrame": "21d"
+    "timeFrame": "28d"
   }
 }`,
 		expect: []string{
-			"\"windowBasedMetricSli\":",
 			"\"COMPARISON_OPERATOR_GREATER_THAN_OR_EQUALS\"",
 			"\"MISSING_DATA_STRATEGY_GOOD\"",
 			"\"WINDOW_SLO_WINDOW_5_MINUTES\"",
-			"\"SLO_TIME_FRAME_21_DAYS\"",
+			"\"windowBasedMetricSli\":",
+			"\"SLO_TIME_FRAME_28_DAYS\"",
 		},
 	},
 	{
-		name: "step 1 copy 3",
+		name: "step 1 copy 4",
 		spec: `{
   "description": "sample-description",
   "labels": {
@@ -226,19 +275,19 @@ var sLOCoverageSpecs = []sLOCoverageSpec{
     }
   },
   "window": {
-    "timeFrame": "28d"
+    "timeFrame": "7d"
   }
 }`,
 		expect: []string{
-			"\"windowBasedMetricSli\":",
 			"\"COMPARISON_OPERATOR_LESS_THAN\"",
 			"\"MISSING_DATA_STRATEGY_BAD\"",
 			"\"WINDOW_SLO_WINDOW_1_MINUTE\"",
-			"\"SLO_TIME_FRAME_28_DAYS\"",
+			"\"windowBasedMetricSli\":",
+			"\"SLO_TIME_FRAME_7_DAYS\"",
 		},
 	},
 	{
-		name: "step 1 copy 4",
+		name: "step 1 copy 5",
 		spec: `{
   "description": "sample-description",
   "labels": {
@@ -275,10 +324,10 @@ var sLOCoverageSpecs = []sLOCoverageSpec{
   }
 }`,
 		expect: []string{
-			"\"windowBasedMetricSli\":",
 			"\"COMPARISON_OPERATOR_LESS_THAN_OR_EQUALS\"",
 			"\"MISSING_DATA_STRATEGY_UNCOUNTED\"",
 			"\"WINDOW_SLO_WINDOW_1_MINUTE\"",
+			"\"windowBasedMetricSli\":",
 			"\"SLO_TIME_FRAME_7_DAYS\"",
 		},
 	},

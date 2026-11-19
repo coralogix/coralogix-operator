@@ -252,6 +252,7 @@ type builder struct {
 	used             map[overrides.Line]bool // the lines of the file that changed the output
 	usedEnums        map[string]bool
 	usedGroups       map[string]bool
+	usedExactlyOne   map[string]bool // components whose exactlyOneOf sets became oneOf groups
 	usedIgnored      map[string]bool // components whose ignored fields are in a CR type
 	usedValidators   map[string]bool
 	ix               *refIndex
@@ -303,7 +304,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		return nil, err
 	}
 	b := &builder{kind: entry.Kind, file: file, used: map[overrides.Line]bool{}, usedEnums: map[string]bool{}, ix: ix, alias: sdkAlias(ix.pkg.Name), types: map[string]*crType{},
-		enums: map[string]*enumMap{}, usedGroups: map[string]bool{}, usedIgnored: map[string]bool{}, usedValidators: map[string]bool{}, convs: map[string]string{}}
+		enums: map[string]*enumMap{}, usedGroups: map[string]bool{}, usedExactlyOne: map[string]bool{}, usedIgnored: map[string]bool{}, usedValidators: map[string]bool{}, convs: map[string]string{}}
 	d := &kindData{
 		Kind: entry.Kind, Lower: strings.ToLower(entry.Kind), Plural: plural(entry.Kind),
 		Finalizer: kebab(entry.Kind) + ".coralogix.com/finalizer", Module: module,
@@ -387,7 +388,13 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":groups." + name, msg: "the group changes no generated CR field"}
 			}
 		}
+		if len(file.ExactlyOneOf) != 0 && !b.usedExactlyOne[r.Name] {
+			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":exactlyOneOf", msg: "the resource has no such set of fields"}
+		}
 		for component, typ := range file.Types {
+			if len(typ.ExactlyOneOf) != 0 && !b.usedExactlyOne[component] {
+				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":types." + component + ".exactlyOneOf", msg: "the component is not an object of the CR"}
+			}
 			for name := range typ.Groups {
 				if !b.usedGroups[component+"."+name] {
 					return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":types." + component + ".groups." + name, msg: "the group changes no generated CR field"}

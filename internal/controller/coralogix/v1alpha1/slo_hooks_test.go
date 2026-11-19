@@ -29,7 +29,7 @@ import (
 )
 
 func sloWithAPM(apm *coralogixv1alpha1.SLOApmSli) *coralogixv1alpha1.SLO {
-	return &coralogixv1alpha1.SLO{Spec: coralogixv1alpha1.SLOSpec{SliType: coralogixv1alpha1.SLOSpecSliType{ApmSli: apm}}}
+	return &coralogixv1alpha1.SLO{Spec: coralogixv1alpha1.SLOSpec{SliType: &coralogixv1alpha1.SLOSpecSliType{ApmSli: apm}}}
 }
 
 // The CRD cannot check the empty-object arms of apmSli, so validate does. Each case runs twice:

@@ -376,7 +376,7 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 			body.WriteString(code)
 			continue
 		}
-		field, src := sourceField(cr, rf.Name)
+		field, src, guard := sourceField(cr, rf.Name)
 		if field == nil {
 			component := cr.schema
 			if component == "" && b.file != nil {
@@ -399,6 +399,10 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 		code, err := b.assignFrom(field, rf.Type, sdkType, path+"."+field.JSON, src)
 		if err != nil {
 			return "", err
+		}
+		if guard != "" {
+			// The group is optional: a CR that leaves it out sends none of its fields.
+			code = "if " + guard + " != nil {\n" + code + "}\n"
 		}
 		body.WriteString(code)
 	}
@@ -458,12 +462,15 @@ func (o *requestObject) conditions() (tests []string, ok bool) {
 // in Get (requestAs). A path of one segment sets a field of the body. A longer path adds the field
 // to the object tree, which requestObjects writes after the last field.
 func (b *builder) movedField(cr *crType, sdkType string, rf *model.Field, path string, root *requestObject, body *strings.Builder) error {
-	field, src := sourceField(cr, rf.Name)
+	field, src, guard := sourceField(cr, rf.Name)
 	if field == nil {
 		if rf.Attrs.Required {
 			return unsupported(path+"."+rf.Name, "the request requires a field that the custom resource does not have")
 		}
 		return nil
+	}
+	if guard != "" {
+		return unsupported(path+"."+rf.Name, "requestAs does not support a field of an optional group")
 	}
 	component := cr.schema
 	if component == "" {
@@ -702,22 +709,27 @@ func crFieldByAPI(cr *crType, api string) *crField {
 	return nil
 }
 
-// sourceField finds an API field at its released CR path.
-func sourceField(cr *crType, api string) (*crField, string) {
+// sourceField finds an API field at its released CR path. guard is the expression of an optional
+// group that holds the field: the code must read the field only when the group is set. It is empty
+// for any other field.
+func sourceField(cr *crType, api string) (field *crField, src, guard string) {
 	for _, f := range cr.Fields {
 		if f.group {
 			for _, child := range f.object.Fields {
 				if child.API == api {
-					return child, "in." + f.GoName + "." + child.GoName
+					if f.Optional {
+						guard = "in." + f.GoName
+					}
+					return child, "in." + f.GoName + "." + child.GoName, guard
 				}
 			}
 			continue
 		}
 		if f.API == api {
-			return f, "in." + f.GoName
+			return f, "in." + f.GoName, ""
 		}
 	}
-	return nil, ""
+	return nil, "", ""
 }
 
 // requestValueBy sends a hidden string or enum value from the selected object arm.
@@ -752,7 +764,10 @@ func (b *builder) requestValueBy(cr *crType, sdkType string, field *model.Field,
 	}
 	var code strings.Builder
 	for i, source := range sortedKeys(by) {
-		arm, src := sourceField(cr, source)
+		arm, src, guard := sourceField(cr, source)
+		if guard != "" {
+			return "", unsupported(location, "requestValueBy does not support an arm in an optional group")
+		}
 		if arm == nil || (arm.typ.Kind != model.Object && arm.typ.Kind != model.OneOf) || !arm.Optional {
 			return "", unsupported(location, "requestValueBy source %s must be an optional object arm", source)
 		}

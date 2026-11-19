@@ -18957,7 +18957,7 @@ SLO is the Schema for the slos API.
         <td>
           SLOSpec defines the desired state of a SLO.<br/>
           <br/>
-            <i>Validations</i>:<li>!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli): productType 'apm' requires sliType.apmSli</li>
+            <i>Validations</i>:<li>(has(self.sliType) ? 1 : 0) + (has(self.sliDefinition) ? 1 : 0) == 1: Exactly one of sliType, sliDefinition must be set</li><li>!(has(self.productType) && self.productType == 'apm') || has(self.sliDefinition) || (has(self.sliType) && has(self.sliType.apmSli)): productType 'apm' requires sliType.apmSli</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -18992,15 +18992,6 @@ SLOSpec defines the desired state of a SLO.
         <td>string</td>
         <td>
           Human-readable display name for the SLO. Required. A missing or empty name is rejected.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#slospecslitype">sliType</a></b></td>
-        <td>object</td>
-        <td>
-          SLOSpecSliType holds the sliType fields of the released CR.<br/>
-          <br/>
-            <i>Validations</i>:<li>(has(self.requestBasedMetric) ? 1 : 0) + (has(self.windowBasedMetric) ? 1 : 0) + (has(self.apmSli) ? 1 : 0) == 1: Exactly one of requestBasedMetric, windowBasedMetric, apmSli must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
@@ -19047,6 +19038,875 @@ SLOSpec defines the desired state of a SLO.
             <i>Enum</i>: unspecified, apm<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinition">sliDefinition</a></b></td>
+        <td>object</td>
+        <td>
+          Definition of the SLI: how it counts (request-based or window-based) and where its values come from (custom metric queries or APM). Replaces the deprecated `requestBasedMetricSli`, `windowBasedMetricSli` and `apmSli`. A request must set either `sliDefinition` or one of the deprecated fields. When `sliDefinition` is set, it takes precedence and the deprecated fields are ignored. Responses always include `sliDefinition`, and also include the matching deprecated field when the SLI can be expressed with it.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.requestBased) ? 1 : 0) + (has(self.windowBased) ? 1 : 0) == 1: Exactly one of requestBased, windowBased must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslitype">sliType</a></b></td>
+        <td>object</td>
+        <td>
+          SLOSpecSliType holds the sliType fields of the released CR.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.requestBasedMetric) ? 1 : 0) + (has(self.windowBasedMetric) ? 1 : 0) + (has(self.apmSli) ? 1 : 0) == 1: Exactly one of requestBasedMetric, windowBasedMetric, apmSli must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.window
+<sup><sup>[↩ Parent](#slospec)</sup></sup>
+
+
+
+SLOSpecWindow holds the window fields of the released CR.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>timeFrame</b></td>
+        <td>enum</td>
+        <td>
+          Rolling evaluation window (fixed-duration lookback).<br/>
+          <br/>
+            <i>Enum</i>: unspecified, 7d, 14d, 21d, 28d, 90d<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags
+<sup><sup>[↩ Parent](#slospec)</sup></sup>
+
+
+
+Service, environment, and team ownership configuration for the SLO group and its permutations.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecownershiptagsenvironment">environment</a></b></td>
+        <td>object</td>
+        <td>
+          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecownershiptagsservice">service</a></b></td>
+        <td>object</td>
+        <td>
+          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecownershiptagsteam">team</a></b></td>
+        <td>object</td>
+        <td>
+          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
+          <br/>
+            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags.environment
+<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
+
+
+
+Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>labelKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>staticValues</b></td>
+        <td>[]string</td>
+        <td>
+          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags.service
+<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
+
+
+
+Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>labelKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>staticValues</b></td>
+        <td>[]string</td>
+        <td>
+          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.ownershipTags.team
+<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
+
+
+
+Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>labelKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>staticValues</b></td>
+        <td>[]string</td>
+        <td>
+          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition
+<sup><sup>[↩ Parent](#slospec)</sup></sup>
+
+
+
+Definition of the SLI: how it counts (request-based or window-based) and where its values come from (custom metric queries or APM). Replaces the deprecated `requestBasedMetricSli`, `windowBasedMetricSli` and `apmSli`. A request must set either `sliDefinition` or one of the deprecated fields. When `sliDefinition` is set, it takes precedence and the deprecated fields are ignored. Responses always include `sliDefinition`, and also include the matching deprecated field when the SLI can be expressed with it.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecslidefinitionrequestbased">requestBased</a></b></td>
+        <td>object</td>
+        <td>
+          Count per request: the SLI is the ratio of good events to total events over the SLO time frame.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.apm) ? 1 : 0) + (has(self.custom) ? 1 : 0) == 1: Exactly one of apm, custom must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbased">windowBased</a></b></td>
+        <td>object</td>
+        <td>
+          Count per time window: the SLI is the ratio of good windows to all windows over the SLO time frame.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.custom) ? 1 : 0) + (has(self.apm) ? 1 : 0) == 1: Exactly one of custom, apm must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased
+<sup><sup>[↩ Parent](#slospecslidefinition)</sup></sup>
+
+
+
+Count per request: the SLI is the ratio of good events to total events over the SLO time frame.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecslidefinitionrequestbasedapm">apm</a></b></td>
+        <td>object</td>
+        <td>
+          Good and total events generated from APM span data for the selected services.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.availability) ? 1 : 0) + (has(self.latency) ? 1 : 0) == 1: Exactly one of availability, latency must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionrequestbasedcustom">custom</a></b></td>
+        <td>object</td>
+        <td>
+          Custom metric queries for the good and total events.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased.apm
+<sup><sup>[↩ Parent](#slospecslidefinitionrequestbased)</sup></sup>
+
+
+
+Good and total events generated from APM span data for the selected services.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecslidefinitionrequestbasedapmselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          Services and filters to count spans of. Required.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>availability</b></td>
+        <td>object</td>
+        <td>
+          A span is good when it has no error.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionrequestbasedapmlatency">latency</a></b></td>
+        <td>object</td>
+        <td>
+          A span is good when its duration is <= `thresholdMs`. With the `APM_SOURCE_E2M` metric source, any `thresholdMs` is accepted. With `APM_SOURCE_SPAN_METRICS`, `thresholdMs` must be one of the bucket bounds of the selected service's span duration histogram; rejected otherwise.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased.apm.selector
+<sup><sup>[↩ Parent](#slospecslidefinitionrequestbasedapm)</sup></sup>
+
+
+
+Services and filters to count spans of. Required.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>services</b></td>
+        <td>[]string</td>
+        <td>
+          Service names to monitor. Required. Exactly one service.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionrequestbasedapmselectorfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Filters on the labels of the APM metrics, narrowing the spans they cover. At most 20, each with at most 50 values, and keys and values of at most 256 characters. With the `APM_SOURCE_E2M` metric source, keys must be labels of the account's service catalog span duration metric; others are rejected.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupingKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Labels to group SLO results by. At most 6. With the `APM_SOURCE_E2M` metric source, each must be a label of the account's service catalog span duration metric; others are rejected.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased.apm.selector.filters[index]
+<sup><sup>[↩ Parent](#slospecslidefinitionrequestbasedapmselector)</sup></sup>
+
+
+
+SLOApmFilterAtSpecSliDefinitionRequestBasedApmSelectorFilters8d0adc330ae1 is the ApmFilter object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Label/tag name to filter on. Required. A missing or empty key is rejected.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>matchOperator</b></td>
+        <td>enum</td>
+        <td>
+          How literals on `key` are compared. Every item in `apmSli.filters` must use the same mode: all implicit (legacy) or all explicit — mixing modes in one list is rejected. Implicit: omitted or `APM_FILTER_MATCH_OPERATOR_UNSPECIFIED` on every item — multiple items with the same `key` OR-merge literals with exact (IS) comparison; sending `UNSPECIFIED` is equivalent to omitting the field (neither is stored as explicit `IS`). Explicit: `APM_FILTER_MATCH_OPERATOR_IS`, `STARTS_WITH`, `ENDS_WITH`, or `INCLUDES` on every item — each item is a separate AND criterion; OR applies only among literals in that item (explicit `IS` differs from implicit when several items share a `key`). Items on different keys are AND-combined. Pattern operators use literal substring matching (not caller-supplied regex). Applies only when the item has at least one literal: non-empty `values`, or deprecated `value` when `values` is omitted or empty (non-empty `values` takes precedence over `value`); otherwise rejected.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, is, startsWith, endsWith, includes<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Preferred: multiple values to match (OR semantics, e.g. status IN [500, 503])<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased.apm.latency
+<sup><sup>[↩ Parent](#slospecslidefinitionrequestbasedapm)</sup></sup>
+
+
+
+A span is good when its duration is <= `thresholdMs`. With the `APM_SOURCE_E2M` metric source, any `thresholdMs` is accepted. With `APM_SOURCE_SPAN_METRICS`, `thresholdMs` must be one of the bucket bounds of the selected service's span duration histogram; rejected otherwise.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>thresholdMs</b></td>
+        <td>int or string</td>
+        <td>
+          Latency threshold in milliseconds, greater than 0, with at most 3 decimal places (whole microseconds). A span is good when its duration is <= this value. Required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased.custom
+<sup><sup>[↩ Parent](#slospecslidefinitionrequestbased)</sup></sup>
+
+
+
+Custom metric queries for the good and total events.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecslidefinitionrequestbasedcustomgoodevents">goodEvents</a></b></td>
+        <td>object</td>
+        <td>
+          Definition of a metric used in SLOs<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionrequestbasedcustomtotalevents">totalEvents</a></b></td>
+        <td>object</td>
+        <td>
+          Definition of a metric used in SLOs<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>groupByLabels</b></td>
+        <td>[]string</td>
+        <td>
+          GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+the value is never sent. The field is kept because removing it would break existing
+resources.
+Deprecated: ignored by the operator and by the API.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased.custom.goodEvents
+<sup><sup>[↩ Parent](#slospecslidefinitionrequestbasedcustom)</sup></sup>
+
+
+
+Definition of a metric used in SLOs
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          Query string. Required. A missing or empty query is rejected.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.requestBased.custom.totalEvents
+<sup><sup>[↩ Parent](#slospecslidefinitionrequestbasedcustom)</sup></sup>
+
+
+
+Definition of a metric used in SLOs
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          Query string. Required. A missing or empty query is rejected.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased
+<sup><sup>[↩ Parent](#slospecslidefinition)</sup></sup>
+
+
+
+Count per time window: the SLI is the ratio of good windows to all windows over the SLO time frame.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>window</b></td>
+        <td>enum</td>
+        <td>
+          Size of each evaluated time window. Required.<br/>
+          <br/>
+            <i>Enum</i>: 1m, 5m<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedapm">apm</a></b></td>
+        <td>object</td>
+        <td>
+          Window value generated from APM span data for the selected services.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.availability) ? 1 : 0) + (has(self.latency) ? 1 : 0) == 1: Exactly one of availability, latency must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedcustom">custom</a></b></td>
+        <td>object</td>
+        <td>
+          Custom metric query yielding the value of each window, and how it is compared to a threshold.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>missingDataStrategy</b></td>
+        <td>enum</td>
+        <td>
+          How a window without data is counted.<br/>
+          <br/>
+            <i>Enum</i>: uncounted, good, bad<br/>
+            <i>Default</i>: uncounted<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.apm
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbased)</sup></sup>
+
+
+
+Window value generated from APM span data for the selected services.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedapmselector">selector</a></b></td>
+        <td>object</td>
+        <td>
+          Services and filters to aggregate spans of. Required.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedapmavailability">availability</a></b></td>
+        <td>object</td>
+        <td>
+          Each window's value is its ratio of spans without an error, from 0 to 1. A window is good when its value is >= `thresholdRatio`.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedapmlatency">latency</a></b></td>
+        <td>object</td>
+        <td>
+          Each window's value is its aggregated span duration, in milliseconds. A window is good when its value is <= `thresholdMs`.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.quantile) ? 1 : 0) + (has(self.average) ? 1 : 0) == 1: Exactly one of quantile, average must be set</li>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.apm.selector
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbasedapm)</sup></sup>
+
+
+
+Services and filters to aggregate spans of. Required.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>services</b></td>
+        <td>[]string</td>
+        <td>
+          Service names to monitor. Required. Exactly one service.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedapmselectorfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Filters on the labels of the APM metrics, narrowing the spans they cover. At most 20, each with at most 50 values, and keys and values of at most 256 characters. With the `APM_SOURCE_E2M` metric source, keys must be labels of the account's service catalog span duration metric; others are rejected.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groupingKeys</b></td>
+        <td>[]string</td>
+        <td>
+          Labels to group SLO results by. At most 6. With the `APM_SOURCE_E2M` metric source, each must be a label of the account's service catalog span duration metric; others are rejected.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.apm.selector.filters[index]
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbasedapmselector)</sup></sup>
+
+
+
+SLOApmFilterAtSpecSliDefinitionRequestBasedApmSelectorFilters8d0adc330ae1 is the ApmFilter object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Label/tag name to filter on. Required. A missing or empty key is rejected.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>matchOperator</b></td>
+        <td>enum</td>
+        <td>
+          How literals on `key` are compared. Every item in `apmSli.filters` must use the same mode: all implicit (legacy) or all explicit — mixing modes in one list is rejected. Implicit: omitted or `APM_FILTER_MATCH_OPERATOR_UNSPECIFIED` on every item — multiple items with the same `key` OR-merge literals with exact (IS) comparison; sending `UNSPECIFIED` is equivalent to omitting the field (neither is stored as explicit `IS`). Explicit: `APM_FILTER_MATCH_OPERATOR_IS`, `STARTS_WITH`, `ENDS_WITH`, or `INCLUDES` on every item — each item is a separate AND criterion; OR applies only among literals in that item (explicit `IS` differs from implicit when several items share a `key`). Items on different keys are AND-combined. Pattern operators use literal substring matching (not caller-supplied regex). Applies only when the item has at least one literal: non-empty `values`, or deprecated `value` when `values` is omitted or empty (non-empty `values` takes precedence over `value`); otherwise rejected.<br/>
+          <br/>
+            <i>Enum</i>: unspecified, is, startsWith, endsWith, includes<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Preferred: multiple values to match (OR semantics, e.g. status IN [500, 503])<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.apm.availability
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbasedapm)</sup></sup>
+
+
+
+Each window's value is its ratio of spans without an error, from 0 to 1. A window is good when its value is >= `thresholdRatio`.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>thresholdRatio</b></td>
+        <td>int or string</td>
+        <td>
+          Availability threshold as a ratio from 0 to 1 (not a percentage). A window is good when its value is >= this value. Required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.apm.latency
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbasedapm)</sup></sup>
+
+
+
+Each window's value is its aggregated span duration, in milliseconds. A window is good when its value is <= `thresholdMs`.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>thresholdMs</b></td>
+        <td>int or string</td>
+        <td>
+          Latency threshold in milliseconds, with at most 3 decimal places (whole microseconds). A window is good when its aggregated duration is <= this value. Required. Should be greater than 0; 0 is accepted only for compatibility and is deprecated.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>average</b></td>
+        <td>object</td>
+        <td>
+          Aggregate by the mean span duration.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedapmlatencyquantile">quantile</a></b></td>
+        <td>object</td>
+        <td>
+          Aggregate by a percentile of span durations. `percentile` is required, greater than 0 and at most 1; omitting it is the same as sending 0, which is rejected.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.apm.latency.quantile
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbasedapmlatency)</sup></sup>
+
+
+
+Aggregate by a percentile of span durations. `percentile` is required, greater than 0 and at most 1; omitting it is the same as sending 0, which is rejected.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>percentile</b></td>
+        <td>int or string</td>
+        <td>
+          Percentile for latency SLOs (0.95 = P95, 0.99 = P99)<br/>
+          <br/>
+            <i>Default</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.custom
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbased)</sup></sup>
+
+
+
+Custom metric query yielding the value of each window, and how it is compared to a threshold.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>comparisonOperator</b></td>
+        <td>enum</td>
+        <td>
+          How each window's value is compared to `threshold`. Required.<br/>
+          <br/>
+            <i>Enum</i>: greaterThan, greaterThanOrEquals, lessThan, lessThanOrEquals<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#slospecslidefinitionwindowbasedcustomquery">query</a></b></td>
+        <td>object</td>
+        <td>
+          Query yielding the value of each window. Required.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>int or string</td>
+        <td>
+          Value each window is compared to, in the unit of the query's result. Required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SLO.spec.sliDefinition.windowBased.custom.query
+<sup><sup>[↩ Parent](#slospecslidefinitionwindowbasedcustom)</sup></sup>
+
+
+
+Query yielding the value of each window. Required.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>query</b></td>
+        <td>string</td>
+        <td>
+          Query string. Required. A missing or empty query is rejected.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -19449,184 +20309,6 @@ Definition of a metric used in SLOs
           Query string. Required. A missing or empty query is rejected.<br/>
         </td>
         <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### SLO.spec.window
-<sup><sup>[↩ Parent](#slospec)</sup></sup>
-
-
-
-SLOSpecWindow holds the window fields of the released CR.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>timeFrame</b></td>
-        <td>enum</td>
-        <td>
-          Rolling evaluation window (fixed-duration lookback).<br/>
-          <br/>
-            <i>Enum</i>: unspecified, 7d, 14d, 21d, 28d, 90d<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### SLO.spec.ownershipTags
-<sup><sup>[↩ Parent](#slospec)</sup></sup>
-
-
-
-Service, environment, and team ownership configuration for the SLO group and its permutations.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#slospecownershiptagsenvironment">environment</a></b></td>
-        <td>object</td>
-        <td>
-          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
-          <br/>
-            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#slospecownershiptagsservice">service</a></b></td>
-        <td>object</td>
-        <td>
-          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
-          <br/>
-            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#slospecownershiptagsteam">team</a></b></td>
-        <td>object</td>
-        <td>
-          Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.<br/>
-          <br/>
-            <i>Validations</i>:<li>!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0): Use either staticValues or labelKeys, not both</li>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### SLO.spec.ownershipTags.environment
-<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
-
-
-
-Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>labelKeys</b></td>
-        <td>[]string</td>
-        <td>
-          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>staticValues</b></td>
-        <td>[]string</td>
-        <td>
-          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### SLO.spec.ownershipTags.service
-<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
-
-
-
-Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>labelKeys</b></td>
-        <td>[]string</td>
-        <td>
-          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>staticValues</b></td>
-        <td>[]string</td>
-        <td>
-          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### SLO.spec.ownershipTags.team
-<sup><sup>[↩ Parent](#slospecownershiptags)</sup></sup>
-
-
-
-Ownership for one dimension (service, environment, or team). static_values are group-wide (broad) assignments. label_keys are metric label names whose values are read per permutation (label-driven). Both may be set; when both lists are empty, that dimension is unset.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>labelKeys</b></td>
-        <td>[]string</td>
-        <td>
-          Metric label names to use as sources (label-driven). Actual values come from series at query time. Empty if not using label-driven for this dimension.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>staticValues</b></td>
-        <td>[]string</td>
-        <td>
-          Group-wide static values (broad). Empty if not using broad for this dimension.<br/>
-        </td>
-        <td>false</td>
       </tr></tbody>
 </table>
 

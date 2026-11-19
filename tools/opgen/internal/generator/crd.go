@@ -71,6 +71,10 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 	if err != nil {
 		return nil, err
 	}
+	groups, err = b.exactlyOne(r.Name, spec, groups)
+	if err != nil {
+		return nil, err
+	}
 	presenceRules(spec, spec, nil, false)
 	if err := groupRules(spec, groups, "spec"); err != nil {
 		return nil, err
@@ -365,6 +369,46 @@ func (b *builder) overrideGroups(component string, groups []model.OneOfGroup, fi
 	return out, nil
 }
 
+// exactlyOne adds the oneOf group of each exactlyOneOf set of the component: a CR sets exactly one of
+// the fields. The arms are optional fields of the owner, or groups. The sample, the e2e sweep, and
+// the coverage count read the group like a oneOf of the contract, so each arm is tested.
+func (b *builder) exactlyOne(component string, owner *crType, groups []model.OneOfGroup) ([]model.OneOfGroup, error) {
+	sets := b.file.ExactlyOneOfFor(component)
+	if len(sets) == 0 {
+		return groups, nil
+	}
+	if b.usedExactlyOne == nil {
+		b.usedExactlyOne = map[string]bool{}
+	}
+	b.usedExactlyOne[component] = true
+	inGroup := map[string]bool{}
+	for _, g := range groups {
+		for _, arm := range g.Arms {
+			inGroup[arm] = true
+		}
+	}
+	for i, set := range sets {
+		location := fmt.Sprintf("exactlyOneOf[%d]", i)
+		if component != b.file.Resource {
+			location = fmt.Sprintf("types.%s.exactlyOneOf[%d]", component, i)
+		}
+		for _, name := range set {
+			j := slices.IndexFunc(owner.Fields, func(f *crField) bool { return f.API == name })
+			switch {
+			case j < 0:
+				return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + location, msg: fmt.Sprintf("the CR has no field %s", name)}
+			case !owner.Fields[j].Optional:
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + location, msg: fmt.Sprintf("%s is required: an exactly-one set needs optional fields", name)}
+			case inGroup[name]:
+				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + location, msg: fmt.Sprintf("%s is already an arm of another oneOf", name)}
+			}
+			inGroup[name] = true
+		}
+		groups = append(slices.Clone(groups), model.OneOfGroup{Arms: slices.Clone(set)})
+	}
+	return groups, nil
+}
+
 // groupFields places released CR fields under named objects and moves their oneOf rules.
 func (b *builder) groupFields(component string, owner *crType, groups []model.OneOfGroup) ([]model.OneOfGroup, error) {
 	configured := b.file.GroupsFor(component)
@@ -417,6 +461,10 @@ func (b *builder) groupFields(component string, owner *crType, groups []model.On
 			if owner.Fields[i].immutable {
 				return nil, unsupported("groups."+name, "an immutable field cannot move into a required group")
 			}
+			if group.Optional && !owner.Fields[i].Optional {
+				// A request that the CR sends without the group would miss the field.
+				return nil, unsupported("groups."+name+".optional", "the group holds the required field %s; an optional group holds optional fields only", api)
+			}
 			child.Fields = append(child.Fields, owner.Fields[i])
 		}
 		rules := groupRulesByName[name]
@@ -431,7 +479,13 @@ func (b *builder) groupFields(component string, owner *crType, groups []model.On
 		}
 		b.types[typeName] = child
 		b.order = append(b.order, child)
-		remainingFields = append(remainingFields, &crField{API: name, JSON: name, GoName: goName(name), GoType: typeName, typ: &model.Type{Kind: model.Object}, object: child, group: true})
+		field := &crField{API: name, JSON: name, GoName: goName(name), GoType: typeName, typ: &model.Type{Kind: model.Object}, object: child, group: true}
+		if group.Optional {
+			// A pointer: a CR that leaves the group out sends nothing of it, and a Go client does not
+			// write an empty object.
+			field.Optional, field.GoType = true, "*"+typeName
+		}
+		remainingFields = append(remainingFields, field)
 		b.usedGroups[component+"."+name] = true
 	}
 	owner.Fields = remainingFields
@@ -1013,6 +1067,10 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		return nil, err
 	}
 	groups, err = b.groupFields(t.Schema, obj, groups)
+	if err != nil {
+		return nil, err
+	}
+	groups, err = b.exactlyOne(t.Schema, obj, groups)
 	if err != nil {
 		return nil, err
 	}

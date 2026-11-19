@@ -5,6 +5,9 @@ values:
   sliType.requestBasedMetric.goodEvents.query: 'sum(rate(coralogix_e2e_events_total{status="ok"}[1m]))'
   sliType.requestBasedMetric.totalEvents.query: 'sum(rate(coralogix_e2e_events_total[1m]))'
   sliType.windowBasedMetric.query.query: 'sum(rate(coralogix_e2e_events_total{status="error"}[5m]))'
+  sliDefinition.requestBased.custom.goodEvents.query: 'sum(rate(coralogix_e2e_events_total{status="ok"}[1m]))'
+  sliDefinition.requestBased.custom.totalEvents.query: 'sum(rate(coralogix_e2e_events_total[1m]))'
+  sliDefinition.windowBased.custom.query.query: 'sum(rate(coralogix_e2e_events_total{status="error"}[5m]))'
   # A dimension takes staticValues or labelKeys, not both, and a static service must be in the
   # APM Service Catalog of the team.
   ownershipTags: {environment: {staticValues: [e2e]}, team: {labelKeys: [team]}}
@@ -14,6 +17,12 @@ values:
 skipChoices:
   SLO:
     choices: [apmSli]
+    reason: the API rejects an APM service that is not in the catalog, and the e2e team has none
+  RequestBasedSli:
+    choices: [apm]
+    reason: the API rejects an APM service that is not in the catalog, and the e2e team has none
+  WindowBasedSli:
+    choices: [apm]
     reason: the API rejects an APM service that is not in the catalog, and the e2e team has none
 skipValues:
   SloProductType:

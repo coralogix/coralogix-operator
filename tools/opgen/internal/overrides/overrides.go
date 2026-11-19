@@ -53,6 +53,10 @@ type File struct {
 	Unwrap []string `yaml:"unwrap"`
 	// Groups place API fields under released CR objects.
 	Groups map[string]Group `yaml:"groups"`
+	// ExactlyOneOf lists sets of spec fields of which a CR sets exactly one, when the contract
+	// states the choice only in text. A name is an API property, or a group name. Each field must be
+	// optional.
+	ExactlyOneOf [][]string `yaml:"exactlyOneOf"`
 	// Enums keeps released custom resource spellings of API enum values.
 	Enums map[string]Enum `yaml:"enums"`
 	// Finalizer keeps the released finalizer name of an existing kind. It is an operator key; the
@@ -239,6 +243,8 @@ func (a API) Check() error {
 type Type struct {
 	Fields map[string]Field `yaml:"fields"`
 	Groups map[string]Group `yaml:"groups"`
+	// ExactlyOneOf is the key of the resource, for the fields of this component.
+	ExactlyOneOf [][]string `yaml:"exactlyOneOf"`
 	// RequestWrapper is the property of the request object of a nested component that holds its
 	// fields, for example policy in {"policy": {...}, "logRules": {...}}. The CR shows the fields
 	// beside the other fields of the component, as Get does. Mode existing only.
@@ -262,8 +268,13 @@ var IgnoredTypes = []string{"string", "[]string", "bool"}
 
 // Group is a released CR object that holds fields from one API component.
 type Group struct {
-	Fields     []string `yaml:"fields"`
-	RequireOne bool     `yaml:"requireOne"`
+	Fields []string `yaml:"fields"`
+	// RequireOne keeps the released exactly-one rule of the arms of the group.
+	RequireOne bool `yaml:"requireOne"`
+	// Optional lets a CR leave the group out. The Go field is a pointer, and a request skips the
+	// fields of a missing group. Use it when a new API field replaces the fields of the group, and
+	// ExactlyOneOf states the choice. The released CRD requires the group, so this loosens it.
+	Optional bool `yaml:"optional"`
 }
 
 // Field is one field line.
@@ -643,11 +654,17 @@ func (f *File) check() error {
 	if err := checkGroups("groups", f.Groups); err != nil {
 		return err
 	}
+	if err := checkExactlyOneOf("exactlyOneOf", f.ExactlyOneOf); err != nil {
+		return err
+	}
 	for name, typ := range f.Types {
 		if f.Mode == ModeNew && len(typ.Groups) != 0 {
 			return fmt.Errorf("types.%s.groups: a new kind follows the contract", name)
 		}
 		if err := checkGroups("types."+name+".groups", typ.Groups); err != nil {
+			return err
+		}
+		if err := checkExactlyOneOf("types."+name+".exactlyOneOf", typ.ExactlyOneOf); err != nil {
 			return err
 		}
 	}
@@ -798,6 +815,22 @@ func checkGroups(path string, groups map[string]Group) error {
 				return fmt.Errorf("%s.%s: field %q is empty or belongs to more than one group", path, name, field)
 			}
 			used[field] = true
+		}
+	}
+	return nil
+}
+
+func checkExactlyOneOf(path string, sets [][]string) error {
+	for i, set := range sets {
+		if len(set) < 2 {
+			return fmt.Errorf("%s[%d]: name at least two fields", path, i)
+		}
+		seen := map[string]bool{}
+		for _, name := range set {
+			if !validJSONName(name) || seen[name] {
+				return fmt.Errorf("%s[%d]: %q is not a field name, or it is listed twice", path, i, name)
+			}
+			seen[name] = true
 		}
 	}
 	return nil
@@ -1037,6 +1070,17 @@ func (f *File) Field(component, field string) Field {
 		return Field{}
 	}
 	return f.Types[component].Fields[field]
+}
+
+// ExactlyOneOfFor returns the exactly-one sets of a resource or nested component.
+func (f *File) ExactlyOneOfFor(component string) [][]string {
+	if f == nil {
+		return nil
+	}
+	if component == f.Resource {
+		return f.ExactlyOneOf
+	}
+	return f.Types[component].ExactlyOneOf
 }
 
 // GroupsFor returns the groups of a resource or nested component.

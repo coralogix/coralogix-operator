@@ -190,47 +190,302 @@ func (in *SLORequestBasedMetricSli) toRequestBasedMetricSli(ctx context.Context,
 	return out, nil
 }
 
-// toWindowBasedMetricSli converts the SLOWindowBasedMetricSli to the API type WindowBasedMetricSli.
-func (in *SLOWindowBasedMetricSli) toWindowBasedMetricSli(ctx context.Context, namespace string) (*slosservice.WindowBasedMetricSli, error) {
-	out := &slosservice.WindowBasedMetricSli{}
-	v34, err := sLOComparisonOperatorToAPI(in.ComparisonOperator)
-	if err != nil {
-		return nil, fmt.Errorf("spec.windowBasedMetric.comparisonOperator: %w", err)
-	}
-	out.ComparisonOperator = v34
-	if in.MissingDataStrategy != nil {
-		v35, err := sLOMissingDataStrategyToAPI(*in.MissingDataStrategy)
+// toApmRequestBasedLatency converts the SLOApmRequestBasedLatency to the API type ApmRequestBasedLatency.
+func (in *SLOApmRequestBasedLatency) toApmRequestBasedLatency(ctx context.Context, namespace string) (*slosservice.ApmRequestBasedLatency, error) {
+	out := &slosservice.ApmRequestBasedLatency{}
+	out.ThresholdMs = in.ThresholdMs.AsApproximateFloat64()
+	return out, nil
+}
+
+// toApmFilter converts the SLOApmFilterAtSpecSliDefinitionRequestBasedApmSelectorFilters8d0adc330ae1 to the API type ApmFilter.
+func (in *SLOApmFilterAtSpecSliDefinitionRequestBasedApmSelectorFilters8d0adc330ae1) toApmFilter(ctx context.Context, namespace string) (*slosservice.ApmFilter, error) {
+	out := &slosservice.ApmFilter{}
+	out.Key = in.Key
+	if in.MatchOperator != nil {
+		v35, err := sLOApmFilterMatchOperatorToAPI(*in.MatchOperator)
 		if err != nil {
-			return nil, fmt.Errorf("spec.windowBasedMetric.missingDataStrategy: %w", err)
+			return nil, fmt.Errorf("spec.sliDefinition.requestBased.apm.selector.filters[].matchOperator: %w", err)
 		}
-		out.MissingDataStrategy = &v35
+		out.MatchOperator = &v35
 	}
-	v36, err := in.Query.toMetric(ctx, namespace)
+	if len(in.Values) != 0 {
+		out.Values = in.Values
+	} else {
+		out.Values = []string{}
+	}
+	return out, nil
+}
+
+// toApmSelector converts the SLOApmSelector to the API type ApmSelector.
+func (in *SLOApmSelector) toApmSelector(ctx context.Context, namespace string) (*slosservice.ApmSelector, error) {
+	out := &slosservice.ApmSelector{}
+	if len(in.Filters) != 0 {
+		v33 := make([]slosservice.ApmFilter, 0, len(in.Filters))
+		for _, e34 := range in.Filters {
+			v38, err := e34.toApmFilter(ctx, namespace)
+			if err != nil {
+				return nil, err
+			}
+			v33 = append(v33, *v38)
+		}
+		out.Filters = v33
+	}
+	if len(in.GroupingKeys) != 0 {
+		out.GroupingKeys = in.GroupingKeys
+	}
+	out.Services = in.Services
+	return out, nil
+}
+
+// toApmRequestBasedSource converts the SLOApmRequestBasedSource to the API type ApmRequestBasedSource.
+func (in *SLOApmRequestBasedSource) toApmRequestBasedSource(ctx context.Context, namespace string) (*slosservice.ApmRequestBasedSource, error) {
+	out := &slosservice.ApmRequestBasedSource{}
+	if in.Availability != nil {
+		out.Availability = map[string]interface{}{}
+	}
+	if in.Latency != nil {
+		v32, err := in.Latency.toApmRequestBasedLatency(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Latency = v32
+	}
+	v43, err := in.Selector.toApmSelector(ctx, namespace)
 	if err != nil {
 		return nil, err
 	}
-	out.Query = *v36
-	if in.Threshold != nil {
-		v37 := float32((*in.Threshold).AsApproximateFloat64())
-		out.Threshold = &v37
+	out.Selector = *v43
+	return out, nil
+}
+
+// toMetric converts the SLOMetricAtSpecSliDefinitionRequestBasedCustomGoodEvents4fcd16bdd1ba to the API type Metric.
+func (in *SLOMetricAtSpecSliDefinitionRequestBasedCustomGoodEvents4fcd16bdd1ba) toMetric(ctx context.Context, namespace string) (*slosservice.Metric, error) {
+	out := &slosservice.Metric{}
+	out.Query = in.Query
+	return out, nil
+}
+
+// toMetric converts the SLOMetricAtSpecSliDefinitionRequestBasedCustomTotalEvents1d04869c58cf to the API type Metric.
+func (in *SLOMetricAtSpecSliDefinitionRequestBasedCustomTotalEvents1d04869c58cf) toMetric(ctx context.Context, namespace string) (*slosservice.Metric, error) {
+	out := &slosservice.Metric{}
+	out.Query = in.Query
+	return out, nil
+}
+
+// toRequestBasedMetricSli converts the SLORequestBasedMetricSliAtSpecSliDefinitionRequestBasedCustom6975aca20ec9 to the API type RequestBasedMetricSli.
+func (in *SLORequestBasedMetricSliAtSpecSliDefinitionRequestBasedCustom6975aca20ec9) toRequestBasedMetricSli(ctx context.Context, namespace string) (*slosservice.RequestBasedMetricSli, error) {
+	out := &slosservice.RequestBasedMetricSli{}
+	v45, err := in.GoodEvents.toMetric(ctx, namespace)
+	if err != nil {
+		return nil, err
 	}
-	v38, err := sLOWindowSloWindowToAPI(in.Window)
+	out.GoodEvents = *v45
+	v46, err := in.TotalEvents.toMetric(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+	out.TotalEvents = *v46
+	return out, nil
+}
+
+// toRequestBasedSli converts the SLORequestBasedSli to the API type RequestBasedSli.
+func (in *SLORequestBasedSli) toRequestBasedSli(ctx context.Context, namespace string) (*slosservice.RequestBasedSli, error) {
+	out := &slosservice.RequestBasedSli{}
+	if in.Apm != nil {
+		v44, err := in.Apm.toApmRequestBasedSource(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Apm = v44
+	}
+	if in.Custom != nil {
+		v47, err := in.Custom.toRequestBasedMetricSli(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Custom = v47
+	}
+	return out, nil
+}
+
+// toApmWindowBasedAvailability converts the SLOApmWindowBasedAvailability to the API type ApmWindowBasedAvailability.
+func (in *SLOApmWindowBasedAvailability) toApmWindowBasedAvailability(ctx context.Context, namespace string) (*slosservice.ApmWindowBasedAvailability, error) {
+	out := &slosservice.ApmWindowBasedAvailability{}
+	out.ThresholdRatio = float32(in.ThresholdRatio.AsApproximateFloat64())
+	return out, nil
+}
+
+// toApmLatencyQuantile converts the SLOApmLatencyQuantileAtSpecSliDefinitionWindowBasedApmLatencyQuantile0fbadf727857 to the API type ApmLatencyQuantile.
+func (in *SLOApmLatencyQuantileAtSpecSliDefinitionWindowBasedApmLatencyQuantile0fbadf727857) toApmLatencyQuantile(ctx context.Context, namespace string) (*slosservice.ApmLatencyQuantile, error) {
+	out := &slosservice.ApmLatencyQuantile{}
+	if in.Percentile != nil {
+		v50 := float32((*in.Percentile).AsApproximateFloat64())
+		out.Percentile = &v50
+	}
+	return out, nil
+}
+
+// toApmWindowBasedLatency converts the SLOApmWindowBasedLatency to the API type ApmWindowBasedLatency.
+func (in *SLOApmWindowBasedLatency) toApmWindowBasedLatency(ctx context.Context, namespace string) (*slosservice.ApmWindowBasedLatency, error) {
+	out := &slosservice.ApmWindowBasedLatency{}
+	if in.Average != nil {
+		out.Average = map[string]interface{}{}
+	}
+	if in.Quantile != nil {
+		v51, err := in.Quantile.toApmLatencyQuantile(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Quantile = v51
+	}
+	out.ThresholdMs = in.ThresholdMs.AsApproximateFloat64()
+	return out, nil
+}
+
+// toApmWindowBasedSource converts the SLOApmWindowBasedSource to the API type ApmWindowBasedSource.
+func (in *SLOApmWindowBasedSource) toApmWindowBasedSource(ctx context.Context, namespace string) (*slosservice.ApmWindowBasedSource, error) {
+	out := &slosservice.ApmWindowBasedSource{}
+	if in.Availability != nil {
+		v49, err := in.Availability.toApmWindowBasedAvailability(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Availability = v49
+	}
+	if in.Latency != nil {
+		v52, err := in.Latency.toApmWindowBasedLatency(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Latency = v52
+	}
+	v53, err := in.Selector.toApmSelector(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+	out.Selector = *v53
+	return out, nil
+}
+
+// toMetric converts the SLOMetricAtSpecSliDefinitionWindowBasedCustomQuery6bce2cb62f2c to the API type Metric.
+func (in *SLOMetricAtSpecSliDefinitionWindowBasedCustomQuery6bce2cb62f2c) toMetric(ctx context.Context, namespace string) (*slosservice.Metric, error) {
+	out := &slosservice.Metric{}
+	out.Query = in.Query
+	return out, nil
+}
+
+// toCustomWindowBasedSource converts the SLOCustomWindowBasedSource to the API type CustomWindowBasedSource.
+func (in *SLOCustomWindowBasedSource) toCustomWindowBasedSource(ctx context.Context, namespace string) (*slosservice.CustomWindowBasedSource, error) {
+	out := &slosservice.CustomWindowBasedSource{}
+	v55, err := sLOComparisonOperatorToAPI(in.ComparisonOperator)
+	if err != nil {
+		return nil, fmt.Errorf("spec.sliDefinition.windowBased.custom.comparisonOperator: %w", err)
+	}
+	out.ComparisonOperator = v55
+	v56, err := in.Query.toMetric(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+	out.Query = *v56
+	out.Threshold = float32(in.Threshold.AsApproximateFloat64())
+	return out, nil
+}
+
+// toWindowBasedSli converts the SLOWindowBasedSli to the API type WindowBasedSli.
+func (in *SLOWindowBasedSli) toWindowBasedSli(ctx context.Context, namespace string) (*slosservice.WindowBasedSli, error) {
+	out := &slosservice.WindowBasedSli{}
+	if in.Apm != nil {
+		v54, err := in.Apm.toApmWindowBasedSource(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Apm = v54
+	}
+	if in.Custom != nil {
+		v57, err := in.Custom.toCustomWindowBasedSource(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.Custom = v57
+	}
+	if in.MissingDataStrategy != nil {
+		v58, err := sLOMissingDataStrategyToAPI(*in.MissingDataStrategy)
+		if err != nil {
+			return nil, fmt.Errorf("spec.sliDefinition.windowBased.missingDataStrategy: %w", err)
+		}
+		out.MissingDataStrategy = &v58
+	}
+	v59, err := sLOWindowSloWindowToAPI(in.Window)
+	if err != nil {
+		return nil, fmt.Errorf("spec.sliDefinition.windowBased.window: %w", err)
+	}
+	out.Window = v59
+	return out, nil
+}
+
+// toSli converts the SLOSli to the API type Sli.
+func (in *SLOSli) toSli(ctx context.Context, namespace string) (*slosservice.Sli, error) {
+	out := &slosservice.Sli{}
+	if in.RequestBased != nil {
+		v48, err := in.RequestBased.toRequestBasedSli(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.RequestBased = v48
+	}
+	if in.WindowBased != nil {
+		v60, err := in.WindowBased.toWindowBasedSli(ctx, namespace)
+		if err != nil {
+			return nil, err
+		}
+		out.WindowBased = v60
+	}
+	return out, nil
+}
+
+// toWindowBasedMetricSli converts the SLOWindowBasedMetricSli to the API type WindowBasedMetricSli.
+func (in *SLOWindowBasedMetricSli) toWindowBasedMetricSli(ctx context.Context, namespace string) (*slosservice.WindowBasedMetricSli, error) {
+	out := &slosservice.WindowBasedMetricSli{}
+	v64, err := sLOComparisonOperatorToAPI(in.ComparisonOperator)
+	if err != nil {
+		return nil, fmt.Errorf("spec.windowBasedMetric.comparisonOperator: %w", err)
+	}
+	out.ComparisonOperator = v64
+	if in.MissingDataStrategy != nil {
+		v65, err := sLOMissingDataStrategyToAPI(*in.MissingDataStrategy)
+		if err != nil {
+			return nil, fmt.Errorf("spec.windowBasedMetric.missingDataStrategy: %w", err)
+		}
+		out.MissingDataStrategy = &v65
+	}
+	v66, err := in.Query.toMetric(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+	out.Query = *v66
+	if in.Threshold != nil {
+		v67 := float32((*in.Threshold).AsApproximateFloat64())
+		out.Threshold = &v67
+	}
+	v68, err := sLOWindowSloWindowToAPI(in.Window)
 	if err != nil {
 		return nil, fmt.Errorf("spec.windowBasedMetric.window: %w", err)
 	}
-	out.Window = v38
+	out.Window = v68
 	return out, nil
 }
 
 // toSlo1 converts the SLOSpec to the API type Slo1.
 func (in *SLOSpec) toSlo1(ctx context.Context, namespace string) (*slosservice.Slo1, error) {
 	out := &slosservice.Slo1{}
-	if in.SliType.ApmSli != nil {
-		v16, err := in.SliType.ApmSli.toApmSli(ctx, namespace)
-		if err != nil {
-			return nil, err
+	if in.SliType != nil {
+		if in.SliType.ApmSli != nil {
+			v16, err := in.SliType.ApmSli.toApmSli(ctx, namespace)
+			if err != nil {
+				return nil, err
+			}
+			out.ApmSli = v16
 		}
-		out.ApmSli = v16
 	}
 	out.Description = in.Description
 	if len(in.Labels) != 0 {
@@ -251,28 +506,39 @@ func (in *SLOSpec) toSlo1(ctx context.Context, namespace string) (*slosservice.S
 		}
 		out.ProductType = &v28
 	}
-	if in.SliType.RequestBasedMetric != nil {
-		v31, err := in.SliType.RequestBasedMetric.toRequestBasedMetricSli(ctx, namespace)
+	if in.SliType != nil {
+		if in.SliType.RequestBasedMetric != nil {
+			v31, err := in.SliType.RequestBasedMetric.toRequestBasedMetricSli(ctx, namespace)
+			if err != nil {
+				return nil, err
+			}
+			out.RequestBasedMetricSli = v31
+		}
+	}
+	if in.SliDefinition != nil {
+		v61, err := in.SliDefinition.toSli(ctx, namespace)
 		if err != nil {
 			return nil, err
 		}
-		out.RequestBasedMetricSli = v31
+		out.SliDefinition = v61
 	}
 	if in.Window.TimeFrame != nil {
-		v32, err := sLOSloTimeFrameToAPI(*in.Window.TimeFrame)
+		v62, err := sLOSloTimeFrameToAPI(*in.Window.TimeFrame)
 		if err != nil {
 			return nil, fmt.Errorf("spec.timeFrame: %w", err)
 		}
-		out.SloTimeFrame = v32
+		out.SloTimeFrame = v62
 	}
-	v33 := float32(in.TargetThresholdPercentage.AsApproximateFloat64())
-	out.TargetThresholdPercentage = &v33
-	if in.SliType.WindowBasedMetric != nil {
-		v39, err := in.SliType.WindowBasedMetric.toWindowBasedMetricSli(ctx, namespace)
-		if err != nil {
-			return nil, err
+	v63 := float32(in.TargetThresholdPercentage.AsApproximateFloat64())
+	out.TargetThresholdPercentage = &v63
+	if in.SliType != nil {
+		if in.SliType.WindowBasedMetric != nil {
+			v69, err := in.SliType.WindowBasedMetric.toWindowBasedMetricSli(ctx, namespace)
+			if err != nil {
+				return nil, err
+			}
+			out.WindowBasedMetricSli = v69
 		}
-		out.WindowBasedMetricSli = v39
 	}
 	return out, nil
 }
@@ -325,24 +591,6 @@ func sLOSloProductTypeToAPI(value string) (slosservice.SloProductType, error) {
 	return v, nil
 }
 
-// sLOSloTimeFrameValues maps each value of the spec to the API value.
-var sLOSloTimeFrameValues = map[string]slosservice.SloTimeFrame{
-	"unspecified": slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_UNSPECIFIED,
-	"7d":          slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_7_DAYS,
-	"14d":         slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_14_DAYS,
-	"21d":         slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_21_DAYS,
-	"28d":         slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_28_DAYS,
-}
-
-// sLOSloTimeFrameToAPI returns the API value of a spec value.
-func sLOSloTimeFrameToAPI(value string) (slosservice.SloTimeFrame, error) {
-	v, ok := sLOSloTimeFrameValues[value]
-	if !ok {
-		return "", fmt.Errorf("unknown value %q", value)
-	}
-	return v, nil
-}
-
 // sLOComparisonOperatorValues maps each value of the spec to the API value.
 var sLOComparisonOperatorValues = map[string]slosservice.ComparisonOperator{
 	"greaterThan":         slosservice.COMPARISONOPERATOR_COMPARISON_OPERATOR_GREATER_THAN,
@@ -370,6 +618,24 @@ var sLOMissingDataStrategyValues = map[string]slosservice.MissingDataStrategy{
 // sLOMissingDataStrategyToAPI returns the API value of a spec value.
 func sLOMissingDataStrategyToAPI(value string) (slosservice.MissingDataStrategy, error) {
 	v, ok := sLOMissingDataStrategyValues[value]
+	if !ok {
+		return "", fmt.Errorf("unknown value %q", value)
+	}
+	return v, nil
+}
+
+// sLOSloTimeFrameValues maps each value of the spec to the API value.
+var sLOSloTimeFrameValues = map[string]slosservice.SloTimeFrame{
+	"unspecified": slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_UNSPECIFIED,
+	"7d":          slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_7_DAYS,
+	"14d":         slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_14_DAYS,
+	"21d":         slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_21_DAYS,
+	"28d":         slosservice.SLOTIMEFRAME_SLO_TIME_FRAME_28_DAYS,
+}
+
+// sLOSloTimeFrameToAPI returns the API value of a spec value.
+func sLOSloTimeFrameToAPI(value string) (slosservice.SloTimeFrame, error) {
+	v, ok := sLOSloTimeFrameValues[value]
 	if !ok {
 		return "", fmt.Errorf("unknown value %q", value)
 	}

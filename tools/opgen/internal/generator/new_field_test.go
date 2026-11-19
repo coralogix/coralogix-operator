@@ -533,7 +533,8 @@ func TestSLONewFieldWithoutOverrides(t *testing.T) {
 	}
 	render := func(spec []byte) map[string][]byte {
 		t.Helper()
-		doc, err := model.Load(spec)
+		// The same loader as generation: it gives an exclusive bound its inclusive form.
+		doc, err := (&documents{raw: spec}).forKind(entry, file)
 		if err != nil {
 			t.Fatal(err)
 		}

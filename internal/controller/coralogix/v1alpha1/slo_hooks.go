@@ -30,10 +30,10 @@ import (
 // are empty objects, and Kubernetes 1.29 and earlier cannot evaluate a CEL rule that reads such a
 // field, so the CRD has no rule for them.
 func (r *SLOReconciler) validate(_ context.Context, _ logr.Logger, cr *coralogixv1alpha1.SLO) error {
-	apm := cr.Spec.SliType.ApmSli
-	if apm == nil {
+	if cr.Spec.SliType == nil || cr.Spec.SliType.ApmSli == nil {
 		return nil
 	}
+	apm := cr.Spec.SliType.ApmSli
 	if (apm.ErrorConfig == nil) == (apm.LatencyConfig == nil) {
 		return errors.New("sliType.apmSli: exactly one of errorConfig or latencyConfig must be set")
 	}

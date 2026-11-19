@@ -54,10 +54,13 @@ type coverage struct {
 	sent map[coverageKey]bool
 	// extra counts the list items that the current step added beyond the first.
 	extra int
+	// crOnly holds the arms that are released CR groups. A request has no key of such an arm: the
+	// fields below it are the arms and values that a request holds.
+	crOnly map[coverageKey]bool
 }
 
 func newCoverage(d *kindData, file *e2eFile) (*coverage, error) {
-	c := &coverage{coupled: map[string]bool{}, coupledKeys: map[coverageKey]bool{}, label: map[coverageKey]string{}, covered: map[coverageKey]bool{}, skipped: map[coverageKey]bool{}, owner: map[*crType]string{}}
+	c := &coverage{coupled: map[string]bool{}, coupledKeys: map[coverageKey]bool{}, label: map[coverageKey]string{}, covered: map[coverageKey]bool{}, skipped: map[coverageKey]bool{}, owner: map[*crType]string{}, crOnly: map[coverageKey]bool{}}
 	c.walk(d.Spec, d.Kind, "", map[*crType]bool{})
 	if err := c.readSkips(file); err != nil {
 		return nil, err
@@ -119,6 +122,9 @@ func (c *coverage) walk(t *crType, parentComponent, path string, seen map[*crTyp
 		for _, arm := range g.Arms {
 			key := coverageKey{"arm", component, arm}
 			c.add(key, fmt.Sprintf("the oneOf arm %s of %s (component %s)", arm, pathLabel(path), component))
+			if i := slices.IndexFunc(t.Fields, func(f *crField) bool { return f.API == arm }); i >= 0 && t.Fields[i].group {
+				c.crOnly[key] = true
+			}
 		}
 	}
 	for _, f := range t.Fields {
@@ -467,6 +473,9 @@ func (c *coverage) sweep(v *sampleValues, d *kindData) ([][]sweepCopy, error) {
 func (c *coverage) expectations(keys []coverageKey) []string {
 	var out []string
 	for _, key := range keys {
+		if c.crOnly[key] {
+			continue // a group of the CR: the request holds the fields below it
+		}
 		if key.kind == "arm" {
 			out = append(out, strconv.Quote(`"`+key.name+`":`))
 		} else {

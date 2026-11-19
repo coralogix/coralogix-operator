@@ -241,20 +241,58 @@ var sLOCoverageSteps = [][]string{
     }
   },
   "productType": "unspecified",
-  "targetThresholdPercentage": 99,
-  "sliType": {
-    "windowBasedMetric": {
-      "comparisonOperator": "greaterThan",
-      "missingDataStrategy": "uncounted",
-      "query": {
-        "query": "sum(rate(coralogix_e2e_events_total{status=\"error\"}[5m]))"
+  "sliDefinition": {
+    "windowBased": {
+      "custom": {
+        "comparisonOperator": "greaterThan",
+        "query": {
+          "query": "sum(rate(coralogix_e2e_events_total{status=\"error\"}[5m]))"
+        },
+        "threshold": 1
       },
-      "threshold": 1,
+      "missingDataStrategy": "uncounted",
       "window": "1m"
     }
   },
+  "targetThresholdPercentage": 99,
   "window": {
     "timeFrame": "14d"
+  }
+}`,
+		`{
+  "description": "sample-description",
+  "labels": {
+    "key": "sample-labels"
+  },
+  "name": "sample-name",
+  "ownershipTags": {
+    "environment": {
+      "staticValues": [
+        "e2e"
+      ]
+    },
+    "team": {
+      "labelKeys": [
+        "team"
+      ]
+    }
+  },
+  "productType": "unspecified",
+  "sliDefinition": {
+    "requestBased": {
+      "custom": {
+        "goodEvents": {
+          "query": "sum(rate(coralogix_e2e_events_total{status=\"ok\"}[1m]))"
+        },
+        "totalEvents": {
+          "query": "sum(rate(coralogix_e2e_events_total[1m]))"
+        }
+      }
+    }
+  },
+  "targetThresholdPercentage": 99,
+  "window": {
+    "timeFrame": "21d"
   }
 }`,
 		`{
@@ -289,7 +327,7 @@ var sLOCoverageSteps = [][]string{
     }
   },
   "window": {
-    "timeFrame": "21d"
+    "timeFrame": "28d"
   }
 }`,
 		`{
@@ -324,7 +362,7 @@ var sLOCoverageSteps = [][]string{
     }
   },
   "window": {
-    "timeFrame": "28d"
+    "timeFrame": "7d"
   }
 }`,
 		`{

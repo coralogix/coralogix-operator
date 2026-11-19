@@ -140,7 +140,7 @@ func getSampleSlo(name, namespace string) *coralogixv1alpha1.SLO {
 			Labels: map[string]string{
 				"team": "e2e-test",
 			},
-			SliType: coralogixv1alpha1.SLOSpecSliType{
+			SliType: &coralogixv1alpha1.SLOSpecSliType{
 				RequestBasedMetric: &coralogixv1alpha1.SLORequestBasedMetricSli{
 					GoodEvents: coralogixv1alpha1.SLOMetric{
 						Query: "sum(rate(coralogix_logs_events_total{app=\"coralogix-slo-example\", status=\"success\"}[1m]))",
@@ -179,7 +179,7 @@ var _ = Describe("SLO validation", func() {
 	It("Should be rejected when no SLI type is set", func(ctx context.Context) {
 		By("Creating an SLO with an empty sliType")
 		slo := getSampleWindowBasedSlo(uniqueName("slo-no-sli"))
-		slo.Spec.SliType = coralogixv1alpha1.SLOSpecSliType{}
+		slo.Spec.SliType = &coralogixv1alpha1.SLOSpecSliType{}
 
 		err := crClient.Create(ctx, slo)
 		Expect(err).To(HaveOccurred())
@@ -497,7 +497,7 @@ func getSampleWindowBasedSlo(name string) *coralogixv1alpha1.SLO {
 		Spec: coralogixv1alpha1.SLOSpec{
 			Name:        name,
 			Description: ptr.To("This is a sample window-based slo"),
-			SliType: coralogixv1alpha1.SLOSpecSliType{
+			SliType: &coralogixv1alpha1.SLOSpecSliType{
 				WindowBasedMetric: &coralogixv1alpha1.SLOWindowBasedMetricSli{
 					Query: coralogixv1alpha1.SLOMetric{
 						Query: "avg(avg_over_time(request_duration_seconds[1m]))",
@@ -556,7 +556,7 @@ func getSampleAPMSlo(name, service string) *coralogixv1alpha1.SLO {
 			Name:        name,
 			Description: ptr.To("This is a sample apm slo"),
 			ProductType: ptr.To("apm"),
-			SliType: coralogixv1alpha1.SLOSpecSliType{
+			SliType: &coralogixv1alpha1.SLOSpecSliType{
 				ApmSli: &coralogixv1alpha1.SLOApmSli{
 					Services: []string{service},
 				},

@@ -23,7 +23,8 @@ import (
 )
 
 // SLOSpec defines the desired state of a SLO.
-// +kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == 'apm') || has(self.sliType.apmSli)",message="productType 'apm' requires sliType.apmSli"
+// +kubebuilder:validation:XValidation:rule="(has(self.sliType) ? 1 : 0) + (has(self.sliDefinition) ? 1 : 0) == 1",message="Exactly one of sliType, sliDefinition must be set"
+// +kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == 'apm') || has(self.sliDefinition) || (has(self.sliType) && has(self.sliType.apmSli))",message="productType 'apm' requires sliType.apmSli"
 type SLOSpec struct {
 	// Human-readable description of the SLO.
 	// +optional
@@ -45,10 +46,14 @@ type SLOSpec struct {
 	// +kubebuilder:validation:Enum=unspecified;apm
 	ProductType *string `json:"productType,omitempty"`
 
+	// Definition of the SLI: how it counts (request-based or window-based) and where its values come from (custom metric queries or APM). Replaces the deprecated `requestBasedMetricSli`, `windowBasedMetricSli` and `apmSli`. A request must set either `sliDefinition` or one of the deprecated fields. When `sliDefinition` is set, it takes precedence and the deprecated fields are ignored. Responses always include `sliDefinition`, and also include the matching deprecated field when the SLI can be expressed with it.
+	// +optional
+	SliDefinition *SLOSli `json:"sliDefinition,omitempty"`
+
 	// Target compliance percentage threshold for the SLO (e.g., 99.9 for three nines).
 	TargetThresholdPercentage resource.Quantity `json:"targetThresholdPercentage"`
 
-	SliType SLOSpecSliType `json:"sliType"`
+	SliType *SLOSpecSliType `json:"sliType,omitempty"`
 
 	Window SLOSpecWindow `json:"window"`
 }
@@ -173,6 +178,209 @@ type SLORequestBasedMetricSli struct {
 // SLOMetric is the Metric object of the API.
 type SLOMetric struct {
 	// Query string. Required. A missing or empty query is rejected.
+	Query string `json:"query"`
+}
+
+// SLOSli is the Sli object of the API.
+// +kubebuilder:validation:XValidation:rule="(has(self.requestBased) ? 1 : 0) + (has(self.windowBased) ? 1 : 0) == 1",message="Exactly one of requestBased, windowBased must be set"
+type SLOSli struct {
+	// Count per request: the SLI is the ratio of good events to total events over the SLO time frame.
+	// +optional
+	RequestBased *SLORequestBasedSli `json:"requestBased,omitempty"`
+
+	// Count per time window: the SLI is the ratio of good windows to all windows over the SLO time frame.
+	// +optional
+	WindowBased *SLOWindowBasedSli `json:"windowBased,omitempty"`
+}
+
+// SLORequestBasedSli is the RequestBasedSli object of the API.
+// +kubebuilder:validation:XValidation:rule="(has(self.apm) ? 1 : 0) + (has(self.custom) ? 1 : 0) == 1",message="Exactly one of apm, custom must be set"
+type SLORequestBasedSli struct {
+	// Good and total events generated from APM span data for the selected services.
+	// +optional
+	Apm *SLOApmRequestBasedSource `json:"apm,omitempty"`
+
+	// Custom metric queries for the good and total events.
+	// +optional
+	Custom *SLORequestBasedMetricSliAtSpecSliDefinitionRequestBasedCustom6975aca20ec9 `json:"custom,omitempty"`
+}
+
+// SLOApmRequestBasedSource is the ApmRequestBasedSource object of the API.
+// +kubebuilder:validation:XValidation:rule="(has(self.availability) ? 1 : 0) + (has(self.latency) ? 1 : 0) == 1",message="Exactly one of availability, latency must be set"
+type SLOApmRequestBasedSource struct {
+	// A span is good when it has no error.
+	// +optional
+	Availability *SLOApmRequestBasedAvailability `json:"availability,omitempty"`
+
+	// A span is good when its duration is <= `thresholdMs`. With the `APM_SOURCE_E2M` metric source, any `thresholdMs` is accepted. With `APM_SOURCE_SPAN_METRICS`, `thresholdMs` must be one of the bucket bounds of the selected service's span duration histogram; rejected otherwise.
+	// +optional
+	Latency *SLOApmRequestBasedLatency `json:"latency,omitempty"`
+
+	// Services and filters to count spans of. Required.
+	Selector SLOApmSelector `json:"selector"`
+}
+
+// SLOApmRequestBasedAvailability is the ApmRequestBasedAvailability object of the API.
+type SLOApmRequestBasedAvailability struct {
+}
+
+// SLOApmRequestBasedLatency is the ApmRequestBasedLatency object of the API.
+type SLOApmRequestBasedLatency struct {
+	// Latency threshold in milliseconds, greater than 0, with at most 3 decimal places (whole microseconds). A span is good when its duration is <= this value. Required.
+	ThresholdMs resource.Quantity `json:"thresholdMs"`
+}
+
+// SLOApmSelector is the ApmSelector object of the API.
+type SLOApmSelector struct {
+	// Filters on the labels of the APM metrics, narrowing the spans they cover. At most 20, each with at most 50 values, and keys and values of at most 256 characters. With the `APM_SOURCE_E2M` metric source, keys must be labels of the account's service catalog span duration metric; others are rejected.
+	// +optional
+	// +kubebuilder:validation:MaxItems=20
+	Filters []SLOApmFilterAtSpecSliDefinitionRequestBasedApmSelectorFilters8d0adc330ae1 `json:"filters,omitempty"`
+
+	// Labels to group SLO results by. At most 6. With the `APM_SOURCE_E2M` metric source, each must be a label of the account's service catalog span duration metric; others are rejected.
+	// +optional
+	// +kubebuilder:validation:MaxItems=6
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=256
+	GroupingKeys []string `json:"groupingKeys,omitempty"`
+
+	// Service names to monitor. Required. Exactly one service.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=256
+	Services []string `json:"services"`
+}
+
+// SLOApmFilterAtSpecSliDefinitionRequestBasedApmSelectorFilters8d0adc330ae1 is the ApmFilter object of the API.
+type SLOApmFilterAtSpecSliDefinitionRequestBasedApmSelectorFilters8d0adc330ae1 struct {
+	// Label/tag name to filter on. Required. A missing or empty key is rejected.
+	// +kubebuilder:validation:MinLength=1
+	Key string `json:"key"`
+
+	// How literals on `key` are compared. Every item in `apmSli.filters` must use the same mode: all implicit (legacy) or all explicit — mixing modes in one list is rejected. Implicit: omitted or `APM_FILTER_MATCH_OPERATOR_UNSPECIFIED` on every item — multiple items with the same `key` OR-merge literals with exact (IS) comparison; sending `UNSPECIFIED` is equivalent to omitting the field (neither is stored as explicit `IS`). Explicit: `APM_FILTER_MATCH_OPERATOR_IS`, `STARTS_WITH`, `ENDS_WITH`, or `INCLUDES` on every item — each item is a separate AND criterion; OR applies only among literals in that item (explicit `IS` differs from implicit when several items share a `key`). Items on different keys are AND-combined. Pattern operators use literal substring matching (not caller-supplied regex). Applies only when the item has at least one literal: non-empty `values`, or deprecated `value` when `values` is omitted or empty (non-empty `values` takes precedence over `value`); otherwise rejected.
+	// +optional
+	// +kubebuilder:validation:Enum=unspecified;is;startsWith;endsWith;includes
+	MatchOperator *string `json:"matchOperator,omitempty"`
+
+	// Preferred: multiple values to match (OR semantics, e.g. status IN [500, 503])
+	// +optional
+	Values []string `json:"values,omitempty"`
+}
+
+// SLORequestBasedMetricSliAtSpecSliDefinitionRequestBasedCustom6975aca20ec9 is the RequestBasedMetricSli object of the API.
+type SLORequestBasedMetricSliAtSpecSliDefinitionRequestBasedCustom6975aca20ec9 struct {
+	// Definition of a metric used in SLOs
+	GoodEvents SLOMetricAtSpecSliDefinitionRequestBasedCustomGoodEvents4fcd16bdd1ba `json:"goodEvents"`
+
+	// Definition of a metric used in SLOs
+	TotalEvents SLOMetricAtSpecSliDefinitionRequestBasedCustomTotalEvents1d04869c58cf `json:"totalEvents"`
+
+	// GroupByLabels has no effect. The Coralogix API derives the SLO grouping itself and
+	// the value is never sent. The field is kept because removing it would break existing
+	// resources.
+	// Deprecated: ignored by the operator and by the API.
+	// +optional
+	GroupByLabels []string `json:"groupByLabels,omitempty"`
+}
+
+// SLOMetricAtSpecSliDefinitionRequestBasedCustomGoodEvents4fcd16bdd1ba is the Metric object of the API.
+type SLOMetricAtSpecSliDefinitionRequestBasedCustomGoodEvents4fcd16bdd1ba struct {
+	// Query string. Required. A missing or empty query is rejected.
+	// +kubebuilder:validation:MinLength=1
+	Query string `json:"query"`
+}
+
+// SLOMetricAtSpecSliDefinitionRequestBasedCustomTotalEvents1d04869c58cf is the Metric object of the API.
+type SLOMetricAtSpecSliDefinitionRequestBasedCustomTotalEvents1d04869c58cf struct {
+	// Query string. Required. A missing or empty query is rejected.
+	// +kubebuilder:validation:MinLength=1
+	Query string `json:"query"`
+}
+
+// SLOWindowBasedSli is the WindowBasedSli object of the API.
+// +kubebuilder:validation:XValidation:rule="(has(self.custom) ? 1 : 0) + (has(self.apm) ? 1 : 0) == 1",message="Exactly one of custom, apm must be set"
+type SLOWindowBasedSli struct {
+	// Window value generated from APM span data for the selected services.
+	// +optional
+	Apm *SLOApmWindowBasedSource `json:"apm,omitempty"`
+
+	// Custom metric query yielding the value of each window, and how it is compared to a threshold.
+	// +optional
+	Custom *SLOCustomWindowBasedSource `json:"custom,omitempty"`
+
+	// How a window without data is counted.
+	// +optional
+	// +kubebuilder:validation:Enum=uncounted;good;bad
+	// +kubebuilder:default=`uncounted`
+	MissingDataStrategy *string `json:"missingDataStrategy,omitempty"`
+
+	// Size of each evaluated time window. Required.
+	// +kubebuilder:validation:Enum={"1m","5m"}
+	Window string `json:"window"`
+}
+
+// SLOApmWindowBasedSource is the ApmWindowBasedSource object of the API.
+// +kubebuilder:validation:XValidation:rule="(has(self.availability) ? 1 : 0) + (has(self.latency) ? 1 : 0) == 1",message="Exactly one of availability, latency must be set"
+type SLOApmWindowBasedSource struct {
+	// Each window's value is its ratio of spans without an error, from 0 to 1. A window is good when its value is >= `thresholdRatio`.
+	// +optional
+	Availability *SLOApmWindowBasedAvailability `json:"availability,omitempty"`
+
+	// Each window's value is its aggregated span duration, in milliseconds. A window is good when its value is <= `thresholdMs`.
+	// +optional
+	Latency *SLOApmWindowBasedLatency `json:"latency,omitempty"`
+
+	// Services and filters to aggregate spans of. Required.
+	Selector SLOApmSelector `json:"selector"`
+}
+
+// SLOApmWindowBasedAvailability is the ApmWindowBasedAvailability object of the API.
+type SLOApmWindowBasedAvailability struct {
+	// Availability threshold as a ratio from 0 to 1 (not a percentage). A window is good when its value is >= this value. Required.
+	ThresholdRatio resource.Quantity `json:"thresholdRatio"`
+}
+
+// SLOApmWindowBasedLatency is the ApmWindowBasedLatency object of the API.
+// +kubebuilder:validation:XValidation:rule="(has(self.quantile) ? 1 : 0) + (has(self.average) ? 1 : 0) == 1",message="Exactly one of quantile, average must be set"
+type SLOApmWindowBasedLatency struct {
+	// Aggregate by the mean span duration.
+	// +optional
+	Average *SLOApmLatencyAverage `json:"average,omitempty"`
+
+	// Aggregate by a percentile of span durations. `percentile` is required, greater than 0 and at most 1; omitting it is the same as sending 0, which is rejected.
+	// +optional
+	Quantile *SLOApmLatencyQuantileAtSpecSliDefinitionWindowBasedApmLatencyQuantile0fbadf727857 `json:"quantile,omitempty"`
+
+	// Latency threshold in milliseconds, with at most 3 decimal places (whole microseconds). A window is good when its aggregated duration is <= this value. Required. Should be greater than 0; 0 is accepted only for compatibility and is deprecated.
+	ThresholdMs resource.Quantity `json:"thresholdMs"`
+}
+
+// SLOApmLatencyQuantileAtSpecSliDefinitionWindowBasedApmLatencyQuantile0fbadf727857 is the ApmLatencyQuantile object of the API.
+type SLOApmLatencyQuantileAtSpecSliDefinitionWindowBasedApmLatencyQuantile0fbadf727857 struct {
+	// Percentile for latency SLOs (0.95 = P95, 0.99 = P99)
+	// +optional
+	// +kubebuilder:default=`0`
+	Percentile *resource.Quantity `json:"percentile,omitempty"`
+}
+
+// SLOCustomWindowBasedSource is the CustomWindowBasedSource object of the API.
+type SLOCustomWindowBasedSource struct {
+	// How each window's value is compared to `threshold`. Required.
+	// +kubebuilder:validation:Enum=greaterThan;greaterThanOrEquals;lessThan;lessThanOrEquals
+	ComparisonOperator string `json:"comparisonOperator"`
+
+	// Query yielding the value of each window. Required.
+	Query SLOMetricAtSpecSliDefinitionWindowBasedCustomQuery6bce2cb62f2c `json:"query"`
+
+	// Value each window is compared to, in the unit of the query's result. Required.
+	Threshold resource.Quantity `json:"threshold"`
+}
+
+// SLOMetricAtSpecSliDefinitionWindowBasedCustomQuery6bce2cb62f2c is the Metric object of the API.
+type SLOMetricAtSpecSliDefinitionWindowBasedCustomQuery6bce2cb62f2c struct {
+	// Query string. Required. A missing or empty query is rejected.
+	// +kubebuilder:validation:MinLength=1
 	Query string `json:"query"`
 }
 

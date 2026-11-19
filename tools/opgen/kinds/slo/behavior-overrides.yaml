@@ -30,9 +30,10 @@ validators:
       add: ['+kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"']
     spec.ownershipTags.team:
       add: ['+kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"']
-    # The API rejects productType apm without an apmSli.
+    # The API rejects productType apm without an apmSli. A sliDefinition passes: whether it needs the
+    # product type is not probed, and the API reports it.
     spec:
-      add: ['+kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == ''apm'') || has(self.sliType.apmSli)",message="productType ''apm'' requires sliType.apmSli"']
+      add: ['+kubebuilder:validation:XValidation:rule="!(has(self.productType) && self.productType == ''apm'') || has(self.sliDefinition) || (has(self.sliType) && has(self.sliType.apmSli))",message="productType ''apm'' requires sliType.apmSli"']
     # The released CRD accepts 90d. The API no longer has it, so the conversion rejects it.
     spec.window.timeFrame:
       remove: ['+kubebuilder:validation:Enum={"unspecified","7d","14d","21d","28d"}']
@@ -57,8 +58,14 @@ groups:
   sliType:
     fields: [requestBasedMetricSli, windowBasedMetricSli, apmSli]
     requireOne: true
+    # The new sliDefinition replaces these arms, so a CR can leave sliType out.
+    optional: true
   window:
     fields: [sloTimeFrame]
+# The contract says "a request must set either sliDefinition or one of the deprecated fields" in
+# text only. When a request sets both, the API uses sliDefinition and ignores the other.
+exactlyOneOf:
+  - [sliType, sliDefinition]
 types:
   Slo:
     fields:
@@ -79,9 +86,6 @@ types:
         description: Definition of a window-based SLI based on metrics
       apmSli:
         description: Definition of an APM-based SLI with automatic query generation
-      # The API's new SLI definition. Its APM latency threshold has an exclusive minimum, which
-      # the generator cannot express. The released CR has no such field.
-      sliDefinition: {skip: true}
   RequestBasedMetricSli:
     ignored:
       groupByLabels:
