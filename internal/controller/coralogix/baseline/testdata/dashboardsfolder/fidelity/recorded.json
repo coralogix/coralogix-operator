@@ -285,7 +285,7 @@
         {
           "status": 200,
           "response": {
-            "folderId": "\u003cid\u003e"
+            "folderId": "{{blank}}"
           }
         },
         {

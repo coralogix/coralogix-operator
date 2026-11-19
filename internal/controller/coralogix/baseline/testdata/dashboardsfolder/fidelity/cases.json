@@ -284,7 +284,8 @@
             "folder": {
               "name": "   "
             }
-          }
+          },
+          "capture": "blank"
         },
         {
           "method": "POST",
