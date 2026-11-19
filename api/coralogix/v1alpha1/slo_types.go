@@ -206,7 +206,6 @@ type SLORequestBasedSli struct {
 }
 
 // SLOApmRequestBasedSource is the ApmRequestBasedSource object of the API.
-// +kubebuilder:validation:XValidation:rule="(has(self.availability) ? 1 : 0) + (has(self.latency) ? 1 : 0) == 1",message="Exactly one of availability, latency must be set"
 type SLOApmRequestBasedSource struct {
 	// A span is good when it has no error.
 	// +optional
@@ -342,7 +341,6 @@ type SLOApmWindowBasedAvailability struct {
 }
 
 // SLOApmWindowBasedLatency is the ApmWindowBasedLatency object of the API.
-// +kubebuilder:validation:XValidation:rule="(has(self.quantile) ? 1 : 0) + (has(self.average) ? 1 : 0) == 1",message="Exactly one of quantile, average must be set"
 type SLOApmWindowBasedLatency struct {
 	// Aggregate by the mean span duration.
 	// +optional

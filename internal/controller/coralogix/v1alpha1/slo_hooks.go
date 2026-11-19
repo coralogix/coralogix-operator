@@ -26,19 +26,44 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 )
 
-// validate checks the oneOf groups of apmSli that the CRD cannot check. errorConfig and average
-// are empty objects, and Kubernetes 1.29 and earlier cannot evaluate a CEL rule that reads such a
-// field, so the CRD has no rule for them.
+// validate checks the oneOf groups of the APM SLI that the CRD cannot check: apmSli, and the APM
+// source of sliDefinition. errorConfig, average, and availability of a request-based source are
+// empty objects, and Kubernetes 1.29 and earlier cannot evaluate a CEL rule that reads such a field,
+// so the CRD has no rule for them.
 func (r *SLOReconciler) validate(_ context.Context, _ logr.Logger, cr *coralogixv1alpha1.SLO) error {
-	if cr.Spec.SliType == nil || cr.Spec.SliType.ApmSli == nil {
+	if err := validateAPMSli(cr.Spec.SliType); err != nil {
+		return err
+	}
+	return validateAPMDefinition(cr.Spec.SliDefinition)
+}
+
+func validateAPMSli(sliType *coralogixv1alpha1.SLOSpecSliType) error {
+	if sliType == nil || sliType.ApmSli == nil {
 		return nil
 	}
-	apm := cr.Spec.SliType.ApmSli
+	apm := sliType.ApmSli
 	if (apm.ErrorConfig == nil) == (apm.LatencyConfig == nil) {
 		return errors.New("sliType.apmSli: exactly one of errorConfig or latencyConfig must be set")
 	}
 	if latency := apm.LatencyConfig; latency != nil && (latency.Quantile == nil) == (latency.Average == nil) {
 		return errors.New("sliType.apmSli.latencyConfig: exactly one of quantile or average must be set")
+	}
+	return nil
+}
+
+func validateAPMDefinition(definition *coralogixv1alpha1.SLOSli) error {
+	if definition == nil {
+		return nil
+	}
+	if requestBased := definition.RequestBased; requestBased != nil && requestBased.Apm != nil {
+		if apm := requestBased.Apm; (apm.Availability == nil) == (apm.Latency == nil) {
+			return errors.New("sliDefinition.requestBased.apm: exactly one of availability or latency must be set")
+		}
+	}
+	if windowBased := definition.WindowBased; windowBased != nil && windowBased.Apm != nil && windowBased.Apm.Latency != nil {
+		if latency := windowBased.Apm.Latency; (latency.Quantile == nil) == (latency.Average == nil) {
+			return errors.New("sliDefinition.windowBased.apm.latency: exactly one of quantile or average must be set")
+		}
 	}
 	return nil
 }

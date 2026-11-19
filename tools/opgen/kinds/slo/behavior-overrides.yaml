@@ -23,6 +23,12 @@ validators:
       remove: ['+kubebuilder:validation:XValidation:rule="(has(self.errorConfig) ? 1 : 0) + (has(self.latencyConfig) ? 1 : 0) <= 1",message="At most one of errorConfig, latencyConfig can be set"']
     spec.sliType.apmSli.latencyConfig#type:
       remove: ['+kubebuilder:validation:XValidation:rule="(has(self.quantile) ? 1 : 0) + (has(self.average) ? 1 : 0) <= 1",message="At most one of quantile, average can be set"']
+    # The same holds for the APM source of sliDefinition: availability of a request-based source and
+    # average of a window-based latency are empty objects. The validate hook checks both choices.
+    spec.sliDefinition.requestBased.apm#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.availability) ? 1 : 0) + (has(self.latency) ? 1 : 0) == 1",message="Exactly one of availability, latency must be set"']
+    spec.sliDefinition.windowBased.apm.latency#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.quantile) ? 1 : 0) + (has(self.average) ? 1 : 0) == 1",message="Exactly one of quantile, average must be set"']
     # The API rejects both lists when both are nonempty.
     spec.ownershipTags.service:
       add: ['+kubebuilder:validation:XValidation:rule="!(has(self.staticValues) && self.staticValues.size() > 0 && has(self.labelKeys) && self.labelKeys.size() > 0)",message="Use either staticValues or labelKeys, not both"']

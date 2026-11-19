@@ -19297,8 +19297,6 @@ Count per request: the SLI is the ratio of good events to total events over the 
         <td>object</td>
         <td>
           Good and total events generated from APM span data for the selected services.<br/>
-          <br/>
-            <i>Validations</i>:<li>(has(self.availability) ? 1 : 0) + (has(self.latency) ? 1 : 0) == 1: Exactly one of availability, latency must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -19652,8 +19650,6 @@ Window value generated from APM span data for the selected services.
         <td>object</td>
         <td>
           Each window's value is its aggregated span duration, in milliseconds. A window is good when its value is <= `thresholdMs`.<br/>
-          <br/>
-            <i>Validations</i>:<li>(has(self.quantile) ? 1 : 0) + (has(self.average) ? 1 : 0) == 1: Exactly one of quantile, average must be set</li>
         </td>
         <td>false</td>
       </tr></tbody>

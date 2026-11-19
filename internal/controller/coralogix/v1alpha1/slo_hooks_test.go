@@ -73,6 +73,64 @@ func TestSLOValidateChecksTheAPMArms(t *testing.T) {
 	}
 }
 
+func sloWithDefinition(definition *coralogixv1alpha1.SLOSli) *coralogixv1alpha1.SLO {
+	return &coralogixv1alpha1.SLO{Spec: coralogixv1alpha1.SLOSpec{SliDefinition: definition}}
+}
+
+// The CRD cannot check two choices of the APM source of sliDefinition, because one arm of each is an
+// empty object: availability of a request-based source, and average of a window-based latency. So
+// validate does. A definition with no APM source passes, as does the sliType form.
+func TestSLOValidateChecksTheAPMDefinitionArms(t *testing.T) {
+	requestBased := func(availability, latency bool) *coralogixv1alpha1.SLOSli {
+		apm := &coralogixv1alpha1.SLOApmRequestBasedSource{}
+		if availability {
+			apm.Availability = &coralogixv1alpha1.SLOApmRequestBasedAvailability{}
+		}
+		if latency {
+			apm.Latency = &coralogixv1alpha1.SLOApmRequestBasedLatency{ThresholdMs: resource.MustParse("250")}
+		}
+		return &coralogixv1alpha1.SLOSli{RequestBased: &coralogixv1alpha1.SLORequestBasedSli{Apm: apm}}
+	}
+	windowBased := func(quantile, average bool) *coralogixv1alpha1.SLOSli {
+		latency := &coralogixv1alpha1.SLOApmWindowBasedLatency{ThresholdMs: resource.MustParse("250")}
+		if quantile {
+			latency.Quantile = &coralogixv1alpha1.SLOApmLatencyQuantileAtSpecSliDefinitionWindowBasedApmLatencyQuantile0fbadf727857{}
+		}
+		if average {
+			latency.Average = &coralogixv1alpha1.SLOApmLatencyAverage{}
+		}
+		return &coralogixv1alpha1.SLOSli{WindowBased: &coralogixv1alpha1.SLOWindowBasedSli{Apm: &coralogixv1alpha1.SLOApmWindowBasedSource{Latency: latency}}}
+	}
+	for _, tc := range []struct {
+		name    string
+		slo     *coralogixv1alpha1.SLO
+		wantErr string
+	}{
+		{"no sliDefinition", &coralogixv1alpha1.SLO{}, ""},
+		{"a custom request-based SLI", sloWithDefinition(&coralogixv1alpha1.SLOSli{RequestBased: &coralogixv1alpha1.SLORequestBasedSli{Custom: &coralogixv1alpha1.SLORequestBasedMetricSliAtSpecSliDefinitionRequestBasedCustom6975aca20ec9{}}}), ""},
+		{"request-based availability only", sloWithDefinition(requestBased(true, false)), ""},
+		{"request-based latency only", sloWithDefinition(requestBased(false, true)), ""},
+		{"request-based with neither arm", sloWithDefinition(requestBased(false, false)), "sliDefinition.requestBased.apm: exactly one of availability or latency"},
+		{"request-based with both arms", sloWithDefinition(requestBased(true, true)), "sliDefinition.requestBased.apm: exactly one of availability or latency"},
+		{"window-based latency with quantile", sloWithDefinition(windowBased(true, false)), ""},
+		{"window-based latency with average", sloWithDefinition(windowBased(false, true)), ""},
+		{"window-based latency with neither", sloWithDefinition(windowBased(false, false)), "sliDefinition.windowBased.apm.latency: exactly one of quantile or average"},
+		{"window-based latency with both", sloWithDefinition(windowBased(true, true)), "sliDefinition.windowBased.apm.latency: exactly one of quantile or average"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := &SLOReconciler{}
+			for range 2 {
+				err := r.validate(context.Background(), logr.Discard(), tc.slo)
+				if tc.wantErr == "" {
+					require.NoError(t, err)
+				} else {
+					require.ErrorContains(t, err, tc.wantErr)
+				}
+			}
+		})
+	}
+}
+
 func sloResponseRevision(revision int32) slosservice.Slo {
 	return slosservice.Slo{Revision: &slosservice.V1Revision{Revision: ptr.To(revision)}}
 }

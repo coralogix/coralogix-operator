@@ -156,10 +156,6 @@ spec:
                         required:
                         - selector
                         type: object
-                        x-kubernetes-validations:
-                        - message: Exactly one of availability, latency must be set
-                          rule: '(has(self.availability) ? 1 : 0) + (has(self.latency)
-                            ? 1 : 0) == 1'
                       custom:
                         properties:
                           goodEvents:
@@ -229,10 +225,6 @@ spec:
                             required:
                             - thresholdMs
                             type: object
-                            x-kubernetes-validations:
-                            - message: Exactly one of quantile, average must be set
-                              rule: '(has(self.quantile) ? 1 : 0) + (has(self.average)
-                                ? 1 : 0) == 1'
                           selector:
                             properties:
                               filters:
