@@ -214,7 +214,7 @@ func TestExclusiveBoundsAreRewrittenBeforeTheCheck(t *testing.T) {
 	}
 	check := func(extra string) error {
 		contract := filepath.Join(t.TempDir(), "openapi.yaml")
-		if err := os.WriteFile(contract, bytes.Replace(data, []byte(field), []byte(field+extra), -1), 0o644); err != nil {
+		if err := os.WriteFile(contract, bytes.ReplaceAll(data, []byte(field), []byte(field+extra)), 0o644); err != nil {
 			t.Fatal(err)
 		}
 		return Check(CheckOptions{Resource: "Thing", OpenAPIPath: contract, E2EPath: filepath.Join("testdata", "root", "tools", "opgen", "kinds", "thing", "e2e.yaml")})

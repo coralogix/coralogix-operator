@@ -2,6 +2,7 @@ package generator
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"math/big"
 	"strconv"
@@ -32,7 +33,7 @@ func exclusiveBoundsExact(data []byte) ([]byte, error) {
 	}
 	var root yaml.Node
 	if err := yaml.Unmarshal(data, &root); err != nil {
-		return data, nil // model.Load reports a document that does not parse.
+		return nil, fmt.Errorf("read the contract: %w", err)
 	}
 	changed := false
 	var walk func(*yaml.Node)
