@@ -459,7 +459,7 @@ var _ = Describe("Alert", Ordered, func() {
 			},
 		}
 		err := crClient.Create(ctx, alert)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsImmediate, analyticsThreshold must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of logsImmediate, logsThreshold, logsRatioThreshold, logsTimeRelativeThreshold, metricThreshold, tracingThreshold, tracingImmediate, flow, logsAnomaly, metricAnomaly, logsNewValue, logsUniqueCount, sloThreshold, analyticsResultCount, analyticsThreshold must be set"))
 	})
 
 	It("Should create a logs-ratio alert with groupByFor, ignoreInfinity, notificationPayloadFilter and undetectedValuesManagement", func(ctx context.Context) {
@@ -672,11 +672,11 @@ var _ = Describe("Alert", Ordered, func() {
 		}, time.Minute, time.Second).Should(Equal(codes.NotFound))
 	})
 
-	It("Should create, update and clear an analytics immediate alert", func(ctx context.Context) {
+	It("Should create, update and clear an analytics result count alert", func(ctx context.Context) {
 		openAPIAlerts := newOpenAPIClientSet().Alerts()
 
 		By("Creating Alert")
-		alertName := uniqueName("analytics-immediate-alert")
+		alertName := uniqueName("analytics-result-count-alert")
 		analyticsAlert := &coralogixv1beta1.Alert{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      alertName,
@@ -689,13 +689,12 @@ var _ = Describe("Alert", Ordered, func() {
 				// The backend requires groupByKeys to be columns returned by the query.
 				GroupByKeys: []string{"applicationname"},
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
-					AnalyticsImmediate: &coralogixv1beta1.AnalyticsImmediate{
+					AnalyticsResultCount: &coralogixv1beta1.AnalyticsResultCount{
 						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
 							Query: "source logs | groupby $l.applicationname aggregate count() as cnt",
 						},
 						TimeframeMinutes:        45,
 						EvaluationPeriodMinutes: ptr.To(int32(5)),
-						UseRowsAsPermutations:   ptr.To(true),
 						EvaluationDelayMs:       ptr.To(int32(120000)),
 						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
 							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
@@ -722,23 +721,22 @@ var _ = Describe("Alert", Ordered, func() {
 			resp, _, err := openAPIAlerts.AlertDefsServiceGetAlertDef(ctx, analyticsAlertID).Execute()
 			g.Expect(err).ToNot(HaveOccurred())
 			props := resp.GetAlertDef().AlertDefProperties
-			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_IMMEDIATE))
+			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_RESULT_COUNT))
 			g.Expect(props.GetGroupByKeys()).To(Equal([]string{"applicationname"}))
-			immediate := props.AnalyticsImmediate
-			g.Expect(immediate).ToNot(BeNil())
-			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | groupby $l.applicationname aggregate count() as cnt"))
-			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(45)))
-			g.Expect(immediate.EvaluationPeriodMinutes).To(Equal(ptr.To(int32(5))))
-			g.Expect(immediate.UseRowsAsPermutations).To(Equal(ptr.To(true)))
-			g.Expect(immediate.EvaluationDelayMs).To(Equal(ptr.To(int32(120000))))
-			g.Expect(immediate.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING))
-			g.Expect(immediate.NoDataPolicy.GetAutoRetireSeconds()).To(Equal(int32(3600)))
+			resultCount := props.AnalyticsResultCount
+			g.Expect(resultCount).ToNot(BeNil())
+			g.Expect(resultCount.DataprimeQuery.GetQuery()).To(Equal("source logs | groupby $l.applicationname aggregate count() as cnt"))
+			g.Expect(resultCount.GetTimeframeMinutes()).To(Equal(int32(45)))
+			g.Expect(resultCount.EvaluationPeriodMinutes).To(Equal(ptr.To(int32(5))))
+			g.Expect(resultCount.EvaluationDelayMs).To(Equal(ptr.To(int32(120000))))
+			g.Expect(resultCount.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING))
+			g.Expect(resultCount.NoDataPolicy.GetAutoRetireSeconds()).To(Equal(int32(3600)))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Clearing the optional fields")
 		modifiedAlert := fetchedAlert.DeepCopy()
 		modifiedAlert.Spec.GroupByKeys = nil
-		modifiedAlert.Spec.TypeDefinition.AnalyticsImmediate = &coralogixv1beta1.AnalyticsImmediate{
+		modifiedAlert.Spec.TypeDefinition.AnalyticsResultCount = &coralogixv1beta1.AnalyticsResultCount{
 			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count"},
 			TimeframeMinutes: 15,
 		}
@@ -750,15 +748,14 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(err).ToNot(HaveOccurred())
 			props := resp.GetAlertDef().AlertDefProperties
 			g.Expect(props.GetGroupByKeys()).To(BeEmpty())
-			immediate := props.AnalyticsImmediate
-			g.Expect(immediate).ToNot(BeNil())
-			g.Expect(immediate.DataprimeQuery.GetQuery()).To(Equal("source logs | count"))
-			g.Expect(immediate.GetTimeframeMinutes()).To(Equal(int32(15)))
+			resultCount := props.AnalyticsResultCount
+			g.Expect(resultCount).ToNot(BeNil())
+			g.Expect(resultCount.DataprimeQuery.GetQuery()).To(Equal("source logs | count"))
+			g.Expect(resultCount.GetTimeframeMinutes()).To(Equal(int32(15)))
 			// Omitted in the spec, so the API resets the period to its default and no longer returns it as set.
-			g.Expect(immediate.EvaluationPeriodMinutes).To(BeNil())
-			g.Expect(immediate.UseRowsAsPermutations).To(BeNil())
-			g.Expect(immediate.EvaluationDelayMs).To(BeNil())
-			g.Expect(immediate.NoDataPolicy).To(BeNil())
+			g.Expect(resultCount.EvaluationPeriodMinutes).To(BeNil())
+			g.Expect(resultCount.EvaluationDelayMs).To(BeNil())
+			g.Expect(resultCount.NoDataPolicy).To(BeNil())
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Deleting the Alert")

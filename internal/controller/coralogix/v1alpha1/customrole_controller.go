@@ -70,7 +70,7 @@ func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logg
 	log.Info("Remote customRole created", "response", utils.FormatJSON(createResponse))
 
 	customRole.Status = coralogixv1alpha1.CustomRoleStatus{
-		ID: ptr.To(strconv.Itoa(int(*createResponse.Id))),
+		ID: ptr.To(strconv.FormatInt(createResponse.Id, 10)),
 	}
 
 	return nil

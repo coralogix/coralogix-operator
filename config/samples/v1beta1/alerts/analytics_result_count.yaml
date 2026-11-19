@@ -8,23 +8,22 @@ metadata:
     app.kubernetes.io/part-of: coralogix-operator
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: coralogix-operator
-  name: analytics-immediate
+  name: analytics-result-count
 spec:
-  name: analytics-immediate alert example
+  name: analytics-result-count alert example
   description: alert from k8s operator
   priority: p3
   # groupByKeys must be columns returned by the query.
   groupByKeys:
     - applicationname
   alertType:
-    analyticsImmediate:
+    analyticsResultCount:
       dataprimeQuery:
         query: source logs | filter $m.severity == Severity.ERROR | groupby $l.applicationname aggregate count() as errors
       timeframeMinutes: 15
       # Optional. How often the query is evaluated, in minutes. Must not exceed timeframeMinutes.
       # When omitted, the API uses min(10, timeframeMinutes). Removing the line resets the period to that default.
       evaluationPeriodMinutes: 5
-      useRowsAsPermutations: true
       evaluationDelayMs: 60000
       noDataPolicy:
         state: alerting

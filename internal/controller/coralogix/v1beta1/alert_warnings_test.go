@@ -35,7 +35,7 @@ import (
 
 func analyticsTypeDefinitions(timeframe int32, period *int32) map[string]coralogixv1beta1.AlertTypeDefinition {
 	return map[string]coralogixv1beta1.AlertTypeDefinition{
-		"immediate": {AnalyticsImmediate: &coralogixv1beta1.AnalyticsImmediate{
+		"resultCount": {AnalyticsResultCount: &coralogixv1beta1.AnalyticsResultCount{
 			DataprimeQuery:          coralogixv1beta1.DataprimeQuery{Query: "source logs | count"},
 			TimeframeMinutes:        timeframe,
 			EvaluationPeriodMinutes: period,
@@ -134,7 +134,7 @@ func TestHandlersRecordEvaluationPeriodWarningAndStillSync(t *testing.T) {
 			t.Run(handler+"/"+tc.name, func(t *testing.T) {
 				server, calls := analyticsAlertServer(t)
 				alert := testAlert(nil)
-				alert.Spec.TypeDefinition = analyticsTypeDefinitions(5, tc.period)["immediate"]
+				alert.Spec.TypeDefinition = analyticsTypeDefinitions(5, tc.period)["resultCount"]
 				initAlertClient(t, alert)
 
 				recorder := record.NewFakeRecorder(10)
@@ -181,6 +181,6 @@ func TestHandleUpdateSkipsEvaluationPeriodWarningForSyncedGeneration(t *testing.
 func TestWarnEvaluationPeriodWithoutRecorder(t *testing.T) {
 	alert := testAlert(nil)
 	alert.ObjectMeta = metav1.ObjectMeta{Name: "a", Namespace: "default"}
-	alert.Spec.TypeDefinition = analyticsTypeDefinitions(5, ptr.To[int32](60))["immediate"]
+	alert.Spec.TypeDefinition = analyticsTypeDefinitions(5, ptr.To[int32](60))["resultCount"]
 	require.NotPanics(t, func() { (&AlertReconciler{}).warnEvaluationPeriod(alert) })
 }

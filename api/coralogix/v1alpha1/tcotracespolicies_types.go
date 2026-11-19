@@ -85,7 +85,7 @@ type TCOTracesPoliciesPolicy struct {
 
 // TCOTracesPoliciesQuotaV1Rule is the quota.v1.Rule object of the API.
 type TCOTracesPoliciesQuotaV1Rule struct {
-	// The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. The service stores the values in lower case.
+	// The value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator. The service stores the values in lower case.
 	// The API holds the values as one string, joined by ",".
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=50
@@ -128,7 +128,7 @@ type TCOTracesPoliciesTagRule struct {
 	// +kubebuilder:validation:Pattern=`^tags\..*`
 	Name string `json:"name"`
 
-	// The tag value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values.
+	// The tag value(s) to match. For IS and IS_NOT rules, up to 50 comma-separated values. For START_WITH and INCLUDES rules, a single value: a comma is part of the value, not a separator.
 	// The API holds the values as one string, joined by ",".
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=50

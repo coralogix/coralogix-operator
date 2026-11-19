@@ -301,8 +301,8 @@ var _ = Describe("SLO window-based", Ordered, func() {
 		By("Verifying the stored SLO carries the new fields")
 		getRes, _, err := slosClient.SlosServiceGetSlo(ctx, sloID).Execute()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(getRes.Slo.WindowBasedMetricSli).ToNot(BeNil())
-		Expect(getRes.Slo.WindowBasedMetricSli.GetMissingDataStrategy()).
+		Expect(windowBasedSli(&getRes.Slo)).ToNot(BeNil())
+		Expect(windowBasedSli(&getRes.Slo).GetMissingDataStrategy()).
 			To(Equal(slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_GOOD))
 		Expect(getRes.Slo.OwnershipTags).ToNot(BeNil())
 		Expect(getRes.Slo.OwnershipTags.Environment.GetStaticValues()).To(Equal([]string{"production"}))
@@ -322,8 +322,8 @@ var _ = Describe("SLO window-based", Ordered, func() {
 		Eventually(func(g Gomega) slos.MissingDataStrategy {
 			getRes, _, err := slosClient.SlosServiceGetSlo(ctx, sloID).Execute()
 			g.Expect(err).ToNot(HaveOccurred())
-			g.Expect(getRes.Slo.WindowBasedMetricSli).ToNot(BeNil())
-			return getRes.Slo.WindowBasedMetricSli.GetMissingDataStrategy()
+			g.Expect(windowBasedSli(&getRes.Slo)).ToNot(BeNil())
+			return windowBasedSli(&getRes.Slo).GetMissingDataStrategy()
 		}, time.Minute, time.Second).Should(Equal(slos.MISSINGDATASTRATEGY_MISSING_DATA_STRATEGY_BAD))
 		slo = modified
 	})
@@ -371,11 +371,11 @@ var _ = Describe("SLO APM", Ordered, func() {
 		getRes, _, err := slosClient.SlosServiceGetSlo(ctx, sloID).Execute()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(getRes.Slo.GetProductType()).To(Equal(slos.SLOPRODUCTTYPE_SLO_PRODUCT_TYPE_APM))
-		Expect(getRes.Slo.ApmSli).ToNot(BeNil())
-		Expect(getRes.Slo.ApmSli.GetServices()).To(Equal([]string{sloAPMService}))
-		Expect(getRes.Slo.ApmSli.LatencyConfig).ToNot(BeNil())
-		Expect(getRes.Slo.ApmSli.LatencyConfig.Quantile).ToNot(BeNil())
-		Expect(getRes.Slo.ApmSli.LatencyConfig.Quantile.GetPercentile()).To(BeNumerically("~", 0.95, 0.001))
+		Expect(apmSli(&getRes.Slo)).ToNot(BeNil())
+		Expect(apmSli(&getRes.Slo).GetServices()).To(Equal([]string{sloAPMService}))
+		Expect(apmSli(&getRes.Slo).LatencyConfig).ToNot(BeNil())
+		Expect(apmSli(&getRes.Slo).LatencyConfig.Quantile).ToNot(BeNil())
+		Expect(apmSli(&getRes.Slo).LatencyConfig.Quantile.GetPercentile()).To(BeNumerically("~", 0.95, 0.001))
 	})
 
 	It("Should switch the latency query type from quantile to average", func(ctx context.Context) {
@@ -394,10 +394,10 @@ var _ = Describe("SLO APM", Ordered, func() {
 		Eventually(func(g Gomega) bool {
 			getRes, _, err := slosClient.SlosServiceGetSlo(ctx, sloID).Execute()
 			g.Expect(err).ToNot(HaveOccurred())
-			g.Expect(getRes.Slo.ApmSli).ToNot(BeNil())
-			g.Expect(getRes.Slo.ApmSli.LatencyConfig).ToNot(BeNil())
-			return getRes.Slo.ApmSli.LatencyConfig.Average != nil &&
-				getRes.Slo.ApmSli.LatencyConfig.Quantile == nil
+			g.Expect(apmSli(&getRes.Slo)).ToNot(BeNil())
+			g.Expect(apmSli(&getRes.Slo).LatencyConfig).ToNot(BeNil())
+			return apmSli(&getRes.Slo).LatencyConfig.Average != nil &&
+				apmSli(&getRes.Slo).LatencyConfig.Quantile == nil
 		}, time.Minute, time.Second).Should(BeTrue())
 		slo = modified
 	})
@@ -448,15 +448,15 @@ var _ = Describe("SLO APM error", Ordered, func() {
 		By("Verifying errorConfig round-trips as an empty object")
 		getRes, _, err := slosClient.SlosServiceGetSlo(ctx, sloID).Execute()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(getRes.Slo.ApmSli).ToNot(BeNil())
+		Expect(apmSli(&getRes.Slo)).ToNot(BeNil())
 		// A nil map would have been dropped from the request, which the API rejects as
 		// "Unsupported APM SLI type". Seeing it come back proves the empty map was sent.
-		Expect(getRes.Slo.ApmSli.ErrorConfig).ToNot(BeNil())
-		Expect(getRes.Slo.ApmSli.LatencyConfig).To(BeNil())
-		Expect(getRes.Slo.ApmSli.GetGroupingKeys()).To(Equal([]string{"http.route"}))
-		Expect(getRes.Slo.ApmSli.GetFilters()).To(HaveLen(1))
-		Expect(getRes.Slo.ApmSli.GetFilters()[0].GetKey()).To(Equal("http.method"))
-		Expect(getRes.Slo.ApmSli.GetFilters()[0].GetValues()).To(Equal([]string{"POST"}))
+		Expect(apmSli(&getRes.Slo).ErrorConfig).ToNot(BeNil())
+		Expect(apmSli(&getRes.Slo).LatencyConfig).To(BeNil())
+		Expect(apmSli(&getRes.Slo).GetGroupingKeys()).To(Equal([]string{"http.route"}))
+		Expect(apmSli(&getRes.Slo).GetFilters()).To(HaveLen(1))
+		Expect(apmSli(&getRes.Slo).GetFilters()[0].GetKey()).To(Equal("http.method"))
+		Expect(apmSli(&getRes.Slo).GetFilters()[0].GetValues()).To(Equal([]string{"POST"}))
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -567,4 +567,14 @@ func getSampleAPMSlo(name, service string) *coralogixv1alpha1.SLO {
 			},
 		},
 	}
+}
+
+// The API marks these SLI arms deprecated in favor of sliDefinition. The operator still sends
+// them, so the tests read them through these helpers.
+func windowBasedSli(s *slos.Slo) *slos.WindowBasedMetricSli {
+	return s.WindowBasedMetricSli //nolint:staticcheck // the operator sends the released SLI arm
+}
+
+func apmSli(s *slos.Slo) *slos.ApmSli {
+	return s.ApmSli //nolint:staticcheck // the operator sends the released SLI arm
 }

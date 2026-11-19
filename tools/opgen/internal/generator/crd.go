@@ -494,6 +494,10 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		jsonName = change.Name
 		b.used[line] = true
 	}
+	if change.Description != "" {
+		description = change.Description
+		b.used[line] = true
+	}
 	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t}
 	path = b.validationPath(component, path, name, jsonName)
 	f.validationPath = path

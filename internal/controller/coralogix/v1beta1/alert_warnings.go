@@ -36,9 +36,9 @@ func evaluationPeriodWarning(spec *coralogixv1beta1.AlertSpec) (string, bool) {
 	var timeframe int32
 	var period *int32
 	switch {
-	case spec.TypeDefinition.AnalyticsImmediate != nil:
-		timeframe = spec.TypeDefinition.AnalyticsImmediate.TimeframeMinutes
-		period = spec.TypeDefinition.AnalyticsImmediate.EvaluationPeriodMinutes
+	case spec.TypeDefinition.AnalyticsResultCount != nil:
+		timeframe = spec.TypeDefinition.AnalyticsResultCount.TimeframeMinutes
+		period = spec.TypeDefinition.AnalyticsResultCount.EvaluationPeriodMinutes
 	case spec.TypeDefinition.AnalyticsThreshold != nil:
 		timeframe = spec.TypeDefinition.AnalyticsThreshold.TimeframeMinutes
 		period = spec.TypeDefinition.AnalyticsThreshold.EvaluationPeriodMinutes
