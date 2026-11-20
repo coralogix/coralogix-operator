@@ -1,0 +1,44 @@
+[
+  {
+    "step": "create with a priority order over int32: the reconciler cannot decode the CR",
+    "spec": {
+      "family": {
+        "active": false,
+        "raw": {
+          "collectorVersion": "0.114.0",
+          "remoteConfigurations": [
+            {
+              "agentSelector": {
+                "attributes": {
+                  "service.version": "0.114.0"
+                }
+              },
+              "name": "default",
+              "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors",
+      "priorityOrder": 2147483648
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "InternalK8sError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

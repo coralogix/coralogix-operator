@@ -1,0 +1,132 @@
+[
+  {
+    "step": "create a preset family",
+    "spec": {
+      "family": {
+        "preset": {
+          "chartName": "CHART_NAME_OTEL_INTEGRATION",
+          "chartVersion": "0.0.289",
+          "integrationVersion": "0.8.0",
+          "metadata": {
+            "ClusterName": "production",
+            "KubernetesRunningOn": "openshift"
+          },
+          "observabilityFeatures": "{\"logs\":{\"enabled\":false}}"
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "preset": {
+              "chartName": "CHART_NAME_OTEL_INTEGRATION",
+              "chartVersion": "0.0.289",
+              "integrationVersion": "0.8.0",
+              "metadata": {
+                "ClusterName": "production",
+                "KubernetesRunningOn": "openshift"
+              },
+              "observabilityFeatures": "{\"logs\":{\"enabled\":false}}"
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove integrationVersion and change the features",
+    "spec": {
+      "family": {
+        "preset": {
+          "chartName": "CHART_NAME_OTEL_INTEGRATION",
+          "chartVersion": "0.0.289",
+          "metadata": {
+            "ClusterName": "production",
+            "KubernetesRunningOn": "openshift"
+          },
+          "observabilityFeatures": "{\"logs\":{\"enabled\":true}}"
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "name,description,tags,priorityOrder,family.description,family.active,family.preset"
+          ]
+        },
+        "body": {
+          "description": "",
+          "family": {
+            "active": false,
+            "description": "",
+            "preset": {
+              "chartName": "CHART_NAME_OTEL_INTEGRATION",
+              "chartVersion": "0.0.289",
+              "metadata": {
+                "ClusterName": "production",
+                "KubernetesRunningOn": "openshift"
+              },
+              "observabilityFeatures": "{\"logs\":{\"enabled\":true}}"
+            }
+          },
+          "name": "Production collectors",
+          "priorityOrder": 0,
+          "tags": []
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

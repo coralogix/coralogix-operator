@@ -1,0 +1,61 @@
+[
+  {
+    "step": "create with an OpAMP extension in the collector configuration: the API rejects it",
+    "spec": {
+      "family": {
+        "raw": {
+          "remoteConfigurations": [
+            {
+              "rawConfiguration": "extensions:\n  opamp: {}\nservice:\n  extensions: [opamp]\n"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "raw": {
+              "remoteConfigurations": [
+                {
+                  "rawConfiguration": "extensions:\n  opamp: {}\nservice:\n  extensions: [opamp]\n"
+                }
+              ]
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

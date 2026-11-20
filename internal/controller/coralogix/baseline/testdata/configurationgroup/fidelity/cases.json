@@ -1,0 +1,1150 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update, update again, deactivate, archive, archive again, get, update after archive",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {}
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {}
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=family.active",
+          "body": {
+            "family": {
+              "active": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "every field, then the update that clears them",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-b-{{run}}",
+            "family": {
+              "active": true,
+              "description": "family b",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {
+                  "team": "observability"
+                }
+              }
+            },
+            "description": "group b",
+            "tags": [
+              "production",
+              "eu"
+            ],
+            "priorityOrder": 100
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-b-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "raw": {
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "an update that leaves optional fields out of the body",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-c-{{run}}",
+            "family": {
+              "active": true,
+              "description": "family c",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {
+                  "team": "observability"
+                }
+              }
+            },
+            "description": "group c",
+            "tags": [
+              "production",
+              "eu"
+            ],
+            "priorityOrder": 100
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-c-{{run}}",
+            "family": {
+              "raw": {
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "archive an active group",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-d-{{run}}",
+            "family": {
+              "active": true,
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=family.active",
+          "body": {
+            "family": {
+              "active": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "change the family content, the description, and active",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {}
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "described",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {}
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": true,
+              "description": "described",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {}
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=family.active",
+          "body": {
+            "family": {
+              "active": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "update masks and bodies that the API rejects",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-f-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=description,family,name,priorityOrder,tags",
+          "body": {
+            "name": "cxo-fidelity-cg-f-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,family.raw,family.preset",
+          "body": {
+            "name": "cxo-fidelity-cg-f-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=family.preset",
+          "body": {
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "observabilityFeatures": "{}"
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name",
+          "body": {
+            "name": ""
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=family.raw",
+          "body": {
+            "family": {
+              "raw": {
+                "remoteConfigurations": []
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=*",
+          "body": {
+            "name": "x"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "creates that the API rejects or accepts at the limits",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "long"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-g-{{run}}"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-g-{{run}}",
+            "family": {}
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-g-{{run}}",
+            "family": {
+              "raw": {
+                "remoteConfigurations": []
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-g-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.115.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-g-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "extensions:\n  opamp:\n    server:\n      ws:\n        endpoint: wss://example.com/v1/opamp\nservice:\n  extensions: [opamp]\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-g-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OPENTELEMETRY_COLLECTOR",
+                "chartVersion": "0.0.289",
+                "observabilityFeatures": "{}"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-g-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "observabilityFeatures": "{}"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{long}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "a name that another group has",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-h-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-h-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-h2-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "other"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{other}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.raw",
+          "body": {
+            "name": "cxo-fidelity-cg-h-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ],
+                "metadata": {}
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{other}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "a name that an archived group has",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-i-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-i-{{run}}",
+            "family": {
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "remoteConfigurations": [
+                  {
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n",
+                    "name": "default",
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ids that are unknown or malformed",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/00000000-0000-4000-8000-0000000000c9"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/00000000-0000-4000-8000-0000000000c9?update_mask=name",
+          "body": {
+            "name": "x"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/00000000-0000-4000-8000-0000000000c9/archive",
+          "body": {}
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/not-a-uuid"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/not-a-uuid?update_mask=name",
+          "body": {
+            "name": "x"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/not-a-uuid/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "a preset family: create, update the same content, change the content, activate, deactivate, archive",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "integrationVersion": "0.8.0"
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.preset",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "integrationVersion": "0.8.0"
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.preset",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.preset",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": true,
+              "description": "",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}"
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=family.active",
+          "body": {
+            "family": {
+              "active": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "a preset family of a standalone template",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-l-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_LINUX_STANDALONE",
+                "chartVersion": "0.0.25",
+                "metadata": {
+                  "ApplicationName": "e2e",
+                  "SubsystemName": "e2e",
+                  "HostRunningOn": "on_premise"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}"
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "a preset family of the ECS template",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-s-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_ECS_EC2",
+                "chartVersion": "0.0.2",
+                "metadata": {
+                  "ClusterName": "e2e"
+                },
+                "observabilityFeatures": "{\"apm\":{\"enabled\":false,\"transactions\":{\"enabled\":false}},\"logs\":{\"enabled\":false}}"
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    }
+  ]
+}

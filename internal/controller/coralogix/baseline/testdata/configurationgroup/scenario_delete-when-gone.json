@@ -1,0 +1,86 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "family": {
+        "raw": {
+          "remoteConfigurations": [
+            {
+              "rawConfiguration": "receivers: {}"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "raw": {
+              "remoteConfigurations": [
+                {
+                  "rawConfiguration": "receivers: {}"
+                }
+              ]
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the group was archived outside the operator",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "family.active"
+          ]
+        },
+        "body": {
+          "family": {
+            "active": false
+          }
+        },
+        "status": 404
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>/archive",
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

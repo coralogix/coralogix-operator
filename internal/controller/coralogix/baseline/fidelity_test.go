@@ -16,6 +16,7 @@ package baseline
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,10 +51,18 @@ type fidelityConfig struct {
 	// deletePath returns the path that deletes a resource. The recorder calls it for each
 	// captured id when it ends, so a failed run leaves nothing behind.
 	deletePath func(id string) string
+	// cleanup returns the requests that remove a resource, for an API that has no DELETE, such as
+	// one that archives with a POST. The recorder sends them in order instead of a DELETE of
+	// deletePath. A 404 of any request is no problem: a case already removed the resource.
+	cleanup func(id string) []fidelityStep
 	// overwritesTeam is true for a kind whose API replaces every resource of the kind in the
 	// team, such as the TCO policies. Its cases delete what the team had. The recorder runs them
 	// only when RECORD_FIDELITY_OVERWRITE_TEAM names the kind.
 	overwritesTeam bool
+	// normalize rewrites an answer of the kind before it is compared or recorded, for a value that
+	// the fake cannot make and the operator never reads, such as text that the API renders from a
+	// template. It runs on the answers of the fake and of the real API alike.
+	normalize func(resp any) any
 	// teamState is set for a kind that has one value per team, such as the archive target. The
 	// recorder reads the value before the first case and writes it back when it ends.
 	teamState *teamState
@@ -84,6 +93,15 @@ func startVars(vars map[string]string) map[string]string {
 		out[name] = value
 	}
 	return out
+}
+
+// cleanupSteps returns the requests that remove the resource with the id: the kind's cleanup, or
+// a DELETE of deletePath.
+func (c fidelityConfig) cleanupSteps(id string) []fidelityStep {
+	if c.cleanup != nil {
+		return c.cleanup(id)
+	}
+	return []fidelityStep{{Method: http.MethodDelete, Path: c.deletePath(id)}}
 }
 
 type fidelityStep struct {
@@ -165,7 +183,7 @@ func TestFakeMatchesRecordedAPI(t *testing.T) {
 						t.Fatalf("recorded.json does not match cases.json for %q: record again", c.Name)
 					}
 					api := k.newFake()
-					vars := startVars(k.fidelity.fakeVars)
+					vars := runVars(k.fidelity.fakeVars, fakeRunToken)
 					for si, s := range c.Steps {
 						path, query := splitQuery(t, substString(s.Path, vars))
 						status, resp := api.handle(s.Method, path, query, substJSON(t, s.Body, vars))
@@ -237,10 +255,11 @@ func TestRecordFidelity(t *testing.T) {
 	t.Cleanup(func() {
 		// The last resource goes first, so a child is deleted before its parent.
 		for i := len(created) - 1; i >= 0; i-- {
-			id := created[i]
-			status, resp, err := sendRecordRequest(base, apiKey, http.MethodDelete, k.fidelity.deletePath(id), nil)
-			if problem := cleanupProblem(status, resp, err); problem != "" {
-				t.Errorf("cleanup: DELETE %s %s; delete it by hand", k.fidelity.deletePath(id), problem)
+			for _, s := range k.fidelity.cleanupSteps(created[i]) {
+				status, resp, err := sendRecordRequest(base, apiKey, s.Method, s.Path, s.Body)
+				if problem := cleanupProblem(status, resp, err); problem != "" {
+					t.Errorf("cleanup: %s %s %s; delete it by hand", s.Method, s.Path, problem)
+				}
 			}
 		}
 	})
@@ -249,10 +268,11 @@ func TestRecordFidelity(t *testing.T) {
 	if k.fidelity.recordVars != nil {
 		initial = k.fidelity.recordVars(t, base, apiKey)
 	}
+	run := newRunToken()
 	out := fidelityRecorded{}
 	for _, c := range loadCases(t, k).Cases {
 		rec := recordedCase{Name: c.Name}
-		vars := startVars(initial)
+		vars := runVars(initial, run)
 		for _, s := range c.Steps {
 			status, resp, err := sendRecordRequest(base, apiKey, s.Method, substString(s.Path, vars), substJSON(t, s.Body, vars))
 			if err != nil {
@@ -279,6 +299,34 @@ func TestRecordFidelity(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(fidelityDir(k), "recorded.json"), recorded, 0o644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// A case can write {{run}} in a path or a body, such as in a name that must be new on each
+// recording: the API of some kinds keeps the name of a removed resource, so a second recording with
+// the same name fails. The recorder sends a new token on each run, and the fake gets a fixed one.
+// normalizeAnswer writes {{run}} for the token in both, so the answers compare. A token has
+// letters that are not hex digits, so it is never part of a UUID.
+const fakeRunToken = "fakerunq"
+
+const runTokenLetters = "ghjkmnpqrstvwxyz"
+
+// newRunToken returns a token of eight letters from runTokenLetters.
+func newRunToken() string {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		panic(err)
+	}
+	for i := range b {
+		b[i] = runTokenLetters[int(b[i])%len(runTokenLetters)]
+	}
+	return string(b[:])
+}
+
+// runVars returns the variables that a case starts with: a copy of start, and the run token.
+func runVars(start map[string]string, token string) map[string]string {
+	vars := startVars(start)
+	vars["run"] = token
+	return vars
 }
 
 // cleanupProblem says why a cleanup delete failed, or "" when it worked. A 404 is no problem: a
@@ -420,7 +468,11 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 	if err := json.Unmarshal([]byte(text), &out); err != nil {
 		t.Fatal(err)
 	}
-	return redactFields(redactStrings(canonicalJSONStrings(out)))
+	out = redactFields(redactStrings(canonicalJSONStrings(out)))
+	if k.fidelity.normalize != nil {
+		out = k.fidelity.normalize(out)
+	}
+	return out
 }
 
 // replaceFieldVars writes {{name}} for each string field named after a starting value that holds
@@ -886,5 +938,17 @@ func TestRequireArchiveTeam(t *testing.T) {
 	}
 	if err := requireArchiveTeam(reader(s3, off)); err == nil {
 		t.Error("a team without enabled tags must be refused")
+	}
+}
+
+func TestRunTokenIsNeverPartOfAUUID(t *testing.T) {
+	for range 100 {
+		token := newRunToken()
+		if len(token) != 8 || strings.ContainsAny(token, "0123456789abcdef") {
+			t.Fatalf("newRunToken() = %q, want 8 letters that are not hex digits", token)
+		}
+	}
+	if strings.Trim(fakeRunToken, "0123456789abcdef") == "" || !strings.ContainsAny(fakeRunToken, "ghijklmnopqrstuvwxyz") {
+		t.Fatalf("fakeRunToken %q must hold a letter that is not a hex digit", fakeRunToken)
 	}
 }

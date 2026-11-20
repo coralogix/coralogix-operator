@@ -1,0 +1,73 @@
+[
+  {
+    "step": "create with a selector service.version that is not collectorVersion: the API rejects it",
+    "spec": {
+      "family": {
+        "raw": {
+          "collectorVersion": "0.114.0",
+          "remoteConfigurations": [
+            {
+              "agentSelector": {
+                "attributes": {
+                  "service.version": "0.115.0"
+                }
+              },
+              "rawConfiguration": "receivers: {}"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "raw": {
+              "collectorVersion": "0.114.0",
+              "remoteConfigurations": [
+                {
+                  "agentSelector": {
+                    "attributes": {
+                      "service.version": "0.115.0"
+                    }
+                  },
+                  "rawConfiguration": "receivers: {}"
+                }
+              ]
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]
