@@ -250,6 +250,10 @@ func (b *builder) nestedMask(d *kindData, f *model.ResourceField) ([]string, []m
 			// too, with the arm that the body has.
 			return nil, nil, unsupported(location+"."+child.Name, "a field with requestValueBy is not supported in a nested mask: Update sends it, and the mask would not name it")
 		}
+		if j < 0 && slices.ContainsFunc(owner.object.Fields, func(c *crField) bool { return c.inlineParent == child.Name }) {
+			// Update rebuilds the inlined object from its fields beside the others, and sends it.
+			return nil, nil, unsupported(location+"."+child.Name, "an inlined object is not supported in a nested mask: Update sends it, and the mask would not name it")
+		}
 		if j < 0 {
 			continue // the CR does not have it, so Update does not send it
 		}

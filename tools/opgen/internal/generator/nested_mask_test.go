@@ -108,6 +108,13 @@ func TestNestedUpdateMaskChecks(t *testing.T) {
 			override: nestedMaskOverride + "types:\n  MaskThingRule:\n    fields:\n      note: {requestValueBy: {some: SOME, prefix: PREFIX}}\n",
 		},
 		{
+			name: "an inlined object", resource: "MaskThing", code: codeShapeUnsupported,
+			override: nestedMaskOverride + "types:\n  MaskThingRule:\n    fields:\n      prefix: {inline: true}\n",
+			edit: func(s string) string {
+				return strings.Replace(s, "        prefix: {$ref: '#/components/schemas/PatchThingPrefix'}\n      oneOf:\n        - required: [some]\n        - required: [prefix]\n    PatchThingKind:", "        prefix: {$ref: '#/components/schemas/PatchThingPrefix'}\n    PatchThingKind:", 1)
+			},
+		},
+		{
 			name: "a oneOf that permits no arm", resource: "MaskThing", override: nestedMaskOverride, code: codeShapeUnsupported,
 			edit: func(s string) string {
 				return strings.Replace(s, "      oneOf:\n        - required: [some]\n        - required: [prefix]\n    PatchThingKind:", "      oneOf:\n        - required: [some]\n        - required: [prefix]\n        - not:\n            anyOf:\n              - required: [some]\n              - required: [prefix]\n    PatchThingKind:", 1)
