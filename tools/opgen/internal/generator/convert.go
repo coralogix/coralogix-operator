@@ -229,6 +229,15 @@ func (b *builder) nestedMask(d *kindData, f *model.ResourceField) ([]string, []m
 			arms[arm] = true
 		}
 	}
+	// An arm of a oneOf of the API that the CR does not show as a choice, such as a group with one
+	// settable arm, would be a plain path, and the mask would name it also when the body lacks it.
+	for _, g := range f.Type.Groups {
+		for _, arm := range g.Arms {
+			if !arms[arm] && slices.ContainsFunc(owner.object.Fields, func(c *crField) bool { return c.API == arm }) {
+				return nil, nil, unsupported(location+"."+arm, "an arm of a oneOf that the custom resource does not show as a choice is not supported in a nested mask")
+			}
+		}
+	}
 	var paths []string
 	var out []maskArm
 	for _, child := range f.Type.Fields {
