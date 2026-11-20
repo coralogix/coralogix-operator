@@ -1,0 +1,94 @@
+[
+  {
+    "step": "create for an application that the team does not have",
+    "spec": {
+      "application": "unknown-app",
+      "config": {
+        "toxicity": {}
+      },
+      "isEnabled": true,
+      "subsystem": "unknown-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "unknown-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "unknown-subsystem",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "unknown-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "unknown-subsystem",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

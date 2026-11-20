@@ -1,0 +1,283 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: aievaluations.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: AIEvaluation
+    listKind: AIEvaluationList
+    plural: aievaluations
+    singular: aievaluation
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              application:
+                maxLength: 256
+                minLength: 1
+                type: string
+                x-kubernetes-validations:
+                - message: spec.application is immutable
+                  rule: self == oldSelf
+              config:
+                properties:
+                  allowedTopics:
+                    properties:
+                      topics:
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - topics
+                    type: object
+                  competition:
+                    properties:
+                      competitors:
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - competitors
+                    type: object
+                  hallucinationCompleteness:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  hallucinationContextAdherence:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  hallucinationContextRelevance:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  hallucinationCorrectness:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  hallucinationTaskAdherence:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  languageMismatch:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  pii:
+                    properties:
+                      categories:
+                        items:
+                          enum:
+                          - PHONE_NUMBER
+                          - EMAIL_ADDRESS
+                          - CREDIT_CARD
+                          - IBAN_CODE
+                          - US_SSN
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - categories
+                    type: object
+                  promptInjection:
+                    properties:
+                      additionalContext:
+                        default: ""
+                        maxLength: 65536
+                        type: string
+                    type: object
+                  restrictedTopics:
+                    properties:
+                      topics:
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - topics
+                    type: object
+                  sexism:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  sqlAllowedTables:
+                    properties:
+                      tables:
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - tables
+                    type: object
+                  sqlHallucination:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  sqlReadOnly:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                  sqlRestrictedTables:
+                    properties:
+                      tables:
+                        items:
+                          maxLength: 256
+                          minLength: 1
+                          type: string
+                        maxItems: 1024
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    required:
+                    - tables
+                    type: object
+                  toxicity:
+                    additionalProperties:
+                      type: string
+                    maxProperties: 0
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: 'Exactly one of the following AI evaluation configs must
+                    be set: allowedTopics, competition, hallucinationCompleteness,
+                    hallucinationContextAdherence, hallucinationContextRelevance,
+                    hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch,
+                    pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables,
+                    sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity'
+                  rule: '(has(self.allowedTopics) ? 1 : 0) + (has(self.competition)
+                    ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence)
+                    ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) +
+                    (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence)
+                    ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii)
+                    ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics)
+                    ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.sqlAllowedTables)
+                    ? 1 : 0) + (has(self.sqlHallucination) ? 1 : 0) + (has(self.sqlReadOnly)
+                    ? 1 : 0) + (has(self.sqlRestrictedTables) ? 1 : 0) + (has(self.toxicity)
+                    ? 1 : 0) == 1'
+              isEnabled:
+                default: true
+                type: boolean
+              subsystem:
+                maxLength: 256
+                minLength: 1
+                type: string
+                x-kubernetes-validations:
+                - message: spec.subsystem is immutable
+                  rule: self == oldSelf
+              target:
+                enum:
+                - prompt
+                - response
+                type: string
+                x-kubernetes-validations:
+                - message: spec.target is immutable
+                  rule: self == oldSelf
+              threshold:
+                anyOf:
+                - type: integer
+                - type: string
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
+            required:
+            - application
+            - config
+            - subsystem
+            - target
+            - threshold
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              id:
+                type: string
+              printableStatus:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

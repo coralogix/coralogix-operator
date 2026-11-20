@@ -1,0 +1,461 @@
+{
+  "allowed topics": {
+    "accepted": true
+  },
+  "allowed topics with 1024 topics": {
+    "accepted": true
+  },
+  "allowed topics with 1025 topics": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.config.allowedTopics.topics",
+        "message": "Too many: 1025: must have at most 1024 items"
+      }
+    ]
+  },
+  "allowed topics with a repeated topic": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueDuplicate",
+        "field": "spec.config.allowedTopics.topics[1]",
+        "message": "Duplicate value: \"a\""
+      }
+    ]
+  },
+  "allowed topics with a topic of 257": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.config.allowedTopics.topics[0]",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "allowed topics with an empty topic": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config.allowedTopics.topics[0]",
+        "message": "Invalid value: \"\": spec.config.allowedTopics.topics[0] in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "allowed topics with no topics": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config.allowedTopics.topics",
+        "message": "Invalid value: 0: spec.config.allowedTopics.topics in body should have at least 1 items"
+      }
+    ]
+  },
+  "application of 256 characters": {
+    "accepted": true
+  },
+  "application of 257 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.application",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "application of spaces": {
+    "accepted": true
+  },
+  "arm allowedTopics": {
+    "accepted": true
+  },
+  "arm competition": {
+    "accepted": true
+  },
+  "arm hallucinationCompleteness": {
+    "accepted": true
+  },
+  "arm hallucinationContextAdherence": {
+    "accepted": true
+  },
+  "arm hallucinationContextRelevance": {
+    "accepted": true
+  },
+  "arm hallucinationCorrectness": {
+    "accepted": true
+  },
+  "arm hallucinationTaskAdherence": {
+    "accepted": true
+  },
+  "arm languageMismatch": {
+    "accepted": true
+  },
+  "arm pii": {
+    "accepted": true
+  },
+  "arm promptInjection": {
+    "accepted": true
+  },
+  "arm restrictedTopics": {
+    "accepted": true
+  },
+  "arm sexism": {
+    "accepted": true
+  },
+  "arm sqlAllowedTables": {
+    "accepted": true
+  },
+  "arm sqlHallucination": {
+    "accepted": true
+  },
+  "arm sqlReadOnly": {
+    "accepted": true
+  },
+  "arm sqlRestrictedTables": {
+    "accepted": true
+  },
+  "arm the CRD does not have": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config",
+        "message": "Invalid value: \"object\": Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"
+      }
+    ]
+  },
+  "arm the CRD does not have and an arm": {
+    "accepted": true
+  },
+  "arm toxicity": {
+    "accepted": true
+  },
+  "competition with a competitor": {
+    "accepted": true
+  },
+  "competition with no competitors": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config.competition.competitors",
+        "message": "Invalid value: 0: spec.config.competition.competitors in body should have at least 1 items"
+      }
+    ]
+  },
+  "custom evaluation arm": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config",
+        "message": "Invalid value: \"object\": Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"
+      }
+    ]
+  },
+  "empty application": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.application",
+        "message": "Invalid value: \"\": spec.application in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty arm as null": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config",
+        "message": "Invalid value: \"object\": Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"
+      }
+    ]
+  },
+  "empty arm with a field": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.config.toxicity",
+        "message": "Too many: 1: must have at most 0 items"
+      }
+    ]
+  },
+  "empty config": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config",
+        "message": "Invalid value: \"object\": Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"
+      }
+    ]
+  },
+  "empty subsystem": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.subsystem",
+        "message": "Invalid value: \"\": spec.subsystem in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "isEnabled as a string": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.isEnabled",
+        "message": "Invalid value: \"string\": spec.isEnabled in body must be of type boolean: \"string\""
+      }
+    ]
+  },
+  "isEnabled false": {
+    "accepted": true
+  },
+  "minimal": {
+    "accepted": true
+  },
+  "no application": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.application",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no config": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.config",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no subsystem": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subsystem",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no target": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.target",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no threshold": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.threshold",
+        "message": "Required value"
+      }
+    ]
+  },
+  "pii with a category in lower case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.config.pii.categories[0]",
+        "message": "Unsupported value: \"email_address\": supported values: \"PHONE_NUMBER\", \"EMAIL_ADDRESS\", \"CREDIT_CARD\", \"IBAN_CODE\", \"US_SSN\""
+      }
+    ]
+  },
+  "pii with a repeated category": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueDuplicate",
+        "field": "spec.config.pii.categories[1]",
+        "message": "Duplicate value: \"US_SSN\""
+      }
+    ]
+  },
+  "pii with an unknown category": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.config.pii.categories[0]",
+        "message": "Unsupported value: \"PASSPORT\": supported values: \"PHONE_NUMBER\", \"EMAIL_ADDRESS\", \"CREDIT_CARD\", \"IBAN_CODE\", \"US_SSN\""
+      }
+    ]
+  },
+  "pii with every category": {
+    "accepted": true
+  },
+  "pii with no categories": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config.pii.categories",
+        "message": "Invalid value: 0: spec.config.pii.categories in body should have at least 1 items"
+      }
+    ]
+  },
+  "pii without categories": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.config.pii.categories",
+        "message": "Required value"
+      }
+    ]
+  },
+  "prompt injection with context of 65536": {
+    "accepted": true
+  },
+  "prompt injection with context of 65537": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.config.promptInjection.additionalContext",
+        "message": "Too long: may not be longer than 65536"
+      }
+    ]
+  },
+  "prompt injection with empty context": {
+    "accepted": true
+  },
+  "prompt injection without context": {
+    "accepted": true
+  },
+  "restricted topics with no topics": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config.restrictedTopics.topics",
+        "message": "Invalid value: 0: spec.config.restrictedTopics.topics in body should have at least 1 items"
+      }
+    ]
+  },
+  "sql allowed tables with no tables": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config.sqlAllowedTables.tables",
+        "message": "Invalid value: 0: spec.config.sqlAllowedTables.tables in body should have at least 1 items"
+      }
+    ]
+  },
+  "sql restricted tables with an empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config.sqlRestrictedTables.tables[0]",
+        "message": "Invalid value: \"\": spec.config.sqlRestrictedTables.tables[0] in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "subsystem of 257 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.subsystem",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "target conversation": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.target",
+        "message": "Unsupported value: \"conversation\": supported values: \"prompt\", \"response\""
+      }
+    ]
+  },
+  "target in API spelling": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.target",
+        "message": "Unsupported value: \"RESPONSE\": supported values: \"prompt\", \"response\""
+      }
+    ]
+  },
+  "target prompt": {
+    "accepted": true
+  },
+  "threshold -1": {
+    "accepted": true
+  },
+  "threshold 1.5": {
+    "accepted": true
+  },
+  "threshold as a number": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "\u003cnil\u003e",
+        "message": "Invalid value: \"\": \"spec.threshold\" must validate at least one schema (anyOf)"
+      },
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.threshold",
+        "message": "Invalid value: \"number\": spec.threshold in body must be of type integer,string: \"number\""
+      },
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.threshold",
+        "message": "Invalid value: \"number\": spec.threshold in body must be of type integer: \"number\""
+      }
+    ]
+  },
+  "threshold that is not a quantity": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.threshold",
+        "message": "Invalid value: \"high\": spec.threshold in body should match '^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$'"
+      }
+    ]
+  },
+  "two config arms": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.config",
+        "message": "Invalid value: \"object\": Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"
+      }
+    ]
+  },
+  "unknown spec field is not an error": {
+    "accepted": true
+  }
+}

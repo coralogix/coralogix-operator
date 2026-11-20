@@ -1,0 +1,106 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "application": "ai-center-demo",
+      "config": {
+        "pii": {
+          "categories": [
+            "EMAIL_ADDRESS",
+            "PHONE_NUMBER"
+          ]
+        }
+      },
+      "isEnabled": true,
+      "subsystem": "demo-runner",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "ai-center-demo",
+          "config": {
+            "pii": {
+              "categories": [
+                "EMAIL_ADDRESS",
+                "PHONE_NUMBER"
+              ]
+            }
+          },
+          "isEnabled": true,
+          "subsystem": "demo-runner",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again with no change",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-1>",
+        "body": {
+          "config": {
+            "pii": {
+              "categories": [
+                "EMAIL_ADDRESS",
+                "PHONE_NUMBER"
+              ]
+            }
+          },
+          "isEnabled": true,
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

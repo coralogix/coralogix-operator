@@ -1,0 +1,94 @@
+[
+  {
+    "step": "create: the API stores the evaluation, and the answer has an empty id",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "isEnabled": true,
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the stored evaluation takes the slot of the new one",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the operator has no id of the stored evaluation",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

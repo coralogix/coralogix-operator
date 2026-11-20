@@ -1,0 +1,173 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "pii": {
+          "categories": [
+            "EMAIL_ADDRESS"
+          ]
+        }
+      },
+      "isEnabled": true,
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "pii": {
+              "categories": [
+                "EMAIL_ADDRESS"
+              ]
+            }
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "add a category",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "pii": {
+          "categories": [
+            "EMAIL_ADDRESS",
+            "US_SSN"
+          ]
+        }
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-1>",
+        "body": {
+          "config": {
+            "pii": {
+              "categories": [
+                "EMAIL_ADDRESS",
+                "US_SSN"
+              ]
+            }
+          },
+          "isEnabled": true,
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "replace the categories",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "pii": {
+          "categories": [
+            "CREDIT_CARD"
+          ]
+        }
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-1>",
+        "body": {
+          "config": {
+            "pii": {
+              "categories": [
+                "CREDIT_CARD"
+              ]
+            }
+          },
+          "isEnabled": true,
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

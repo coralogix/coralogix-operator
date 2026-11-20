@@ -1,0 +1,194 @@
+[
+  {
+    "step": "create with the threshold 1 as a number",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "isEnabled": true,
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": 1
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 1
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "threshold 0",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-1>",
+        "body": {
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "threshold": 0
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "threshold in milli units",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "750m"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-1>",
+        "body": {
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "threshold": 0.75
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "threshold with many digits",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.333333333"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-1>",
+        "body": {
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "threshold": 0.333333333
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 5,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

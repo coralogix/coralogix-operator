@@ -1,0 +1,1008 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update as the released operator, switch arms, delete, then act on the deleted evaluation",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS",
+                    "PHONE_NUMBER"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS",
+                    "PHONE_NUMBER"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": false,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.5,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "allowedTopics": {
+                  "topics": [
+                    "billing"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.4,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "promptInjection": {
+                  "additionalContext": ""
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.4,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "promptInjection": {
+                  "additionalContext": ""
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.4,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with no isEnabled and no threshold",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sexism": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": false,
+              "subsystem": "{{subsystem}}",
+              "target": "PROMPT",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sexism": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": false,
+              "subsystem": "{{subsystem}}",
+              "target": "PROMPT",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a prompt injection for the response",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "promptInjection": {
+                  "additionalContext": "a support assistant"
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create twice with the same application, subsystem, target, and type",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: An evaluation with these parameters already exists"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create for an application that the team does not have",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: AI application not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with threshold over 1, below 0, and at the bounds",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 1,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be less than or equal to 1\",\n    \"path\": [\n      \"threshold\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 0,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be greater than or equal to 0\",\n    \"path\": [\n      \"threshold\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 1,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 1,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be less than or equal to 1\",\n    \"path\": [\n      \"threshold\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with invalid configs",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"config\",\n      \"evaluation\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at least 1 element(s)\",\n    \"path\": [\n      \"config\",\n      \"evaluation\",\n      \"value\",\n      \"categories\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"message\": \"Items in array must be unique, no duplicates allowed.\",\n    \"path\": [\n      \"config\",\n      \"evaluation\",\n      \"value\",\n      \"topics\"\n    ]\n  }\n]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with no target and no config",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"expected\": \"'PROMPT' | 'RESPONSE' | 'CONVERSATION'\",\n    \"received\": \"undefined\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"target\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"config\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "act on an id that is not a UUID",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "act on an unknown id",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "update with an updateMask",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.6,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.6,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"path\": [\n      \"updateMask\"\n    ],\n    \"message\": \"Field \\\"isEnabled\\\" is required and cannot be cleared via update_mask.\"\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"message\": \"Unknown field path \\\"config.sexism\\\" in update_mask.\",\n    \"path\": [\n      \"updateMask\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"message\": \"Unknown field path \\\"unknown_field\\\" in update_mask.\",\n    \"path\": [\n      \"updateMask\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create and delete every config arm that the other cases do not create",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "competition": {
+                  "competitors": [
+                    "Example Corp"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm0}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm0}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationCompleteness": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm1}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm1}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationContextAdherence": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm2}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm2}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationContextRelevance": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm3}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm3}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationCorrectness": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm4}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm4}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationTaskAdherence": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm5}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm5}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "languageMismatch": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm6}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm6}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "restrictedTopics": {
+                  "topics": [
+                    "politics"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm7}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm7}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlAllowedTables": {
+                  "tables": [
+                    "orders"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm8}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm8}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlHallucination": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm9}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm9}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlReadOnly": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm10}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm10}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlRestrictedTables": {
+                  "tables": [
+                    "users"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm11}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm11}}"
+          }
+        }
+      ]
+    }
+  ]
+}

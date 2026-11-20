@@ -1,0 +1,57 @@
+[
+  {
+    "step": "create a prompt injection with no additional context",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "promptInjection": {
+          "additionalContext": ""
+        }
+      },
+      "isEnabled": true,
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "prompt",
+      "threshold": "0.5"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "promptInjection": {
+              "additionalContext": ""
+            }
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "PROMPT",
+          "threshold": 0.5
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

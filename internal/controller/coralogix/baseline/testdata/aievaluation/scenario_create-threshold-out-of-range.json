@@ -1,0 +1,104 @@
+[
+  {
+    "step": "create with a threshold over 1: the operator rejects it",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "isEnabled": true,
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "1.5"
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "fix the threshold",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
