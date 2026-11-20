@@ -1,0 +1,90 @@
+{
+  "bucket of 1 character": {
+    "accepted": true
+  },
+  "bucket of 300 characters": {
+    "accepted": true
+  },
+  "empty bucket and region": {
+    "accepted": true
+  },
+  "empty ibm cos target": {
+    "accepted": true
+  },
+  "empty s3 target": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec",
+        "message": "Invalid value: \"object\": Exactly one of s3Target or ibmCosTarget must be specified"
+      }
+    ]
+  },
+  "ibm cos bucket type API name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.ibmCosTarget.bucketType",
+        "message": "Unsupported value: \"IBM_BUCKET_TYPE_EXTERNAL\": supported values: \"UNSPECIFIED\", \"EXTERNAL\", \"INTERNAL\""
+      }
+    ]
+  },
+  "ibm cos bucket type EXTERNAL": {
+    "accepted": true
+  },
+  "ibm cos bucket type INTERNAL": {
+    "accepted": true
+  },
+  "ibm cos bucket type UNSPEC": {
+    "accepted": true
+  },
+  "ibm cos bucket type lowercase": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.ibmCosTarget.bucketType",
+        "message": "Unsupported value: \"external\": supported values: \"UNSPECIFIED\", \"EXTERNAL\", \"INTERNAL\""
+      }
+    ]
+  },
+  "ibm cos target": {
+    "accepted": true
+  },
+  "ibm cos with a service crn": {
+    "accepted": true
+  },
+  "no spec": {
+    "accepted": true
+  },
+  "s3 and ibm cos": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec",
+        "message": "Invalid value: \"object\": Exactly one of s3Target or ibmCosTarget must be specified"
+      }
+    ]
+  },
+  "s3 target": {
+    "accepted": true
+  },
+  "s3 target without a bucket": {
+    "accepted": true
+  },
+  "s3 target without a region": {
+    "accepted": true
+  },
+  "unknown field is not an error": {
+    "accepted": true
+  },
+  "unknown s3 field is not an error": {
+    "accepted": true
+  }
+}

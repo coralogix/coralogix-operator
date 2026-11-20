@@ -1,0 +1,634 @@
+{
+  "cases": [
+    {
+      "name": "set the team bucket as the operator creates, updates, and deletes",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": true
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": true
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": true
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a target without a region, and an empty region",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": true
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": true
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: \"targetSpec\" does not match any of the allowed types"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": true
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejected targets",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: \"targetSpec\" does not match any of the allowed types"
+          }
+        },
+        {
+          "status": 408,
+          "response": {
+            "code": 408,
+            "message": "Deadline Exceeded: Failed to update archive target. Please provide a bucket in region {{region}} and try again."
+          }
+        },
+        {
+          "status": 408,
+          "response": {
+            "code": 408,
+            "message": "Deadline Exceeded: Region us-east-1 is not supported, must use {{region}}."
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: \"targetSpec\" is required"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line 1:2): unknown field \"ibmCos\""
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a body without isActive deactivates",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": true
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a format and an external id in the request",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "activate retentions twice",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "activateRetentions": true
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "activateRetentions": true
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "enableTags": true
+          }
+        }
+      ]
+    }
+  ]
+}
