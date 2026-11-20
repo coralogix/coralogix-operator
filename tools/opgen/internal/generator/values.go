@@ -55,6 +55,11 @@ type e2eFile struct {
 	SkipValues map[string]e2eSkipValues `yaml:"skipValues"`
 	// SkipChoices lists oneOf arms that no test sends, by component, with the reason.
 	SkipChoices map[string]e2eSkipChoices `yaml:"skipChoices"`
+	// Env lists environment variables that the live tests read. A substitution, a fixture spec, or
+	// the upgrade spec names one as @{env.NAME}, for an account value that the public repository
+	// cannot hold, such as a resource that only the test account has. A value cannot: it reaches
+	// the sample.
+	Env []string `yaml:"env"`
 }
 
 // e2eSkipValues skips API values of one enum component. A skipped value is still in the CRD: a skip
@@ -120,7 +125,39 @@ func readE2E(path string) (*e2eFile, error) {
 			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":skipChoices." + component, msg: "choices and reason are required"}
 		}
 	}
+	seen := map[string]bool{}
+	for _, name := range f.Env {
+		if !envName.MatchString(name) || seen[name] {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":env", msg: fmt.Sprintf("%q is not an upper-case variable name, or it is listed twice", name)}
+		}
+		seen[name] = true
+	}
 	return &f, nil
+}
+
+var (
+	envName = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
+	envRef  = regexp.MustCompile(`@\{env\.([^}]*)\}`)
+)
+
+// envIssues checks that each @{env.NAME} of the e2e texts names a variable of env, and that each
+// variable of env is used.
+func envIssues(env []string, texts ...string) error {
+	used := map[string]bool{}
+	for _, text := range texts {
+		for _, m := range envRef.FindAllStringSubmatch(text, -1) {
+			if !slices.Contains(env, m[1]) {
+				return &shapeError{code: codeE2EInvalid, path: e2eFileName + ":env", msg: fmt.Sprintf("@{env.%s} names a variable that env does not list", m[1])}
+			}
+			used[m[1]] = true
+		}
+	}
+	for _, name := range env {
+		if !used[name] {
+			return &shapeError{code: codeE2EUnused, path: e2eFileName + ":env." + name, msg: "no value names @{env." + name + "}"}
+		}
+	}
+	return nil
 }
 
 // e2eData is what the e2e test template needs.
@@ -145,6 +182,8 @@ type e2eData struct {
 	Steps [][]sweepCopy
 	// Overwrite is the e2e test of an overwrite resource, nil for another resource.
 	Overwrite *overwriteData
+	// Env are the environment variables that the live tests read.
+	Env []string
 }
 
 // overwriteData is the e2e test of an overwrite resource. The spec holds one list; the test gives its
@@ -298,6 +337,24 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		}
 		e2e.Upgrade = &upgradeData{file.Upgrade.From, string(encoded), file.Upgrade.Field, file.Upgrade.Value}
 	}
+	// The values also make the sample, which must not name a variable.
+	if envRef.MatchString(e2e.FullJSON) || envRef.MatchString(e2e.MinimalJSON) {
+		return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":values", msg: "a value reaches the sample; name the variable in a substitution of the value"}
+	}
+	var texts []string
+	for _, fixture := range e2e.Fixtures {
+		texts = append(texts, fixture.SpecJSON)
+	}
+	for _, sub := range e2e.Substitutions {
+		texts = append(texts, sub.To)
+	}
+	if e2e.Upgrade != nil {
+		texts = append(texts, e2e.Upgrade.SpecJSON)
+	}
+	if err := envIssues(file.Env, texts...); err != nil {
+		return nil, nil, nil, err
+	}
+	e2e.Env = file.Env
 	if d.Overwrite {
 		if e2e.Overwrite, err = overwriteStep(d, ix, file, full); err != nil {
 			return nil, nil, nil, err

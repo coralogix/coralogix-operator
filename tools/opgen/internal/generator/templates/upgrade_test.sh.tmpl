@@ -7,6 +7,9 @@ mode="${1:?usage: $0 before|after|cleanup}"
 cr="upgrade-test-{{.Lower}}"
 namespace="default"
 name="${NAME:?NAME is required}"
+{{- range .E2E.Env}}
+: "${ {{- .}}:?{{.}} is required}"
+{{- end}}
 {{- if not .Overwrite}}
 id_file="${RUNNER_TEMP:-/tmp}/upgrade-test-{{.Lower}}.id"
 {{- end}}
@@ -44,7 +47,7 @@ wait_for() {
 
 case "$mode" in
 before)
-    spec="$(sed "s/@{run}/$name/g" <<'JSON'
+    spec="$(sed {{if .E2E.Env}}-e "s/@{run}/$name/g"{{range .E2E.Env}} -e "s|@{env.{{.}}}|${ {{- .}}}|g"{{end}}{{else}}"s/@{run}/$name/g"{{end}} <<'JSON'
 {{.E2E.Upgrade.SpecJSON}}
 JSON
 )"
