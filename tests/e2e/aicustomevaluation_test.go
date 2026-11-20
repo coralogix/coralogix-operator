@@ -119,15 +119,20 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 
 	It("Should restore application links removed outside the operator", func(ctx context.Context) {
 		By("Removing the AICustomEvaluation application link directly in Coralogix")
-		_, httpResp, err := aiEvaluations.
-			AiEvaluationsServiceUnlinkCustomEvaluationFromApp(ctx, application.id, aiCustomEvaluationID).
-			Execute()
-		Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
-
+		// A reconcile that the previous spec started can still be running, and its update sends the
+		// links of the spec. If it lands after the unlink, the link is back before the check below
+		// sees it gone. So unlink again whenever the link is there, until the operator settles.
 		Eventually(func(g Gomega) {
 			customEvaluation := getRemoteAICustomEvaluation(ctx, g, aiEvaluations, aiCustomEvaluationID)
+			if len(customEvaluation.GetApplicationIds()) > 0 {
+				_, httpResp, err := aiEvaluations.
+					AiEvaluationsServiceUnlinkCustomEvaluationFromApp(ctx, application.id, aiCustomEvaluationID).
+					Execute()
+				g.Expect(cxsdk.NewAPIError(httpResp, err)).ToNot(HaveOccurred())
+				customEvaluation = getRemoteAICustomEvaluation(ctx, g, aiEvaluations, aiCustomEvaluationID)
+			}
 			g.Expect(customEvaluation.GetApplicationIds()).To(BeEmpty())
-		}, time.Minute, time.Second).Should(Succeed())
+		}, 2*time.Minute, 2*time.Second).Should(Succeed())
 
 		By("Patching the AICustomEvaluation to trigger reconciliation")
 		current := &coralogixv1alpha1.AICustomEvaluation{}
