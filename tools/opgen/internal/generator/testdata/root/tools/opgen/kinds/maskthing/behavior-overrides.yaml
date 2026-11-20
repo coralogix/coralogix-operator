@@ -6,3 +6,5 @@ api:
   # The API rejects the bare path rule: the mask names rule.enabled, rule.note, and the arm.
   updateMask:
     nested: [rule]
+# The spec can hold secrets: the logs name the kind and the id, not the bodies.
+hideBodiesInLogs: true

@@ -62,6 +62,11 @@ type File struct {
 	// Finalizer keeps the released finalizer name of an existing kind. It is an operator key; the
 	// shared iac module does not know it. The generated name is kebab(Kind).coralogix.com/finalizer.
 	Finalizer string `yaml:"finalizer"`
+	// HideBodiesInLogs keeps the Create and Update bodies and responses out of the operator logs,
+	// for a kind whose spec can hold secrets, such as a collector configuration with credentials.
+	// The logs name the kind and the id only. It is an operator key; the shared iac module does not
+	// know it.
+	HideBodiesInLogs bool `yaml:"hideBodiesInLogs"`
 	// Hooks names the handwritten steps that the generated lifecycle calls. Each hook is an
 	// unexported method of the reconciler, defined in a handwritten file of the same package. Hooks
 	// change the generated body; they never replace it. Mode existing only.
