@@ -42,6 +42,9 @@ api:
   updateMask:
     nested: [family]
 finalizer: configurationgroup.coralogix.com/finalizer
+# A raw collector configuration can hold credentials. The released controller logged only the
+# name and the id.
+hideBodiesInLogs: true
 # The API refuses to archive a group whose family is active (412), so beforeDelete deactivates it.
 hooks: [beforeDelete]
 enums:
