@@ -228,6 +228,7 @@ jobs:
     uses: ./.github/workflows/e2e-tests.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_1 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
       logs_bucket: ${{ secrets.LOGS_BUCKET }}
       metrics_bucket: ${{ secrets.METRICS_BUCKET }}
       aws_region: ${{ secrets.AWS_REGION }}
@@ -242,6 +243,7 @@ jobs:
     uses: ./.github/workflows/helm-e2e-tests.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_2 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
       logs_bucket: ${{ secrets.LOGS_BUCKET }}
       metrics_bucket: ${{ secrets.METRICS_BUCKET }}
       aws_region: ${{ secrets.AWS_REGION }}
@@ -269,6 +271,7 @@ jobs:
       operator_version: "0.5"
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_4 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
       logs_bucket: ${{ secrets.LOGS_BUCKET }}
       metrics_bucket: ${{ secrets.METRICS_BUCKET }}
       aws_region: ${{ secrets.AWS_REGION }}
@@ -287,6 +290,7 @@ jobs:
       operator_version: "1.0"
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_5 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
       logs_bucket: ${{ secrets.LOGS_BUCKET }}
       metrics_bucket: ${{ secrets.METRICS_BUCKET }}
       aws_region: ${{ secrets.AWS_REGION }}
@@ -305,6 +309,7 @@ jobs:
       operator_version: "2.0"
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_6 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
       logs_bucket: ${{ secrets.LOGS_BUCKET }}
       metrics_bucket: ${{ secrets.METRICS_BUCKET }}
       aws_region: ${{ secrets.AWS_REGION }}
@@ -322,6 +327,7 @@ jobs:
       suite: group-scim
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_7 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
 
   coverage:
     needs: [changes, prepare-8]
@@ -332,6 +338,7 @@ jobs:
     uses: ./.github/workflows/coverage-tests.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_8 }}
+      ai_prefix: ${{ secrets.OPERATOR_CI_AI_APPLICATION_PREFIX }}
 
   live-tests-result:
     # Branch protection requires this check name. Keep it stable.

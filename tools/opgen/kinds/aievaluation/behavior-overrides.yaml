@@ -1,0 +1,55 @@
+resource: AiEvaluation
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The API makes an evaluation disabled when Create leaves isEnabled out. The released CRD
+    # enables it.
+    spec.isEnabled:
+      add: ['+kubebuilder:default=true']
+    # The released message of the exactly-one rule.
+    spec.config#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence) ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) + (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.sqlAllowedTables) ? 1 : 0) + (has(self.sqlHallucination) ? 1 : 0) + (has(self.sqlReadOnly) ? 1 : 0) + (has(self.sqlRestrictedTables) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1",message="Exactly one of allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity must be set"']
+      add: ['+kubebuilder:validation:XValidation:rule="(has(self.allowedTopics) ? 1 : 0) + (has(self.competition) ? 1 : 0) + (has(self.hallucinationCompleteness) ? 1 : 0) + (has(self.hallucinationContextAdherence) ? 1 : 0) + (has(self.hallucinationContextRelevance) ? 1 : 0) + (has(self.hallucinationCorrectness) ? 1 : 0) + (has(self.hallucinationTaskAdherence) ? 1 : 0) + (has(self.languageMismatch) ? 1 : 0) + (has(self.pii) ? 1 : 0) + (has(self.promptInjection) ? 1 : 0) + (has(self.restrictedTopics) ? 1 : 0) + (has(self.sexism) ? 1 : 0) + (has(self.sqlAllowedTables) ? 1 : 0) + (has(self.sqlHallucination) ? 1 : 0) + (has(self.sqlReadOnly) ? 1 : 0) + (has(self.sqlRestrictedTables) ? 1 : 0) + (has(self.toxicity) ? 1 : 0) == 1",message="Exactly one of the following AI evaluation configs must be set: allowedTopics, competition, hallucinationCompleteness, hallucinationContextAdherence, hallucinationContextRelevance, hallucinationCorrectness, hallucinationTaskAdherence, languageMismatch, pii, promptInjection, restrictedTopics, sexism, sqlAllowedTables, sqlHallucination, sqlReadOnly, sqlRestrictedTables, toxicity"']
+api:
+  updateMaskInBody: true
+# Update sends no updateMask, as the released kind did. The server then updates each field in the
+# body, and a config of another arm replaces the stored one (recorded in the baseline fidelity).
+updateMask: omit
+types:
+  AiEvaluation:
+    fields:
+      id: {readOnly: true}
+      # The released CRD keeps the application, the subsystem, and the target of an evaluation.
+      # The API can change them, but the released kind never sent them in an Update.
+      application: {immutable: true}
+      subsystem: {immutable: true}
+      # The released CR requires it. The API keeps no threshold when Create leaves it out.
+      threshold: {required: true}
+      # The contract text names CONVERSATION, which the released CRD does not accept.
+      target: {immutable: true, description: Target span content the evaluation runs against.}
+      isEnabled: {description: Whether the evaluation is active.}
+      config: {description: AI evaluation configuration.}
+  EvaluationConfig:
+    unsupportedArms:
+      - {arm: sqlLoad, reason: the released CRD never had this arm}
+      - {arm: customEvaluation, reason: the AICustomEvaluation kind manages custom evaluations through its own API}
+    fields:
+      hallucinationCompleteness: {emptyObject: map}
+      hallucinationContextAdherence: {emptyObject: map}
+      hallucinationContextRelevance: {emptyObject: map}
+      hallucinationCorrectness: {emptyObject: map}
+      hallucinationTaskAdherence: {emptyObject: map}
+      languageMismatch: {emptyObject: map}
+      sexism: {emptyObject: map}
+      sqlHallucination: {emptyObject: map}
+      sqlReadOnly: {emptyObject: map}
+      toxicity: {emptyObject: map}
+enums:
+  EvaluationTarget:
+    # The first value is a business value: the enum has no UNSPECIFIED value.
+    names: {PROMPT: prompt, RESPONSE: response}
+    rejected:
+      - {value: CONVERSATION, reason: the released CRD never accepted this value; adding it needs a live test}
+  PiiCategory:
+    verbatim: true

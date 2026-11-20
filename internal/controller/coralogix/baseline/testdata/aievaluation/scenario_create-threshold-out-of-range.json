@@ -11,7 +11,23 @@
       "target": "response",
       "threshold": "1.5"
     },
-    "requests": [],
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 1.5
+        },
+        "status": 400
+      }
+    ],
     "result": {
       "error": true
     },
@@ -32,7 +48,23 @@
   },
   {
     "step": "reconcile again",
-    "requests": [],
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 1.5
+        },
+        "status": 400
+      }
+    ],
     "result": {
       "error": true
     },

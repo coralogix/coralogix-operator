@@ -11,6 +11,8 @@ on:
     secrets:
       api_key:
         required: true
+      ai_prefix:
+        required: false
 
 permissions:
   contents: read
@@ -89,6 +91,9 @@ jobs:
       - name: Run the coverage specs of the shard
         env:
           SHARD_FILTER: ${{ matrix.filter }}
+          # The generated AIEvaluation tests use the last AI application of the CI preparation.
+          AI_EVALUATION_APPLICATION: ${{ secrets.ai_prefix }}-20
+          AI_EVALUATION_SUBSYSTEM: ci-acceptance
         run: bash .github/scripts/ci-account.sh lookup make e2e-tests E2E_GINKGO_LABEL_FILTER="${SHARD_FILTER}"
       - name: Collect Operator Logs
         if: always()

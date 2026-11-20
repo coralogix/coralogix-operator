@@ -41,7 +41,6 @@ const (
 	IPAccess                   = "IPAccess"
 	CustomEnrichmentKind       = "CustomEnrichment"
 	EnrichmentKind             = "Enrichment"
-	AIEvaluationKind           = "AIEvaluation"
 	AICustomEvaluationKind     = "AICustomEvaluation"
 	ConfigurationGroupKind     = "ConfigurationGroup"
 
