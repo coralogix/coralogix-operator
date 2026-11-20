@@ -64,6 +64,9 @@ type kindData struct {
 	GetMethod, DeleteMethod    string
 	Replace                    bool
 	Mask, MaskSetter           string // the update mask and its setter, "" for a full replace
+	// MaskArms are the update mask paths of oneOf arms of a nested object (api.updateMask.nested).
+	// The mask names an arm only when the spec sets it, so UpdateMask is a method, not a const.
+	MaskArms []maskArm
 	IDField                    string // the Go field of the id in the resource response
 	IDValue                    bool   // the id field is a value, not a pointer
 	IDBits                     int    // 32 or 64 for a numeric API id; status still stores a string
@@ -110,6 +113,11 @@ type kindData struct {
 	Status []statusField
 
 	E2E *e2eData
+}
+
+// maskArm is an update mask path that the mask holds when Check, a Go expression on the CR, is true.
+type maskArm struct {
+	Path, Check string
 }
 
 // crType is a Go struct of the custom resource.

@@ -9,6 +9,7 @@ import (
 	contentthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/content_things_service"
 	hookdeletethings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_delete_things_service"
 	hookthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_things_service"
+	maskthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/mask_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
 	thingpolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/thing_policies_service"
@@ -27,6 +28,11 @@ func (c *ClientSet) Things() *things.ThingsServiceAPIService {
 // PatchThings returns the client of the patch things API.
 func (c *ClientSet) PatchThings() *patchthings.PatchThingsServiceAPIService {
 	return patchthings.NewPatchThingsServiceAPIService()
+}
+
+// MaskThings returns the client of the mask things API.
+func (c *ClientSet) MaskThings() *maskthings.MaskThingsServiceAPIService {
+	return maskthings.NewMaskThingsServiceAPIService()
 }
 
 // RefThings returns the client of the ref things API.
