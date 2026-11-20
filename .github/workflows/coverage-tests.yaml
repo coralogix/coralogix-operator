@@ -11,6 +11,11 @@ on:
     secrets:
       api_key:
         required: true
+      # The e2e env values of generated kinds (e2e.yaml env), such as the archive target bucket.
+      logs_bucket:
+        required: true
+      aws_region:
+        required: true
 
 permissions:
   contents: read
@@ -66,6 +71,8 @@ jobs:
       IMG: coralogix-operator-image:latest
       CORALOGIX_REGION: EU2
       CORALOGIX_API_KEY: ${{ secrets.api_key }}
+      LOGS_BUCKET: ${{ secrets.logs_bucket }}
+      AWS_REGION: ${{ secrets.aws_region }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

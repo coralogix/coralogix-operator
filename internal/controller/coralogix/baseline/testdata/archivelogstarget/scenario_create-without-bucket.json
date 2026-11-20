@@ -2,6 +2,7 @@
   {
     "step": "create without a bucket: the request sends an empty bucket",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "region": "eu-north-1"
       }

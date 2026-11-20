@@ -2,6 +2,7 @@
   {
     "step": "create with an empty s3Target",
     "spec": {
+      "isActive": true,
       "s3Target": {}
     },
     "requests": [
@@ -11,8 +12,7 @@
         "body": {
           "isActive": true,
           "s3": {
-            "bucket": "",
-            "region": ""
+            "bucket": ""
           }
         },
         "status": 400

@@ -2,6 +2,7 @@
   {
     "step": "create without a region: the request sends an empty region",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-fidelity-archive"
       }
@@ -13,28 +14,36 @@
         "body": {
           "isActive": true,
           "s3": {
-            "bucket": "cxo-fidelity-archive",
-            "region": ""
+            "bucket": "cxo-fidelity-archive"
           }
         },
-        "status": 400
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1/activate",
+        "status": 200
       }
     ],
     "result": {
-      "error": true
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
-      "finalizers": [],
+      "finalizers": [
+        "archivelogstarget.coralogix.com/finalizer"
+      ],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
             "type": "RemoteSynced"
           }
         ],
-        "printableStatus": "RemoteUnsynced"
+        "id": "archiveLogsTaget",
+        "printableStatus": "RemoteSynced"
       }
     }
   },
@@ -47,34 +56,49 @@
         "body": {
           "isActive": true,
           "s3": {
-            "bucket": "cxo-fidelity-archive",
-            "region": ""
+            "bucket": "cxo-fidelity-archive"
           }
         },
-        "status": 400
+        "status": 200
       }
     ],
     "result": {
-      "error": true
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
-      "finalizers": [],
+      "finalizers": [
+        "archivelogstarget.coralogix.com/finalizer"
+      ],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
             "type": "RemoteSynced"
           }
         ],
-        "printableStatus": "RemoteUnsynced"
+        "id": "archiveLogsTaget",
+        "printableStatus": "RemoteSynced"
       }
     }
   },
   {
     "step": "delete",
-    "requests": [],
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/logs/data-setup/v2",
+        "body": {
+          "isActive": false,
+          "s3": {
+            "bucket": "cxo-fidelity-archive"
+          }
+        },
+        "status": 200
+      }
+    ],
     "result": {
       "error": false
     },

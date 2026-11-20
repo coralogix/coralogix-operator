@@ -614,3 +614,92 @@ func withNewSLOField(t *testing.T, spec []byte) []byte {
 	}
 	return out
 }
+
+// A new field of the S3 target, and a new field that Get nests in archiveSpec and the POST sends at
+// the top level, flow into the type, the request, the sample, and the generated test with no
+// behavior-overrides line. The chart 0.5 upgrade spec stays fixed.
+func TestArchiveLogsTargetNewFieldWithoutOverrides(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		if os.Getenv("CI") != "" {
+			t.Fatal(err)
+		}
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	entry := kindEntry{Kind: "ArchiveLogsTarget", Resource: "v2.Target"}
+	dir := filepath.Join(input.ModuleRoot, entry.dir())
+	render := func(spec []byte) map[string][]byte {
+		t.Helper()
+		// Each render reads the file again: reshape records its result in the file.
+		file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+		if err != nil {
+			t.Fatal(err)
+		}
+		// The same loader as generation: it reshapes the contract of the singleton.
+		doc, err := (&documents{raw: spec}).forKind(entry, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.files
+	}
+	before := render(input.OpenAPI)
+	after := render(withNewArchiveFields(t, input.OpenAPI))
+	for name, content := range after {
+		if removed := removedLines(string(before[name]), string(content)); len(removed) != 0 {
+			t.Errorf("%s: a new field changed existing lines:\n%s", name, strings.Join(removed, "\n"))
+		}
+	}
+	for _, want := range []struct{ file, text string }{
+		{"api/coralogix/v1alpha1/archivelogstarget_types.go", "StorageClass *string `json:\"storageClass,omitempty\"`"},
+		{"api/coralogix/v1alpha1/archivelogstarget_types.go", "CompressionLevel *int32 `json:\"compressionLevel,omitempty\"`"},
+		{"api/coralogix/v1alpha1/archivelogstarget_convert.go", "out.StorageClass = in.StorageClass"},
+		{"api/coralogix/v1alpha1/archivelogstarget_convert.go", "out.CompressionLevel = in.CompressionLevel"},
+		{"config/samples/v1alpha1/generated/archivelogstarget.yaml", "storageClass:"},
+		{"config/samples/v1alpha1/generated/archivelogstarget.yaml", "compressionLevel:"},
+		{"tests/e2e/archivelogstarget_generated_test.go", `"storageClass":`},
+	} {
+		if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+			t.Errorf("%s has no %q", want.file, want.text)
+		}
+	}
+	if string(after["scripts/upgrade-check-archivelogstarget.sh"]) != string(before["scripts/upgrade-check-archivelogstarget.sh"]) {
+		t.Error("a new field changed the released chart upgrade check")
+	}
+}
+
+// withNewArchiveFields adds storageClass to the S3 target, which Get and the POST share, and
+// compressionLevel to the archiveSpec of Get and to the top level of the POST body.
+func withNewArchiveFields(t *testing.T, spec []byte) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := yaml.Unmarshal(spec, &doc); err != nil {
+		t.Fatal(err)
+	}
+	schemas := doc["components"].(map[string]any)["schemas"].(map[string]any)
+	props := func(name string) map[string]any {
+		return schemas[name].(map[string]any)["properties"].(map[string]any)
+	}
+	props("S3TargetSpec")["storageClass"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "Storage class."}
+	level := map[string]any{"type": "integer", "format": "int32", "x-coralogix-presence": true, "description": "Compression level."}
+	props("ArchiveSpec")["compressionLevel"] = level
+	set := doc["paths"].(map[string]any)["/logs/data-setup/v2"].(map[string]any)["post"].(map[string]any)
+	body := set["requestBody"].(map[string]any)["content"].(map[string]any)["application/json"].(map[string]any)["schema"].(map[string]any)
+	body["properties"].(map[string]any)["compressionLevel"] = level
+	out, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}

@@ -10420,10 +10420,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-ArchiveLogsTarget is the Schema for the Archive Logs API.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
-
-**Added in v0.5.0**
+ArchiveLogsTarget is the Schema for the archivelogstargets API.
 
 <table>
     <thead>
@@ -10455,7 +10452,7 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
         <td><b><a href="#archivelogstargetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.<br/>
+          ArchiveLogsTargetSpec defines the desired state of a ArchiveLogsTarget.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.s3Target) != has(self.ibmCosTarget): Exactly one of s3Target or ibmCosTarget must be specified</li>
         </td>
@@ -10464,7 +10461,7 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
         <td><b><a href="#archivelogstargetstatus">status</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          ArchiveLogsTargetStatus defines the observed state of a ArchiveLogsTarget.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10476,7 +10473,7 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
 
 
 
-ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs target.
+ArchiveLogsTargetSpec defines the desired state of a ArchiveLogsTarget.
 
 <table>
     <thead>
@@ -10488,17 +10485,35 @@ ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs targ
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>format</b></td>
+        <td>enum</td>
+        <td>
+          Target format.<br/>
+          <br/>
+            <i>Enum</i>: cxDataV1<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#archivelogstargetspecibmcostarget">ibmCosTarget</a></b></td>
         <td>object</td>
         <td>
-          The IBM COS target configuration.<br/>
+          IbmCosTarget is an IBM Cloud Object Storage target.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>isActive</b></td>
+        <td>boolean</td>
+        <td>
+          Whether archiving to this target is active.<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#archivelogstargetspecs3target">s3Target</a></b></td>
         <td>object</td>
         <td>
-          The S3 target configuration.<br/>
+          This data structure represents an S3 target.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10510,7 +10525,7 @@ ArchiveLogsTargetSpec defines the desired state of a Coralogix archive logs targ
 
 
 
-The IBM COS target configuration.
+IbmCosTarget is an IBM Cloud Object Storage target.
 
 <table>
     <thead>
@@ -10560,7 +10575,7 @@ The IBM COS target configuration.
 
 
 
-The S3 target configuration.
+This data structure represents an S3 target.
 
 <table>
     <thead>
@@ -10575,14 +10590,28 @@ The S3 target configuration.
         <td><b>bucketName</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Bucket name.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>externalId</b></td>
+        <td>string</td>
+        <td>
+          External identifier.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>region</b></td>
         <td>string</td>
         <td>
-          The region of the S3 bucket.<br/>
+          Region.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>roleArn</b></td>
+        <td>string</td>
+        <td>
+          The role arn.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10594,7 +10623,7 @@ The S3 target configuration.
 
 
 
-
+ArchiveLogsTargetStatus defines the observed state of a ArchiveLogsTarget.
 
 <table>
     <thead>
@@ -10616,7 +10645,7 @@ The S3 target configuration.
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          ID is the identifier of the archive logs target.<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>

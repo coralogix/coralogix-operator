@@ -2,6 +2,7 @@
   {
     "step": "create",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-fidelity-archive",
         "region": "eu-north-1"
@@ -68,7 +69,7 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteUpdateFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
@@ -80,26 +81,30 @@
   },
   {
     "step": "delete: no request",
-    "requests": [],
-    "result": {
-      "error": true
-    },
-    "object": {
-      "finalizers": [
-        "archivelogstarget.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 3,
-            "reason": "RemoteDeletionFailed",
-            "status": "False",
-            "type": "RemoteSynced"
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/logs/data-setup/v2",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/logs/data-setup/v2",
+        "body": {
+          "format": "TARGET_FORMAT_CX_DATA_V1",
+          "isActive": false,
+          "s3": {
+            "bucket": "cxo-fidelity-archive",
+            "externalId": "eu2-0000000",
+            "region": "eu-north-1"
           }
-        ],
-        "id": "archiveLogsTaget",
-        "printableStatus": "RemoteUnsynced"
+        },
+        "status": 200
       }
-    }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
   }
 ]
