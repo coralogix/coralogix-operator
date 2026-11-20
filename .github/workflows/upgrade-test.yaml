@@ -146,6 +146,12 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-slo.sh before
+      # The ConfigurationGroup kind is in charts 2.9 and later, so in the 2.0 line.
+      - name: Create a ConfigurationGroup with the released operator
+        if: inputs.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-configurationgroup.sh before
       - name: Build PR image
         uses: ./.github/actions/build-operator-image
         with:
@@ -241,6 +247,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-slo.sh after
+      - name: Check the ConfigurationGroup of the released operator
+        if: inputs.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-configurationgroup.sh after
       # A failed step before the check skips it, so delete the resources here; no run leaves them in
       # Coralogix.
       - name: Delete the SLO of the upgrade test
@@ -248,6 +259,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-slo.sh cleanup
+      - name: Delete the ConfigurationGroup of the upgrade test
+        if: always() && inputs.operator_version == '2.0'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-configurationgroup.sh cleanup
       - name: Delete the Dashboard of the upgrade test
         if: always()
         env:

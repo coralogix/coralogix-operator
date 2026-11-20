@@ -10855,7 +10855,6 @@ with respect to the current state of the instance.<br/>
 
 
 ConfigurationGroup is the Schema for the configurationgroups API.
-This resource is in Preview and may change in breaking ways. It uses the Fleet Manager configuration-groups API.
 
 <table>
     <thead>
@@ -10887,15 +10886,14 @@ This resource is in Preview and may change in breaking ways. It uses the Fleet M
         <td><b><a href="#configurationgroupspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ConfigurationGroupSpec defines the desired state of a Fleet Manager configuration group.
-It mirrors the configuration-groups API create request. This resource is in Preview.<br/>
+          ConfigurationGroupSpec defines the desired state of a ConfigurationGroup.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#configurationgroupstatus">status</a></b></td>
         <td>object</td>
         <td>
-          ConfigurationGroupStatus defines the observed state of ConfigurationGroup.<br/>
+          ConfigurationGroupStatus defines the observed state of a ConfigurationGroup.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10907,8 +10905,7 @@ It mirrors the configuration-groups API create request. This resource is in Prev
 
 
 
-ConfigurationGroupSpec defines the desired state of a Fleet Manager configuration group.
-It mirrors the configuration-groups API create request. This resource is in Preview.
+ConfigurationGroupSpec defines the desired state of a ConfigurationGroup.
 
 <table>
     <thead>
@@ -10923,7 +10920,7 @@ It mirrors the configuration-groups API create request. This resource is in Prev
         <td><b><a href="#configurationgroupspecfamily">family</a></b></td>
         <td>object</td>
         <td>
-          Latest configuration family for this group.<br/>
+          Latest configuration family of the group.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.preset) != has(self.raw): Exactly one of preset or raw is required</li>
         </td>
@@ -10932,30 +10929,32 @@ It mirrors the configuration-groups API create request. This resource is in Prev
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Display name. Group names are unique per team and cannot be cleared.<br/>
+          Display name shown in Fleet Management, unique among the team's configuration groups.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Human-readable description.<br/>
+          Description of the group's purpose.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>priorityOrder</b></td>
         <td>integer</td>
         <td>
-          Selection precedence. Higher values win on ties and 0 is the default.<br/>
+          Selection priority when multiple configurations match an agent. Higher values take precedence.<br/>
           <br/>
             <i>Format</i>: int32<br/>
+            <i>Minimum</i>: -2.147483648e+09<br/>
+            <i>Maximum</i>: 2.147483647e+09<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>tags</b></td>
         <td>[]string</td>
         <td>
-          Tags attached to the configuration group.<br/>
+          Tags for organizing the group. Tags do not select agents.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10967,7 +10966,7 @@ It mirrors the configuration-groups API create request. This resource is in Prev
 
 
 
-Latest configuration family for this group.
+Latest configuration family of the group.
 
 <table>
     <thead>
@@ -10982,7 +10981,7 @@ Latest configuration family for this group.
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          Whether this family is active. Defaults to false.<br/>
+          Whether this family is eligible for delivery to matching agents. This is not confirmation that an agent has applied it.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -10996,15 +10995,14 @@ Latest configuration family for this group.
         <td><b><a href="#configurationgroupspecfamilypreset">preset</a></b></td>
         <td>object</td>
         <td>
-          Configuration template settings; Coralogix generates the remote configurations from them.<br/>
+          Configuration template settings; present when the family has a chartName and observability features.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#configurationgroupspecfamilyraw">raw</a></b></td>
         <td>object</td>
         <td>
-          Configuration family defined directly by its remote configurations, each with an
-OTel Collector configuration and an agent selector.<br/>
+          Inputs of a configuration family defined directly by its remote configurations; present when the family has no chartName.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11016,7 +11014,7 @@ OTel Collector configuration and an agent selector.<br/>
 
 
 
-Configuration template settings; Coralogix generates the remote configurations from them.
+Configuration template settings; present when the family has a chartName and observability features.
 
 <table>
     <thead>
@@ -11031,8 +11029,7 @@ Configuration template settings; Coralogix generates the remote configurations f
         <td><b>chartName</b></td>
         <td>enum</td>
         <td>
-          Configuration template type: CHART_NAME_OTEL_INTEGRATION for Kubernetes, CHART_NAME_OTEL_ECS_EC2 for ECS on EC2,
-or CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, or CHART_NAME_OTEL_MACOS_STANDALONE for hosts.<br/>
+          Configuration template type: CHART_NAME_OTEL_INTEGRATION for Kubernetes, CHART_NAME_OTEL_ECS_EC2 for ECS on EC2, or CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, or CHART_NAME_OTEL_MACOS_STANDALONE for hosts.<br/>
           <br/>
             <i>Enum</i>: CHART_NAME_OTEL_INTEGRATION, CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, CHART_NAME_OTEL_MACOS_STANDALONE, CHART_NAME_OTEL_ECS_EC2<br/>
         </td>
@@ -11041,31 +11038,28 @@ or CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, or CHAR
         <td><b>chartVersion</b></td>
         <td>string</td>
         <td>
-          Configuration template version. It determines the OTel Collector version, the generated collector configuration,
-and which integrationVersion values are supported. Unsupported versions are rejected.<br/>
+          Configuration template version. It determines the OTel Collector version, the generated collector configuration, and which integrationVersion values are supported. Unsupported versions are rejected.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>observabilityFeatures</b></td>
         <td>string</td>
         <td>
-          Observability feature settings for the configuration template, as a JSON object string;
-the available features depend on chartName and integrationVersion.<br/>
+          Observability feature settings for the configuration template, as a JSON object string; the available features depend on chartName and integrationVersion. Example: `{"logs":{"enabled":true}}`.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>integrationVersion</b></td>
         <td>string</td>
         <td>
-          Version of the observability features format. Omit it to use the default for the template type and version.<br/>
+          Version of the observability features format used for this configuration family.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>metadata</b></td>
         <td>map[string]string</td>
         <td>
-          Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn,
-ApplicationName, or SubsystemName. Set the observability features in observabilityFeatures.<br/>
+          Environment setup values for the configuration template, such as ClusterName, KubernetesRunningOn, ApplicationName, or SubsystemName. Example: `{"ClusterName":"production-eu2"}`.<br/>
           <br/>
             <i>Validations</i>:<li>self.all(k, size(self[k]) <= 4096): metadata values must be at most 4096 characters</li>
         </td>
@@ -11079,8 +11073,7 @@ ApplicationName, or SubsystemName. Set the observability features in observabili
 
 
 
-Configuration family defined directly by its remote configurations, each with an
-OTel Collector configuration and an agent selector.
+Inputs of a configuration family defined directly by its remote configurations; present when the family has no chartName.
 
 <table>
     <thead>
@@ -11095,22 +11088,21 @@ OTel Collector configuration and an agent selector.
         <td><b><a href="#configurationgroupspecfamilyrawremoteconfigurationsindex">remoteConfigurations</a></b></td>
         <td>[]object</td>
         <td>
-          Remote configurations in this family.<br/>
+          Remote configurations of this configuration family.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>collectorVersion</b></td>
         <td>string</td>
         <td>
-          Collector semantic version this family targets, without a leading v prefix.
-Every agentSelector must then set service.version to this value.<br/>
+          Collector semantic version targeted by this family. This is separate from the family version and the Supervisor image tag.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>metadata</b></td>
         <td>map[string]string</td>
         <td>
-          Metadata stored with this configuration family.<br/>
+          Metadata stored with this configuration family. Example: `{"team":"platform"}`.<br/>
           <br/>
             <i>Validations</i>:<li>self.all(k, size(self[k]) <= 4096): metadata values must be at most 4096 characters</li>
         </td>
@@ -11124,7 +11116,7 @@ Every agentSelector must then set service.version to this value.<br/>
 
 
 
-RemoteConfigurationSpec is a remote OpenTelemetry Collector configuration.
+ConfigurationGroupRemoteConfiguration is the RemoteConfiguration object of the API.
 
 <table>
     <thead>
@@ -11139,14 +11131,14 @@ RemoteConfigurationSpec is a remote OpenTelemetry Collector configuration.
         <td><b>rawConfiguration</b></td>
         <td>string</td>
         <td>
-          OpenTelemetry Collector configuration YAML. The supervisor-managed OpAMP extension must not be configured.<br/>
+          Collector YAML sent to matching agents.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#configurationgroupspecfamilyrawremoteconfigurationsindexagentselector">agentSelector</a></b></td>
         <td>object</td>
         <td>
-          Agent attributes that match agents for this configuration.<br/>
+          Flat agent attributes that match agents for this configuration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -11165,7 +11157,7 @@ RemoteConfigurationSpec is a remote OpenTelemetry Collector configuration.
 
 
 
-Agent attributes that match agents for this configuration.
+Flat agent attributes that match agents for this configuration.
 
 <table>
     <thead>
@@ -11180,7 +11172,7 @@ Agent attributes that match agents for this configuration.
         <td><b>attributes</b></td>
         <td>map[string]string</td>
         <td>
-          Flat agent attributes to match. If collectorVersion is set, service.version must match it.<br/>
+          Attributes of the stored selector. A remote configuration saved with an omitted or empty selector is returned without agentSelector, so the empty match-all selection is preserved; attributes are not expanded to the currently matched agents. Example: `{"cx.agent.type":"docker","host.name":"collector-host-01","service.version":"0.160.0"}`.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11192,7 +11184,7 @@ Agent attributes that match agents for this configuration.
 
 
 
-ConfigurationGroupStatus defines the observed state of ConfigurationGroup.
+ConfigurationGroupStatus defines the observed state of a ConfigurationGroup.
 
 <table>
     <thead>

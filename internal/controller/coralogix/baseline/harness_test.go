@@ -239,6 +239,31 @@ func (h *harness) Create(name, manifest string) {
 	h.reconcile(name, obj.Object["spec"])
 }
 
+// CreateRejected tries to create the CR from a YAML manifest, and records that the API server
+// refuses it and why. It runs no reconcile, and the CR does not exist.
+func (h *harness) CreateRejected(name, manifest string) {
+	h.t.Helper()
+	obj := &unstructured.Unstructured{}
+	if err := yaml.Unmarshal([]byte(manifest), &obj.Object); err != nil {
+		h.t.Fatalf("%s: parse manifest: %v", name, err)
+	}
+	obj.SetNamespace(h.namespace)
+	h.key = client.ObjectKeyFromObject(obj)
+	h.gvk = obj.GroupVersionKind()
+	err := h.client.Create(context.Background(), obj)
+	if err == nil {
+		h.t.Fatalf("%s: the API server accepted the CR", name)
+	}
+	rejected := admissionAnswer(h.t, name, err)
+	h.steps = append(h.steps, step{
+		Step:     name,
+		Spec:     obj.Object["spec"],
+		Rejected: &rejected,
+		Requests: h.server.takeRequests(),
+		Object:   h.observe(),
+	})
+}
+
 // CreateFromFile creates the CR from a manifest file, given relative to the repository root.
 func (h *harness) CreateFromFile(name, path string) {
 	h.t.Helper()

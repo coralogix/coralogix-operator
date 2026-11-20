@@ -1,6 +1,6 @@
 [
   {
-    "step": "create with a priority order over int32: the reconciler cannot decode the CR",
+    "step": "create with a priority order over int32: the CRD refuses it",
     "spec": {
       "family": {
         "active": false,
@@ -22,23 +22,20 @@
       "name": "Production collectors",
       "priorityOrder": 2147483648
     },
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueInvalid",
+          "field": "spec.priorityOrder",
+          "message": "Invalid value: 2147483648: spec.priorityOrder in body should be less than or equal to 2147483647"
+        }
+      ]
+    },
     "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "InternalK8sError",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   }
 ]

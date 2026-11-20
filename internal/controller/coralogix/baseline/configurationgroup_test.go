@@ -46,7 +46,7 @@ func init() {
 		resource: "configurationgroups",
 		newFake:  newConfigurationGroupFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.ConfigurationGroupReconciler{ConfigurationGroupsClient: cs.ConfigGroups(), Interval: reconcileInterval}
+			return &v1alpha1controllers.ConfigurationGroupReconciler{Client: cs.ConfigGroups(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: configurationGroupScenarios,
 		admission: configurationGroupAdmission(),
@@ -230,10 +230,10 @@ var configurationGroupScenarios = map[string]func(h *harness){
 		h.Create("create with a negative priority order", configurationGroupManifest("  name: Production collectors\n  priorityOrder: -5\n"+cgRawFamily(false)))
 	},
 
-	// The CRD accepts a number over int32 (admission case "priority order over int32"), and the
-	// typed client cannot read the CR back.
+	// The CRD refuses a number over int32 (admission case "priority order over int32"). The
+	// handwritten CRD accepted it, and the typed client could not read the CR back.
 	"create-priority-order-over-int32": func(h *harness) {
-		h.Create("create with a priority order over int32: the reconciler cannot decode the CR", configurationGroupManifest("  name: Production collectors\n  priorityOrder: 2147483648\n"+cgRawFamily(false)))
+		h.CreateRejected("create with a priority order over int32: the CRD refuses it", configurationGroupManifest("  name: Production collectors\n  priorityOrder: 2147483648\n"+cgRawFamily(false)))
 	},
 
 	"create-empty-agent-selector": func(h *harness) {

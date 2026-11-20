@@ -1,0 +1,53 @@
+resource: ConfigurationGroup
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD has no default: an omitted value is left out of Create.
+    spec.priorityOrder:
+      remove: ['+kubebuilder:default=0']
+    spec.family.active:
+      remove: ['+kubebuilder:default=false']
+    # The released rule and message of the family choice.
+    spec.family#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.raw) ? 1 : 0) + (has(self.preset) ? 1 : 0) == 1",message="Exactly one of raw, preset must be set"']
+      add: ['+kubebuilder:validation:XValidation:rule="has(self.preset) != has(self.raw)",message="Exactly one of preset or raw is required"']
+    # The released CRD checks the semantic version with the pattern of the API, which also sets the
+    # length of five characters that the contract states.
+    spec.family.preset.chartVersion:
+      remove: ['+kubebuilder:validation:MinLength=5']
+      add: ['+kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`']
+    spec.family.preset.integrationVersion:
+      remove: ['+kubebuilder:validation:MinLength=5']
+      add: ['+kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`']
+    spec.family.raw.collectorVersion:
+      remove: ['+kubebuilder:validation:MinLength=5']
+      add: ['+kubebuilder:validation:Pattern=`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`']
+    # The released CRD limits the metadata values with a CEL rule on the map, and the values are
+    # plain strings.
+    spec.family.preset.metadata:
+      add: ['+kubebuilder:validation:XValidation:rule="self.all(k, size(self[k]) <= 4096)",message="metadata values must be at most 4096 characters"']
+    spec.family.preset.metadata{}: {inferred: false}
+    spec.family.raw.metadata:
+      add: ['+kubebuilder:validation:XValidation:rule="self.all(k, size(self[k]) <= 4096)",message="metadata values must be at most 4096 characters"']
+    spec.family.raw.metadata{}: {inferred: false}
+    # The released CRD has no limit on the selector values.
+    spec.family.raw.remoteConfigurations[].agentSelector.attributes{}: {inferred: false}
+api:
+  customMethods: true
+  # The API has no DELETE. Archive is a POST, and an archived group answers 404.
+  delete:
+    operation: ConfigurationGroupService_ArchiveConfigurationGroup
+  # The API rejects the bare path family, and a mask with both family.raw and family.preset.
+  updateMask:
+    nested: [family]
+finalizer: configurationgroup.coralogix.com/finalizer
+# The API refuses to archive a group whose family is active (412), so beforeDelete deactivates it.
+hooks: [beforeDelete]
+enums:
+  ChartName:
+    verbatim: true
+    zero: CHART_NAME_UNSPECIFIED
+    rejectZero: true   # the released CRD never accepted it
+    rejected:
+      - {value: CHART_NAME_OPENTELEMETRY_COLLECTOR, reason: the API answers unsupported chart_name}

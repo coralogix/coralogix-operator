@@ -67,7 +67,6 @@ rules:
       - apikeys
       - archivelogstargets
       - archivemetricstargets
-      - configurationgroups
       - connectors
       - customenrichments
       - customroles
@@ -99,7 +98,6 @@ rules:
       - apikeys/finalizers
       - archivelogstargets/finalizers
       - archivemetricstargets/finalizers
-      - configurationgroups/finalizers
       - connectors/finalizers
       - customenrichments/finalizers
       - customroles/finalizers
@@ -125,7 +123,6 @@ rules:
       - apikeys/status
       - archivelogstargets/status
       - archivemetricstargets/status
-      - configurationgroups/status
       - connectors/status
       - customenrichments/status
       - customroles/status
@@ -154,6 +151,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - configurationgroups
       - dashboards
       - dashboardsfolders
       - events2metrics
@@ -176,6 +174,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - configurationgroups/finalizers
       - dashboards/finalizers
       - dashboardsfolders/finalizers
       - events2metrics/finalizers
@@ -192,6 +191,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - configurationgroups/status
       - dashboards/status
       - dashboardsfolders/status
       - events2metrics/status

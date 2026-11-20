@@ -54,11 +54,11 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 				Name:        name,
 				Description: ptr.To("e2e configuration group"),
 				Tags:        []string{"e2e"},
-				Family: coralogixv1alpha1.ConfigurationFamilySpec{
+				Family: coralogixv1alpha1.ConfigurationGroupConfigurationFamily{
 					Active: ptr.To(true),
-					Raw: &coralogixv1alpha1.RawConfigurationFamilySpec{
+					Raw: &coralogixv1alpha1.ConfigurationGroupRawConfigurationFamily{
 						CollectorVersion: ptr.To("0.114.0"),
-						RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{
+						RemoteConfigurations: []coralogixv1alpha1.ConfigurationGroupRemoteConfiguration{
 							{
 								Name: ptr.To("default"),
 								RawConfiguration: `receivers:
@@ -66,7 +66,7 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
     protocols:
       grpc: {}
 `,
-								AgentSelector: &coralogixv1alpha1.AgentSelectorSpec{Attributes: map[string]string{
+								AgentSelector: &coralogixv1alpha1.ConfigurationGroupAgentSelectorResponse{Attributes: map[string]string{
 									"cx.agent.type":   "agent",
 									"service.version": "0.114.0",
 								}},

@@ -1,4 +1,13 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes: []
+changes:
+  - kind: ConfigurationGroup
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.priorityOrder
+    before: 2a556bf1f5199d0a
+    after: b0205befb5a19789
+    reason: >-
+      The released CRD accepted a priorityOrder outside int32, which the Go type cannot decode: one
+      such object fails the typed List of every ConfigurationGroup. The new minimum and maximum are
+      the int32 range of the API, so every value that a released operator could reconcile stays
+      valid.
