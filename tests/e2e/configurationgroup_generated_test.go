@@ -44,7 +44,7 @@ const (
 	configurationGroupFullSpec = `{
   "description": "sample-description",
   "family": {
-    "active": true,
+    "active": false,
     "description": "sample-description",
     "raw": {
       "collectorVersion": "0.114.0",
@@ -214,7 +214,7 @@ var configurationGroupCoverageSteps = [][]string{
 		`{
   "description": "sample-description",
   "family": {
-    "active": true,
+    "active": false,
     "description": "sample-description",
     "preset": {
       "chartName": "CHART_NAME_OTEL_INTEGRATION",
@@ -235,7 +235,7 @@ var configurationGroupCoverageSteps = [][]string{
 		`{
   "description": "sample-description",
   "family": {
-    "active": true,
+    "active": false,
     "description": "sample-description",
     "preset": {
       "chartName": "CHART_NAME_OTEL_LINUX_STANDALONE",
@@ -257,7 +257,7 @@ var configurationGroupCoverageSteps = [][]string{
 		`{
   "description": "sample-description",
   "family": {
-    "active": true,
+    "active": false,
     "description": "sample-description",
     "preset": {
       "chartName": "CHART_NAME_OTEL_WINDOWS_STANDALONE",
@@ -279,7 +279,7 @@ var configurationGroupCoverageSteps = [][]string{
 		`{
   "description": "sample-description",
   "family": {
-    "active": true,
+    "active": false,
     "description": "sample-description",
     "preset": {
       "chartName": "CHART_NAME_OTEL_MACOS_STANDALONE",
@@ -301,7 +301,7 @@ var configurationGroupCoverageSteps = [][]string{
 		`{
   "description": "sample-description",
   "family": {
-    "active": true,
+    "active": false,
     "description": "sample-description",
     "preset": {
       "chartName": "CHART_NAME_OTEL_ECS_EC2",

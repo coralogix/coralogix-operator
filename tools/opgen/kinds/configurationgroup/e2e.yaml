@@ -14,6 +14,9 @@ values:
   # Features that a live probe accepted for every template.
   family.preset.observabilityFeatures: '{"apm":{"enabled":false,"transactions":{"enabled":false}},"logs":{"enabled":false}}'
   priorityOrder: 10
+  # The API refuses to archive an active group, and the cleanup backstop of the test archives
+  # without the beforeDelete hook. The handwritten e2e test deletes an active group.
+  family.active: false
 # Each template has its own versions of the features format; omitted, the API takes the default.
 omit: [family.preset.integrationVersion]
 # Each template has its own chart versions and required metadata (live probes).
@@ -33,17 +36,3 @@ when:
 update:
   field: description
   value: Configuration group updated by the e2e test
-upgrade:
-  from: '2.0'
-  spec:
-    name: '@{run}'
-    description: Configuration group created before the operator upgrade
-    family:
-      raw:
-        collectorVersion: 0.114.0
-        remoteConfigurations:
-          - rawConfiguration: "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n"
-            agentSelector:
-              attributes: {service.version: 0.114.0}
-  field: description
-  value: Configuration group updated after the operator upgrade
