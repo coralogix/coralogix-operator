@@ -1,0 +1,309 @@
+{
+  "cases": [
+    {
+      "name": "set the team bucket as the operator creates, updates, and deletes",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2",
+          "captureFields": {
+            "bucket": "target.s3.bucket",
+            "region": "target.s3.region"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": false,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        }
+      ]
+    },
+    {
+      "name": "a target without a region, and an empty region",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2",
+          "captureFields": {
+            "bucket": "target.s3.bucket",
+            "region": "target.s3.region"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "bucket": "{{bucket}}",
+              "region": ""
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": false,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        }
+      ]
+    },
+    {
+      "name": "rejected targets",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2",
+          "captureFields": {
+            "bucket": "target.s3.bucket",
+            "region": "target.s3.region"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "bucket": "",
+              "region": "{{region}}"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "bucket": "cxo-fidelity-no-such-bucket",
+              "region": "{{region}}"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "bucket": "{{bucket}}",
+              "region": "us-east-1"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "ibmCos": {
+              "bucketCrn": "crn:v1:bluemix:public:cloud-object-storage:global:a/0:0:bucket:cxo-fidelity",
+              "endpoint": "s3.eu-de.cloud-object-storage.appdomain.cloud"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": false,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        }
+      ]
+    },
+    {
+      "name": "a body without isActive deactivates",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2",
+          "captureFields": {
+            "bucket": "target.s3.bucket",
+            "region": "target.s3.region"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": true,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": false,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        }
+      ]
+    },
+    {
+      "name": "a format and an external id in the request",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2",
+          "captureFields": {
+            "bucket": "target.s3.bucket",
+            "region": "target.s3.region"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": false,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            },
+            "format": "TARGET_FORMAT_CX_DATA_V1"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": false,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}"
+            },
+            "format": "TARGET_FORMAT_UNSPECIFIED"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/logs/data-setup/v2"
+        }
+      ]
+    },
+    {
+      "name": "activate retentions twice",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/dataengine/retention-tags/v1/activate"
+        },
+        {
+          "method": "POST",
+          "path": "/dataengine/retention-tags/v1/activate"
+        },
+        {
+          "method": "GET",
+          "path": "/dataengine/retention-tags/v1/enabled"
+        }
+      ]
+    }
+  ]
+}
