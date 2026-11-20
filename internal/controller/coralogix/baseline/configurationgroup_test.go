@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,8 +59,27 @@ func init() {
 					{Method: http.MethodPost, Path: configurationGroupPath + "/" + id + "/archive", Body: map[string]any{}},
 				}
 			},
+			normalize: hideRenderedConfigurations,
 		},
 	})
+}
+
+// cgRendered stands for the collector configuration that the API renders from a preset template.
+const cgRendered = "<rendered from the template>"
+
+// hideRenderedConfigurations writes cgRendered for the text and hash of each remote configuration
+// of a preset family. The fake does not render templates, and the operator never reads them.
+func hideRenderedConfigurations(resp any) any {
+	group, _ := resp.(map[string]any)
+	family, _ := group["family"].(map[string]any)
+	preset, _ := family["preset"].(map[string]any)
+	remotes, _ := preset["remoteConfigurations"].([]any)
+	for _, item := range remotes {
+		if remote, ok := item.(map[string]any); ok {
+			remote["rawConfiguration"], remote["hash"] = cgRendered, cgRendered
+		}
+	}
+	return resp
 }
 
 // cgYAML is a small collector configuration. The API stores it without the last newline.
@@ -429,6 +449,19 @@ var configurationGroupScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again: the API answers as it should")
 	},
 
+	// The API stores the group, but the answer has no id, as a lost response would. The SDK cannot
+	// decode a group without its id, so the CR gets no status id. The retry creates again, and the
+	// API refuses the name of the first group. No CR tracks the first group, so deleting the CR
+	// leaves it.
+	"create-stored-without-id": func(h *harness) {
+		configurationGroups(h).storeNextCreateWithoutID()
+		h.Create("create: the API stores the group and answers without its id", configurationGroupMinimalManifest)
+		h.Reconcile("reconcile again: the create is sent again, and the API refuses the name")
+		h.RecordRemote("the remote groups: the first group stays", configurationGroups(h).list())
+		h.Delete("delete the CR")
+		h.RecordRemote("the remote groups after the delete: the first group stays", configurationGroups(h).list())
+	},
+
 	"create-malformed-response": func(h *harness) {
 		configurationGroups(h).answerNext(http.MethodPost, "not a group")
 		h.Create("create: the answer cannot be decoded", configurationGroupMinimalManifest)
@@ -557,8 +590,9 @@ func configurationGroupAdmission() map[string]string {
 //
 // The status codes, error texts, and stored values follow fidelity/recorded.json, which the real
 // API answered. Each rule names the recorded case that shows it. A rule with no case name is not
-// recorded: it is the simplest answer that the scenarios need. A preset family is not recorded:
-// the API renders its remote configurations from a template, which the fake does not do.
+// recorded: it is the simplest answer that the scenarios need. The API renders the remote
+// configurations of a preset family from a template. The fake answers their names and agent
+// selectors, and cgRendered for their text, which the fidelity check hides in both answers.
 type configurationGroupFake struct {
 	mu     sync.Mutex
 	groups map[string]*storedGroup
@@ -567,6 +601,9 @@ type configurationGroupFake struct {
 	next map[string]forcedAnswer
 	// ignoreUpdate makes the next update answer the stored group and change nothing.
 	ignoreUpdate bool
+	// hideNextCreateID makes the next create store the group and answer it without its id, as a
+	// lost response would.
+	hideNextCreateID bool
 }
 
 type storedGroup struct {
@@ -626,6 +663,30 @@ func (f *configurationGroupFake) ignoreNextUpdate() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.ignoreUpdate = true
+}
+
+// storeNextCreateWithoutID makes the next create store the group and answer it without its id.
+func (f *configurationGroupFake) storeNextCreateWithoutID() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.hideNextCreateID = true
+}
+
+// list returns the id, name, and archived flag of each stored group, sorted by name and id.
+func (f *configurationGroupFake) list() []map[string]any {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	out := []map[string]any{}
+	for id, g := range f.groups {
+		out = append(out, map[string]any{"id": id, "name": g.name, "archived": g.archived})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i]["name"] != out[j]["name"] {
+			return out[i]["name"].(string) < out[j]["name"].(string)
+		}
+		return out[i]["id"].(string) < out[j]["id"].(string)
+	})
+	return out
 }
 
 // seed stores a group with one remote configuration, as if another client made it.
@@ -756,6 +817,12 @@ func (f *configurationGroupFake) create(in map[string]any) (int, any) {
 	g.priorityOrder = int64Value(in["priorityOrder"])
 	id := newUUID()
 	f.groups[id] = g
+	if f.hideNextCreateID {
+		f.hideNextCreateID = false
+		answer := g.answer(id)
+		delete(answer, "id")
+		return http.StatusOK, answer
+	}
 	return http.StatusOK, g.answer(id)
 }
 
@@ -1023,11 +1090,47 @@ func (f storedFamily) answer() map[string]any {
 	return out
 }
 
-// presetAnswer is a preset family as the API answers it, which is not recorded. The API adds the
-// default integrationVersion and the collectorVersion of the template, and the remote
-// configurations that it renders. The fake renders none.
+// cgTemplate is what the API adds to a preset family of a chart (cases "a preset family: ...",
+// "a preset family of a standalone template", "a preset family of the ECS template"): the default
+// integrationVersion, the collectorVersion, and the remote configurations that it renders. Windows
+// and macOS are not recorded: they follow the Linux template.
+type cgTemplate struct {
+	integrationVersion, collectorVersion string
+	// remotes are the cx.agent.type of each rendered remote configuration, which is also its name.
+	remotes []string
+	// clusterName is true when each agent selector has cx.cluster.name, from metadata.ClusterName.
+	clusterName bool
+}
+
+var cgTemplates = map[string]cgTemplate{
+	"CHART_NAME_OTEL_INTEGRATION":        {"0.8.0", "0.147.0", []string{"agent", "cluster-collector"}, true},
+	"CHART_NAME_OTEL_LINUX_STANDALONE":   {"0.1.0", "0.147.0", []string{"agent"}, false},
+	"CHART_NAME_OTEL_WINDOWS_STANDALONE": {"0.1.0", "0.147.0", []string{"agent"}, false},
+	"CHART_NAME_OTEL_MACOS_STANDALONE":   {"0.1.0", "0.147.0", []string{"agent"}, false},
+	"CHART_NAME_OTEL_ECS_EC2":            {"0.5.0", "0.131.1", []string{"agent"}, true},
+}
+
+// presetAnswer is a preset family as the API answers it. An integrationVersion that the request
+// leaves out is the default of the template, also on an update (case "a preset family: ...").
 func presetAnswer(preset map[string]any) map[string]any {
-	out := map[string]any{"integrationVersion": "0.8.0", "collectorVersion": "0.147.0", "metadata": map[string]any{}, "remoteConfigurations": []any{}}
+	chart, _ := preset["chartName"].(string)
+	tpl := cgTemplates[chart]
+	metadata, _ := preset["metadata"].(map[string]any)
+	remotes := make([]any, 0, len(tpl.remotes))
+	for _, agentType := range tpl.remotes {
+		attributes := map[string]any{"cx.agent.type": agentType, "service.version": tpl.collectorVersion}
+		if tpl.clusterName {
+			attributes["cx.cluster.name"] = metadata["ClusterName"]
+		}
+		remotes = append(remotes, map[string]any{
+			"id": newUUID(), "name": agentType, "rawConfiguration": cgRendered, "hash": cgRendered,
+			"agentSelector": map[string]any{"attributes": attributes}, "createdAt": cgTime, "updatedAt": cgTime,
+		})
+	}
+	out := map[string]any{
+		"integrationVersion": tpl.integrationVersion, "collectorVersion": tpl.collectorVersion,
+		"metadata": map[string]any{}, "remoteConfigurations": remotes,
+	}
 	for k, v := range preset {
 		out[k] = v
 	}

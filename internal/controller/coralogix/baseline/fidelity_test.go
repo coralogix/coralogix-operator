@@ -59,6 +59,10 @@ type fidelityConfig struct {
 	// team, such as the TCO policies. Its cases delete what the team had. The recorder runs them
 	// only when RECORD_FIDELITY_OVERWRITE_TEAM names the kind.
 	overwritesTeam bool
+	// normalize rewrites an answer of the kind before it is compared or recorded, for a value that
+	// the fake cannot make and the operator never reads, such as text that the API renders from a
+	// template. It runs on the answers of the fake and of the real API alike.
+	normalize func(resp any) any
 	// teamState is set for a kind that has one value per team, such as the archive target. The
 	// recorder reads the value before the first case and writes it back when it ends.
 	teamState *teamState
@@ -464,7 +468,11 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 	if err := json.Unmarshal([]byte(text), &out); err != nil {
 		t.Fatal(err)
 	}
-	return redactFields(redactStrings(canonicalJSONStrings(out)))
+	out = redactFields(redactStrings(canonicalJSONStrings(out)))
+	if k.fidelity.normalize != nil {
+		out = k.fidelity.normalize(out)
+	}
+	return out
 }
 
 // replaceFieldVars writes {{name}} for each string field named after a starting value that holds

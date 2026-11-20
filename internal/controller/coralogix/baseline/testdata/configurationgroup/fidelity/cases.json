@@ -970,6 +970,181 @@
           "body": {}
         }
       ]
+    },
+    {
+      "name": "a preset family: create, update the same content, change the content, activate, deactivate, archive",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "integrationVersion": "0.8.0"
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.preset",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "integrationVersion": "0.8.0"
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.preset",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": false,
+              "description": "",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=name,description,tags,priorityOrder,family.description,family.active,family.preset",
+          "body": {
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "description": "",
+            "tags": [],
+            "priorityOrder": 0,
+            "family": {
+              "active": true,
+              "description": "",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}"
+              }
+            }
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}?update_mask=family.active",
+          "body": {
+            "family": {
+              "active": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "a preset family of a standalone template",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-l-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_LINUX_STANDALONE",
+                "chartVersion": "0.0.25",
+                "metadata": {
+                  "ApplicationName": "e2e",
+                  "SubsystemName": "e2e",
+                  "HostRunningOn": "on_premise"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}"
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "a preset family of the ECS template",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1",
+          "body": {
+            "name": "cxo-fidelity-cg-s-{{run}}",
+            "family": {
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_ECS_EC2",
+                "chartVersion": "0.0.2",
+                "metadata": {
+                  "ClusterName": "e2e"
+                },
+                "observabilityFeatures": "{\"apm\":{\"enabled\":false,\"transactions\":{\"enabled\":false}},\"logs\":{\"enabled\":false}}"
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/fleet-management/configuration-groups/v1/{{id}}/archive",
+          "body": {}
+        }
+      ]
     }
   ]
 }

@@ -1349,6 +1349,539 @@
           }
         }
       ]
+    },
+    {
+      "name": "a preset family: create, update the same content, change the content, activate, deactivate, archive",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.8.0",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  },
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "cluster-collector",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "cluster-collector",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.8.0",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  },
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "cluster-collector",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "cluster-collector",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.8.0",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  },
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "cluster-collector",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "cluster-collector",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.8.0",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  },
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "cluster-collector",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "cluster-collector",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.8.0",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  },
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "cluster-collector",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "cluster-collector",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": true,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.8.0",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  },
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "cluster-collector",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "cluster-collector",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_INTEGRATION",
+                "chartVersion": "0.0.289",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.8.0",
+                "metadata": {
+                  "ClusterName": "production",
+                  "KubernetesRunningOn": "openshift"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":true}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  },
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "cluster-collector",
+                        "cx.cluster.name": "production",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "cluster-collector",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-p-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a preset family of a standalone template",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_LINUX_STANDALONE",
+                "chartVersion": "0.0.25",
+                "collectorVersion": "0.147.0",
+                "integrationVersion": "0.1.0",
+                "metadata": {
+                  "ApplicationName": "e2e",
+                  "HostRunningOn": "on_premise",
+                  "SubsystemName": "e2e"
+                },
+                "observabilityFeatures": "{\"logs\":{\"enabled\":false}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "service.version": "0.147.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-l-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a preset family of the ECS template",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "preset": {
+                "chartName": "CHART_NAME_OTEL_ECS_EC2",
+                "chartVersion": "0.0.2",
+                "collectorVersion": "0.131.1",
+                "integrationVersion": "0.5.0",
+                "metadata": {
+                  "ClusterName": "e2e"
+                },
+                "observabilityFeatures": "{\"apm\":{\"enabled\":false,\"transactions\":{\"enabled\":false}},\"logs\":{\"enabled\":false}}",
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "cx.agent.type": "agent",
+                        "cx.cluster.name": "e2e",
+                        "service.version": "0.131.1"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "\u003crendered from the template\u003e",
+                    "id": "\u003cid\u003e",
+                    "name": "agent",
+                    "rawConfiguration": "\u003crendered from the template\u003e",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-s-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
     }
   ]
 }
