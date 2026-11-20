@@ -19,3 +19,5 @@ types:
       enabled: {name: disabled, requestAs: disabled}
       rules: {inline: true}
       tags: {joinedBy: ","}
+# The logs of an overwrite resource leave out the bodies too.
+hideBodiesInLogs: true
