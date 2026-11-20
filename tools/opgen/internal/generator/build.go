@@ -362,6 +362,10 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 			// removes it before the renderer sees the resource.
 			b.used[line] = true
 		}
+		if file.Field(line.Component, line.Field).Immutable {
+			// applyImmutable checked that Update had the field, and removed it.
+			b.used[line] = true
+		}
 		if file.Types[line.Component].Fields[line.Field].ReadOnly && resourceHasField(r, line) {
 			// The shared model removes a read-only field from the spec and requests.
 			b.used[line] = true
