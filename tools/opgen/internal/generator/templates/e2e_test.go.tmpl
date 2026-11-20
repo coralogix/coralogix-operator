@@ -204,11 +204,15 @@ func require{{.Kind}}Env() {
 	}
 }
 
-// expand{{.Kind}}Env replaces each @{env.NAME} of a spec with the value of the variable.
+// expand{{.Kind}}Env replaces each @{env.NAME} of a JSON spec with the value of the variable. The
+// placeholder is inside a JSON string, so the value is escaped for it: a quote, a backslash, or a
+// newline stays the exact character.
 func expand{{.Kind}}Env(spec string) string {
-{{- range .E2E.Env}}
-	spec = strings.ReplaceAll(spec, "@{env.{{.}}}", os.Getenv({{printf "%q" .}}))
-{{- end}}
+	for _, name := range []string{ {{- range $i, $n := .E2E.Env}}{{if $i}}, {{end}}{{printf "%q" $n}}{{end -}} } {
+		quoted, err := json.Marshal(os.Getenv(name))
+		Expect(err).NotTo(HaveOccurred())
+		spec = strings.ReplaceAll(spec, "@{env."+name+"}", string(quoted[1:len(quoted)-1]))
+	}
 	return spec
 }
 

@@ -30,7 +30,8 @@ func TestE2EEnvValues(t *testing.T) {
 		"\t\"os\"\n",
 		"func requireThingEnv() {",
 		`[]string{"THING_DESCRIPTION"}`,
-		`spec = strings.ReplaceAll(spec, "@{env.THING_DESCRIPTION}", os.Getenv("THING_DESCRIPTION"))`,
+		`quoted, err := json.Marshal(os.Getenv(name))`,
+		`spec = strings.ReplaceAll(spec, "@{env."+name+"}", string(quoted[1:len(quoted)-1]))`,
 		"spec = expandThingEnv(spec)",
 		`strings.ReplaceAll(spec, "e2e-description", strings.ReplaceAll("@{env.THING_DESCRIPTION}", "@{run}", name))`,
 	} {
@@ -42,7 +43,7 @@ func TestE2EEnvValues(t *testing.T) {
 		t.Error("BeforeAll does not check the variables")
 	}
 	script := readGenerated(t, root, "scripts/upgrade-check-thing.sh")
-	for _, want := range []string{`: "${THING_DESCRIPTION:?THING_DESCRIPTION is required}"`, `-e "s|@{env.THING_DESCRIPTION}|${THING_DESCRIPTION}|g"`} {
+	for _, want := range []string{`: "${THING_DESCRIPTION:?THING_DESCRIPTION is required}"`, `jq --arg value "${THING_DESCRIPTION}" 'walk(if type == "string" then gsub("@\\{env\\.THING_DESCRIPTION\\}"; $value) else . end)'`} {
 		if !strings.Contains(script, want) {
 			t.Errorf("the upgrade check has no %q", want)
 		}
