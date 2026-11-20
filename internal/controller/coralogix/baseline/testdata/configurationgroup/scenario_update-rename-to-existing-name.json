@@ -1,0 +1,175 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "family": {
+        "raw": {
+          "remoteConfigurations": [
+            {
+              "rawConfiguration": "receivers: {}"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "raw": {
+              "remoteConfigurations": [
+                {
+                  "rawConfiguration": "receivers: {}"
+                }
+              ]
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the name to one that another group has: the API rejects it",
+    "spec": {
+      "family": {
+        "raw": {
+          "remoteConfigurations": [
+            {
+              "rawConfiguration": "receivers: {}"
+            }
+          ]
+        }
+      },
+      "name": "Taken"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "name,description,tags,priorityOrder,family.description,family.active,family.raw"
+          ]
+        },
+        "body": {
+          "description": "",
+          "family": {
+            "active": false,
+            "description": "",
+            "raw": {
+              "metadata": {},
+              "remoteConfigurations": [
+                {
+                  "rawConfiguration": "receivers: {}"
+                }
+              ]
+            }
+          },
+          "name": "Taken",
+          "priorityOrder": 0,
+          "tags": []
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "name,description,tags,priorityOrder,family.description,family.active,family.raw"
+          ]
+        },
+        "body": {
+          "description": "",
+          "family": {
+            "active": false,
+            "description": "",
+            "raw": {
+              "metadata": {},
+              "remoteConfigurations": [
+                {
+                  "rawConfiguration": "receivers: {}"
+                }
+              ]
+            }
+          },
+          "name": "Taken",
+          "priorityOrder": 0,
+          "tags": []
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

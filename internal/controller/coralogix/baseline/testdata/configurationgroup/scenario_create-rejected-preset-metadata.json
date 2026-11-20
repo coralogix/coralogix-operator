@@ -1,0 +1,57 @@
+[
+  {
+    "step": "create a preset family without ClusterName: the API rejects it",
+    "spec": {
+      "family": {
+        "preset": {
+          "chartName": "CHART_NAME_OTEL_INTEGRATION",
+          "chartVersion": "0.0.289",
+          "observabilityFeatures": "{}"
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "preset": {
+              "chartName": "CHART_NAME_OTEL_INTEGRATION",
+              "chartVersion": "0.0.289",
+              "observabilityFeatures": "{}"
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

@@ -1,0 +1,147 @@
+[
+  {
+    "step": "create an active family",
+    "spec": {
+      "family": {
+        "active": true,
+        "raw": {
+          "collectorVersion": "0.114.0",
+          "remoteConfigurations": [
+            {
+              "agentSelector": {
+                "attributes": {
+                  "service.version": "0.114.0"
+                }
+              },
+              "name": "default",
+              "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "active": true,
+            "raw": {
+              "collectorVersion": "0.114.0",
+              "remoteConfigurations": [
+                {
+                  "agentSelector": {
+                    "attributes": {
+                      "service.version": "0.114.0"
+                    }
+                  },
+                  "name": "default",
+                  "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\n"
+                }
+              ]
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the deactivation is lost, so the API refuses the archive",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "family.active"
+          ]
+        },
+        "body": {
+          "family": {
+            "active": false
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>/archive",
+        "status": 412
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteDeletionFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the API answers as it should",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "family.active"
+          ]
+        },
+        "body": {
+          "family": {
+            "active": false
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>/archive",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

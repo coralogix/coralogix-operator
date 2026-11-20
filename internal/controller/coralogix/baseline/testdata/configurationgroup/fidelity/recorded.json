@@ -1,0 +1,1354 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update, update again, deactivate, archive, archive again, get, update after archive",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-a-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        }
+      ]
+    },
+    {
+      "name": "every field, then the update that clears them",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "description": "group b",
+            "family": {
+              "active": true,
+              "description": "family b",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {
+                  "team": "observability"
+                },
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-b-{{run}}",
+            "priorityOrder": 100,
+            "tags": [
+              "production",
+              "eu"
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "description": "group b",
+            "family": {
+              "active": true,
+              "description": "family b",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {
+                  "team": "observability"
+                },
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-b-{{run}}",
+            "priorityOrder": 100,
+            "tags": [
+              "production",
+              "eu"
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-b-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-b-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "an update that leaves optional fields out of the body",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "description": "group c",
+            "family": {
+              "active": true,
+              "description": "family c",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {
+                  "team": "observability"
+                },
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-c-{{run}}",
+            "priorityOrder": 100,
+            "tags": [
+              "production",
+              "eu"
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-c-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-c-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "archive an active group",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": true,
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-d-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 412,
+          "response": {
+            "code": 412,
+            "message": "Failed Precondition: configuration group has active families"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-d-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "change the family content, the description, and active",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "a51ca067551065c6b1675c3c3d434bfbfda9ae4ec1cd6932ac8e0ed8359272a2",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "a51ca067551065c6b1675c3c3d434bfbfda9ae4ec1cd6932ac8e0ed8359272a2",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "description": "described",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "a51ca067551065c6b1675c3c3d434bfbfda9ae4ec1cd6932ac8e0ed8359272a2",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "description": "described",
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "a51ca067551065c6b1675c3c3d434bfbfda9ae4ec1cd6932ac8e0ed8359272a2",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": true,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "description": "described",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "a51ca067551065c6b1675c3c3d434bfbfda9ae4ec1cd6932ac8e0ed8359272a2",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": true,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "description": "described",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "a51ca067551065c6b1675c3c3d434bfbfda9ae4ec1cd6932ac8e0ed8359272a2",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "basedOnConfigurationFamilyId": "\u003cid\u003e",
+              "description": "described",
+              "id": "\u003cid\u003e",
+              "lastActivatedAt": "\u003ctime\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "a51ca067551065c6b1675c3c3d434bfbfda9ae4ec1cd6932ac8e0ed8359272a2",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      http: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "2"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-e-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "update masks and bodies that the API rejects",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-f-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: unsupported update_mask path \"family\""
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: family.raw and family.preset cannot both be in update_mask"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: preset content cannot replace a raw configuration family"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: name is required when it is in update_mask"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: at least one remote configuration is required"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: parsing field \"update_mask\": field mask wildcard is not supported"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-f-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "creates that the API rejects or accepts at the limits",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: name is required"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{long}}",
+            "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: family is required"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: family.raw or family.preset is required"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: at least one remote configuration is required"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: service.version in agent_selector (\"0.115.0\") does not match collector_version (\"0.114.0\")"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: collector configuration must not define extensions.opamp"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: unsupported chart_name"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: missing required metadata: ClusterName"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a name that another group has",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-h-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: configuration group name already exists"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{other}}",
+            "name": "cxo-fidelity-cg-h2-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: configuration group name already exists"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a name that an archived group has",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "archived": false,
+            "family": {
+              "active": false,
+              "id": "\u003cid\u003e",
+              "raw": {
+                "collectorVersion": "0.114.0",
+                "metadata": {},
+                "remoteConfigurations": [
+                  {
+                    "agentSelector": {
+                      "attributes": {
+                        "service.version": "0.114.0"
+                      }
+                    },
+                    "createdAt": "\u003ctime\u003e",
+                    "hash": "4d5f1bbf1d4cadaaa3c5e3e576798a67cf2e7d8bf8bd7f2c0b875940a00305cd",
+                    "id": "\u003cid\u003e",
+                    "name": "default",
+                    "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}",
+                    "updatedAt": "\u003ctime\u003e"
+                  }
+                ]
+              },
+              "sources": [],
+              "version": "1"
+            },
+            "id": "{{id}}",
+            "name": "cxo-fidelity-cg-i-{{run}}",
+            "priorityOrder": 0,
+            "tags": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: configuration group name already exists"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ids that are unknown or malformed",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: configuration group not found or archived"
+          }
+        }
+      ]
+    }
+  ]
+}

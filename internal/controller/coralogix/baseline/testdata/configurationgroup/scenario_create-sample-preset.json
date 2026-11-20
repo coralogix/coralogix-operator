@@ -1,0 +1,133 @@
+[
+  {
+    "step": "create the preset sample",
+    "spec": {
+      "description": "Kubernetes collectors generated from the OTel integration template.",
+      "family": {
+        "active": true,
+        "description": "Kubernetes preset family",
+        "preset": {
+          "chartName": "CHART_NAME_OTEL_INTEGRATION",
+          "chartVersion": "0.0.289",
+          "metadata": {
+            "ClusterName": "production",
+            "KubernetesRunningOn": "openshift",
+            "PrivateLinkEnabled": "false"
+          },
+          "observabilityFeatures": "{\n  \"apm\": {\n    \"enabled\": true,\n    \"ebpf\": false,\n    \"span_metrics\": {\n      \"enabled\": true,\n      \"histogram_buckets\": [],\n      \"transform_statements\": []\n    },\n    \"sampling\": {},\n    \"profiling\": {\n      \"enabled\": false\n    }\n  },\n  \"logs\": {\n    \"enabled\": false\n  },\n  \"kubernetes_events\": true,\n  \"reduce_resources_attributes\": true,\n  \"metrics\": {\n    \"host\": {\n      \"enabled\": false\n    },\n    \"kubelet\": false,\n    \"cluster\": false,\n    \"kubernetes_extra\": {\n      \"enabled\": false,\n      \"scrape_all\": false\n    },\n    \"collector\": false,\n    \"statsd\": false,\n    \"target_allocator\": false\n  },\n  \"resource_catalog\": false,\n  \"fleet_management\": {\n    \"enabled\": false,\n    \"remote_config\": false\n  },\n  \"coralogix_operator\": false\n}\n"
+        }
+      },
+      "name": "production-k8s-collectors",
+      "tags": [
+        "production"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "description": "Kubernetes collectors generated from the OTel integration template.",
+          "family": {
+            "active": true,
+            "description": "Kubernetes preset family",
+            "preset": {
+              "chartName": "CHART_NAME_OTEL_INTEGRATION",
+              "chartVersion": "0.0.289",
+              "metadata": {
+                "ClusterName": "production",
+                "KubernetesRunningOn": "openshift",
+                "PrivateLinkEnabled": "false"
+              },
+              "observabilityFeatures": "{\n  \"apm\": {\n    \"enabled\": true,\n    \"ebpf\": false,\n    \"span_metrics\": {\n      \"enabled\": true,\n      \"histogram_buckets\": [],\n      \"transform_statements\": []\n    },\n    \"sampling\": {},\n    \"profiling\": {\n      \"enabled\": false\n    }\n  },\n  \"logs\": {\n    \"enabled\": false\n  },\n  \"kubernetes_events\": true,\n  \"reduce_resources_attributes\": true,\n  \"metrics\": {\n    \"host\": {\n      \"enabled\": false\n    },\n    \"kubelet\": false,\n    \"cluster\": false,\n    \"kubernetes_extra\": {\n      \"enabled\": false,\n      \"scrape_all\": false\n    },\n    \"collector\": false,\n    \"statsd\": false,\n    \"target_allocator\": false\n  },\n  \"resource_catalog\": false,\n  \"fleet_management\": {\n    \"enabled\": false,\n    \"remote_config\": false\n  },\n  \"coralogix_operator\": false\n}\n"
+            }
+          },
+          "name": "production-k8s-collectors",
+          "tags": [
+            "production"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again with no change",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "name,description,tags,priorityOrder,family.description,family.active,family.preset"
+          ]
+        },
+        "body": {
+          "description": "Kubernetes collectors generated from the OTel integration template.",
+          "family": {
+            "active": true,
+            "description": "Kubernetes preset family",
+            "preset": {
+              "chartName": "CHART_NAME_OTEL_INTEGRATION",
+              "chartVersion": "0.0.289",
+              "metadata": {
+                "ClusterName": "production",
+                "KubernetesRunningOn": "openshift",
+                "PrivateLinkEnabled": "false"
+              },
+              "observabilityFeatures": "{\n  \"apm\": {\n    \"enabled\": true,\n    \"ebpf\": false,\n    \"span_metrics\": {\n      \"enabled\": true,\n      \"histogram_buckets\": [],\n      \"transform_statements\": []\n    },\n    \"sampling\": {},\n    \"profiling\": {\n      \"enabled\": false\n    }\n  },\n  \"logs\": {\n    \"enabled\": false\n  },\n  \"kubernetes_events\": true,\n  \"reduce_resources_attributes\": true,\n  \"metrics\": {\n    \"host\": {\n      \"enabled\": false\n    },\n    \"kubelet\": false,\n    \"cluster\": false,\n    \"kubernetes_extra\": {\n      \"enabled\": false,\n      \"scrape_all\": false\n    },\n    \"collector\": false,\n    \"statsd\": false,\n    \"target_allocator\": false\n  },\n  \"resource_catalog\": false,\n  \"fleet_management\": {\n    \"enabled\": false,\n    \"remote_config\": false\n  },\n  \"coralogix_operator\": false\n}\n"
+            }
+          },
+          "name": "production-k8s-collectors",
+          "priorityOrder": 0,
+          "tags": [
+            "production"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
