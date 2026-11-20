@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -219,13 +220,16 @@ func TestRecordFidelity(t *testing.T) {
 					created = append(created, id)
 				}
 			}
-			rec.Steps = append(rec.Steps, fidelityAnswer{Status: status, Response: normalizeAnswer(t, k, s, status, resp, vars)})
+			normalized := normalizeAnswer(t, k, s, status, resp, vars)
+			if name := leakedStartingValue(normalized, substJSON(t, s.Body, vars), initial); name != "" {
+				t.Fatalf("%s: %s %s: the answer holds the value of {{%s}} outside its field, for example in an error text; nothing was written. The value can be private: choose another one", c.Name, s.Method, s.Path, name)
+			}
+			rec.Steps = append(rec.Steps, fidelityAnswer{Status: status, Response: normalized})
 		}
 		out.Cases = append(out.Cases, rec)
 	}
 	recorded := marshalGolden(t, out)
 	checkNoSecrets(t, recorded, apiKey, base)
-	checkNoStartingValues(t, recorded, initial)
 	if err := os.WriteFile(filepath.Join(fidelityDir(k), "recorded.json"), recorded, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -385,16 +389,67 @@ func replaceFieldVars(v any, names map[string]string, vars map[string]string) an
 	return v
 }
 
-// checkNoStartingValues stops the recording when a starting value is left outside its field, for
-// example in an error text: the value can be private, such as an application name of the team.
-func checkNoStartingValues(t *testing.T, recorded []byte, vars map[string]string) {
-	t.Helper()
-	for name, value := range vars {
-		if value != "" && regexp.MustCompile(`\b`+regexp.QuoteMeta(value)+`\b`).Match(recorded) {
-			t.Fatalf("the recording holds the value of {{%s}} outside its field; nothing was written", name)
+// leakedStartingValue returns the name of a starting value that a normalized answer still holds,
+// or "". The value can be private, such as an application name of the team. It reads string
+// values only, not keys. It ignores placeholders, and strings that the request of the step sent,
+// such as a topic of a config that the answer repeats.
+func leakedStartingValue(answer, request any, vars map[string]string) string {
+	sent := map[string]bool{}
+	var collect func(v any)
+	collect = func(v any) {
+		switch v := v.(type) {
+		case string:
+			sent[v] = true
+		case map[string]any:
+			for _, value := range v {
+				collect(value)
+			}
+		case []any:
+			for _, value := range v {
+				collect(value)
+			}
 		}
 	}
+	collect(request)
+	names := make([]string, 0, len(vars))
+	for name, value := range vars {
+		if value != "" {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	var leaked func(v any) string
+	leaked = func(v any) string {
+		switch v := v.(type) {
+		case string:
+			if sent[v] {
+				return ""
+			}
+			text := placeholderPattern.ReplaceAllString(v, "")
+			for _, name := range names {
+				if regexp.MustCompile(`\b` + regexp.QuoteMeta(vars[name]) + `\b`).MatchString(text) {
+					return name
+				}
+			}
+		case map[string]any:
+			for _, value := range v {
+				if name := leaked(value); name != "" {
+					return name
+				}
+			}
+		case []any:
+			for _, value := range v {
+				if name := leaked(value); name != "" {
+					return name
+				}
+			}
+		}
+		return ""
+	}
+	return leaked(answer)
 }
+
+var placeholderPattern = regexp.MustCompile(`\{\{[^}]*\}\}`)
 
 // redactStrings hides account values inside each string value. A number that is not in a string
 // stays as it is: a limit of 30000 is a setting, and "<number>" would not be JSON.
@@ -627,6 +682,22 @@ func TestNormalizeAnswerReplacesStartingValuesByField(t *testing.T) {
 	want := map[string]any{"aiEvaluation": map[string]any{"application": "{{application}}", "subsystem": "{{subsystem}}", "note": "apple app"}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
+	}
+}
+
+// A starting value leaks only when an answer string that the request did not send holds it. Keys,
+// placeholders, and repeated request values are no leak.
+func TestLeakedStartingValue(t *testing.T) {
+	vars := map[string]string{"application": "application", "subsystem": "billing"}
+	request := map[string]any{"application": "application", "subsystem": "billing", "config": map[string]any{"allowedTopics": map[string]any{"topics": []any{"billing"}}}}
+	clean := map[string]any{"aiEvaluation": map[string]any{"application": "{{application}}", "subsystem": "{{subsystem}}", "config": map[string]any{"allowedTopics": map[string]any{"topics": []any{"billing"}}}}}
+	if name := leakedStartingValue(clean, request, vars); name != "" {
+		t.Fatalf("a normalized answer leaks {{%s}}", name)
+	}
+	vars = map[string]string{"application": "team-app-20"}
+	leak := map[string]any{"message": "Not Found: application team-app-20 not found"}
+	if name := leakedStartingValue(leak, map[string]any{"application": "team-app-20"}, vars); name != "application" {
+		t.Fatalf("an error text that names the application is not reported: got %q", name)
 	}
 }
 
