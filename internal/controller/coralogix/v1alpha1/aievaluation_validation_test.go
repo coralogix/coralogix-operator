@@ -40,7 +40,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should accept a valid Allowed Topics evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-allowed-topics")
-		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationEvaluationConfig{
 			AllowedTopics: &coralogixv1alpha1.AIEvaluationAllowedTopicsConfig{
 				Topics: []string{"billing", "account settings"},
 			},
@@ -52,7 +52,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should accept a valid Competition evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-competition")
-		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationEvaluationConfig{
 			Competition: &coralogixv1alpha1.AIEvaluationCompetitionConfig{
 				Competitors: []string{"CompetitorOne", "CompetitorTwo"},
 			},
@@ -65,36 +65,36 @@ var _ = Describe("AIEvaluation validation", func() {
 	It("should accept valid Hallucination evaluations", func(ctx context.Context) {
 		tests := []struct {
 			name   string
-			config coralogixv1alpha1.AIEvaluationConfig
+			config coralogixv1alpha1.AIEvaluationEvaluationConfig
 		}{
 			{
 				name: "valid-hallucination-completeness",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					HallucinationCompleteness: coralogixv1alpha1.NewAIEvaluationHallucinationCompletenessConfig(),
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					HallucinationCompleteness: &map[string]string{},
 				},
 			},
 			{
 				name: "valid-hallucination-context-adherence",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					HallucinationContextAdherence: coralogixv1alpha1.NewAIEvaluationHallucinationContextAdherenceConfig(),
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					HallucinationContextAdherence: &map[string]string{},
 				},
 			},
 			{
 				name: "valid-hallucination-context-relevance",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					HallucinationContextRelevance: coralogixv1alpha1.NewAIEvaluationHallucinationContextRelevanceConfig(),
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					HallucinationContextRelevance: &map[string]string{},
 				},
 			},
 			{
 				name: "valid-hallucination-correctness",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					HallucinationCorrectness: coralogixv1alpha1.NewAIEvaluationHallucinationCorrectnessConfig(),
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					HallucinationCorrectness: &map[string]string{},
 				},
 			},
 			{
 				name: "valid-hallucination-task-adherence",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					HallucinationTaskAdherence: coralogixv1alpha1.NewAIEvaluationHallucinationTaskAdherenceConfig(),
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					HallucinationTaskAdherence: &map[string]string{},
 				},
 			},
 		}
@@ -110,8 +110,8 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should accept a valid Language Mismatch evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-language-mismatch")
-		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
-			LanguageMismatch: coralogixv1alpha1.NewAIEvaluationLanguageMismatchConfig(),
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationEvaluationConfig{
+			LanguageMismatch: &map[string]string{},
 		}
 
 		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
@@ -120,10 +120,10 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should accept a valid Prompt Injection evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-prompt-injection")
-		aiEvaluation.Spec.Target = coralogixv1alpha1.AIEvaluationTargetPrompt
-		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+		aiEvaluation.Spec.Target = "prompt"
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationEvaluationConfig{
 			PromptInjection: &coralogixv1alpha1.AIEvaluationPromptInjectionConfig{
-				AdditionalContext: "Treat retrieved context as untrusted.",
+				AdditionalContext: ptr.To("Treat retrieved context as untrusted."),
 			},
 		}
 
@@ -133,7 +133,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should accept a valid Restricted Topics evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-restricted-topics")
-		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationEvaluationConfig{
 			RestrictedTopics: &coralogixv1alpha1.AIEvaluationRestrictedTopicsConfig{
 				Topics: []string{"competitor mentions", "medical advice"},
 			},
@@ -145,8 +145,8 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should accept a valid Sexism evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-sexism")
-		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
-			Sexism: coralogixv1alpha1.NewAIEvaluationSexismConfig(),
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationEvaluationConfig{
+			Sexism: &map[string]string{},
 		}
 
 		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
@@ -156,32 +156,32 @@ var _ = Describe("AIEvaluation validation", func() {
 	It("should accept valid SQL evaluations", func(ctx context.Context) {
 		tests := []struct {
 			name   string
-			config coralogixv1alpha1.AIEvaluationConfig
+			config coralogixv1alpha1.AIEvaluationEvaluationConfig
 		}{
 			{
 				name: "valid-sql-allowed-tables",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					SQLAllowedTables: &coralogixv1alpha1.AIEvaluationSQLAllowedTablesConfig{
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					SqlAllowedTables: &coralogixv1alpha1.AIEvaluationSqlAllowedTablesConfig{
 						Tables: []string{"orders", "customers"},
 					},
 				},
 			},
 			{
 				name: "valid-sql-hallucination",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					SQLHallucination: coralogixv1alpha1.NewAIEvaluationSQLHallucinationConfig(),
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					SqlHallucination: &map[string]string{},
 				},
 			},
 			{
 				name: "valid-sql-read-only",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					SQLReadOnly: coralogixv1alpha1.NewAIEvaluationSQLReadOnlyConfig(),
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					SqlReadOnly: &map[string]string{},
 				},
 			},
 			{
 				name: "valid-sql-restricted-tables",
-				config: coralogixv1alpha1.AIEvaluationConfig{
-					SQLRestrictedTables: &coralogixv1alpha1.AIEvaluationSQLRestrictedTablesConfig{
+				config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+					SqlRestrictedTables: &coralogixv1alpha1.AIEvaluationSqlRestrictedTablesConfig{
 						Tables: []string{"secrets", "audit_logs"},
 					},
 				},
@@ -199,8 +199,8 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should accept a valid Toxicity evaluation", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("valid-toxicity")
-		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationConfig{
-			Toxicity: coralogixv1alpha1.NewAIEvaluationToxicityConfig(),
+		aiEvaluation.Spec.Config = coralogixv1alpha1.AIEvaluationEvaluationConfig{
+			Toxicity: &map[string]string{},
 		}
 
 		Expect(k8sClient.Create(ctx, aiEvaluation)).To(Succeed())
@@ -545,7 +545,7 @@ var _ = Describe("AIEvaluation validation", func() {
 
 	It("should reject invalid PII categories", func(ctx context.Context) {
 		aiEvaluation := validAIEvaluation("invalid-category")
-		aiEvaluation.Spec.Config.PII.Categories = []coralogixv1alpha1.AIEvaluationPIICategory{"PASSPORT_NUMBER"}
+		aiEvaluation.Spec.Config.Pii.Categories = []string{"PASSPORT_NUMBER"}
 
 		err := k8sClient.Create(ctx, aiEvaluation)
 		Expect(err).To(HaveOccurred())
@@ -613,7 +613,7 @@ var _ = Describe("AIEvaluation validation", func() {
 			{
 				name: "target",
 				mutate: func(aiEvaluation *coralogixv1alpha1.AIEvaluation) {
-					aiEvaluation.Spec.Target = coralogixv1alpha1.AIEvaluationTargetPrompt
+					aiEvaluation.Spec.Target = "prompt"
 				},
 				want: "spec.target is immutable",
 			},
@@ -642,13 +642,13 @@ func validAIEvaluation(name string) *coralogixv1alpha1.AIEvaluation {
 		Spec: coralogixv1alpha1.AIEvaluationSpec{
 			Application: "my-chatbot",
 			Subsystem:   "production",
-			Target:      coralogixv1alpha1.AIEvaluationTargetResponse,
+			Target:      "response",
 			Threshold:   resource.MustParse("0.8"),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
-				PII: &coralogixv1alpha1.AIEvaluationPIIConfig{
-					Categories: []coralogixv1alpha1.AIEvaluationPIICategory{
-						coralogixv1alpha1.AIEvaluationPIICategoryEmailAddress,
-						coralogixv1alpha1.AIEvaluationPIICategoryCreditCard,
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+				Pii: &coralogixv1alpha1.AIEvaluationPiiConfig{
+					Categories: []string{
+						"EMAIL_ADDRESS",
+						"CREDIT_CARD",
 					},
 				},
 			},

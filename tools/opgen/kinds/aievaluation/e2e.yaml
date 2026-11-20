@@ -1,0 +1,14 @@
+# An evaluation belongs to an AI application that already exists in the team: the API answers 404
+# for any other, and no API creates one. The CI preparation step sends traces for 20 applications
+# whose names come from a private prefix. The generated tests use the last one, which the
+# handwritten tests skip, so the two never take the same evaluation slot.
+env: [AI_EVALUATION_APPLICATION, AI_EVALUATION_SUBSYSTEM]
+values:
+  application: e2e-ai-application
+  subsystem: e2e-ai-subsystem
+substitutions:
+  e2e-ai-application: '@{env.AI_EVALUATION_APPLICATION}'
+  e2e-ai-subsystem: '@{env.AI_EVALUATION_SUBSYSTEM}'
+# One application holds one evaluation of each type and target. The steps of the coverage sweep
+# send different types, and the shards share one account, so they run in one shard, one at a time.
+serial: true
