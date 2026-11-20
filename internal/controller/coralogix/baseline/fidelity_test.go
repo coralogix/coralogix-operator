@@ -53,6 +53,21 @@ type fidelityConfig struct {
 	// team, such as the TCO policies. Its cases delete what the team had. The recorder runs them
 	// only when RECORD_FIDELITY_OVERWRITE_TEAM names the kind.
 	overwritesTeam bool
+	// teamState is set for a kind that has one value per team, such as the archive target. The
+	// recorder reads the value before the first case and writes it back when it ends.
+	teamState *teamState
+}
+
+// teamState reads the one value of a team and writes it back.
+type teamState struct {
+	// readPath is the path of the GET that returns the value.
+	readPath string
+	// restore returns the request that writes back the value that the GET returned.
+	restore func(original any) fidelityStep
+	// require checks the team before the first case, with read sending a GET. A case can change
+	// what restore does not write back, so the recorder runs only on a team where that change is
+	// none: it stops with the error of require.
+	require func(read func(path string) (any, error)) error
 }
 
 type fidelityStep struct {
@@ -62,6 +77,10 @@ type fidelityStep struct {
 	Body any    `json:"body,omitempty"`
 	// Capture names the id in the response, for use in later steps.
 	Capture string `json:"capture,omitempty"`
+	// CaptureFields names values of the response, by a dotted path, for use in later steps as
+	// {{name}}. The recording shows each value as {{name}}, so a value of the team, such as its
+	// bucket, stays out of the file.
+	CaptureFields map[string]string `json:"captureFields,omitempty"`
 	// AllowForbidden records a 403 answer instead of stopping. By default the recorder reads a 403
 	// as a missing permission. Set it on a step where the API itself refuses with 403.
 	AllowForbidden bool `json:"allowForbidden,omitempty"`
@@ -169,6 +188,33 @@ func TestRecordFidelity(t *testing.T) {
 	apiKey := os.Getenv("CORALOGIX_API_KEY")
 	if apiKey == "" {
 		t.Fatal("CORALOGIX_API_KEY is empty")
+	}
+
+	if ts := k.fidelity.teamState; ts != nil {
+		if ts.require != nil {
+			read := func(path string) (any, error) {
+				status, resp, err := sendRecordRequest(base, apiKey, http.MethodGet, path, nil)
+				if err == nil && !succeeded(status) {
+					err = fmt.Errorf("GET %s returned %d", path, status)
+				}
+				return resp, err
+			}
+			if err := ts.require(read); err != nil {
+				t.Fatalf("the team cannot record %s: %v", k.name, err)
+			}
+		}
+		status, original, err := sendRecordRequest(base, apiKey, http.MethodGet, ts.readPath, nil)
+		if err != nil || !succeeded(status) {
+			t.Fatalf("read the team value before the cases: GET %s returned %d: %v", ts.readPath, status, err)
+		}
+		// t.Cleanup runs last in, first out, so this runs after the deletes below.
+		t.Cleanup(func() {
+			s := ts.restore(original)
+			status, resp, err := sendRecordRequest(base, apiKey, s.Method, s.Path, s.Body)
+			if err != nil || !succeeded(status) {
+				t.Errorf("cleanup: %s %s returned %d %s: %v; write back the team value by hand: %s", s.Method, s.Path, status, compact(resp), err, compact(original))
+			}
+		})
 	}
 
 	var created []string
@@ -299,13 +345,18 @@ func sendRecordRequest(base, apiKey, method, path string, body any) (int, any, e
 
 // capturedID reads the id of a new resource from a response, or "" when the path has no string.
 func capturedID(resp any, k kind) string {
+	return stringAt(resp, k.fidelity.captureField)
+}
+
+// stringAt reads the string at a dotted path of a response, or "" when the path has no string.
+func stringAt(resp any, path string) string {
 	current := resp
-	for _, key := range strings.Split(k.fidelity.captureField, ".") {
+	for _, key := range strings.Split(path, ".") {
 		m, _ := current.(map[string]any)
 		current = m[key]
 	}
-	id, _ := current.(string)
-	return id
+	value, _ := current.(string)
+	return value
 }
 
 // normalizeAnswer stores a captured id under its name, then writes {{name}} for each captured
@@ -314,6 +365,11 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 	t.Helper()
 	if s.Capture != "" && succeeded(status) {
 		vars[s.Capture] = capturedID(resp, k)
+	}
+	if succeeded(status) {
+		for name, path := range s.CaptureFields {
+			vars[name] = stringAt(resp, path)
+		}
 	}
 	raw, err := json.Marshal(resp)
 	if err != nil {
@@ -367,11 +423,14 @@ var (
 	// A run of five or more digits is a company, team, or user number.
 	longNumberPattern = regexp.MustCompile(`\b[0-9]{5,}\b`)
 	// Values of these response fields name an account, a person, or a single request.
-	redactedFieldPattern = regexp.MustCompile(`(?i)^(companyid|teamid|userid|orgid|accountid|email|requestid|traceid|correlationid|authorid|authorname|updaterauthorid|updatername|lockerauthorid|lockername)$`)
+	redactedFieldPattern = regexp.MustCompile(`(?i)^(companyid|teamid|userid|orgid|accountid|externalid|email|requestid|traceid|correlationid|authorid|authorname|updaterauthorid|updatername|lockerauthorid|lockername)$`)
 )
 
-// redactText hides account values inside free text, such as an error message.
+// redactText hides account values inside free text, such as an error message. It also writes a
+// no-break space as a space: protojson picks one of the two at random in its error messages, so
+// two recordings of one answer differ.
 func redactText(text string) string {
+	text = strings.ReplaceAll(text, "\u00a0", " ")
 	text = labeledIDPattern.ReplaceAllString(text, "${1}(<redacted>)")
 	text = emailPattern.ReplaceAllString(text, "<email>")
 	text = timestampPattern.ReplaceAllString(text, "<time>")
@@ -522,6 +581,12 @@ func TestRedactHidesAccountValues(t *testing.T) {
 	}
 }
 
+func TestRedactTextWritesANoBreakSpaceAsASpace(t *testing.T) {
+	if got := redactText("proto:\u00a0(line 1:2)"); got != "proto: (line 1:2)" {
+		t.Fatalf("redactText = %q", got)
+	}
+}
+
 func TestCanonicalJSONStringsSortsKeys(t *testing.T) {
 	got := canonicalJSONStrings(map[string]any{
 		"policy": `{"b":1,"a":{"d":2,"c":3}}`,
@@ -623,5 +688,61 @@ func TestNormalizeAnswerKeepsANumberThatIsNotInAString(t *testing.T) {
 	want := map[string]any{"e2m": map[string]any{"permutations": map[string]any{"limit": float64(30000)}, "note": "request <number>"}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
+	}
+}
+
+func TestNormalizeAnswerCapturesFields(t *testing.T) {
+	vars := map[string]string{}
+	resp := map[string]any{"target": map[string]any{"s3": map[string]any{"bucket": "team-bucket", "region": "eu-north-1", "externalId": "eu2-4012345"}}}
+	step := fidelityStep{CaptureFields: map[string]string{"bucket": "target.s3.bucket", "region": "target.s3.region"}}
+	got := normalizeAnswer(t, kind{}, step, http.StatusOK, resp, vars)
+	if vars["bucket"] != "team-bucket" || vars["region"] != "eu-north-1" {
+		t.Fatalf("fields not captured: vars = %v", vars)
+	}
+	want := map[string]any{"target": map[string]any{"s3": map[string]any{"bucket": "{{bucket}}", "region": "{{region}}", "externalId": "<redacted>"}}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
+	}
+
+	failed := map[string]string{}
+	normalizeAnswer(t, kind{}, step, http.StatusBadRequest, resp, failed)
+	if len(failed) != 0 {
+		t.Fatalf("a failed answer captured fields: %v", failed)
+	}
+}
+
+func TestRestoreArchiveTargetWritesBackTheTeamTarget(t *testing.T) {
+	original := map[string]any{"target": map[string]any{
+		"s3":          map[string]any{"bucket": "b", "region": "r", "externalId": "e"},
+		"archiveSpec": map[string]any{"isActive": true},
+	}}
+	got := restoreArchiveTarget(original)
+	want := fidelityStep{Method: http.MethodPost, Path: archiveTargetPath, Body: map[string]any{
+		"isActive": true, "s3": map[string]any{"bucket": "b", "region": "r", "externalId": "e"},
+	}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("restoreArchiveTarget = %+v, want %+v", got, want)
+	}
+}
+
+func TestRequireArchiveTeam(t *testing.T) {
+	reader := func(target, tags any) func(string) (any, error) {
+		return func(path string) (any, error) {
+			if path == archiveTagsEnabledURL {
+				return tags, nil
+			}
+			return target, nil
+		}
+	}
+	s3 := map[string]any{"target": map[string]any{"s3": map[string]any{"bucket": "b"}}}
+	on, off := map[string]any{"enableTags": true}, map[string]any{"enableTags": false}
+	if err := requireArchiveTeam(reader(s3, on)); err != nil {
+		t.Errorf("a team with an S3 target and enabled tags: %v", err)
+	}
+	if err := requireArchiveTeam(reader(map[string]any{"target": map[string]any{}}, on)); err == nil {
+		t.Error("a team without an S3 target must be refused")
+	}
+	if err := requireArchiveTeam(reader(s3, off)); err == nil {
+		t.Error("a team without enabled tags must be refused")
 	}
 }

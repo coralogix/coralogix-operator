@@ -1,0 +1,1 @@
+archivelogstarget.coralogix.com/finalizer

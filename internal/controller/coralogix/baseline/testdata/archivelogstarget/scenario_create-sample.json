@@ -1,0 +1,42 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "s3Target": {
+        "bucketName": "\u003cyour-bucket-name\u003e",
+        "region": "\u003cyour-region\u003e"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/logs/data-setup/v2",
+        "body": {
+          "isActive": true,
+          "s3": {
+            "bucket": "\u003cyour-bucket-name\u003e",
+            "region": "\u003cyour-region\u003e"
+          }
+        },
+        "status": 408
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

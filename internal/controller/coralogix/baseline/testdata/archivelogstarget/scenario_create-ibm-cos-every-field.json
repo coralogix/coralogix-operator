@@ -1,0 +1,31 @@
+[
+  {
+    "step": "create an IBM COS target with every field: no request",
+    "spec": {
+      "ibmCosTarget": {
+        "bucketCrn": "crn:v1:bluemix:public:cloud-object-storage:global:a/0:0:bucket:cxo",
+        "bucketType": "EXTERNAL",
+        "endpoint": "s3.eu-de.cloud-object-storage.appdomain.cloud",
+        "serviceCrn": "crn:v1:bluemix:public:cloud-object-storage:global:a/0:0::"
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]
