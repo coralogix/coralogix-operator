@@ -32,7 +32,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ThingPoliciesReconciler reconciles a ThingPolicies object.
@@ -71,12 +70,12 @@ func (r *ThingPoliciesReconciler) HandleUpdate(ctx context.Context, log logr.Log
 	if err != nil {
 		return fmt.Errorf("error on building the request of ThingPolicies: %w", err)
 	}
-	log.Info("Overwriting remote ThingPolicies", "ThingPolicies", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.ThingPoliciesServiceOverwriteThingPolicies(ctx).OverwriteThingPoliciesRequest(*body).Execute()
+	log.Info("Overwriting remote ThingPolicies")
+	_, httpResp, err := r.Client.ThingPoliciesServiceOverwriteThingPolicies(ctx).OverwriteThingPoliciesRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote ThingPolicies: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ThingPolicies overwritten", "response", utils.FormatJSON(resp))
+	log.Info("Remote ThingPolicies overwritten")
 	return coralogixreconciler.AddFinalizer(ctx, log, cr, r)
 }
 

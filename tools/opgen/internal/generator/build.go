@@ -45,6 +45,8 @@ type kindData struct {
 	Plural    string // viewfolders
 	Finalizer string
 	Module    string // the operator module path
+	// HideBodiesInLogs keeps request and response bodies out of the logs (hideBodiesInLogs).
+	HideBodiesInLogs bool
 
 	SDKPath, SDKAlias string
 	CxsdkPath         string
@@ -66,14 +68,14 @@ type kindData struct {
 	Mask, MaskSetter           string // the update mask and its setter, "" for a full replace
 	// MaskArms are the update mask paths of oneOf arms of a nested object (api.updateMask.nested).
 	// The mask names an arm only when the spec sets it, so UpdateMask is a method, not a const.
-	MaskArms []maskArm
-	IDField                    string // the Go field of the id in the resource response
-	IDValue                    bool   // the id field is a value, not a pointer
-	IDBits                     int    // 32 or 64 for a numeric API id; status still stores a string
-	IDGoType                   string // int32 or int64 for a numeric API id
-	IDZeroValid                bool
-	CreateResponseField        string // the field that wraps the resource in the Create response
-	CreateResponseValue        bool
+	MaskArms            []maskArm
+	IDField             string // the Go field of the id in the resource response
+	IDValue             bool   // the id field is a value, not a pointer
+	IDBits              int    // 32 or 64 for a numeric API id; status still stores a string
+	IDGoType            string // int32 or int64 for a numeric API id
+	IDZeroValid         bool
+	CreateResponseField string // the field that wraps the resource in the Create response
+	CreateResponseValue bool
 	// CreateResponseIDField is the field of a Create response that holds only the id
 	// (api.createResponseOnlyIDProperty). CreateResponseIDValue: it is a value, not a pointer.
 	CreateResponseIDField      string
@@ -319,6 +321,7 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		SDKPath: ix.pkg.Pkg, SDKAlias: b.alias, CxsdkPath: ix.cxsdk, Replace: r.Replace,
 	}
 	d.BodyIDInWrapper = r.Policy.RequestWrapper != "" && !updateIDOutsideWrapper
+	d.HideBodiesInLogs = file != nil && file.HideBodiesInLogs
 	if file != nil && file.Finalizer != "" {
 		if file.Finalizer == d.Finalizer {
 			return nil, &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":finalizer", msg: "the value is the generated finalizer"}

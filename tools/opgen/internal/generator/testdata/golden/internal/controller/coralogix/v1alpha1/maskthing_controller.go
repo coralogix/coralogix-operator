@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // MaskThingReconciler reconciles a MaskThing object.
@@ -64,12 +63,11 @@ func (r *MaskThingReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on building the create request of MaskThing: %w", err)
 	}
-	log.Info("Creating remote MaskThing", "MaskThing", utils.FormatJSON(body))
+	log.Info("Creating remote MaskThing")
 	resp, httpResp, err := r.Client.MaskThingsServiceCreateMaskThing(ctx).CreateMaskThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote MaskThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote MaskThing created", "response", utils.FormatJSON(resp))
 	if resp == nil {
 		return fmt.Errorf("the create response of MaskThing has no resource")
 	}
@@ -88,12 +86,12 @@ func (r *MaskThingReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return fmt.Errorf("error on building the update request of MaskThing: %w", err)
 	}
-	log.Info("Updating remote MaskThing", "id", id, "MaskThing", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.MaskThingsServiceUpdateMaskThing(ctx, id).UpdateMaskThingRequest(*body).UpdateMask(cr.UpdateMask()).Execute()
+	log.Info("Updating remote MaskThing", "id", id)
+	_, httpResp, err := r.Client.MaskThingsServiceUpdateMaskThing(ctx, id).UpdateMaskThingRequest(*body).UpdateMask(cr.UpdateMask()).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote MaskThing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote MaskThing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote MaskThing updated", "id", id)
 	return nil
 }
 
