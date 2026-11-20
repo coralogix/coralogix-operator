@@ -15,6 +15,20 @@ jsonpath() {
     kubectl get {{.Lower}} "$cr" -n "$namespace" -o jsonpath="$1"
 }
 
+{{if .E2E.Upgrade.Env -}}
+# env_json and env_text return an environment variable, escaped for a sed replacement inside a JSON
+# string, or in plain text.
+env_json() {
+    local value
+    value="$(printf '%s' "${!1:?$1 is required}" | jq -Rr @json)"
+    printf '%s' "${value:1:${#value}-2}" | sed -e 's/[\\|&]/\\&/g'
+}
+
+env_text() {
+    printf '%s' "${!1:?$1 is required}" | sed -e 's/[\\|&]/\\&/g'
+}
+
+{{end -}}
 gone() {
     ! kubectl get {{.Lower}} "$cr" -n "$namespace" >/dev/null 2>&1
 }
@@ -44,7 +58,7 @@ wait_for() {
 
 case "$mode" in
 before)
-    spec="$(sed "s/@{run}/$name/g" <<'JSON'
+    spec="$(sed {{if .E2E.Upgrade.Env}}-e {{end}}"s/@{run}/$name/g"{{range .E2E.Upgrade.Env}} -e {{printf "\"s|@{env:%s}|$(env_json %s)|g\"" . .}}{{end}} <<'JSON'
 {{.E2E.Upgrade.SpecJSON}}
 JSON
 )"
@@ -64,7 +78,7 @@ after)
 {{- if not .Overwrite}}
     [ "$(jsonpath '{.status.id}')" = "$(cat "$id_file")" ] || { echo "{{.Kind}} id changed after upgrade"; exit 1; }
 {{- end}}
-    value="$(printf '%s' '{{.E2E.Upgrade.Value}}' | sed "s/@{run}/$name/g")"
+    value="$(printf '%s' '{{.E2E.Upgrade.Value}}' | sed {{if .E2E.Upgrade.Env}}-e {{end}}"s/@{run}/$name/g"{{range .E2E.Upgrade.Env}} -e {{printf "\"s|@{env:%s}|$(env_text %s)|g\"" . .}}{{end}})"
 {{- if .Overwrite}}
     # The field is a path into the list, such as policies/0/description.
     patch="$(jq -n --arg path '/spec/{{.E2E.Upgrade.Field}}' --arg value "$value" '[{op:"add", path:$path, value:$value}]')"

@@ -1,0 +1,23 @@
+# SettingThing: a singleton that one POST sets and the API cannot remove.
+resource: SettingThing
+mode: existing
+validators:
+  inferred: true
+singletonID: {fixed: setting-thing}
+api:
+  operations:
+    create: SettingThingsService_SetSettingThing
+    get: SettingThingsService_GetSettingThing
+    update: SettingThingsService_SetSettingThing
+    delete: none
+types:
+  SettingThing:
+    fields:
+      # Get nests isActive and level in spec; the POST sends them at the top level.
+      spec: {inline: true}
+      # The POST sets only an item.
+      otherItem: {skip: true}
+  SettingThingItem:
+    fields:
+      # The released CR may leave the bucket out; the SDK keeps it as a value in every schema.
+      bucket: {optional: true}

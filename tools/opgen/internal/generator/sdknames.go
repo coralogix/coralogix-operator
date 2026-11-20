@@ -21,6 +21,7 @@ func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapp
 	if err != nil {
 		return nil, err
 	}
+	refs = inlineSDKNames(upsertSDKNames(refs, file), file)
 	if updateIDOutsideWrapper {
 		for _, ref := range refs {
 			if ref.Path != "update.body" || ref.Kind != sdkcheck.KindType {
@@ -66,6 +67,60 @@ func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapp
 		Name: goName(strings.TrimSuffix(tag, " Service")), Want: "func() *" + sdkcheck.PackageName(tag) + "." + sdkcheck.ClientType(tag),
 		ByType: true, Rule: sdkcheck.RuleClientSet,
 	}), nil
+}
+
+// upsertSDKNames gives the SDK names of the PUT and the DELETE that reshape added for an upsert the
+// names of the POST and the GET: the SDK has only those two calls.
+func upsertSDKNames(refs []sdkcheck.Ref, file *overrides.File) []sdkcheck.Ref {
+	if !file.Upserts() {
+		return refs
+	}
+	ops := file.API.Operations
+	names := strings.NewReplacer(
+		goName(ops.Create+overrides.UpsertPutSuffix), goName(ops.Create),
+		goName(ops.Get+overrides.UpsertDeleteSuffix), goName(ops.Get))
+	out := slices.Clone(refs)
+	for i := range out {
+		out[i].Name, out[i].Owner = names.Replace(out[i].Name), names.Replace(out[i].Owner)
+		out[i].Want, out[i].WantValue = names.Replace(out[i].Want), names.Replace(out[i].WantValue)
+	}
+	return out
+}
+
+// inlineSDKNames moves the SDK names of the fields that an inline line on the resource moved to the
+// type of the object that holds them, and adds the object: its field of the resource type, and its
+// type. The model gave them to the resource type, because it reads the reshaped contract. Only the
+// response nests the object, so the request names stay.
+func inlineSDKNames(refs []sdkcheck.Ref, file *overrides.File) []sdkcheck.Ref {
+	if file == nil || len(file.Inlined) == 0 {
+		return refs
+	}
+	out := slices.Clone(refs)
+	root := slices.IndexFunc(out, func(r sdkcheck.Ref) bool { return r.Path == "fields" && r.Kind == sdkcheck.KindType })
+	if root < 0 {
+		return out
+	}
+	rootType, pkg := out[root].Name, out[root].Pkg
+	added := map[string]bool{}
+	for i, ref := range out {
+		name, ok := strings.CutPrefix(ref.Path, "fields.")
+		parent, inlined := file.Inlined[name]
+		if !ok || !inlined || ref.Kind != sdkcheck.KindField || ref.Owner != rootType {
+			continue
+		}
+		typ := model.GoName(parent.Schema)
+		out[i].Owner = typ
+		if added[parent.Field] {
+			continue
+		}
+		added[parent.Field] = true
+		path := "fields." + parent.Field
+		// A required object can be a value in the SDK.
+		out = append(out,
+			sdkcheck.Ref{Path: path, Kind: sdkcheck.KindField, Pkg: pkg, Owner: rootType, Name: goName(parent.Field), Want: "*" + typ, WantValue: typ, Rule: sdkcheck.RuleProperty},
+			sdkcheck.Ref{Path: path, Kind: sdkcheck.KindType, Pkg: pkg, Name: typ, Rule: sdkcheck.RuleComponent})
+	}
+	return out
 }
 
 // refIndex finds SDK names by model path, by owner type, and by component.
@@ -206,7 +261,8 @@ func optionalValues(refs []sdkcheck.Ref, resource string, file *overrides.File) 
 		if ref.Kind != sdkcheck.KindField || ref.WantValue != "" || !strings.HasPrefix(ref.Want, "*") {
 			continue
 		}
-		if !strings.HasPrefix(ref.Path, "create.") && !strings.HasPrefix(ref.Path, "update.") {
+		// The response holds the field as the SDK does too: the model reads the line there as well.
+		if !strings.HasPrefix(ref.Path, "create.") && !strings.HasPrefix(ref.Path, "update.") && !strings.HasPrefix(ref.Path, "fields.") {
 			continue
 		}
 		schema, ok := schemaOf[ref.Owner]

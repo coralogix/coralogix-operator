@@ -101,6 +101,24 @@ type documents struct {
 }
 
 func (d *documents) forKind(entry kindEntry, file *overrides.File) (docType, error) {
+	if needsReshape(file) && file.Content != nil {
+		// The content key cuts the resource down to its id; a reshape line changes the full resource.
+		return nil, &shapeError{code: "OPERATOR_SHAPE_UNSUPPORTED", path: overrides.FileName + ":content",
+			msg: "content cannot go with an upsert, an inline line on the resource, or a skipped arm of the resource"}
+	}
+	if needsReshape(file) {
+		// The kind gets a contract of its own: reshape adds operations, moves fields, and removes
+		// skipped arms.
+		reshaped, parents, err := reshape(d.raw, entry.Resource, file)
+		if err != nil {
+			return nil, err
+		}
+		file.Inlined = parents
+		if reshaped, err = exclusiveBoundsExact(reshaped); err != nil {
+			return nil, err
+		}
+		return model.Load(reshaped)
+	}
 	if file == nil || file.Content == nil {
 		if d.shared == nil {
 			raw, err := exclusiveBoundsExact(d.raw)

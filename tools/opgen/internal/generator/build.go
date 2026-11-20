@@ -102,6 +102,15 @@ type kindData struct {
 	WriteFields []writeField
 	ItemGetType string // the SDK type of an item of the list that Get returns
 
+	// Singleton: the API has one resource per team and no id (api.operations with delete: none).
+	// Create and Update call the Set operation, Create writes SingletonID to status.id, and the
+	// generated Delete makes no call.
+	Singleton   bool
+	SingletonID string
+	// inlined is the object of the response that holds each field of an inline line on the
+	// resource.
+	inlined map[string]overrides.InlineParent
+
 	// Content is set for a kind with the content key: the CR holds the resource as JSON text.
 	Content *contentData
 
@@ -317,8 +326,15 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 		}
 		d.Finalizer = file.Finalizer
 	}
-	if err := checkLifecycle(r); err != nil {
+	if err := checkLifecycle(r, file); err != nil {
 		return nil, err
+	}
+	if file != nil {
+		d.inlined = file.Inlined
+	}
+	for _, field := range file.InlinedFields() {
+		// reshape moved the fields of the object into the resource: the line made the contract.
+		b.used[overrides.Line{Component: file.Resource, Field: field}] = true
 	}
 	hasGroups := false
 	if file != nil {
@@ -463,13 +479,15 @@ func resourceHasField(r *model.Resource, line overrides.Line) bool {
 
 // checkLifecycle rejects the API shapes that only a released resource has. Their keys land with
 // the first kind that needs them.
-func checkLifecycle(r *model.Resource) error {
+func checkLifecycle(r *model.Resource, file *overrides.File) error {
 	if r.Overwrite {
 		return checkOverwrite(r)
 	}
 	switch {
+	case r.Singleton && file.Upserts():
+		return nil // the status id is fixed, and no call takes an id
 	case r.Singleton:
-		return unsupported("resource", "a singleton is not supported yet")
+		return unsupported("resource", "a singleton is supported only when one POST sets it: api.operations with delete: none")
 	case r.IDType == nil:
 		return unsupported("resource", "the id has no type")
 	case r.IDType.Kind == model.Integer && r.IDType.Format != "int32" && r.IDType.Format != "int64":
