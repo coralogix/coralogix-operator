@@ -312,7 +312,7 @@
           "status": 400,
           "response": {
             "code": 400,
-            "message": "Bad Request: proto: (line 1:2): unknown field \"ibmCos\""
+            "message": "Bad Request: proto: (line 1:2): unknown field \"ibmCos\""
           }
         },
         {
@@ -505,6 +505,26 @@
     {
       "name": "a format and an external id in the request",
       "steps": [
+        {
+          "status": 200,
+          "response": {
+            "target": {
+              "archiveSpec": {
+                "archivingFormatId": "cx_data_v1",
+                "enableTags": true,
+                "format": "TARGET_FORMAT_CX_DATA_V1",
+                "isActive": false
+              },
+              "managedBy": "MANAGED_BY_CUSTOMER",
+              "managedRetentionClass": "MANAGED_RETENTION_CLASS_UNSPECIFIED",
+              "s3": {
+                "bucket": "{{bucket}}",
+                "externalId": "\u003credacted\u003e",
+                "region": "{{region}}"
+              }
+            }
+          }
+        },
         {
           "status": 200,
           "response": {

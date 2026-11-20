@@ -121,7 +121,8 @@ func (f *archiveLogsTargetFake) handle(method, path string, _ url.Values, body a
 // region", "rejected targets", "a body without isActive deactivates", and "a format and an
 // external id in the request".
 func (f *archiveLogsTargetFake) set(in map[string]any) (int, any) {
-	// An unknown field, such as ibmCos, stops the JSON decoder of the gateway.
+	// An unknown field, such as ibmCos, stops the JSON decoder of the gateway. Its message has a
+	// space or a no-break space at random; the recording keeps a space.
 	keys := make([]string, 0, len(in))
 	for key := range in {
 		keys = append(keys, key)
@@ -129,7 +130,7 @@ func (f *archiveLogsTargetFake) set(in map[string]any) (int, any) {
 	sort.Strings(keys)
 	for _, key := range keys {
 		if key != "isActive" && key != "s3" && key != "format" {
-			return apiError(http.StatusBadRequest, fmt.Sprintf("proto: (line 1:2): unknown field %q", key))
+			return apiError(http.StatusBadRequest, fmt.Sprintf("proto: (line 1:2): unknown field %q", key))
 		}
 	}
 	s3, ok := in["s3"].(map[string]any)

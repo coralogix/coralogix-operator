@@ -255,7 +255,8 @@
           "path": "/logs/data-setup/v2",
           "captureFields": {
             "bucket": "target.s3.bucket",
-            "region": "target.s3.region"
+            "region": "target.s3.region",
+            "externalId": "target.s3.externalId"
           }
         },
         {
@@ -280,6 +281,18 @@
               "bucket": "{{bucket}}"
             },
             "format": "TARGET_FORMAT_UNSPECIFIED"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logs/data-setup/v2",
+          "body": {
+            "isActive": false,
+            "s3": {
+              "region": "{{region}}",
+              "bucket": "{{bucket}}",
+              "externalId": "{{externalId}}"
+            }
           }
         },
         {

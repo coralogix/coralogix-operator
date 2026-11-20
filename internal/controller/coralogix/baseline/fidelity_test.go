@@ -64,6 +64,10 @@ type teamState struct {
 	readPath string
 	// restore returns the request that writes back the value that the GET returned.
 	restore func(original any) fidelityStep
+	// require checks the team before the first case, with read sending a GET. A case can change
+	// what restore does not write back, so the recorder runs only on a team where that change is
+	// none: it stops with the error of require.
+	require func(read func(path string) (any, error)) error
 }
 
 type fidelityStep struct {
@@ -187,6 +191,18 @@ func TestRecordFidelity(t *testing.T) {
 	}
 
 	if ts := k.fidelity.teamState; ts != nil {
+		if ts.require != nil {
+			read := func(path string) (any, error) {
+				status, resp, err := sendRecordRequest(base, apiKey, http.MethodGet, path, nil)
+				if err == nil && !succeeded(status) {
+					err = fmt.Errorf("GET %s returned %d", path, status)
+				}
+				return resp, err
+			}
+			if err := ts.require(read); err != nil {
+				t.Fatalf("the team cannot record %s: %v", k.name, err)
+			}
+		}
 		status, original, err := sendRecordRequest(base, apiKey, http.MethodGet, ts.readPath, nil)
 		if err != nil || !succeeded(status) {
 			t.Fatalf("read the team value before the cases: GET %s returned %d: %v", ts.readPath, status, err)
@@ -410,8 +426,11 @@ var (
 	redactedFieldPattern = regexp.MustCompile(`(?i)^(companyid|teamid|userid|orgid|accountid|externalid|email|requestid|traceid|correlationid|authorid|authorname|updaterauthorid|updatername|lockerauthorid|lockername)$`)
 )
 
-// redactText hides account values inside free text, such as an error message.
+// redactText hides account values inside free text, such as an error message. It also writes a
+// no-break space as a space: protojson picks one of the two at random in its error messages, so
+// two recordings of one answer differ.
 func redactText(text string) string {
+	text = strings.ReplaceAll(text, "\u00a0", " ")
 	text = labeledIDPattern.ReplaceAllString(text, "${1}(<redacted>)")
 	text = emailPattern.ReplaceAllString(text, "<email>")
 	text = timestampPattern.ReplaceAllString(text, "<time>")
@@ -562,6 +581,12 @@ func TestRedactHidesAccountValues(t *testing.T) {
 	}
 }
 
+func TestRedactTextWritesANoBreakSpaceAsASpace(t *testing.T) {
+	if got := redactText("proto:\u00a0(line 1:2)"); got != "proto: (line 1:2)" {
+		t.Fatalf("redactText = %q", got)
+	}
+}
+
 func TestCanonicalJSONStringsSortsKeys(t *testing.T) {
 	got := canonicalJSONStrings(map[string]any{
 		"policy": `{"b":1,"a":{"d":2,"c":3}}`,
@@ -697,5 +722,27 @@ func TestRestoreArchiveTargetWritesBackTheTeamTarget(t *testing.T) {
 	}}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("restoreArchiveTarget = %+v, want %+v", got, want)
+	}
+}
+
+func TestRequireArchiveTeam(t *testing.T) {
+	reader := func(target, tags any) func(string) (any, error) {
+		return func(path string) (any, error) {
+			if path == archiveTagsEnabledURL {
+				return tags, nil
+			}
+			return target, nil
+		}
+	}
+	s3 := map[string]any{"target": map[string]any{"s3": map[string]any{"bucket": "b"}}}
+	on, off := map[string]any{"enableTags": true}, map[string]any{"enableTags": false}
+	if err := requireArchiveTeam(reader(s3, on)); err != nil {
+		t.Errorf("a team with an S3 target and enabled tags: %v", err)
+	}
+	if err := requireArchiveTeam(reader(map[string]any{"target": map[string]any{}}, on)); err == nil {
+		t.Error("a team without an S3 target must be refused")
+	}
+	if err := requireArchiveTeam(reader(s3, off)); err == nil {
+		t.Error("a team without enabled tags must be refused")
 	}
 }

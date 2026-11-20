@@ -16,6 +16,7 @@ package baseline
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -56,9 +57,35 @@ func init() {
 			teamState: &teamState{
 				readPath: archiveTargetPath,
 				restore:  restoreArchiveTarget,
+				require:  requireArchiveTeam,
 			},
 		},
 	})
+}
+
+// requireArchiveTeam checks that the team has an S3 target and enabled retention tags. The cases set
+// the S3 target, which a team without one never had, and activate the retentions, which no call
+// turns off: on such a team the recording would leave both changed.
+func requireArchiveTeam(read func(path string) (any, error)) error {
+	target, err := read(archiveTargetPath)
+	if err != nil {
+		return err
+	}
+	root, _ := target.(map[string]any)
+	got, _ := root["target"].(map[string]any)
+	s3, _ := got["s3"].(map[string]any)
+	if bucket, _ := s3["bucket"].(string); bucket == "" {
+		return errors.New("it has no S3 archive target; use a team whose archive is set to an S3 bucket")
+	}
+	enabled, err := read(archiveTagsEnabledURL)
+	if err != nil {
+		return err
+	}
+	tags, _ := enabled.(map[string]any)
+	if on, _ := tags["enableTags"].(bool); !on {
+		return errors.New("its retention tags are not enabled, and the cases enable them for good; use a team where they are")
+	}
+	return nil
 }
 
 // restoreArchiveTarget writes back the target that GET returned: its S3 fields and whether it is
@@ -131,6 +158,14 @@ var archiveLogsTargetScenarios = map[string]func(h *harness){
 
 	"create-other-region": func(h *harness) {
 		h.Create("create with a region other than the one of the team: the API answers 408", archiveLogsTargetManifest(s3Spec("us-east-1", archiveBucket)))
+		h.Delete("delete")
+	},
+
+	// The CRD accepts a CR without spec: its exactly-one rule is on spec. Reconcile then finds no S3
+	// target and fails before any request.
+	"create-without-spec": func(h *harness) {
+		h.Create("create without spec: no request", "apiVersion: coralogix.com/v1alpha1\nkind: ArchiveLogsTarget\nmetadata:\n  name: target\n")
+		h.Reconcile("reconcile again")
 		h.Delete("delete")
 	},
 
