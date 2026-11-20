@@ -1,0 +1,61 @@
+[
+  {
+    "step": "create with the name of an archived group: the API rejects it",
+    "spec": {
+      "family": {
+        "raw": {
+          "remoteConfigurations": [
+            {
+              "rawConfiguration": "receivers: {}"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "raw": {
+              "remoteConfigurations": [
+                {
+                  "rawConfiguration": "receivers: {}"
+                }
+              ]
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

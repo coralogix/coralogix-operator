@@ -1,0 +1,346 @@
+{
+  "129 remote configurations": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.family.raw.remoteConfigurations",
+        "message": "Too many: 129: must have at most 128 items"
+      }
+    ]
+  },
+  "65 tags": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.tags",
+        "message": "Too many: 65: must have at most 64 items"
+      }
+    ]
+  },
+  "chart name ecs": {
+    "accepted": true
+  },
+  "chart name in camel case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.family.preset.chartName",
+        "message": "Unsupported value: \"otelIntegration\": supported values: \"CHART_NAME_OTEL_INTEGRATION\", \"CHART_NAME_OTEL_LINUX_STANDALONE\", \"CHART_NAME_OTEL_WINDOWS_STANDALONE\", \"CHART_NAME_OTEL_MACOS_STANDALONE\", \"CHART_NAME_OTEL_ECS_EC2\""
+      }
+    ]
+  },
+  "chart name linux": {
+    "accepted": true
+  },
+  "chart name macos": {
+    "accepted": true
+  },
+  "chart name opentelemetry": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.family.preset.chartName",
+        "message": "Unsupported value: \"CHART_NAME_OPENTELEMETRY_COLLECTOR\": supported values: \"CHART_NAME_OTEL_INTEGRATION\", \"CHART_NAME_OTEL_LINUX_STANDALONE\", \"CHART_NAME_OTEL_WINDOWS_STANDALONE\", \"CHART_NAME_OTEL_MACOS_STANDALONE\", \"CHART_NAME_OTEL_ECS_EC2\""
+      }
+    ]
+  },
+  "chart name unspecified": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.family.preset.chartName",
+        "message": "Unsupported value: \"CHART_NAME_UNSPECIFIED\": supported values: \"CHART_NAME_OTEL_INTEGRATION\", \"CHART_NAME_OTEL_LINUX_STANDALONE\", \"CHART_NAME_OTEL_WINDOWS_STANDALONE\", \"CHART_NAME_OTEL_MACOS_STANDALONE\", \"CHART_NAME_OTEL_ECS_EC2\""
+      }
+    ]
+  },
+  "chart name windows": {
+    "accepted": true
+  },
+  "chart version that is not semver": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.preset.chartVersion",
+        "message": "Invalid value: \"latest\": spec.family.preset.chartVersion in body should match '^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$'"
+      }
+    ]
+  },
+  "collector version": {
+    "accepted": true
+  },
+  "collector version of two parts": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.raw.collectorVersion",
+        "message": "Invalid value: \"1.2\": spec.family.raw.collectorVersion in body should match '^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$'"
+      }
+    ]
+  },
+  "collector version with a suffix": {
+    "accepted": true
+  },
+  "collector version with v": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.raw.collectorVersion",
+        "message": "Invalid value: \"v0.114.0\": spec.family.raw.collectorVersion in body should match '^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$'"
+      }
+    ]
+  },
+  "description of 4097 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.description",
+        "message": "Too long: may not be longer than 4096"
+      }
+    ]
+  },
+  "empty agent selector": {
+    "accepted": true
+  },
+  "empty collector version": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.raw.collectorVersion",
+        "message": "Invalid value: \"\": spec.family.raw.collectorVersion in body should match '^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$'"
+      }
+    ]
+  },
+  "empty name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"\": spec.name in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty raw configuration": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.raw.remoteConfigurations[0].rawConfiguration",
+        "message": "Invalid value: \"\": spec.family.raw.remoteConfigurations[0].rawConfiguration in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty remote name": {
+    "accepted": true
+  },
+  "empty tag": {
+    "accepted": true
+  },
+  "family description of 4097": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.family.description",
+        "message": "Too long: may not be longer than 4096"
+      }
+    ]
+  },
+  "integration version": {
+    "accepted": true
+  },
+  "integration version of two parts": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.preset.integrationVersion",
+        "message": "Invalid value: \"0.8\": spec.family.preset.integrationVersion in body should match '^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$'"
+      }
+    ]
+  },
+  "long agent selector value": {
+    "accepted": true
+  },
+  "name of 256 characters": {
+    "accepted": true
+  },
+  "name of 257 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.name",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "negative priority order": {
+    "accepted": true
+  },
+  "neither preset nor raw": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family",
+        "message": "Invalid value: \"object\": Exactly one of preset or raw is required"
+      }
+    ]
+  },
+  "no chart version": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.family.preset.chartVersion",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no family": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.family",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no observability features": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.family.preset.observabilityFeatures",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no remote configurations": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.raw.remoteConfigurations",
+        "message": "Invalid value: 0: spec.family.raw.remoteConfigurations in body should have at least 1 items"
+      }
+    ]
+  },
+  "observability features of 1": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.preset.observabilityFeatures",
+        "message": "Invalid value: \"x\": spec.family.preset.observabilityFeatures in body should be at least 2 chars long"
+      }
+    ]
+  },
+  "preset and raw": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family",
+        "message": "Invalid value: \"object\": Exactly one of preset or raw is required"
+      }
+    ]
+  },
+  "preset family": {
+    "accepted": true
+  },
+  "preset metadata of 65 entries": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.family.preset.metadata",
+        "message": "Too many: 65: must have at most 64 items"
+      }
+    ]
+  },
+  "preset metadata value of 4097": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.preset.metadata",
+        "message": "Invalid value: \"object\": metadata values must be at most 4096 characters"
+      }
+    ]
+  },
+  "priority order over int32": {
+    "accepted": true
+  },
+  "raw family": {
+    "accepted": true
+  },
+  "raw metadata": {
+    "accepted": true
+  },
+  "raw metadata of 65 entries": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.family.raw.metadata",
+        "message": "Too many: 65: must have at most 64 items"
+      }
+    ]
+  },
+  "raw metadata value of 4097": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.family.raw.metadata",
+        "message": "Invalid value: \"object\": metadata values must be at most 4096 characters"
+      }
+    ]
+  },
+  "remote name of 257 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.family.raw.remoteConfigurations[0].name",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "tag of 257 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.tags[0]",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "unknown field is not an error": {
+    "accepted": true
+  }
+}

@@ -1,0 +1,159 @@
+[
+  {
+    "step": "create the raw sample",
+    "spec": {
+      "description": "Collector configuration group for production.",
+      "family": {
+        "active": true,
+        "description": "Default production family",
+        "raw": {
+          "collectorVersion": "0.114.0",
+          "metadata": {
+            "team": "observability"
+          },
+          "remoteConfigurations": [
+            {
+              "agentSelector": {
+                "attributes": {
+                  "cx.agent.type": "agent",
+                  "service.version": "0.114.0"
+                }
+              },
+              "name": "default",
+              "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  batch: {}\nexporters:\n  nop: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [nop]\n"
+            }
+          ]
+        }
+      },
+      "name": "production-collectors",
+      "priorityOrder": 100,
+      "tags": [
+        "production"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "description": "Collector configuration group for production.",
+          "family": {
+            "active": true,
+            "description": "Default production family",
+            "raw": {
+              "collectorVersion": "0.114.0",
+              "metadata": {
+                "team": "observability"
+              },
+              "remoteConfigurations": [
+                {
+                  "agentSelector": {
+                    "attributes": {
+                      "cx.agent.type": "agent",
+                      "service.version": "0.114.0"
+                    }
+                  },
+                  "name": "default",
+                  "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  batch: {}\nexporters:\n  nop: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [nop]\n"
+                }
+              ]
+            }
+          },
+          "name": "production-collectors",
+          "priorityOrder": 100,
+          "tags": [
+            "production"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again with no change",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
+        "query": {
+          "update_mask": [
+            "name,description,tags,priorityOrder,family.description,family.active,family.raw"
+          ]
+        },
+        "body": {
+          "description": "Collector configuration group for production.",
+          "family": {
+            "active": true,
+            "description": "Default production family",
+            "raw": {
+              "collectorVersion": "0.114.0",
+              "metadata": {
+                "team": "observability"
+              },
+              "remoteConfigurations": [
+                {
+                  "agentSelector": {
+                    "attributes": {
+                      "cx.agent.type": "agent",
+                      "service.version": "0.114.0"
+                    }
+                  },
+                  "name": "default",
+                  "rawConfiguration": "receivers:\n  otlp:\n    protocols:\n      grpc: {}\nprocessors:\n  batch: {}\nexporters:\n  nop: {}\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      processors: [batch]\n      exporters: [nop]\n"
+                }
+              ]
+            }
+          },
+          "name": "production-collectors",
+          "priorityOrder": 100,
+          "tags": [
+            "production"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

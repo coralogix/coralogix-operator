@@ -1,0 +1,1 @@
+configurationgroup.coralogix.com/finalizer

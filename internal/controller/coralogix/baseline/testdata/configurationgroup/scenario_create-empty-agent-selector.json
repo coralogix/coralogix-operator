@@ -1,0 +1,59 @@
+[
+  {
+    "step": "create with an empty agent selector: the request sends {}",
+    "spec": {
+      "family": {
+        "raw": {
+          "remoteConfigurations": [
+            {
+              "agentSelector": {},
+              "rawConfiguration": "receivers: {}"
+            }
+          ]
+        }
+      },
+      "name": "Production collectors"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1",
+        "body": {
+          "family": {
+            "raw": {
+              "remoteConfigurations": [
+                {
+                  "agentSelector": {},
+                  "rawConfiguration": "receivers: {}"
+                }
+              ]
+            }
+          },
+          "name": "Production collectors"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "configurationgroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
