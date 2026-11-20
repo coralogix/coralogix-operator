@@ -104,6 +104,10 @@ func TestNestedUpdateMaskChecks(t *testing.T) {
 		{name: "a field that Update does not have", resource: "MaskThing", override: strings.Replace(nestedMaskOverride, "[rule]", "[missing]", 1), code: codeShapeUnsupported},
 		{name: "a full-replace Update", resource: "Thing", override: "resource: Thing\nmode: existing\nvalidators: {inferred: true}\napi:\n  updateMask:\n    nested: [config]\n", code: codeShapeUnsupported},
 		{
+			name: "a field with requestValueBy", resource: "MaskThing", code: codeShapeUnsupported,
+			override: nestedMaskOverride + "types:\n  MaskThingRule:\n    fields:\n      note: {requestValueBy: {some: SOME, prefix: PREFIX}}\n",
+		},
+		{
 			name: "a oneOf that permits no arm", resource: "MaskThing", override: nestedMaskOverride, code: codeShapeUnsupported,
 			edit: func(s string) string {
 				return strings.Replace(s, "      oneOf:\n        - required: [some]\n        - required: [prefix]\n    PatchThingKind:", "      oneOf:\n        - required: [some]\n        - required: [prefix]\n        - not:\n            anyOf:\n              - required: [some]\n              - required: [prefix]\n    PatchThingKind:", 1)

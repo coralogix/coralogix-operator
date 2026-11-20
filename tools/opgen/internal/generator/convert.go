@@ -245,6 +245,11 @@ func (b *builder) nestedMask(d *kindData, f *model.ResourceField) ([]string, []m
 			continue // Update does not send it
 		}
 		j := slices.IndexFunc(owner.object.Fields, func(c *crField) bool { return c.API == child.Name })
+		if j < 0 && b.file != nil && len(b.file.Field(f.Type.Schema, child.Name).RequestValueBy) != 0 {
+			// Update sends a value that the selected arm decides, so the mask would have to name it
+			// too, with the arm that the body has.
+			return nil, nil, unsupported(location+"."+child.Name, "a field with requestValueBy is not supported in a nested mask: Update sends it, and the mask would not name it")
+		}
 		if j < 0 {
 			continue // the CR does not have it, so Update does not send it
 		}
