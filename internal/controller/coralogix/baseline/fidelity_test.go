@@ -225,6 +225,7 @@ func TestRecordFidelity(t *testing.T) {
 	}
 	recorded := marshalGolden(t, out)
 	checkNoSecrets(t, recorded, apiKey, base)
+	checkNoStartingValues(t, recorded, initial)
 	if err := os.WriteFile(filepath.Join(fidelityDir(k), "recorded.json"), recorded, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -334,15 +335,20 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 	if s.Capture != "" && succeeded(status) {
 		vars[s.Capture] = capturedID(resp, k)
 	}
+	// A starting value, such as an application name, is replaced only as the whole value of the
+	// field of its name. A substring replace would rewrite a key that contains it, and two starting
+	// values that are equal would get the same placeholder.
+	resp = replaceFieldVars(roundTrip(t, resp), k.fidelity.fakeVars, vars)
 	raw, err := json.Marshal(resp)
 	if err != nil {
 		t.Fatal(err)
 	}
 	text := string(raw)
 	for name, value := range vars {
-		if value != "" {
-			text = strings.ReplaceAll(text, value, "{{"+name+"}}")
+		if _, field := k.fidelity.fakeVars[name]; field || value == "" {
+			continue
 		}
+		text = strings.ReplaceAll(text, value, "{{"+name+"}}")
 	}
 	text = anyCaseUUIDPattern.ReplaceAllStringFunc(text, func(id string) string {
 		if strings.HasPrefix(strings.ToLower(id), fixedIDPrefix) {
@@ -355,6 +361,39 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 		t.Fatal(err)
 	}
 	return redactFields(redactStrings(canonicalJSONStrings(out)))
+}
+
+// replaceFieldVars writes {{name}} for each string field named after a starting value that holds
+// exactly that value.
+func replaceFieldVars(v any, names map[string]string, vars map[string]string) any {
+	switch v := v.(type) {
+	case map[string]any:
+		for key, value := range v {
+			if _, ok := names[key]; ok {
+				if text, ok := value.(string); ok && text != "" && text == vars[key] {
+					v[key] = "{{" + key + "}}"
+					continue
+				}
+			}
+			v[key] = replaceFieldVars(value, names, vars)
+		}
+	case []any:
+		for i := range v {
+			v[i] = replaceFieldVars(v[i], names, vars)
+		}
+	}
+	return v
+}
+
+// checkNoStartingValues stops the recording when a starting value is left outside its field, for
+// example in an error text: the value can be private, such as an application name of the team.
+func checkNoStartingValues(t *testing.T, recorded []byte, vars map[string]string) {
+	t.Helper()
+	for name, value := range vars {
+		if value != "" && regexp.MustCompile(`\b`+regexp.QuoteMeta(value)+`\b`).Match(recorded) {
+			t.Fatalf("the recording holds the value of {{%s}} outside its field; nothing was written", name)
+		}
+	}
 }
 
 // redactStrings hides account values inside each string value. A number that is not in a string
@@ -574,6 +613,19 @@ func TestNormalizeAnswerCapturesIDOf201(t *testing.T) {
 		t.Fatalf("id not captured from a 201 answer: vars = %v", vars)
 	}
 	if want := map[string]any{"id": "{{id}}", "name": "cxo-fidelity-a"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
+	}
+}
+
+// A starting value is replaced by field, so a short value does not rewrite a key, and two equal
+// values keep their own placeholders.
+func TestNormalizeAnswerReplacesStartingValuesByField(t *testing.T) {
+	k := kind{fidelity: fidelityConfig{fakeVars: map[string]string{"application": "a", "subsystem": "s"}}}
+	vars := map[string]string{"application": "app", "subsystem": "app"}
+	resp := map[string]any{"aiEvaluation": map[string]any{"application": "app", "subsystem": "app", "note": "apple app"}}
+	got := normalizeAnswer(t, k, fidelityStep{}, http.StatusOK, resp, vars)
+	want := map[string]any{"aiEvaluation": map[string]any{"application": "{{application}}", "subsystem": "{{subsystem}}", "note": "apple app"}}
+	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("normalizeAnswer = %v, want %v", got, want)
 	}
 }

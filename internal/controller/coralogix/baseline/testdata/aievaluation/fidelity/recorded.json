@@ -8,7 +8,7 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "pii": {
                   "categories": [
@@ -17,14 +17,14 @@
                   ]
                 }
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.8,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -33,7 +33,7 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "pii": {
                   "categories": [
@@ -42,14 +42,14 @@
                   ]
                 }
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.8,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -58,18 +58,18 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "toxicity": {}
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": false,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.5,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -78,7 +78,7 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "allowedTopics": {
                   "topics": [
@@ -86,14 +86,14 @@
                   ]
                 }
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.4,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -102,20 +102,20 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "promptInjection": {
                   "additionalContext": ""
                 }
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.4,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -124,20 +124,20 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "promptInjection": {
                   "additionalContext": ""
                 }
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.4,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -178,17 +178,17 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "sexism": {}
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": false,
               "subsystem": "{{subsystem}}",
               "target": "PROMPT",
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -197,17 +197,17 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "sexism": {}
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": false,
               "subsystem": "{{subsystem}}",
               "target": "PROMPT",
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -227,20 +227,20 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "promptInjection": {
                   "additionalContext": "a support assistant"
                 }
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.8,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -260,18 +260,18 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "toxicity": {}
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0.8,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -324,18 +324,18 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "toxicity": {}
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 1,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
@@ -344,18 +344,18 @@
           "response": {
             "aiEvaluation": {
               "application": "{{application}}",
-              "companyId": "<redacted>",
+              "companyId": "\u003credacted\u003e",
               "config": {
                 "toxicity": {}
               },
-              "createdAt": "<time>",
+              "createdAt": "\u003ctime\u003e",
               "createdBy": "",
               "id": "{{id}}",
               "isEnabled": true,
               "subsystem": "{{subsystem}}",
               "target": "RESPONSE",
               "threshold": 0,
-              "updatedAt": "<time>"
+              "updatedAt": "\u003ctime\u003e"
             }
           }
         },
