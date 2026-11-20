@@ -1,0 +1,182 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "isEnabled": true,
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3",
+        "body": {
+          "application": "cxo-baseline-app",
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "subsystem": "cxo-baseline-subsystem",
+          "target": "RESPONSE",
+          "threshold": 0.8
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the application",
+    "spec": {
+      "application": "other-app",
+      "config": {
+        "toxicity": {}
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueInvalid",
+          "field": "spec.application",
+          "message": "Invalid value: \"string\": spec.application is immutable"
+        }
+      ]
+    },
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the subsystem",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "subsystem": "other-subsystem",
+      "target": "response",
+      "threshold": "0.8"
+    },
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueInvalid",
+          "field": "spec.subsystem",
+          "message": "Invalid value: \"string\": spec.subsystem is immutable"
+        }
+      ]
+    },
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the target",
+    "spec": {
+      "application": "cxo-baseline-app",
+      "config": {
+        "toxicity": {}
+      },
+      "subsystem": "cxo-baseline-subsystem",
+      "target": "prompt",
+      "threshold": "0.8"
+    },
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueInvalid",
+          "field": "spec.target",
+          "message": "Invalid value: \"string\": spec.target is immutable"
+        }
+      ]
+    },
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "ai-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

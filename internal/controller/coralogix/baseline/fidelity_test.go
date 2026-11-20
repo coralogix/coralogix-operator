@@ -53,6 +53,21 @@ type fidelityConfig struct {
 	// team, such as the TCO policies. Its cases delete what the team had. The recorder runs them
 	// only when RECORD_FIDELITY_OVERWRITE_TEAM names the kind.
 	overwritesTeam bool
+	// recordVars returns values that the cases name as {{name}} from their first step, such as an
+	// AI application of the team, which the API cannot create. It reads them from the real API.
+	// fakeVars are the same names for the fake. The recorder writes {{name}} for each value, so
+	// the two compare equal.
+	recordVars func(t *testing.T, base, apiKey string) map[string]string
+	fakeVars   map[string]string
+}
+
+// startVars returns a copy of vars, the values that each case starts with.
+func startVars(vars map[string]string) map[string]string {
+	out := map[string]string{}
+	for name, value := range vars {
+		out[name] = value
+	}
+	return out
 }
 
 type fidelityStep struct {
@@ -130,7 +145,7 @@ func TestFakeMatchesRecordedAPI(t *testing.T) {
 						t.Fatalf("recorded.json does not match cases.json for %q: record again", c.Name)
 					}
 					api := k.newFake()
-					vars := map[string]string{}
+					vars := startVars(k.fidelity.fakeVars)
 					for si, s := range c.Steps {
 						path, query := splitQuery(t, substString(s.Path, vars))
 						status, resp := api.handle(s.Method, path, query, substJSON(t, s.Body, vars))
@@ -183,10 +198,14 @@ func TestRecordFidelity(t *testing.T) {
 		}
 	})
 
+	var initial map[string]string
+	if k.fidelity.recordVars != nil {
+		initial = k.fidelity.recordVars(t, base, apiKey)
+	}
 	out := fidelityRecorded{}
 	for _, c := range loadCases(t, k).Cases {
 		rec := recordedCase{Name: c.Name}
-		vars := map[string]string{}
+		vars := startVars(initial)
 		for _, s := range c.Steps {
 			status, resp, err := sendRecordRequest(base, apiKey, s.Method, substString(s.Path, vars), substJSON(t, s.Body, vars))
 			if err != nil {

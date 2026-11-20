@@ -1,0 +1,468 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update as the released operator, switch arms, delete, then act on the deleted evaluation",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS",
+                    "PHONE_NUMBER"
+                  ]
+                }
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS",
+                    "PHONE_NUMBER"
+                  ]
+                }
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": false,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.5,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "allowedTopics": {
+                  "topics": [
+                    "billing"
+                  ]
+                }
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.4,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "promptInjection": {
+                  "additionalContext": ""
+                }
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.4,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "promptInjection": {
+                  "additionalContext": ""
+                }
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.4,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with no isEnabled and no threshold",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "sexism": {}
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": false,
+              "subsystem": "{{subsystem}}",
+              "target": "PROMPT",
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "sexism": {}
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": false,
+              "subsystem": "{{subsystem}}",
+              "target": "PROMPT",
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a prompt injection for the response",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "promptInjection": {
+                  "additionalContext": "a support assistant"
+                }
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create twice with the same application, subsystem, target, and type",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: An evaluation with these parameters already exists"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create for an application that the team does not have",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: AI application not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with threshold over 1, below 0, and at the bounds",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 1,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be less than or equal to 1\",\n    \"path\": [\n      \"threshold\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 0,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be greater than or equal to 0\",\n    \"path\": [\n      \"threshold\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 1,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "<redacted>",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "<time>",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0,
+              "updatedAt": "<time>"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_big\",\n    \"maximum\": 1,\n    \"type\": \"number\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Number must be less than or equal to 1\",\n    \"path\": [\n      \"threshold\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with invalid configs",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"config\",\n      \"evaluation\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 1,\n    \"type\": \"array\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"Array must contain at least 1 element(s)\",\n    \"path\": [\n      \"config\",\n      \"evaluation\",\n      \"value\",\n      \"categories\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"message\": \"Items in array must be unique, no duplicates allowed.\",\n    \"path\": [\n      \"config\",\n      \"evaluation\",\n      \"value\",\n      \"topics\"\n    ]\n  }\n]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with no target and no config",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"expected\": \"'PROMPT' | 'RESPONSE' | 'CONVERSATION'\",\n    \"received\": \"undefined\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"target\"\n    ],\n    \"message\": \"Required\"\n  },\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"config\"\n    ],\n    \"message\": \"Required\"\n  }\n]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "act on an id that is not a UUID",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "act on an unknown id",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Evaluation not found"
+          }
+        }
+      ]
+    }
+  ]
+}
