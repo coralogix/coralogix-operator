@@ -47,10 +47,14 @@ wait_for() {
 
 case "$mode" in
 before)
-    spec="$(sed {{if .E2E.Env}}-e "s/@{run}/$name/g"{{range .E2E.Env}} -e "s|@{env.{{.}}}|${ {{- .}}}|g"{{end}}{{else}}"s/@{run}/$name/g"{{end}} <<'JSON'
+    spec="$(sed "s/@{run}/$name/g" <<'JSON'
 {{.E2E.Upgrade.SpecJSON}}
 JSON
 )"
+{{- range .E2E.Env}}
+    # jq writes the value of {{.}} into each decoded string, so any character stays as it is.
+    spec="$(jq --arg value "${ {{- .}}}" 'walk(if type == "string" then gsub("@\\{env\\.{{.}}\\}"; $value) else . end)' <<<"$spec")"
+{{- end}}
     jq -n --arg name "$cr" --arg namespace "$namespace" --argjson spec "$spec" \
         '{apiVersion:"coralogix.com/v1alpha1", kind:"{{.Kind}}", metadata:{name:$name,namespace:$namespace}, spec:$spec}' \
         | kubectl apply -f -
