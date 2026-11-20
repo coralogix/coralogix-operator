@@ -145,7 +145,7 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		}
 		d.MaskSetter = mask.Name
 	}
-	if r.MaskInBody {
+	if r.MaskInBody && !b.file.OmitsUpdateMask() {
 		field, err := b.ix.field(d.UpdateBody, r.UpdateMask)
 		if err != nil {
 			return err
@@ -250,7 +250,7 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 		}
 		d.UpdateIDInBody, d.BodyIDField, d.BodyIDValue = true, ref.Name, !strings.HasPrefix(ref.Want, "*")
 	}
-	if r.Replace {
+	if r.Replace || b.file.OmitsUpdateMask() {
 		return b.requestValues(r, d)
 	}
 	if r.UpdateMaskPattern != "" {

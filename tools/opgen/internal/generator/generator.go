@@ -170,12 +170,15 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 		return nil, asEligibility(entry, err)
 	}
 	policy := withFoldKept(doc, entry, file, file.Policy())
-	if report := model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy); len(report) != 0 {
+	if report := maskIssues(model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy), file); len(report) != 0 {
 		return nil, &EligibilityError{Report: located(entry, report)}
 	}
 	r, err := model.BuildWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy)
 	if err != nil {
 		return nil, fmt.Errorf("%s: build the validated resource: %w", entry.Kind, err)
+	}
+	if err := applyImmutable(r, file); err != nil {
+		return nil, asEligibility(entry, err)
 	}
 	if err := nestedSkipIssues(doc, entry, file, policy); err != nil {
 		return nil, asEligibility(entry, err)
@@ -201,6 +204,45 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 		return nil, err
 	}
 	return v, nil
+}
+
+// applyImmutable makes each field with an immutable line one that only Create sends: the shared
+// model then gives it the Immutable behavior, so the CRD rejects a change and Update leaves the
+// field out. A PATCH keeps a field that the body and the mask leave out. A full replace would clear
+// it, so the key needs a PATCH Update.
+func applyImmutable(r *model.Resource, file *overrides.File) error {
+	for _, line := range file.Lines() {
+		if !file.Field(line.Component, line.Field).Immutable {
+			continue
+		}
+		path := overrides.FileName + ":" + line.String() + ".immutable"
+		i := slices.IndexFunc(r.Fields, func(f *model.ResourceField) bool { return f.Name == line.Field })
+		switch {
+		case i < 0:
+			return &shapeError{code: codeOverrideUnused, path: path, msg: "the resource has no field " + line.Field}
+		case r.Replace:
+			return &shapeError{code: codeOverrideInvalid, path: path, msg: "a full-replace Update would clear a field that it leaves out; immutable needs a PATCH Update"}
+		case r.Fields[i].Create == nil:
+			return &shapeError{code: codeOverrideInvalid, path: path, msg: "Create does not send the field"}
+		case r.Fields[i].Update == nil:
+			return &shapeError{code: codeOverrideUnused, path: path, msg: "Update already leaves the field out, so the contract makes it immutable"}
+		}
+		r.Fields[i].Update = nil
+		r.Fields[i].Behavior = model.Immutable
+	}
+	return nil
+}
+
+// maskIssues drops the update-mask issues that updateMask: omit settles. Update then sends no mask,
+// and the server replaces the whole value of each field in the body, a nested oneOf included, so
+// the mask paths that the shared module checks are never sent.
+func maskIssues(report issue.Report, file *overrides.File) issue.Report {
+	if !file.OmitsUpdateMask() {
+		return report
+	}
+	return slices.DeleteFunc(report, func(i issue.Issue) bool {
+		return i.Code == "UPDATE_MASK_NESTED_ONEOF_UNSUPPORTED" || i.Code == "UPDATE_MASK_CONTRACT_INVALID"
+	})
 }
 
 // withFoldKept exempts the folded properties of a createAs line from the requiredness check of the

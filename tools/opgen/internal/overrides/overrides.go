@@ -75,6 +75,12 @@ type File struct {
 	// Spec declares spec fields of handwritten Go types that a hook reads. The generated
 	// conversions do not use them. Mode existing only, and the kind needs a hook.
 	Spec map[string]SpecField `yaml:"spec"`
+	// UpdateMask "omit" sends no update mask in the PATCH body (api.updateMaskInBody), as a released
+	// kind that never sent one. The server then updates each field in the body, and it replaces
+	// the whole value of a field, nested oneOf arms included: a config of another arm replaces the
+	// stored one. That lets Update change a nested oneOf through a mask that names only top-level
+	// fields, which the shared module cannot check. Mode existing only.
+	UpdateMask string `yaml:"updateMask"`
 
 	// hooksNode is the hooks key as the file writes it, nil without one. A written empty list is an
 	// error, and a Go slice cannot tell it from a missing key.
@@ -253,6 +259,17 @@ type Type struct {
 	// deprecated field that was never sent. The CR keeps each one, so stored objects and manifests
 	// that set it stay valid, and Create and Update never send it. Existing kinds only.
 	Ignored map[string]IgnoredField `yaml:"ignored"`
+	// UnsupportedArms are oneOf arms of this component that the released CR never had, such as an
+	// arm that another kind manages. They stay out of the CR and the requests. Existing kinds only.
+	UnsupportedArms []UnsupportedArm `yaml:"unsupportedArms"`
+}
+
+// UnsupportedArm is one oneOf arm that the CR does not offer.
+type UnsupportedArm struct {
+	// Arm is the API property of the arm.
+	Arm string `yaml:"arm"`
+	// Reason says why the CR does not offer the arm.
+	Reason string `yaml:"reason"`
 }
 
 // IgnoredField is one released CR field that the API does not have.
@@ -298,6 +315,10 @@ type Field struct {
 	// arm removes the arm; the shared module accepts it only for an empty object arm of a group
 	// that allows no arm.
 	Skip bool `yaml:"skip"`
+	// Immutable keeps a released CR field that cannot change after Create, when the PATCH Update
+	// of the API accepts it. The CRD rejects a change of the field, and Update leaves it out, as
+	// for a field that only Create has. A top-level field of an existing kind with a PATCH Update.
+	Immutable bool `yaml:"immutable"`
 	// Ref makes a string id of another resource a reference (way 2): the custom resource sets
 	// backendRef.id, or resourceRef, the custom resource that manages the other resource.
 	Ref *Ref `yaml:"ref"`
@@ -473,13 +494,29 @@ func (f *File) check() error {
 	if err := f.checkIgnored(); err != nil {
 		return err
 	}
+	if err := f.checkUnsupportedArms(); err != nil {
+		return err
+	}
+	if err := f.checkUpdateMask(); err != nil {
+		return err
+	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "") {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
+		}
+		if field.Immutable {
+			switch {
+			case f.Mode != ModeExisting:
+				return fmt.Errorf("%s.immutable: a new kind follows the contract", line)
+			case line.Component != f.Resource:
+				return fmt.Errorf("%s.immutable: only a top-level field of the resource can be immutable", line)
+			case field.ReadOnly || len(field.CreateAs) != 0 || field.RequestAs != "" || len(field.RequestValueBy) != 0:
+				return fmt.Errorf("%s.immutable: the line cannot set readOnly, createAs, requestAs, or requestValueBy", line)
+			}
 		}
 		if field.Skip && f.Mode != ModeExisting {
 			return fmt.Errorf("%s.skip: a new kind follows the contract", line)
@@ -1128,4 +1165,81 @@ func (f *File) checkIgnored() error {
 		}
 	}
 	return nil
+}
+
+// UpdateMaskOmit is the updateMask value that sends no update mask.
+const UpdateMaskOmit = "omit"
+
+// OmitsUpdateMask reports whether Update sends no update mask.
+func (f *File) OmitsUpdateMask() bool {
+	return f != nil && f.UpdateMask == UpdateMaskOmit
+}
+
+// checkUpdateMask checks the updateMask key. It needs the mask in the PATCH body: a query mask is
+// a required parameter of the SDK call.
+func (f *File) checkUpdateMask() error {
+	switch {
+	case f.UpdateMask == "":
+		return nil
+	case f.UpdateMask != UpdateMaskOmit:
+		return fmt.Errorf("updateMask: want %q", UpdateMaskOmit)
+	case f.Mode != ModeExisting:
+		return errors.New("updateMask: a new kind follows the contract")
+	case !f.API.UpdateMaskInBody:
+		return errors.New("updateMask: omit needs api.updateMaskInBody: true")
+	}
+	return nil
+}
+
+// checkUnsupportedArms checks the unsupportedArms of each component. The generator checks that
+// each one is a oneOf arm of its component.
+func (f *File) checkUnsupportedArms() error {
+	for _, component := range slices.Sorted(maps.Keys(f.Types)) {
+		typ := f.Types[component]
+		seen := map[string]bool{}
+		for i, arm := range typ.UnsupportedArms {
+			location := fmt.Sprintf("types.%s.unsupportedArms[%d]", component, i)
+			switch {
+			case f.Mode != ModeExisting:
+				return fmt.Errorf("%s: a new kind follows the contract", location)
+			case !validJSONName(arm.Arm):
+				return fmt.Errorf("%s.arm: %q is not a property name", location, arm.Arm)
+			case seen[arm.Arm]:
+				return fmt.Errorf("%s.arm: %s is listed twice", location, arm.Arm)
+			case strings.TrimSpace(arm.Reason) == "":
+				return fmt.Errorf("%s.reason: say why the CR does not offer the arm", location)
+			}
+			seen[arm.Arm] = true
+			if _, ok := typ.Fields[arm.Arm]; ok {
+				return fmt.Errorf("%s: a field line names the arm %s, which the CR does not have", location, arm.Arm)
+			}
+			for name, group := range typ.Groups {
+				if slices.Contains(group.Fields, arm.Arm) {
+					return fmt.Errorf("%s: group %s names the arm %s, which the CR does not have", location, name, arm.Arm)
+				}
+			}
+			if component == f.Resource {
+				for name, group := range f.Groups {
+					if slices.Contains(group.Fields, arm.Arm) {
+						return fmt.Errorf("%s: group %s names the arm %s, which the CR does not have", location, name, arm.Arm)
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// UnsupportedArms returns the unsupported arms of each component, by component.
+func (f *File) UnsupportedArms() map[string][]string {
+	if f == nil {
+		return nil
+	}
+	out := map[string][]string{}
+	for component, typ := range f.Types {
+		for _, arm := range typ.UnsupportedArms {
+			out[component] = append(out[component], arm.Arm)
+		}
+	}
+	return out
 }
