@@ -24,3 +24,5 @@ kinds:
     resource: Dashboard
   - kind: DashboardsFolder
     resource: DashboardFolder
+  - kind: ConfigurationGroup
+    resource: ConfigurationGroup

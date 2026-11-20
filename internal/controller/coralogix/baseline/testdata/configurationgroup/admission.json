@@ -292,7 +292,14 @@
     ]
   },
   "priority order over int32": {
-    "accepted": true
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.priorityOrder",
+        "message": "Invalid value: 2147483648: spec.priorityOrder in body should be less than or equal to 2147483647"
+      }
+    ]
   },
   "raw family": {
     "accepted": true

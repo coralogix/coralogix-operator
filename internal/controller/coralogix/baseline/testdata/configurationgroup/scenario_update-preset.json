@@ -82,14 +82,11 @@
         "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
         "query": {
           "update_mask": [
-            "name,description,tags,priorityOrder,family.description,family.active,family.preset"
+            "description,family.active,family.description,name,priorityOrder,tags,family.preset"
           ]
         },
         "body": {
-          "description": "",
           "family": {
-            "active": false,
-            "description": "",
             "preset": {
               "chartName": "CHART_NAME_OTEL_INTEGRATION",
               "chartVersion": "0.0.289",
@@ -100,9 +97,7 @@
               "observabilityFeatures": "{\"logs\":{\"enabled\":true}}"
             }
           },
-          "name": "Production collectors",
-          "priorityOrder": 0,
-          "tags": []
+          "name": "Production collectors"
         },
         "status": 200
       }

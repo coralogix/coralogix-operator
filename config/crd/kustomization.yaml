@@ -22,8 +22,8 @@ resources:
   - bases/coralogix.com_enrichments.yaml
   - bases/coralogix.com_aievaluations.yaml
   - bases/coralogix.com_aicustomevaluations.yaml
-  - bases/coralogix.com_configurationgroups.yaml
   # BEGIN generated kinds
+  - bases/coralogix.com_configurationgroups.yaml
   - bases/coralogix.com_dashboards.yaml
   - bases/coralogix.com_dashboardsfolders.yaml
   - bases/coralogix.com_events2metrics.yaml

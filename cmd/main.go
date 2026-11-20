@@ -285,13 +285,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "AICustomEvaluation")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.ConfigurationGroupReconciler{
-		ConfigurationGroupsClient: oapiClientSet.ConfigGroups(),
-		Interval:                  cfg.ReconcileIntervals[utils.ConfigurationGroupKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ConfigurationGroup")
-		os.Exit(1)
-	}
 	if err = v1alpha1controllers.SetupGeneratedControllers(mgr, oapiClientSet, cfg.ReconcileIntervals); err != nil {
 		setupLog.Error(err, "unable to create the generated controllers")
 		os.Exit(1)

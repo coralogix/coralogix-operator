@@ -1,0 +1,38 @@
+# Names of groups must be new on each run: the API keeps the name of an archived group.
+substitutions:
+  sample-name: '@{run}'
+values:
+  # A collector configuration that the API accepts. The selector's service.version must equal
+  # collectorVersion.
+  family.raw.collectorVersion: 0.114.0
+  family.raw.remoteConfigurations.rawConfiguration: |
+    receivers:
+      otlp:
+        protocols:
+          grpc: {}
+  family.raw.remoteConfigurations.agentSelector.attributes: {service.version: 0.114.0}
+  # Features that a live probe accepted for every template.
+  family.preset.observabilityFeatures: '{"apm":{"enabled":false,"transactions":{"enabled":false}},"logs":{"enabled":false}}'
+  priorityOrder: 10
+  # The API refuses to archive an active group, and the cleanup backstop of the test archives
+  # without the beforeDelete hook. The handwritten e2e test deletes an active group.
+  family.active: false
+# Each template has its own versions of the features format; omitted, the API takes the default.
+omit: [family.preset.integrationVersion]
+# Each template has its own chart versions and required metadata (live probes).
+when:
+  - match: {family.preset.chartName: CHART_NAME_OTEL_INTEGRATION}
+    set:
+      family.preset.chartVersion: 0.0.289
+      family.preset.metadata: {ClusterName: e2e, KubernetesRunningOn: e2e}
+  - match: {family.preset.chartName: [CHART_NAME_OTEL_LINUX_STANDALONE, CHART_NAME_OTEL_WINDOWS_STANDALONE, CHART_NAME_OTEL_MACOS_STANDALONE]}
+    set:
+      family.preset.chartVersion: 0.0.25
+      family.preset.metadata: {ApplicationName: e2e, SubsystemName: e2e, HostRunningOn: on_premise}
+  - match: {family.preset.chartName: CHART_NAME_OTEL_ECS_EC2}
+    set:
+      family.preset.chartVersion: 0.0.2
+      family.preset.metadata: {ClusterName: e2e}
+update:
+  field: description
+  value: Configuration group updated by the e2e test
