@@ -127,12 +127,12 @@ func readE2E(path string) (*e2eFile, error) {
 
 // e2eData is what the e2e test template needs.
 type e2eData struct {
-	Omit                  []string
-	Serial                bool
-	Fixtures              []fixtureData
-	Substitutions         []substitutionData
+	Omit          []string
+	Serial        bool
+	Fixtures      []fixtureData
+	Substitutions []substitutionData
 	// HasEnv: a substitution reads an environment variable, so the test imports os.
-	HasEnv bool
+	HasEnv                bool
 	Upgrade               *upgradeData
 	FullJSON, MinimalJSON string // Go string literals of the spec as JSON
 	NameField             string // the Go path of a string name, "" when there is none

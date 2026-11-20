@@ -140,7 +140,10 @@ func newSettingThingGenerated(name, spec string) *coralogixv1alpha1.SettingThing
 	{
 		value := os.Getenv("SETTING_BUCKET")
 		Expect(value).NotTo(BeEmpty(), "set SETTING_BUCKET for the e2e test of SettingThing")
-		spec = strings.ReplaceAll(spec, "e2e-setting-bucket", value)
+		// The spec is JSON text: the value goes into a JSON string, escaped.
+		quoted, err := json.Marshal(value)
+		Expect(err).NotTo(HaveOccurred())
+		spec = strings.ReplaceAll(spec, "e2e-setting-bucket", string(quoted[1:len(quoted)-1]))
 	}
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()

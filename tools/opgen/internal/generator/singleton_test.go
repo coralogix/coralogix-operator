@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"os/exec"
@@ -253,7 +254,8 @@ func TestSingletonWithoutUpsertIsRejected(t *testing.T) {
 	}
 }
 
-// An @{env:NAME} substitution reads the variable when the live test runs. The offline coverage test
+// An @{env:NAME} substitution reads the variable when the live test runs, and puts it into the JSON
+// spec escaped. The offline coverage test
 // keeps the sample value, and the upgrade check fills the variable in with sed.
 func TestEnvSubstitution(t *testing.T) {
 	root, input := syntheticRoot(t)
@@ -261,7 +263,7 @@ func TestEnvSubstitution(t *testing.T) {
 		t.Fatal(err)
 	}
 	e2e := readGenerated(t, root, e2eDir+"/settingthing_generated_test.go")
-	for _, want := range []string{`"os"`, `value := os.Getenv("SETTING_BUCKET")`, `"set SETTING_BUCKET for the e2e test of SettingThing"`, `spec = strings.ReplaceAll(spec, "e2e-setting-bucket", value)`} {
+	for _, want := range []string{`"os"`, `value := os.Getenv("SETTING_BUCKET")`, `"set SETTING_BUCKET for the e2e test of SettingThing"`, `quoted, err := json.Marshal(value)`, `spec = strings.ReplaceAll(spec, "e2e-setting-bucket", string(quoted[1:len(quoted)-1]))`} {
 		if !strings.Contains(e2e, want) {
 			t.Errorf("the e2e test lacks %q", want)
 		}
@@ -302,5 +304,19 @@ func TestEnvSubstitution(t *testing.T) {
 		if err := generateFromInput(input, root, root); err == nil || !strings.Contains(err.Error(), "@{env:NAME}") {
 			t.Errorf("%s: want the whole-value error, got %v", name, err)
 		}
+	}
+}
+
+// The escaping of the e2e templates keeps a value with JSON syntax in it as it is.
+func TestEnvValueSurvivesTheJSONSpec(t *testing.T) {
+	const value = `a"b\tc\\d` + "\n"
+	quoted, err := json.Marshal(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	spec := strings.ReplaceAll(`{"bucket":"e2e-bucket"}`, "e2e-bucket", string(quoted[1:len(quoted)-1]))
+	var got struct{ Bucket string }
+	if err := json.Unmarshal([]byte(spec), &got); err != nil || got.Bucket != value {
+		t.Errorf("decoded %q (%v), want %q", got.Bucket, err, value)
 	}
 }

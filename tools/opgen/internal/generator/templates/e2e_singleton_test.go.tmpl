@@ -147,7 +147,10 @@ func new{{.Kind}}Generated(name, spec string) *coralogixv1alpha1.{{.Kind}} {
 	{
 		value := os.Getenv({{printf "%q" .Env}})
 		Expect(value).NotTo(BeEmpty(), "set {{.Env}} for the e2e test of {{$.Kind}}")
-		spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, value)
+		// The spec is JSON text: the value goes into a JSON string, escaped.
+		quoted, err := json.Marshal(value)
+		Expect(err).NotTo(HaveOccurred())
+		spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, string(quoted[1:len(quoted)-1]))
 	}
 	{{- else}}
 	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name))
