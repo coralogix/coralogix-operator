@@ -2,6 +2,7 @@
   {
     "step": "create with a region other than the one of the team: the API answers 408",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-fidelity-archive",
         "region": "us-east-1"

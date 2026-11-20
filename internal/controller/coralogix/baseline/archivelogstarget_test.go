@@ -44,9 +44,9 @@ func init() {
 		newFake:  newArchiveLogsTargetFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
 			return &v1alpha1controllers.ArchiveLogsTargetReconciler{
-				ArchiveLogsTargetsClient: cs.ArchiveLogs(),
-				ArchiveRetentionsClient:  cs.ArchiveRetentions(),
-				Interval:                 reconcileInterval,
+				Client:    cs.ArchiveLogs(),
+				ClientSet: cs,
+				Interval:  reconcileInterval,
 			}
 		},
 		scenarios: archiveLogsTargetScenarios,

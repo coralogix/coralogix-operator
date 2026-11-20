@@ -1,0 +1,47 @@
+# Where ArchiveLogsTarget differs from the API contract, because users already have it.
+#
+# A field with a line here keeps its released behavior. A field without a line follows the API
+# contract.
+resource: v2.Target
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD takes exactly one of s3Target and ibmCosTarget.
+    spec:
+      add: ['+kubebuilder:validation:XValidation:rule="has(self.s3Target) != has(self.ibmCosTarget)",message="Exactly one of s3Target or ibmCosTarget must be specified"']
+    # The released bucketName has no limits.
+    spec.s3Target.bucketName: {inferred: false}
+    # The released kind always sent isActive: true.
+    spec.isActive:
+      add: ['+kubebuilder:default=true']
+# The team has one archive target and the API has no id. The released objects hold this id.
+singletonID: {fixed: archiveLogsTaget}
+finalizer: archivelogstarget.coralogix.com/finalizer
+api:
+  # One POST creates and replaces the target. The API cannot remove it.
+  operations:
+    create: S3TargetService_SetTarget
+    get: S3TargetService_GetTarget
+    update: S3TargetService_SetTarget
+    delete: none
+# The released CRD takes an IBM COS target. This REST API sets only S3 targets, so validate rejects
+# it before any call, as the released kind did.
+spec:
+  ibmCosTarget: {type: IbmCosTarget}
+# validate: an S3 target is required. afterCreate and afterUpdate activate the retentions. delete
+# sets the target inactive, as the released kind did.
+hooks: [validate, afterCreate, afterUpdate, delete]
+types:
+  v2.Target:
+    fields:
+      # The released CR may hold an IBM COS target instead.
+      s3: {name: s3Target, optional: true}
+      # Get nests isActive and format in archiveSpec; the POST sends them at the top level.
+      archiveSpec: {inline: true}
+      # This REST API sets only S3 targets.
+      ibmCos: {skip: true}
+      isActive: {optional: true}
+  S3TargetSpec:
+    fields:
+      bucket: {name: bucketName, optional: true}

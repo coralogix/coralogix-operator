@@ -233,15 +233,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Connector")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.ArchiveLogsTargetReconciler{
-		ArchiveLogsTargetsClient: oapiClientSet.ArchiveLogs(),
-		ArchiveRetentionsClient:  oapiClientSet.ArchiveRetentions(),
-		Interval:                 cfg.ReconcileIntervals[utils.ArchiveLogsTargetKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ArchiveLogsTarget")
-		os.Exit(1)
-	}
-
 	if err = (&v1alpha1controllers.ArchiveMetricsTargetReconciler{
 		ArchiveMetricsTargetsClient: oapiClientSet.ArchiveMetrics(),
 		Interval:                    cfg.ReconcileIntervals[utils.ArchiveMetricsTargetKind],

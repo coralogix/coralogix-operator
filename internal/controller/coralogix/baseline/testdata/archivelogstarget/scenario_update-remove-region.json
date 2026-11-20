@@ -2,6 +2,7 @@
   {
     "step": "create",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-fidelity-archive",
         "region": "eu-north-1"
@@ -62,15 +63,15 @@
         "body": {
           "isActive": true,
           "s3": {
-            "bucket": "cxo-fidelity-archive",
-            "region": ""
+            "bucket": "cxo-fidelity-archive"
           }
         },
-        "status": 400
+        "status": 200
       }
     ],
     "result": {
-      "error": true
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
       "finalizers": [
@@ -80,13 +81,13 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteUpdateFailed",
-            "status": "False",
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
             "type": "RemoteSynced"
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteUnsynced"
+        "printableStatus": "RemoteSynced"
       }
     }
   }
