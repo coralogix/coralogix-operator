@@ -30,6 +30,10 @@ spec:
             type: object
           spec:
             properties:
+              format:
+                enum:
+                - cxDataV1
+                type: string
               ibmCosTarget:
                 properties:
                   bucketCrn:
@@ -45,11 +49,18 @@ spec:
                   serviceCrn:
                     type: string
                 type: object
+              isActive:
+                default: true
+                type: boolean
               s3Target:
                 properties:
                   bucketName:
                     type: string
+                  externalId:
+                    type: string
                   region:
+                    type: string
+                  roleArn:
                     type: string
                 type: object
             type: object

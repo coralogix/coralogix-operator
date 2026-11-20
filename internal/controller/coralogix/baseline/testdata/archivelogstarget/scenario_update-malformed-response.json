@@ -2,6 +2,7 @@
   {
     "step": "create",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-fidelity-archive",
         "region": "eu-north-1"
@@ -98,6 +99,11 @@
             "region": "eu-north-1"
           }
         },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1/activate",
         "status": 200
       }
     ],

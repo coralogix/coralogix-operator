@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -33,7 +34,9 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("ArchiveLogsTarget", Ordered, func() {
+// The team has one archive target, which the generated ArchiveLogsTarget test writes too, so this
+// test runs alone.
+var _ = Describe("ArchiveLogsTarget", Ordered, Serial, func() {
 	var (
 		crClient          client.Client
 		archiveLogsClient *cxsdk.ArchiveLogsClient
@@ -54,9 +57,9 @@ var _ = Describe("ArchiveLogsTarget", Ordered, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.ArchiveLogsTargetSpec{
-				S3Target: &coralogixv1alpha1.S3Target{
-					Region:     awsRegion,
-					BucketName: logsBucket,
+				S3Target: &coralogixv1alpha1.ArchiveLogsTargetS3TargetSpec{
+					Region:     ptr.To(awsRegion),
+					BucketName: ptr.To(logsBucket),
 				},
 			},
 		}

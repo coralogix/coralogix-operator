@@ -1,0 +1,26 @@
+# The e2e values of ArchiveLogsTarget that the contract cannot state.
+#
+# The team has one archive target. It must name a bucket that Coralogix can write to, in the region
+# of the cluster; CI holds both as secrets.
+values:
+  s3Target.bucketName: e2e-archive-logs-bucket
+  s3Target.region: e2e-archive-logs-region
+substitutions:
+  e2e-archive-logs-bucket: '@{env:LOGS_BUCKET}'
+  e2e-archive-logs-region: '@{env:AWS_REGION}'
+# The team keeps the external id and the role of its bucket: a made-up value would break archiving.
+omit: [s3Target.externalId, s3Target.roleArn]
+# The CRD takes exactly one of s3Target and ibmCosTarget, and the API sets only S3 targets.
+minimal:
+  s3Target: {bucketName: e2e-archive-logs-bucket, region: e2e-archive-logs-region}
+# The update step sets the target inactive and reads it back from archiveSpec.
+update:
+  field: isActive
+  value: false
+# The spec that chart 0.5 accepts.
+upgrade:
+  from: '0.5'
+  spec:
+    s3Target: {bucketName: '@{env:LOGS_BUCKET}', region: '@{env:AWS_REGION}'}
+  field: format
+  value: cxDataV1

@@ -19,6 +19,7 @@ package utils
 
 // The kinds that the operator generator writes.
 const (
+	ArchiveLogsTargetKind = "ArchiveLogsTarget"
 	DashboardKind         = "Dashboard"
 	DashboardsFolderKind  = "DashboardsFolder"
 	Events2MetricKind     = "Events2Metric"

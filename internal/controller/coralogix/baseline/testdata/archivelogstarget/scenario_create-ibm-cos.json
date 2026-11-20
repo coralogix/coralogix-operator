@@ -5,7 +5,8 @@
       "ibmCosTarget": {
         "bucketCrn": "crn:v1:bluemix:public:cloud-object-storage:global:a/0:0:bucket:cxo",
         "endpoint": "s3.eu-de.cloud-object-storage.appdomain.cloud"
-      }
+      },
+      "isActive": true
     },
     "requests": [],
     "result": {
@@ -17,7 +18,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
@@ -38,7 +39,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
