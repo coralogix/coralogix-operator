@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ConfigurationGroupReconciler reconciles a ConfigurationGroup object.
@@ -65,12 +64,11 @@ func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log l
 	if err != nil {
 		return fmt.Errorf("error on building the create request of ConfigurationGroup: %w", err)
 	}
-	log.Info("Creating remote ConfigurationGroup", "ConfigurationGroup", utils.FormatJSON(body))
+	log.Info("Creating remote ConfigurationGroup")
 	resp, httpResp, err := r.Client.ConfigurationGroupServiceCreateConfigurationGroup(ctx).ConfigurationGroupServiceCreateConfigurationGroupRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote ConfigurationGroup: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ConfigurationGroup created", "response", utils.FormatJSON(resp))
 	if resp == nil {
 		return fmt.Errorf("the create response of ConfigurationGroup has no resource")
 	}
@@ -89,12 +87,12 @@ func (r *ConfigurationGroupReconciler) HandleUpdate(ctx context.Context, log log
 	if err != nil {
 		return fmt.Errorf("error on building the update request of ConfigurationGroup: %w", err)
 	}
-	log.Info("Updating remote ConfigurationGroup", "id", id, "ConfigurationGroup", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.ConfigurationGroupServiceUpdateConfigurationGroup(ctx, id).ConfigurationGroupServiceUpdateConfigurationGroupRequest(*body).UpdateMask(cr.UpdateMask()).Execute()
+	log.Info("Updating remote ConfigurationGroup", "id", id)
+	_, httpResp, err := r.Client.ConfigurationGroupServiceUpdateConfigurationGroup(ctx, id).ConfigurationGroupServiceUpdateConfigurationGroupRequest(*body).UpdateMask(cr.UpdateMask()).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote ConfigurationGroup %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ConfigurationGroup updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote ConfigurationGroup updated", "id", id)
 	return nil
 }
 
