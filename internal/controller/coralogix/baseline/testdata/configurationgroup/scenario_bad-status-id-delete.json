@@ -68,7 +68,7 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteDeletionFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
@@ -92,7 +92,7 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteDeletionFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }

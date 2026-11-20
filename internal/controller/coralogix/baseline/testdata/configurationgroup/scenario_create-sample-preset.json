@@ -80,7 +80,7 @@
         "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
         "query": {
           "update_mask": [
-            "name,description,tags,priorityOrder,family.description,family.active,family.preset"
+            "description,family.active,family.description,name,priorityOrder,tags,family.preset"
           ]
         },
         "body": {
@@ -100,7 +100,6 @@
             }
           },
           "name": "production-k8s-collectors",
-          "priorityOrder": 0,
           "tags": [
             "production"
           ]

@@ -106,7 +106,7 @@
         "path": "/mgmt/openapi/5/fleet-management/configuration-groups/v1/<id-1>",
         "query": {
           "update_mask": [
-            "name,description,tags,priorityOrder,family.description,family.active,family.raw"
+            "description,family.active,family.description,name,priorityOrder,tags,family.raw"
           ]
         },
         "body": {
