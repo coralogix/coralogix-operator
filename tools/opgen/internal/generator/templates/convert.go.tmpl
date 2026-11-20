@@ -31,7 +31,21 @@ import (
 	"{{.Module}}/internal/config"
 {{- end}}
 )
-{{- if .Mask}}
+{{- if .MaskArms}}
+
+// UpdateMask returns every field that Update sends. The operator keeps no prior spec, so Update
+// sets every field, and a field that the spec leaves out is cleared. Of a oneOf, the mask names
+// only the arm that the spec sets: the API rejects a mask with an arm that the body does not have.
+func (in *{{.Kind}}) UpdateMask() string {
+	paths := []string{ {{- range $i, $p := maskPaths .Mask}}{{if $i}}, {{end}}"{{$p}}"{{end -}} }
+{{- range .MaskArms}}
+	if {{.Check}} {
+		paths = append(paths, "{{.Path}}")
+	}
+{{- end}}
+	return strings.Join(paths, ",")
+}
+{{- else if .Mask}}
 
 // {{.Kind}}UpdateMask lists every field that Update sends. The operator keeps no prior spec, so
 // Update sets every field, and a field that the spec leaves out is cleared.
@@ -88,7 +102,7 @@ func (in *{{.Kind}}) UpdateRequest(ctx context.Context{{if .HasNameLookup}}, cli
 	{{- end}}
 {{- end}}
 {{- if .MaskInBody}}
-	out.{{.MaskBodyField}} = {{if .MaskBodyValue}}{{.Kind}}UpdateMask{{else}}ptr.To({{.Kind}}UpdateMask){{end}}
+	out.{{.MaskBodyField}} = {{if .MaskBodyValue}}{{template "updateMask" .}}{{else}}ptr.To({{template "updateMask" .}}){{end}}
 {{- end}}
 {{- range .UpdateValues}}
 	out.{{.Field}} = {{.Expr}}
@@ -116,3 +130,5 @@ func {{.Func}}(value string) ({{.SDKType}}, error) {
 	return v, nil
 }
 {{end -}}
+
+{{- define "updateMask"}}{{if .MaskArms}}in.UpdateMask(){{else}}{{.Kind}}UpdateMask{{end}}{{end}}

@@ -1,0 +1,8 @@
+resource: MaskThing
+mode: existing
+validators:
+  inferred: true
+api:
+  # The API rejects the bare path rule: the mask names rule.enabled, rule.note, and the arm.
+  updateMask:
+    nested: [rule]

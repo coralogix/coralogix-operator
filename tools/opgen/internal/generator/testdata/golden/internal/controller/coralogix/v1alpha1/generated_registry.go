@@ -58,6 +58,12 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.HookThingKind, err)
 	}
+	if err := (&MaskThingReconciler{
+		Client:   clientSet.MaskThings(),
+		Interval: intervals[utils.MaskThingKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.MaskThingKind, err)
+	}
 	if err := (&PatchThingReconciler{
 		Client:   clientSet.PatchThings(),
 		Interval: intervals[utils.PatchThingKind],
