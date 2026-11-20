@@ -45,8 +45,11 @@ func renderKind(d *kindData, full *omap) (map[string][]byte, error) {
 	d.Header = version.GoHeader
 	files := map[string][]byte{}
 	e2eTemplate := "e2e_test.go.tmpl"
-	if d.Overwrite {
+	switch {
+	case d.Overwrite:
 		e2eTemplate = "e2e_overwrite_test.go.tmpl"
+	case d.Singleton:
+		e2eTemplate = "e2e_singleton_test.go.tmpl"
 	}
 	for _, f := range []struct{ path, tmpl string }{
 		{apiDir + "/" + d.Lower + "_types.go", "types.go.tmpl"},

@@ -36,7 +36,9 @@ type e2eFile struct {
 	Fixtures []e2eFixture `yaml:"fixtures"`
 	// Minimal adds fields that the API needs although the CRD marks them optional.
 	Minimal map[string]any `yaml:"minimal"`
-	// Substitutions replace sample values with run-specific values in generated tests.
+	// Substitutions replace sample values with run-specific values in generated tests. A value
+	// that is exactly @{env:NAME} is the environment variable NAME when the live test runs, such as
+	// a bucket that CI holds as a secret; the offline coverage test keeps the sample value.
 	Substitutions map[string]string `yaml:"substitutions"`
 	// Upgrade freezes the spec accepted by a released chart.
 	Upgrade *e2eUpgrade `yaml:"upgrade"`
@@ -129,6 +131,8 @@ type e2eData struct {
 	Serial                bool
 	Fixtures              []fixtureData
 	Substitutions         []substitutionData
+	// HasEnv: a substitution reads an environment variable, so the test imports os.
+	HasEnv bool
 	Upgrade               *upgradeData
 	FullJSON, MinimalJSON string // Go string literals of the spec as JSON
 	NameField             string // the Go path of a string name, "" when there is none
@@ -170,11 +174,22 @@ type fixtureData struct {
 
 type substitutionData struct {
 	From, To string
+	// Env is the environment variable of an @{env:NAME} substitution, "" for another one.
+	Env string
 }
 
 type upgradeData struct {
 	From, SpecJSON, Field, Value string
+	// Env lists the environment variables that @{env:NAME} names in the spec or the value.
+	Env []string
 }
+
+// envSubstitution is a substitution value that names an environment variable. envReference finds
+// one in a longer text.
+var (
+	envSubstitution = regexp.MustCompile(`^@\{env:([A-Z_][A-Z0-9_]*)\}$`)
+	envReference    = regexp.MustCompile(`@\{env:([A-Z_][A-Z0-9_]*)\}`)
+)
 
 // updateData is the update step as Go code: the field that it changes, the value that it sets,
 // the value that the API then returns, and the expression that reads it from the response "got".
@@ -278,7 +293,14 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		e2e.Fixtures = append(e2e.Fixtures, fixtureData{fixture.Kind, fixture.Suffix, fixture.StatusField, goString(string(encoded))})
 	}
 	for _, from := range sortedKeys(file.Substitutions) {
-		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, file.Substitutions[from]})
+		sub := substitutionData{From: from, To: file.Substitutions[from]}
+		if m := envSubstitution.FindStringSubmatch(sub.To); m != nil {
+			sub.Env, sub.To = m[1], ""
+			e2e.HasEnv = true
+		} else if strings.Contains(sub.To, "@{env:") {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":substitutions." + from, msg: "an environment substitution is the whole value: @{env:NAME}"}
+		}
+		e2e.Substitutions = append(e2e.Substitutions, sub)
 	}
 	if file.Upgrade != nil {
 		for name := range file.Upgrade.Spec {
@@ -296,7 +318,12 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		e2e.Upgrade = &upgradeData{file.Upgrade.From, string(encoded), file.Upgrade.Field, file.Upgrade.Value}
+		e2e.Upgrade = &upgradeData{From: file.Upgrade.From, SpecJSON: string(encoded), Field: file.Upgrade.Field, Value: file.Upgrade.Value}
+		for _, m := range envReference.FindAllStringSubmatch(string(encoded)+file.Upgrade.Value, -1) {
+			if !slices.Contains(e2e.Upgrade.Env, m[1]) {
+				e2e.Upgrade.Env = append(e2e.Upgrade.Env, m[1])
+			}
+		}
 	}
 	if d.Overwrite {
 		if e2e.Overwrite, err = overwriteStep(d, ix, file, full); err != nil {
@@ -304,6 +331,9 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		}
 		e2e.Serial = true // every write replaces the list of the whole account
 		return full, minimal, e2e, nil
+	}
+	if d.Singleton {
+		e2e.Serial = true // every CR writes the one resource of the team
 	}
 	candidates := updateCandidates(d.Spec, full)
 	for _, candidate := range candidates {
@@ -967,6 +997,18 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		// The CR holds a createAs field flat. The response nests it in an object.
 		var notNil []string
 		owner, name := resource.Name, f.API
+		if parent, ok := d.inlined[f.API]; ok {
+			// An inline line on the resource: the response nests the field in an object.
+			object, err := ix.field(resource.Name, parent.Field)
+			if err != nil {
+				return nil, err
+			}
+			base += object.Name + "."
+			if strings.HasPrefix(object.Want, "*") {
+				notNil = append(notNil, strings.TrimSuffix(base, "."))
+			}
+			owner = strings.TrimPrefix(object.Want, "*")
+		}
 		if f.fold != nil {
 			object, err := ix.field(resource.Name, f.fold.Object)
 			if err != nil {

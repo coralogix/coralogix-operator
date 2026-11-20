@@ -532,6 +532,9 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 			msg: fmt.Sprintf("the file is for resource %q, but the kind is resource %q", file.Resource, entry.Resource)}
 	}
 	for _, line := range file.Lines() {
+		if line.Component == entry.Resource && file.Field(line.Component, line.Field).Inline {
+			continue // reshape moved the fields of the object into the resource, and checked the line
+		}
 		ok := false
 		if doc.Components != nil && doc.Components.Schemas != nil {
 			if proxy, found := doc.Components.Schemas.Get(line.Component); found && proxy.Schema() != nil && proxy.Schema().Properties != nil {
@@ -541,7 +544,9 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 				if found && change.Skip && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "the contract already marks this field read-only"}
 				}
-				if found && change.Skip && line.Component == entry.Resource && !requestHasField(doc, entry.Resource, file, line.Field) {
+				// A skipped arm of a oneOf group of the response is used even when the requests omit it: the
+				// skip removes the arm, so the groups of Get and the requests agree.
+				if found && change.Skip && line.Component == entry.Resource && !requestHasField(doc, entry.Resource, file, line.Field) && !slices.Contains(file.PrunedArms, line.Field) {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "Create and Update already omit this field"}
 				}
 				if found && change.ReadOnly && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {

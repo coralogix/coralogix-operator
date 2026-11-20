@@ -8,6 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	{{- if .E2E.HasEnv}}
+	"os"
+	{{- end}}
 	"strconv"
 	"strings"
 	"time"
@@ -170,7 +173,15 @@ func remove{{.Kind}}Generated(ctx context.Context, apiClient *{{.SDKAlias}}.{{.C
 func new{{.Kind}}Generated(name, spec string) *coralogixv1alpha1.{{.Kind}} {
 	cr := &coralogixv1alpha1.{{.Kind}}{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}}
 	{{- range .E2E.Substitutions}}
+	{{- if .Env}}
+	{
+		value := os.Getenv({{printf "%q" .Env}})
+		Expect(value).NotTo(BeEmpty(), "set {{.Env}} for the e2e test of {{$.Kind}}")
+		spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, value)
+	}
+	{{- else}}
 	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name))
+	{{- end}}
 	{{- end}}
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
