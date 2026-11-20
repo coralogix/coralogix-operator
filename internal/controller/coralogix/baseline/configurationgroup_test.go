@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"testing"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -64,11 +65,34 @@ func init() {
 	})
 }
 
+func TestHideRenderedConfigurationsSortsByName(t *testing.T) {
+	remote := func(name string) map[string]any {
+		return map[string]any{"name": name, "rawConfiguration": "exporters: {}", "hash": "abc"}
+	}
+	answer := func(names ...string) any {
+		remotes := []any{}
+		for _, name := range names {
+			remotes = append(remotes, remote(name))
+		}
+		return map[string]any{"family": map[string]any{"preset": map[string]any{"remoteConfigurations": remotes}}}
+	}
+	got := hideRenderedConfigurations(answer("cluster-collector", "agent"))
+	want := hideRenderedConfigurations(answer("agent", "cluster-collector"))
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("the order of the API changes the answer:\n got %v\nwant %v", got, want)
+	}
+	first := want.(map[string]any)["family"].(map[string]any)["preset"].(map[string]any)["remoteConfigurations"].([]any)[0].(map[string]any)
+	if first["name"] != "agent" || first["rawConfiguration"] != cgRendered || first["hash"] != cgRendered {
+		t.Fatalf("first remote configuration = %v", first)
+	}
+}
+
 // cgRendered stands for the collector configuration that the API renders from a preset template.
 const cgRendered = "<rendered from the template>"
 
 // hideRenderedConfigurations writes cgRendered for the text and hash of each remote configuration
-// of a preset family. The fake does not render templates, and the operator never reads them.
+// of a preset family, and sorts them by name: the API can answer them in any order. The fake does
+// not render templates, and the operator never reads them.
 func hideRenderedConfigurations(resp any) any {
 	group, _ := resp.(map[string]any)
 	family, _ := group["family"].(map[string]any)
@@ -79,7 +103,14 @@ func hideRenderedConfigurations(resp any) any {
 			remote["rawConfiguration"], remote["hash"] = cgRendered, cgRendered
 		}
 	}
+	sort.SliceStable(remotes, func(i, j int) bool { return remoteName(remotes[i]) < remoteName(remotes[j]) })
 	return resp
+}
+
+func remoteName(item any) string {
+	remote, _ := item.(map[string]any)
+	name, _ := remote["name"].(string)
+	return name
 }
 
 // cgYAML is a small collector configuration. The API stores it without the last newline.
