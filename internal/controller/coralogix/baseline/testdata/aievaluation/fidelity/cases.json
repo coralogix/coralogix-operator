@@ -374,6 +374,350 @@
           "path": "/ai/evaluations/v3/00000000-0000-4000-8000-00000000dead"
         }
       ]
+    },
+    {
+      "name": "update with an updateMask",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "pii": {
+                "categories": [
+                  "EMAIL_ADDRESS"
+                ]
+              }
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PATCH",
+          "path": "/ai/evaluations/v3/{{id}}",
+          "body": {
+            "threshold": 0.6,
+            "isEnabled": false,
+            "updateMask": "threshold"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/ai/evaluations/v3/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/ai/evaluations/v3/{{id}}",
+          "body": {
+            "updateMask": "threshold"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/ai/evaluations/v3/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/ai/evaluations/v3/{{id}}",
+          "body": {
+            "config": {
+              "toxicity": {}
+            },
+            "updateMask": "config"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/ai/evaluations/v3/{{id}}"
+        },
+        {
+          "method": "PATCH",
+          "path": "/ai/evaluations/v3/{{id}}",
+          "body": {
+            "updateMask": "isEnabled"
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/ai/evaluations/v3/{{id}}",
+          "body": {
+            "config": {
+              "sexism": {}
+            },
+            "updateMask": "config.sexism"
+          }
+        },
+        {
+          "method": "PATCH",
+          "path": "/ai/evaluations/v3/{{id}}",
+          "body": {
+            "threshold": 0.5,
+            "updateMask": "threshold,unknownField"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/ai/evaluations/v3/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create and delete every config arm that the other cases do not create",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "competition": {
+                "competitors": [
+                  "Example Corp"
+                ]
+              }
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm0"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm0}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "hallucinationCompleteness": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm1"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm1}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "hallucinationContextAdherence": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm2"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm2}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "hallucinationContextRelevance": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm3"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm3}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "hallucinationCorrectness": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm4"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm4}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "hallucinationTaskAdherence": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm5"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm5}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "languageMismatch": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm6"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm6}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "restrictedTopics": {
+                "topics": [
+                  "politics"
+                ]
+              }
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm7"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm7}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "sqlAllowedTables": {
+                "tables": [
+                  "orders"
+                ]
+              }
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm8"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm8}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "sqlHallucination": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm9"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm9}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "sqlReadOnly": {}
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm10"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm10}}"
+        },
+        {
+          "method": "POST",
+          "path": "/ai/evaluations/v3",
+          "body": {
+            "application": "{{application}}",
+            "subsystem": "{{subsystem}}",
+            "target": "RESPONSE",
+            "config": {
+              "sqlRestrictedTables": {
+                "tables": [
+                  "users"
+                ]
+              }
+            },
+            "isEnabled": true,
+            "threshold": 0.8
+          },
+          "capture": "arm11"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/evaluations/v3/{{arm11}}"
+        }
+      ]
     }
   ]
 }

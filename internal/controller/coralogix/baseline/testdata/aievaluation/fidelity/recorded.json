@@ -463,6 +463,546 @@
           }
         }
       ]
+    },
+    {
+      "name": "update with an updateMask",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.6,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.6,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "pii": {
+                  "categories": [
+                    "EMAIL_ADDRESS"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"path\": [\n      \"updateMask\"\n    ],\n    \"message\": \"Field \\\"isEnabled\\\" is required and cannot be cleared via update_mask.\"\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"message\": \"Unknown field path \\\"config.sexism\\\" in update_mask.\",\n    \"path\": [\n      \"updateMask\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"code\": \"custom\",\n    \"message\": \"Unknown field path \\\"unknown_field\\\" in update_mask.\",\n    \"path\": [\n      \"updateMask\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "toxicity": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{id}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create and delete every config arm that the other cases do not create",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "competition": {
+                  "competitors": [
+                    "Example Corp"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm0}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm0}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationCompleteness": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm1}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm1}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationContextAdherence": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm2}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm2}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationContextRelevance": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm3}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm3}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationCorrectness": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm4}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm4}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "hallucinationTaskAdherence": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm5}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm5}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "languageMismatch": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm6}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm6}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "restrictedTopics": {
+                  "topics": [
+                    "politics"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm7}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm7}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlAllowedTables": {
+                  "tables": [
+                    "orders"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm8}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm8}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlHallucination": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm9}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm9}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlReadOnly": {}
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm10}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm10}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiEvaluation": {
+              "application": "{{application}}",
+              "companyId": "\u003credacted\u003e",
+              "config": {
+                "sqlRestrictedTables": {
+                  "tables": [
+                    "users"
+                  ]
+                }
+              },
+              "createdAt": "\u003ctime\u003e",
+              "createdBy": "",
+              "id": "{{arm11}}",
+              "isEnabled": true,
+              "subsystem": "{{subsystem}}",
+              "target": "RESPONSE",
+              "threshold": 0.8,
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{arm11}}"
+          }
+        }
+      ]
     }
   ]
 }

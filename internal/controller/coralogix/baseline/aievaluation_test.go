@@ -25,6 +25,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"unicode"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -282,6 +283,13 @@ func aiEvaluationScenarios() map[string]func(h *harness) {
 			h.Reconcile("reconcile again: the API answers as it should")
 		},
 
+		"create-empty-id-after-remote-create": func(h *harness) {
+			aiEvaluations(h).loseNextID()
+			h.Create("create: the API stores the evaluation, and the answer has an empty id", aiEvalMinimalManifest)
+			h.Reconcile("reconcile again: the stored evaluation takes the slot of the new one")
+			h.Delete("delete: the operator has no id of the stored evaluation")
+		},
+
 		"create-malformed-response": func(h *harness) {
 			aiEvaluations(h).answerNext(http.MethodPost, "not an evaluation")
 			h.Create("create: the answer cannot be decoded", aiEvalMinimalManifest)
@@ -499,7 +507,8 @@ func aiEvalItems(n int) string {
 // The status codes, error texts, and stored values follow fidelity/recorded.json, which the real
 // API answered:
 //   - A PATCH with no updateMask updates each field in the body. A config in the body replaces
-//     the stored config, also with another arm.
+//     the stored config, also with another arm. With an updateMask, only the listed fields
+//     change, and a listed threshold that the body leaves out is cleared.
 //   - isEnabled is false when Create leaves it out. A promptInjection with no additionalContext
 //     stores "".
 //   - The API answers 404 for an evaluation that does not exist, and 400 for an id that is not a
@@ -515,6 +524,8 @@ type aiEvaluationFake struct {
 	// next holds one forced answer per method. The next request with that method gets it, and the
 	// fake does not run the request.
 	next map[string]forcedAnswer
+	// loseNextCreatedID makes the next Create store the evaluation and answer with an empty id.
+	loseNextCreatedID bool
 }
 
 func newAIEvaluationFake() *aiEvaluationFake {
@@ -551,6 +562,14 @@ func (f *aiEvaluationFake) answerNext(method string, body any) {
 	f.next[method] = forcedAnswer{status: http.StatusOK, body: body}
 }
 
+// loseNextID makes the next Create store the evaluation, as the real API does, and answer
+// with an empty id, so the operator cannot know the id.
+func (f *aiEvaluationFake) loseNextID() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.loseNextCreatedID = true
+}
+
 // answerNextError makes the next request with the method get an error answer.
 func (f *aiEvaluationFake) answerNextError(method string, status int, reason string) {
 	f.mu.Lock()
@@ -575,7 +594,14 @@ func (f *aiEvaluationFake) handle(method, path string, _ url.Values, body any) (
 	in, _ := body.(map[string]any)
 	switch {
 	case method == http.MethodPost && rest == "":
-		return f.create(in)
+		status, resp := f.create(in)
+		if f.loseNextCreatedID && status == http.StatusOK {
+			f.loseNextCreatedID = false
+			created := copyMap(resp.(map[string]any)["aiEvaluation"].(map[string]any))
+			created["id"] = ""
+			resp = map[string]any{"aiEvaluation": created}
+		}
+		return status, resp
 	case method == http.MethodGet && id != "" && !strings.Contains(id, "/"):
 		stored, status, resp := f.find(id)
 		if stored == nil {
@@ -662,6 +688,19 @@ func (f *aiEvaluationFake) update(id string, in map[string]any) (int, any) {
 	stored, status, resp := f.find(id)
 	if stored == nil {
 		return status, resp
+	}
+	// With an updateMask, only the listed fields change, and a listed threshold that the body
+	// leaves out is cleared. Without one, each field in the body changes.
+	if mask, _ := in["updateMask"].(string); mask != "" {
+		masked := map[string]any{}
+		for _, path := range strings.Split(mask, ",") {
+			if v, ok := in[path]; ok {
+				masked[path] = v
+			} else if path == "threshold" {
+				delete(stored, "threshold")
+			}
+		}
+		in = masked
 	}
 	application, _ := in["application"].(string)
 	subsystem, _ := in["subsystem"].(string)
@@ -755,7 +794,7 @@ func aiEvalCheckUpdate(id string, in map[string]any) []zodIssue {
 	}
 	for _, path := range strings.Split(mask, ",") {
 		if !aiEvalMaskPaths[path] {
-			issues = append(issues, zodCustom(fmt.Sprintf("Unknown field path %q in update_mask.", path), "updateMask"))
+			issues = append(issues, zodCustom(fmt.Sprintf("Unknown field path %q in update_mask.", snakeCase(path)), "updateMask"))
 		}
 	}
 	if len(issues) != 0 {
@@ -763,10 +802,23 @@ func aiEvalCheckUpdate(id string, in map[string]any) []zodIssue {
 	}
 	for _, path := range strings.Split(mask, ",") {
 		if _, ok := in[path]; !ok && path != "threshold" {
-			issues = append(issues, zodCustom(fmt.Sprintf("Field %q is required and cannot be cleared via update_mask.", path), "updateMask"))
+			issues = append(issues, zodIssue{{"code", "custom"}, zodPath("updateMask"), {"message", fmt.Sprintf("Field %q is required and cannot be cleared via update_mask.", path)}})
 		}
 	}
 	return issues
+}
+
+// snakeCase is the proto spelling of a field path, as the API names it in errors.
+func snakeCase(path string) string {
+	var b strings.Builder
+	for _, r := range path {
+		if unicode.IsUpper(r) {
+			b.WriteByte('_')
+			r = unicode.ToLower(r)
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 func aiEvalCheckThreshold(in map[string]any) []zodIssue {
