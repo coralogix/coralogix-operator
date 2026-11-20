@@ -8,6 +8,8 @@ on:
     secrets:
       api_key:
         required: true
+      ai_prefix:
+        required: false
       logs_bucket:
         required: true
       metrics_bucket:
@@ -64,6 +66,10 @@ jobs:
         run: |
           make deploy
       - name: Run e2e Tests
+        env:
+          # The generated AIEvaluation tests use the last AI application of the CI preparation.
+          AI_EVALUATION_APPLICATION: ${{ secrets.ai_prefix }}-20
+          AI_EVALUATION_SUBSYSTEM: ci-acceptance
         run: bash .github/scripts/ci-account.sh lookup make e2e-tests
       - name: Collect Operator Logs
         if: always()

@@ -61,7 +61,20 @@
       "target": "response",
       "threshold": "2"
     },
-    "requests": [],
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-1>",
+        "body": {
+          "config": {
+            "toxicity": {}
+          },
+          "isEnabled": true,
+          "threshold": 2
+        },
+        "status": 400
+      }
+    ],
     "result": {
       "error": true
     },

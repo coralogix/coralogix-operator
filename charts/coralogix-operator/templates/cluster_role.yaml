@@ -60,7 +60,6 @@ rules:
       - coralogix.com
     resources:
       - aicustomevaluations
-      - aievaluations
       - alerts
       - alertschedulers
       - alertsets
@@ -91,7 +90,6 @@ rules:
       - coralogix.com
     resources:
       - aicustomevaluations/finalizers
-      - aievaluations/finalizers
       - alerts/finalizers
       - alertschedulers/finalizers
       - alertsets/finalizers
@@ -116,7 +114,6 @@ rules:
       - coralogix.com
     resources:
       - aicustomevaluations/status
-      - aievaluations/status
       - alerts/status
       - alertschedulers/status
       - alertsets/status
@@ -151,6 +148,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - aievaluations
       - archivelogstargets
       - dashboards
       - dashboardsfolders
@@ -174,6 +172,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - aievaluations/finalizers
       - archivelogstargets/finalizers
       - dashboards/finalizers
       - dashboardsfolders/finalizers
@@ -191,6 +190,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - aievaluations/status
       - archivelogstargets/status
       - dashboards/status
       - dashboardsfolders/status

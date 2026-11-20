@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -52,13 +53,13 @@ var _ = Describe("AIEvaluation PII", Ordered, Serial, func() {
 		application          aiEvaluationApplicationRef
 		target               string
 		aiEvaluationCRName   = uniqueName("ai-evaluation-pii")
-		createdPIICategories = []coralogixv1alpha1.AIEvaluationPIICategory{
-			coralogixv1alpha1.AIEvaluationPIICategoryEmailAddress,
-			coralogixv1alpha1.AIEvaluationPIICategoryCreditCard,
+		createdPIICategories = []string{
+			"EMAIL_ADDRESS",
+			"CREDIT_CARD",
 		}
-		updatedPIICategories = []coralogixv1alpha1.AIEvaluationPIICategory{
-			coralogixv1alpha1.AIEvaluationPIICategoryPhoneNumber,
-			coralogixv1alpha1.AIEvaluationPIICategoryUSSSN,
+		updatedPIICategories = []string{
+			"PHONE_NUMBER",
+			"US_SSN",
 		}
 	)
 
@@ -110,8 +111,8 @@ var _ = Describe("AIEvaluation PII", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -134,7 +135,7 @@ var _ = Describe("AIEvaluation PII", Ordered, Serial, func() {
 		modified := aiEvaluation.DeepCopy()
 		modified.Spec.Threshold = resource.MustParse("0.9")
 		modified.Spec.IsEnabled = ptr.To(false)
-		modified.Spec.Config.PII.Categories = updatedPIICategories
+		modified.Spec.Config.Pii.Categories = updatedPIICategories
 		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
 
 		By("Verifying AIEvaluation is updated in Coralogix backend")
@@ -222,8 +223,8 @@ var _ = Describe("AIEvaluation Allowed Topics", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -334,8 +335,8 @@ var _ = Describe("AIEvaluation Competition", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -389,8 +390,8 @@ func init() {
 		"AIEvaluation Hallucination Completeness",
 		"ai-evaluation-hallucination-completeness",
 		aievaluations.EVALUATIONTYPE_HALLUCINATION_COMPLETENESS,
-		func(config *coralogixv1alpha1.AIEvaluationConfig) {
-			config.HallucinationCompleteness = coralogixv1alpha1.NewAIEvaluationHallucinationCompletenessConfig()
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig) {
+			config.HallucinationCompleteness = &map[string]string{}
 		},
 		expectRemoteAIEvaluationHallucinationCompleteness,
 	)
@@ -399,8 +400,8 @@ func init() {
 		"AIEvaluation Hallucination Context Adherence",
 		"ai-evaluation-hallucination-context-adherence",
 		aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_ADHERENCE,
-		func(config *coralogixv1alpha1.AIEvaluationConfig) {
-			config.HallucinationContextAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationContextAdherenceConfig()
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig) {
+			config.HallucinationContextAdherence = &map[string]string{}
 		},
 		expectRemoteAIEvaluationHallucinationContextAdherence,
 	)
@@ -409,8 +410,8 @@ func init() {
 		"AIEvaluation Hallucination Context Relevance",
 		"ai-evaluation-hallucination-context-relevance",
 		aievaluations.EVALUATIONTYPE_HALLUCINATION_CONTEXT_RELEVANCE,
-		func(config *coralogixv1alpha1.AIEvaluationConfig) {
-			config.HallucinationContextRelevance = coralogixv1alpha1.NewAIEvaluationHallucinationContextRelevanceConfig()
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig) {
+			config.HallucinationContextRelevance = &map[string]string{}
 		},
 		expectRemoteAIEvaluationHallucinationContextRelevance,
 	)
@@ -419,8 +420,8 @@ func init() {
 		"AIEvaluation Hallucination Correctness",
 		"ai-evaluation-hallucination-correctness",
 		aievaluations.EVALUATIONTYPE_HALLUCINATION_CORRECTNESS,
-		func(config *coralogixv1alpha1.AIEvaluationConfig) {
-			config.HallucinationCorrectness = coralogixv1alpha1.NewAIEvaluationHallucinationCorrectnessConfig()
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig) {
+			config.HallucinationCorrectness = &map[string]string{}
 		},
 		expectRemoteAIEvaluationHallucinationCorrectness,
 	)
@@ -429,8 +430,8 @@ func init() {
 		"AIEvaluation Hallucination Task Adherence",
 		"ai-evaluation-hallucination-task-adherence",
 		aievaluations.EVALUATIONTYPE_HALLUCINATION_TASK_ADHERENCE,
-		func(config *coralogixv1alpha1.AIEvaluationConfig) {
-			config.HallucinationTaskAdherence = coralogixv1alpha1.NewAIEvaluationHallucinationTaskAdherenceConfig()
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig) {
+			config.HallucinationTaskAdherence = &map[string]string{}
 		},
 		expectRemoteAIEvaluationHallucinationTaskAdherence,
 	)
@@ -495,8 +496,8 @@ var _ = Describe("AIEvaluation Language Mismatch", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -606,8 +607,8 @@ var _ = Describe("AIEvaluation Prompt Injection", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -630,7 +631,7 @@ var _ = Describe("AIEvaluation Prompt Injection", Ordered, Serial, func() {
 		modified := aiEvaluation.DeepCopy()
 		modified.Spec.Threshold = resource.MustParse("0.9")
 		modified.Spec.IsEnabled = ptr.To(false)
-		modified.Spec.Config.PromptInjection.AdditionalContext = updatedAdditionalContext
+		modified.Spec.Config.PromptInjection.AdditionalContext = ptr.To(updatedAdditionalContext)
 		Expect(crClient.Patch(ctx, modified, client.MergeFrom(aiEvaluation))).To(Succeed())
 
 		By("Verifying AIEvaluation is updated in Coralogix backend")
@@ -718,8 +719,8 @@ var _ = Describe("AIEvaluation Restricted Topics", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -827,8 +828,8 @@ var _ = Describe("AIEvaluation Sexism", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -883,8 +884,8 @@ func init() {
 		aievaluations.EVALUATIONTYPE_SQL_ALLOWED_TABLES,
 		[]string{"orders", "customers"},
 		[]string{"invoices", "payments"},
-		func(config *coralogixv1alpha1.AIEvaluationConfig, values []string) {
-			config.SQLAllowedTables = &coralogixv1alpha1.AIEvaluationSQLAllowedTablesConfig{Tables: values}
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig, values []string) {
+			config.SqlAllowedTables = &coralogixv1alpha1.AIEvaluationSqlAllowedTablesConfig{Tables: values}
 		},
 		expectRemoteAIEvaluationSQLAllowedTables,
 	)
@@ -893,8 +894,8 @@ func init() {
 		"AIEvaluation SQL Hallucination",
 		"ai-evaluation-sql-hallucination",
 		aievaluations.EVALUATIONTYPE_SQL_HALLUCINATION,
-		func(config *coralogixv1alpha1.AIEvaluationConfig) {
-			config.SQLHallucination = coralogixv1alpha1.NewAIEvaluationSQLHallucinationConfig()
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig) {
+			config.SqlHallucination = &map[string]string{}
 		},
 		expectRemoteAIEvaluationSQLHallucination,
 	)
@@ -903,8 +904,8 @@ func init() {
 		"AIEvaluation SQL Read Only",
 		"ai-evaluation-sql-read-only",
 		aievaluations.EVALUATIONTYPE_SQL_READ_ONLY,
-		func(config *coralogixv1alpha1.AIEvaluationConfig) {
-			config.SQLReadOnly = coralogixv1alpha1.NewAIEvaluationSQLReadOnlyConfig()
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig) {
+			config.SqlReadOnly = &map[string]string{}
 		},
 		expectRemoteAIEvaluationSQLReadOnly,
 	)
@@ -915,8 +916,8 @@ func init() {
 		aievaluations.EVALUATIONTYPE_SQL_RESTRICTED_TABLES,
 		[]string{"secrets", "audit_logs"},
 		[]string{"payroll", "pii_exports"},
-		func(config *coralogixv1alpha1.AIEvaluationConfig, values []string) {
-			config.SQLRestrictedTables = &coralogixv1alpha1.AIEvaluationSQLRestrictedTablesConfig{Tables: values}
+		func(config *coralogixv1alpha1.AIEvaluationEvaluationConfig, values []string) {
+			config.SqlRestrictedTables = &coralogixv1alpha1.AIEvaluationSqlRestrictedTablesConfig{Tables: values}
 		},
 		expectRemoteAIEvaluationSQLRestrictedTables,
 	)
@@ -981,8 +982,8 @@ var _ = Describe("AIEvaluation Toxicity", Ordered, Serial, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI evaluation ID is not set")
@@ -1104,6 +1105,10 @@ func findAvailableAIEvaluationApplication(
 		if applicationName == "" || subsystem == "" {
 			continue
 		}
+		// The generated AIEvaluation tests own this application.
+		if applicationName == os.Getenv("AI_EVALUATION_APPLICATION") {
+			continue
+		}
 
 		target, available, err := availableAIEvaluationTarget(ctx, evaluationsClient, applicationName, subsystem)
 		if err != nil {
@@ -1160,7 +1165,7 @@ func availableAIEvaluationTarget(
 		}
 	}
 
-	for _, candidate := range []string{coralogixv1alpha1.AIEvaluationTargetResponse, coralogixv1alpha1.AIEvaluationTargetPrompt} {
+	for _, candidate := range []string{"response", "prompt"} {
 		if _, used := usedTargets[candidate]; !used {
 			return candidate, true, nil
 		}
@@ -1173,7 +1178,7 @@ func describeEmptyConfigAIEvaluation(
 	description string,
 	namePrefix string,
 	evaluationType aievaluations.EvaluationType,
-	configure func(*coralogixv1alpha1.AIEvaluationConfig),
+	configure func(*coralogixv1alpha1.AIEvaluationEvaluationConfig),
 	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation),
 ) {
 	Describe(description, Ordered, Serial, func() {
@@ -1236,8 +1241,8 @@ func describeEmptyConfigAIEvaluation(
 				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 				g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 				g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-				if fetched.Status.Id != nil {
-					aiEvaluationID = *fetched.Status.Id
+				if fetched.Status.ID != nil {
+					aiEvaluationID = *fetched.Status.ID
 					return nil
 				}
 				return fmt.Errorf("AI evaluation ID is not set")
@@ -1292,7 +1297,7 @@ func describeStringSetConfigAIEvaluation(
 	evaluationType aievaluations.EvaluationType,
 	createdValues []string,
 	updatedValues []string,
-	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
+	configure func(*coralogixv1alpha1.AIEvaluationEvaluationConfig, []string),
 	expectRemoteConfig func(Gomega, aievaluations.AiEvaluation, []string),
 ) {
 	Describe(description, Ordered, Serial, func() {
@@ -1356,8 +1361,8 @@ func describeStringSetConfigAIEvaluation(
 				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiEvaluationCRName, Namespace: testNamespace}, fetched)).To(Succeed())
 				g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 				g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-				if fetched.Status.Id != nil {
-					aiEvaluationID = *fetched.Status.Id
+				if fetched.Status.ID != nil {
+					aiEvaluationID = *fetched.Status.ID
 					return nil
 				}
 				return fmt.Errorf("AI evaluation ID is not set")
@@ -1414,9 +1419,9 @@ func newEmptyConfigAIEvaluation(
 	target string,
 	threshold resource.Quantity,
 	isEnabled bool,
-	configure func(*coralogixv1alpha1.AIEvaluationConfig),
+	configure func(*coralogixv1alpha1.AIEvaluationEvaluationConfig),
 ) *coralogixv1alpha1.AIEvaluation {
-	config := coralogixv1alpha1.AIEvaluationConfig{}
+	config := coralogixv1alpha1.AIEvaluationEvaluationConfig{}
 	configure(&config)
 
 	return &coralogixv1alpha1.AIEvaluation{
@@ -1443,9 +1448,9 @@ func newStringSetConfigAIEvaluation(
 	threshold resource.Quantity,
 	isEnabled bool,
 	values []string,
-	configure func(*coralogixv1alpha1.AIEvaluationConfig, []string),
+	configure func(*coralogixv1alpha1.AIEvaluationEvaluationConfig, []string),
 ) *coralogixv1alpha1.AIEvaluation {
-	config := coralogixv1alpha1.AIEvaluationConfig{}
+	config := coralogixv1alpha1.AIEvaluationEvaluationConfig{}
 	configure(&config, values)
 
 	return &coralogixv1alpha1.AIEvaluation{
@@ -1471,7 +1476,7 @@ func newPIIAIEvaluation(
 	target string,
 	threshold resource.Quantity,
 	isEnabled bool,
-	categories []coralogixv1alpha1.AIEvaluationPIICategory,
+	categories []string,
 ) *coralogixv1alpha1.AIEvaluation {
 	return &coralogixv1alpha1.AIEvaluation{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1484,8 +1489,8 @@ func newPIIAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
-				PII: &coralogixv1alpha1.AIEvaluationPIIConfig{
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+				Pii: &coralogixv1alpha1.AIEvaluationPiiConfig{
 					Categories: categories,
 				},
 			},
@@ -1513,7 +1518,7 @@ func newAllowedTopicsAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
 				AllowedTopics: &coralogixv1alpha1.AIEvaluationAllowedTopicsConfig{
 					Topics: topics,
 				},
@@ -1542,7 +1547,7 @@ func newCompetitionAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
 				Competition: &coralogixv1alpha1.AIEvaluationCompetitionConfig{
 					Competitors: competitors,
 				},
@@ -1570,8 +1575,8 @@ func newLanguageMismatchAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
-				LanguageMismatch: coralogixv1alpha1.NewAIEvaluationLanguageMismatchConfig(),
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+				LanguageMismatch: &map[string]string{},
 			},
 		},
 	}
@@ -1597,9 +1602,9 @@ func newPromptInjectionAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
 				PromptInjection: &coralogixv1alpha1.AIEvaluationPromptInjectionConfig{
-					AdditionalContext: additionalContext,
+					AdditionalContext: ptr.To(additionalContext),
 				},
 			},
 		},
@@ -1626,7 +1631,7 @@ func newRestrictedTopicsAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
 				RestrictedTopics: &coralogixv1alpha1.AIEvaluationRestrictedTopicsConfig{
 					Topics: topics,
 				},
@@ -1654,8 +1659,8 @@ func newSexismAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
-				Sexism: coralogixv1alpha1.NewAIEvaluationSexismConfig(),
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+				Sexism: &map[string]string{},
 			},
 		},
 	}
@@ -1680,8 +1685,8 @@ func newToxicityAIEvaluation(
 			Target:      target,
 			Threshold:   threshold,
 			IsEnabled:   ptr.To(isEnabled),
-			Config: coralogixv1alpha1.AIEvaluationConfig{
-				Toxicity: coralogixv1alpha1.NewAIEvaluationToxicityConfig(),
+			Config: coralogixv1alpha1.AIEvaluationEvaluationConfig{
+				Toxicity: &map[string]string{},
 			},
 		},
 	}
@@ -1703,7 +1708,7 @@ func getRemoteAIEvaluation(
 func expectRemoteAIEvaluationPIICategories(
 	g Gomega,
 	evaluation aievaluations.AiEvaluation,
-	expected []coralogixv1alpha1.AIEvaluationPIICategory,
+	expected []string,
 ) {
 	config := evaluation.GetConfig()
 	g.Expect(config.Pii).ToNot(BeNil())
@@ -1868,10 +1873,10 @@ func schemaPIICategories(categories []aievaluations.PiiCategory) []string {
 	return result
 }
 
-func expectedPIICategories(categories []coralogixv1alpha1.AIEvaluationPIICategory) []interface{} {
+func expectedPIICategories(categories []string) []interface{} {
 	result := make([]interface{}, 0, len(categories))
 	for _, category := range categories {
-		result = append(result, string(category))
+		result = append(result, category)
 	}
 	return result
 }
