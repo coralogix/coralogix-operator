@@ -101,6 +101,20 @@ type documents struct {
 }
 
 func (d *documents) forKind(entry kindEntry, file *overrides.File) (docType, error) {
+	if len(file.UnsupportedArms()) != 0 {
+		// The kind sees the contract without its unsupported arms; the other kinds keep them.
+		raw, err := withoutUnsupportedArms(d.raw, file)
+		if err != nil {
+			return nil, err
+		}
+		if file.Content != nil {
+			return opaqueDocument(raw, entry.Resource, file)
+		}
+		if raw, err = exclusiveBoundsExact(raw); err != nil {
+			return nil, err
+		}
+		return model.Load(raw)
+	}
 	if file == nil || file.Content == nil {
 		if d.shared == nil {
 			raw, err := exclusiveBoundsExact(d.raw)

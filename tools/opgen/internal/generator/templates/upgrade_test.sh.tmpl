@@ -7,6 +7,9 @@ mode="${1:?usage: $0 before|after|cleanup}"
 cr="upgrade-test-{{.Lower}}"
 namespace="default"
 name="${NAME:?NAME is required}"
+{{- range .E2E.Env}}
+: "${ {{- .}}:?{{.}} is required}"
+{{- end}}
 {{- if not .Overwrite}}
 id_file="${RUNNER_TEMP:-/tmp}/upgrade-test-{{.Lower}}.id"
 {{- end}}
@@ -48,6 +51,10 @@ before)
 {{.E2E.Upgrade.SpecJSON}}
 JSON
 )"
+{{- range .E2E.Env}}
+    # jq writes the value of {{.}} into each decoded string, so any character stays as it is.
+    spec="$(jq --arg value "${ {{- .}}}" 'walk(if type == "string" then gsub("@\\{env\\.{{.}}\\}"; $value) else . end)' <<<"$spec")"
+{{- end}}
     jq -n --arg name "$cr" --arg namespace "$namespace" --argjson spec "$spec" \
         '{apiVersion:"coralogix.com/v1alpha1", kind:"{{.Kind}}", metadata:{name:$name,namespace:$namespace}, spec:$spec}' \
         | kubectl apply -f -

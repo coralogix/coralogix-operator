@@ -689,20 +689,35 @@ func substString(s string, vars map[string]string) string {
 	return s
 }
 
+// substJSON writes each {{name}} of a request body. It substitutes inside the decoded keys and
+// string values, so a value with a quote or a backslash, such as an application name, stays the
+// exact string that it is.
 func substJSON(t *testing.T, v any, vars map[string]string) any {
 	t.Helper()
 	if v == nil {
 		return nil
 	}
-	raw, err := json.Marshal(v)
-	if err != nil {
-		t.Fatal(err)
+	var subst func(v any) any
+	subst = func(v any) any {
+		switch v := v.(type) {
+		case string:
+			return substString(v, vars)
+		case map[string]any:
+			out := make(map[string]any, len(v))
+			for key, value := range v {
+				out[substString(key, vars)] = subst(value)
+			}
+			return out
+		case []any:
+			out := make([]any, len(v))
+			for i, value := range v {
+				out[i] = subst(value)
+			}
+			return out
+		}
+		return v
 	}
-	var out any
-	if err := json.Unmarshal([]byte(substString(string(raw), vars)), &out); err != nil {
-		t.Fatal(err)
-	}
-	return out
+	return subst(roundTrip(t, v))
 }
 
 func roundTrip(t *testing.T, v any) any {
@@ -815,6 +830,17 @@ func TestLeakedStartingValue(t *testing.T) {
 	leak := map[string]any{"message": "Not Found: application team-app-20 not found"}
 	if name := leakedStartingValue(leak, map[string]any{"application": "team-app-20"}, vars); name != "application" {
 		t.Fatalf("an error text that names the application is not reported: got %q", name)
+	}
+}
+
+// A value with a quote or a backslash is sent as the exact string.
+func TestSubstJSONKeepsQuotesAndBackslashes(t *testing.T) {
+	vars := map[string]string{"application": `app"na\me`, "id": "3dc02998-0b50-4ea8-b68a-4779d716fa1f"}
+	body := map[string]any{"application": "{{application}}", "note": "of {{application}}", "ids": []any{"{{id}}"}}
+	got := substJSON(t, body, vars)
+	want := map[string]any{"application": `app"na\me`, "note": `of app"na\me`, "ids": []any{"3dc02998-0b50-4ea8-b68a-4779d716fa1f"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("substJSON = %v, want %v", got, want)
 	}
 }
 

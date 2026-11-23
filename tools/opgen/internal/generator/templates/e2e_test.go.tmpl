@@ -8,6 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+{{- if .E2E.Env}}
+	"os"
+{{- end}}
 	"strconv"
 	"strings"
 	"time"
@@ -46,6 +49,9 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 	)
 
 	BeforeAll(func{{if .E2E.Fixtures}}(ctx context.Context){{else}}(){{end}} {
+{{- if $.E2E.Env}}
+		require{{$.Kind}}Env()
+{{- end}}
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().{{.Accessor}}()
 		fullName = uniqueName("e2e-{{.Lower}}")
@@ -53,7 +59,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 {{- range .E2E.Fixtures}}
 		{
 			fixture := &coralogixv1alpha1.{{.Kind}}{ObjectMeta: metav1.ObjectMeta{Name: fullName + "{{.Suffix}}", Namespace: testNamespace}}
-			decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll({{.SpecJSON}}, "@{run}", fullName)))
+			decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll({{if $.E2E.Env}}expand{{$.Kind}}Env({{.SpecJSON}}){{else}}{{.SpecJSON}}{{end}}, "@{run}", fullName)))
 			decoder.DisallowUnknownFields()
 			Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
 			Expect(crClient.Create(ctx, fixture)).To(Succeed())
@@ -172,6 +178,9 @@ func new{{.Kind}}Generated(name, spec string) *coralogixv1alpha1.{{.Kind}} {
 	{{- range .E2E.Substitutions}}
 	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name))
 	{{- end}}
+	{{- if .E2E.Env}}
+	spec = expand{{.Kind}}Env(spec)
+	{{- end}}
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())
@@ -181,7 +190,33 @@ func new{{.Kind}}Generated(name, spec string) *coralogixv1alpha1.{{.Kind}} {
 	return cr
 }
 
-// waitFor{{.Kind}}Generated waits until the {{.Kind}} is synced, and returns its {{if .IDBits}}API {{end}}id.
+{{if .E2E.Env}}// require{{.Kind}}Env skips the test when an environment variable that it reads is not set, and
+// fails it in CI, where the workflow must set each one.
+func require{{.Kind}}Env() {
+	for _, name := range []string{ {{- range $i, $n := .E2E.Env}}{{if $i}}, {{end}}{{printf "%q" $n}}{{end -}} } {
+		if os.Getenv(name) != "" {
+			continue
+		}
+		if os.Getenv("CI") != "" {
+			Fail(name + " is not set")
+		}
+		Skip(name + " is not set")
+	}
+}
+
+// expand{{.Kind}}Env replaces each @{env.NAME} of a JSON spec with the value of the variable. The
+// placeholder is inside a JSON string, so the value is escaped for it: a quote, a backslash, or a
+// newline stays the exact character.
+func expand{{.Kind}}Env(spec string) string {
+	for _, name := range []string{ {{- range $i, $n := .E2E.Env}}{{if $i}}, {{end}}{{printf "%q" $n}}{{end -}} } {
+		quoted, err := json.Marshal(os.Getenv(name))
+		Expect(err).NotTo(HaveOccurred())
+		spec = strings.ReplaceAll(spec, "@{env."+name+"}", string(quoted[1:len(quoted)-1]))
+	}
+	return spec
+}
+
+{{end}}// waitFor{{.Kind}}Generated waits until the {{.Kind}} is synced, and returns its {{if .IDBits}}API {{end}}id.
 func waitFor{{.Kind}}Generated(ctx context.Context, crClient client.Client, name string) {{if .IDBits}}{{.IDGoType}}{{else}}string{{end}} {
 	var id string
 	Eventually(func(g Gomega) {
@@ -223,6 +258,9 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered{{if .E2E.Serial}}, Serial{{end}
 	)
 
 	BeforeAll(func() {
+{{- if $.E2E.Env}}
+		require{{$.Kind}}Env()
+{{- end}}
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().{{.Accessor}}()
 		base = uniqueName("e2e-{{.Lower}}-cov")
@@ -249,7 +287,7 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered{{if .E2E.Serial}}, Serial{{end}
 {{- range .E2E.Fixtures}}
 				{
 					fixture := &coralogixv1alpha1.{{.Kind}}{ObjectMeta: metav1.ObjectMeta{Name: name + "{{.Suffix}}", Namespace: testNamespace}}
-					decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll({{.SpecJSON}}, "@{run}", name)))
+					decoder := json.NewDecoder(strings.NewReader(strings.ReplaceAll({{if $.E2E.Env}}expand{{$.Kind}}Env({{.SpecJSON}}){{else}}{{.SpecJSON}}{{end}}, "@{run}", name)))
 					decoder.DisallowUnknownFields()
 					Expect(decoder.Decode(&fixture.Spec)).To(Succeed())
 					Expect(crClient.Create(ctx, fixture)).To(Succeed())
