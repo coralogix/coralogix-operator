@@ -1129,6 +1129,9 @@ func listUpdateStep(d *kindData, ix *refIndex, file *e2eFile, resourceName strin
 		if target == nil || key == nil {
 			return nil, nil
 		}
+		if target == key {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "the update cannot change a listMapKey"}
+		}
 		if target.synthetic || target.immutable || target.enum != nil || target.ref != "" || target.typ.Pattern != "" || target.typ.WireString ||
 			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, target.typ.Kind) {
 			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "the list item field is not a mutable string, bool, or integer"}

@@ -10,7 +10,7 @@ name="${NAME:?NAME is required}"
 {{- range .E2E.Env}}
 : "${ {{- .}}:?{{.}} is required}"
 {{- end}}
-{{- if not .Overwrite}}
+{{- if not (or .Overwrite .StatuslessSingleton)}}
 id_file="${RUNNER_TEMP:-/tmp}/upgrade-test-{{.Lower}}.id"
 {{- end}}
 
@@ -21,7 +21,7 @@ jsonpath() {
 gone() {
     ! kubectl get {{.Lower}} "$cr" -n "$namespace" >/dev/null 2>&1
 }
-{{- if not .Overwrite}}
+{{- if not (or .Overwrite .StatuslessSingleton)}}
 
 has_id() {
     [ -n "$(jsonpath '{.status.id}')" ]
@@ -58,8 +58,12 @@ JSON
     jq -n --arg name "$cr" --arg namespace "$namespace" --argjson spec "$spec" \
         '{apiVersion:"coralogix.com/v1alpha1", kind:"{{.Kind}}", metadata:{name:$name,namespace:$namespace}, spec:$spec}' \
         | kubectl apply -f -
+{{- if or .Overwrite .StatuslessSingleton}}
 {{- if .Overwrite}}
     # The {{.Kind}} is the whole list of the API: it has no status id.
+{{- else}}
+    # This {{.Kind}} has no status id.
+{{- end}}
     wait_for synced
 {{- else}}
     wait_for has_id
@@ -68,7 +72,7 @@ JSON
     ;;
 after)
     wait_for synced
-{{- if not .Overwrite}}
+{{- if not (or .Overwrite .StatuslessSingleton)}}
     [ "$(jsonpath '{.status.id}')" = "$(cat "$id_file")" ] || { echo "{{.Kind}} id changed after upgrade"; exit 1; }
 {{- end}}
     value="$(printf '%s' '{{.E2E.Upgrade.Value}}' | sed "s/@{run}/$name/g")"

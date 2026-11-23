@@ -56,6 +56,10 @@ func TestListItemUpdateFindsTheSameItemInTheAPI(t *testing.T) {
 	if _, err := listUpdateStep(d, ix, &e2eFile{Update: &e2eUpdate{Field: "rules.enabled", Value: false}}, "RuleSet", full); err == nil {
 		t.Error("a list without an item key must be rejected")
 	}
+	list.Markers = []string{"+listType=map", "+listMapKey=entityType"}
+	if _, err := listUpdateStep(d, ix, &e2eFile{Update: &e2eUpdate{Field: "rules.entityType", Value: "spans"}}, "RuleSet", full); err == nil || !strings.Contains(err.Error(), "cannot change a listMapKey") {
+		t.Errorf("changing the key must be rejected: %v", err)
+	}
 }
 
 func TestStatuslessSingletonRendersReplaceFinalizerAndDelete(t *testing.T) {
@@ -81,5 +85,13 @@ func TestStatuslessSingletonRendersReplaceFinalizerAndDelete(t *testing.T) {
 	}
 	if strings.Contains(string(types), "ID *string") || !strings.Contains(string(types), "HasIDInStatus() bool") {
 		t.Error("the status must have no id and must use the Update path")
+	}
+	d.E2E = &e2eData{Upgrade: &upgradeData{From: "1.0.0", SpecJSON: `{"rules":[]}`, Field: "rules", Value: "[]"}}
+	script, err := renderUpgradeScript(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(script), "has_id") || strings.Contains(string(script), ".status.id") || strings.Contains(string(script), "id_file") || strings.Count(string(script), "wait_for synced") != 3 {
+		t.Error("the upgrade check must wait for sync and must not read a status id")
 	}
 }
