@@ -1,0 +1,2889 @@
+{
+  "cases": [
+    {
+      "name": "lifecycle: create, get, replace, get, delete, delete again, get and replace after delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-life-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-life-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-life-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a name and a type only, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-bare-{{run}}",
+              "type": "SLACK"
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create without a description, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-no-desc-{{run}}",
+              "type": "SLACK",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with an empty description, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-empty-desc-{{run}}",
+              "type": "SLACK",
+              "description": "",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with an empty connectorConfig, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-empty-config-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {}
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with an empty list of fields, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-empty-fields-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": []
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with a field that has an empty value, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-empty-value-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": ""
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with a field that has no value, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-no-value-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with the same field name twice, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-field-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "one"
+                  },
+                  {
+                    "fieldName": "channel",
+                    "value": "two"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with fields in reverse order, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-order-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with a long description",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-long-desc-{{run}}",
+              "type": "SLACK",
+              "description": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with several fields and an override for each entity type, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-full-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with an override that has no fields, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-override-bare-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS"
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with an override that has an empty list of fields, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-override-empty-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": []
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with two overrides for one entity type, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-override-twice-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "one"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "two"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create with an override field that the connector config does not have, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-override-other-field-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "fallbackChannel",
+                      "template": "x"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create generic https with alert overrides, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-https-override-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "url",
+                      "template": "https://example.com/alerts"
+                    },
+                    {
+                      "fieldName": "additionalBodyFields",
+                      "template": "{\"alias\":\"{{alert.groupingKey}}\"}"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a slack connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-slack-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a generic-https connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-generic-https-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a pager-duty connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-pager-duty-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-integration-key"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a pager-duty-incidents connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-pager-duty-incidents-{{run}}",
+              "type": "PAGERDUTY_INCIDENTS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  },
+                  {
+                    "fieldName": "service",
+                    "value": "PXXXXXX"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a email connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-email-{{run}}",
+              "type": "EMAIL",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"email1@example.com\",\"email2@example.com\"]"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a service-now connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-service-now-{{run}}",
+              "type": "SERVICE_NOW",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "instanceUrl",
+                    "value": "https://example.service-now.com"
+                  },
+                  {
+                    "fieldName": "username",
+                    "value": "username-example"
+                  },
+                  {
+                    "fieldName": "password",
+                    "value": "password-example"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a microsoft-teams connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-microsoft-teams-{{run}}",
+              "type": "MICROSOFT_TEAMS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  },
+                  {
+                    "fieldName": "teamId",
+                    "value": "some-team-id"
+                  },
+                  {
+                    "fieldName": "channelId",
+                    "value": "19:channel-id@thread.tacv2"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a eventbridge connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-eventbridge-{{run}}",
+              "type": "EVENTBRIDGE",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  },
+                  {
+                    "fieldName": "additionalDetail",
+                    "value": "{\"pipeline_id\": \"p123\"}"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a incident-io connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-incident-io-{{run}}",
+              "type": "INCIDENT_IO",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  },
+                  {
+                    "fieldName": "alertEventsUrl",
+                    "value": "https://api.incident.io/v2/alert_events/http/source-id"
+                  },
+                  {
+                    "fieldName": "alertSourceToken",
+                    "value": "some-alert-source-token"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "secret fields of a pagerDuty connector: get shows the key or hides it",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-secret-pd-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "secret fields of a serviceNow connector: get shows the password or hides it",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-secret-snow-{{run}}",
+              "type": "SERVICE_NOW",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "instanceUrl",
+                    "value": "https://example.service-now.com"
+                  },
+                  {
+                    "fieldName": "username",
+                    "value": "username-example"
+                  },
+                  {
+                    "fieldName": "password",
+                    "value": "password-example"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "secret fields of an incidentIo connector: get shows the keys or hides them",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-secret-iio-{{run}}",
+              "type": "INCIDENT_IO",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  },
+                  {
+                    "fieldName": "alertEventsUrl",
+                    "value": "https://api.incident.io/v2/alert_events/http/source-id"
+                  },
+                  {
+                    "fieldName": "alertSourceToken",
+                    "value": "some-alert-source-token"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace a secret field with the same value, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-secret-same-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-secret-same-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace a secret field with a new value, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-secret-new-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-secret-new-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-other-key"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps without a url",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-https-no-url-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with no fields",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-https-no-fields-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": []
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with a url that is not a url",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-https-bad-url-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "value": "not a url"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with a method that does not exist",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-https-bad-method-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "FETCH"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with headers that are not JSON",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-https-bad-headers-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "not json"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: a field name that no slack connector has",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-unknown-field-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  },
+                  {
+                    "fieldName": "nope",
+                    "value": "x"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: slack without a channel",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-slack-no-channel-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: email with an address that is not one",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-email-bad-{{run}}",
+              "type": "EMAIL",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"not-an-email\"]"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: email with addresses that are not a JSON list",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-email-not-json-{{run}}",
+              "type": "EMAIL",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "email1@example.com"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: serviceNow with an instance url that is not a url",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-snow-bad-url-{{run}}",
+              "type": "SERVICE_NOW",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "instanceUrl",
+                    "value": "not a url"
+                  },
+                  {
+                    "fieldName": "username",
+                    "value": "u"
+                  },
+                  {
+                    "fieldName": "password",
+                    "value": "p"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: type CONNECTOR_TYPE_UNSPECIFIED",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-unspecified-{{run}}",
+              "type": "CONNECTOR_TYPE_UNSPECIFIED",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: type IBM_EVENT_NOTIFICATIONS",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-ibm-{{run}}",
+              "type": "IBM_EVENT_NOTIFICATIONS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: a type that the enum does not have",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-unknown-{{run}}",
+              "type": "NOPE",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: a type in lower case",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-type-lower-{{run}}",
+              "type": "slack",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: override for TEST_NOTIFICATIONS",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-entity-test-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "TEST_NOTIFICATIONS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "x"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: override for ENTITY_TYPE_UNSPECIFIED",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-entity-unspecified-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ENTITY_TYPE_UNSPECIFIED",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "x"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: override for OLLY_SCHEDULED_TASKS",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-entity-olly-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "OLLY_SCHEDULED_TASKS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "x"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: an override for a field name that no slack connector has",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-override-unknown-field-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "nope",
+                      "template": "x"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: an override with a template that does not parse",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-override-bad-template-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{% if %}"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: an empty name",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: a body without a connector",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "rejection: a connector without a name",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "type": "SLACK",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a connector without a type",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-no-type-{{run}}",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "rejection: a connector with a property that the API does not know",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-extra-property-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "nope": "x"
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "server fields: the client sends id, team, times, and a resolved config",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-server-fields-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "custom-id",
+              "teamId": 1,
+              "createTime": "2020-01-01T00:00:00Z",
+              "updateTime": "2020-01-01T00:00:00Z",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "other"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "duplicate name: create twice, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id2"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "duplicate name: the same name in another type",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "type": "EMAIL",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"email1@example.com\",\"email2@example.com\"]"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id2"
+        }
+      ]
+    },
+    {
+      "name": "duplicate name: the same name in upper case",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "CXO-FIDELITY-CONNECTOR-DUP-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id2"
+        }
+      ]
+    },
+    {
+      "name": "duplicate name on replace: rename a connector to the name of another",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-a-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-b-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id2"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-dup-a-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id2}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id2}}"
+        }
+      ]
+    },
+    {
+      "name": "replace is a full replace: a body with a name and a type only clears the rest, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-full-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-full-{{run}}",
+              "type": "SLACK",
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace without a description, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-no-desc-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-no-desc-{{run}}",
+              "type": "SLACK",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace removes the overrides, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-no-overrides-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-no-overrides-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace renames a connector, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-rename-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-renamed-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace changes the type and the fields, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-type-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-type-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace changes the type and keeps the fields of the old type, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-type-keep-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-type-keep-{{run}}",
+              "type": "GENERIC_HTTPS",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace with an invalid type, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-bad-type-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-bad-type-{{run}}",
+              "type": "CONNECTOR_TYPE_UNSPECIFIED",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace with a field that the type does not have, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-bad-field-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-bad-field-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  },
+                  {
+                    "fieldName": "nope",
+                    "value": "x"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace without an id, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-no-id-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-no-id-{{run}}",
+              "type": "SLACK",
+              "description": "changed",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace with an empty id, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-empty-id-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-empty-id-{{run}}",
+              "type": "SLACK",
+              "description": "changed",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": ""
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "replace without a connector",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {}
+        }
+      ]
+    },
+    {
+      "name": "replace with the secret rotated, then get",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-secret-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-one"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-replace-secret-{{run}}",
+              "type": "PAGERDUTY",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-two"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "unknown id: get, replace, delete",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/00000000-0000-4000-8000-00000000dead"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-unknown-id-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "00000000-0000-4000-8000-00000000dead"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/00000000-0000-4000-8000-00000000dead"
+        }
+      ]
+    },
+    {
+      "name": "malformed id _bad: get, replace, delete",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/_bad"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-malformed-id-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "_bad"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/_bad"
+        }
+      ]
+    },
+    {
+      "name": "malformed id has.dot: get, replace, delete",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/has.dot"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-malformed-id-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "has.dot"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/has.dot"
+        }
+      ]
+    },
+    {
+      "name": "malformed id -leading: get, replace, delete",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/-leading"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-malformed-id-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "-leading"
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/-leading"
+        }
+      ]
+    },
+    {
+      "name": "delete twice, then get and replace",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-delete-twice-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-delete-twice-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              },
+              "id": "{{id}}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a name can be used again after delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-reuse-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        },
+        {
+          "method": "DELETE",
+          "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        },
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-reuse-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "general"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id2"
+        }
+      ]
+    }
+  ]
+}
