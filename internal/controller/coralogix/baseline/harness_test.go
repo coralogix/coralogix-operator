@@ -239,6 +239,29 @@ func (h *harness) Create(name, manifest string) {
 	h.reconcile(name, obj.Object["spec"])
 }
 
+// CreateReleased creates the CR from a YAML manifest with the finalizers and status that a
+// released operator wrote, as after a chart upgrade, then reconciles once. The step shows which
+// remote resource the operator uses for a CR that it did not create.
+func (h *harness) CreateReleased(name, manifest string, finalizers []string, status map[string]any) {
+	h.t.Helper()
+	obj := &unstructured.Unstructured{}
+	if err := yaml.Unmarshal([]byte(manifest), &obj.Object); err != nil {
+		h.t.Fatalf("%s: parse manifest: %v", name, err)
+	}
+	obj.SetNamespace(h.namespace)
+	obj.SetFinalizers(finalizers)
+	h.key = client.ObjectKeyFromObject(obj)
+	h.gvk = obj.GroupVersionKind()
+	if err := h.client.Create(context.Background(), obj); err != nil {
+		h.t.Fatalf("%s: create: %v", name, err)
+	}
+	obj.Object["status"] = status
+	if err := h.client.Status().Update(context.Background(), obj); err != nil {
+		h.t.Fatalf("%s: write the released status: %v", name, err)
+	}
+	h.reconcile(name, obj.Object["spec"])
+}
+
 // CreateRejected tries to create the CR from a YAML manifest, and records that the API server
 // refuses it and why. It runs no reconcile, and the CR does not exist.
 func (h *harness) CreateRejected(name, manifest string) {

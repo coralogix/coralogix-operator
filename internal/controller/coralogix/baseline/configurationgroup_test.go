@@ -386,6 +386,19 @@ var configurationGroupScenarios = map[string]func(h *harness){
 		h.Delete("delete")
 	},
 
+	// A chart upgrade: the released operator created the group and wrote status.id and its
+	// finalizer. The operator updates that group, creates none, and archives it on delete.
+	"upgrade-from-released": func(h *harness) {
+		id := configurationGroups(h).seed("Production collectors", true, false)
+		h.CreateReleased("the released operator made the group: reconcile the CR", configurationGroupManifest("  name: Production collectors\n"+cgRawFamily(true)),
+			[]string{"configurationgroup.coralogix.com/finalizer"}, map[string]any{"id": id, "printableStatus": "RemoteSynced"})
+		if got := h.StatusID(); got != id {
+			h.t.Fatalf("status.id changed from %s to %s", id, got)
+		}
+		h.Reconcile("reconcile again")
+		h.Delete("delete: the family is deactivated, then the group is archived")
+	},
+
 	"delete-when-gone": func(h *harness) {
 		h.Create("create", configurationGroupMinimalManifest)
 		configurationGroups(h).forget(h.StatusID())
@@ -720,14 +733,17 @@ func (f *configurationGroupFake) list() []map[string]any {
 	return out
 }
 
-// seed stores a group with one remote configuration, as if another client made it.
-func (f *configurationGroupFake) seed(name string, active, archived bool) {
+// seed stores a group with one remote configuration, as if another client made it, and returns
+// its id.
+func (f *configurationGroupFake) seed(name string, active, archived bool) string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.groups[newUUID()] = &storedGroup{name: name, archived: archived, family: storedFamily{
+	id := newUUID()
+	f.groups[id] = &storedGroup{name: name, archived: archived, family: storedFamily{
 		id: newUUID(), version: 1, active: active, activatedOnce: active,
 		raw: &storedRaw{metadata: map[string]any{}, remotes: []storedRemote{{id: newUUID(), rawConfiguration: "receivers: {}"}}},
 	}}
+	return id
 }
 
 // forget archives a group without a request, as if it was archived outside the operator.
