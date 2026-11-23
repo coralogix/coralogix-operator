@@ -18,9 +18,9 @@ minimal:
 update:
   field: isActive
   value: false
-# The spec that chart 0.5 accepts.
+# The spec that chart 1.0 accepts. Chart 0.5 has no ArchiveLogsTarget.
 upgrade:
-  from: '0.5'
+  from: '1.0'
   spec:
     s3Target: {bucketName: '@{env.LOGS_BUCKET}', region: '@{env.AWS_REGION}'}
   field: format
