@@ -1,6 +1,8 @@
 package generator
 
 import (
+	"slices"
+
 	"github.com/coralogix/coralogix-operator/v2/tools/opgen/internal/overrides"
 )
 
@@ -96,6 +98,14 @@ func (d *kindData) RemoteStatusFields() []string {
 // HasClientSet is true when the reconciler needs the SDK client set: a name lookup of a reference,
 // or a hook that calls another API.
 func (d *kindData) HasClientSet() bool { return d.HasNameLookup || d.Hooks.Any }
+
+// UsesSecrets is true when a conversion reads a Secret (valueFrom). The controller then needs the
+// RBAC marker of the Secret read.
+func (d *kindData) UsesSecrets() bool {
+	return slices.ContainsFunc(append([]*crType{d.Spec}, d.Types...), func(t *crType) bool {
+		return slices.ContainsFunc(t.Fields, func(f *crField) bool { return f.secretRef != "" })
+	})
+}
 
 // CreateReturn is what a Create return statement starts with, before the error. With an afterCreate
 // hook, Create also returns the follow-up step, and an error returns no step.

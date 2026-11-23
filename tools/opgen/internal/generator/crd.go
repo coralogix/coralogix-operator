@@ -46,6 +46,9 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if inGroup[f.Name] && b.file.Field(r.Name, f.Name).Required {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + r.Name + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
 		}
+		if inGroup[f.Name] && b.file.Field(r.Name, f.Name).ValueFrom != nil {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + r.Name + ".fields." + f.Name + ".valueFrom", msg: "a oneOf arm cannot take a Secret"}
+		}
 		if folds := r.CreateFolds(f); len(folds) != 0 {
 			fields, err := b.foldedFields(r, f, folds)
 			if err != nil {
@@ -69,6 +72,9 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if field.refForm == "split" {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
+		if field.secretRef != "" {
+			spec.Fields = append(spec.Fields, secretReferenceField(field))
+		}
 	}
 	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
@@ -88,6 +94,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		return nil, err
 	}
 	splitReferenceRules(spec)
+	secretReferenceRules(spec)
 	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
 	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	if err := b.applyValidation(spec, "spec", map[*crType]bool{}, true); err != nil {
@@ -476,6 +483,9 @@ func (b *builder) groupFields(component string, owner *crType, groups []model.On
 			if i < 0 {
 				return nil, unsupported("groups."+name, "the API component has no managed field %s", api)
 			}
+			if owner.Fields[i].secretRef != "" {
+				return nil, unsupported("groups."+name, "the field %s has a valueFrom line, and its Secret reference cannot move into a group", api)
+			}
 			if owner.Fields[i].immutable {
 				return nil, unsupported("groups."+name, "an immutable field cannot move into a required group")
 			}
@@ -561,6 +571,17 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		// The policy relaxes a required request field before the model is built.
 		b.used[line] = true
 	}
+	secretExactlyOne := false
+	if change.ValueFrom != nil {
+		if t.Kind != model.String || t.Format != "" || len(t.Wrappers) != 0 {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".valueFrom", msg: "valueFrom needs a plain string field"}
+		}
+		// The CR sets the string or the Secret, so the string is optional in the CR even when the
+		// contract requires it. A contract that requires it, or requireOne, keeps the exactly-one rule.
+		secretExactlyOne = required || change.RequireOne
+		required = false
+		b.used[line] = true
+	}
 	jsonName := name
 	if change.Name != "" && change.Name != name {
 		jsonName = change.Name
@@ -571,6 +592,9 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 		b.used[line] = true
 	}
 	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t}
+	if change.ValueFrom != nil {
+		f.secretRef, f.secretExactlyOne = change.ValueFrom.Secret, secretExactlyOne
+	}
 	path = b.validationPath(component, path, name, jsonName)
 	f.validationPath = path
 	if change.OmitEmptyInRequest {
@@ -1124,6 +1148,9 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		if (t.Kind == model.OneOf || inGroup[f.Name]) && b.file.Field(t.Schema, f.Name).Required {
 			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + t.Schema + ".fields." + f.Name + ".required", msg: "a oneOf arm cannot be required on its own"}
 		}
+		if (t.Kind == model.OneOf || inGroup[f.Name]) && b.file.Field(t.Schema, f.Name).ValueFrom != nil {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":types." + t.Schema + ".fields." + f.Name + ".valueFrom", msg: "a oneOf arm cannot take a Secret"}
+		}
 		required := t.Kind != model.OneOf && f.Create.Required && !inGroup[f.Name]
 		child := path + "." + f.Name
 		field, err := b.field(obj.Name, t.Schema, f.Name, f.Description, f.Type, required, requiredScalarWithoutPresence(f.Create, f.Type), child, inItem)
@@ -1142,6 +1169,9 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		obj.Fields = append(obj.Fields, field)
 		if field.refForm == "split" {
 			obj.Fields = append(obj.Fields, splitReferenceField(field))
+		}
+		if field.secretRef != "" {
+			obj.Fields = append(obj.Fields, secretReferenceField(field))
 		}
 	}
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
@@ -1171,6 +1201,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		return nil, err
 	}
 	splitReferenceRules(obj)
+	secretReferenceRules(obj)
 	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
 	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	return obj, nil
@@ -1331,6 +1362,33 @@ func splitReferenceField(f *crField) *crField {
 	return &crField{
 		JSON: f.refSibling, GoName: goName(f.refSibling), GoType: "*ResourceRef", Optional: true,
 		Doc: []string{fmt.Sprintf("It refers to a %s custom resource.", f.ref)}, synthetic: true,
+	}
+}
+
+// secretReferenceField is the sibling of a string with a valueFrom line: a reference to the Secret
+// key that holds the value. It has no API property, so a request never carries it.
+func secretReferenceField(f *crField) *crField {
+	return &crField{
+		JSON: f.secretRef, GoName: goName(f.secretRef), GoType: "*corev1.SecretKeySelector", Optional: true, synthetic: true,
+		Doc:     []string{fmt.Sprintf("%s is a reference to a Secret key that holds the value of %s.", goName(f.secretRef), f.JSON), fmt.Sprintf("The operator reads the Secret in the namespace of the resource. Conflicts with %s.", goName(f.JSON))},
+		Markers: []string{"+optional"},
+	}
+}
+
+// secretReferenceRules adds the rule of each string with a valueFrom line: the CR sets the string or
+// the Secret reference, and not both. Exactly one is needed when the contract requires the string,
+// or when the line says requireOne.
+func secretReferenceRules(t *crType) {
+	for _, f := range t.Fields {
+		if f.secretRef == "" {
+			continue
+		}
+		terms := fmt.Sprintf("(has(self.%s) ? 1 : 0) + (has(self.%s) ? 1 : 0)", f.JSON, f.secretRef)
+		if f.secretExactlyOne {
+			t.Markers = append(t.Markers, celMarker(terms+" == 1", fmt.Sprintf("Exactly one of %s or %s must be set", f.JSON, f.secretRef)))
+		} else {
+			t.Markers = append(t.Markers, celMarker(terms+" <= 1", fmt.Sprintf("At most one of %s or %s can be set", f.JSON, f.secretRef)))
+		}
 	}
 }
 
