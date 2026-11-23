@@ -59,7 +59,7 @@
     }
   },
   {
-    "step": "switch the type to genericHttps",
+    "step": "switch the type to genericHttps: the API rejects the update, a connector keeps its type",
     "spec": {
       "connectorConfig": {
         "fields": [

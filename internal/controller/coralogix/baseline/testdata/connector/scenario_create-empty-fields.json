@@ -1,6 +1,6 @@
 [
   {
-    "step": "create with an empty list of fields",
+    "step": "create with an empty list of fields: the API rejects it, a slack connector needs a channel",
     "spec": {
       "connectorConfig": {
         "fields": []

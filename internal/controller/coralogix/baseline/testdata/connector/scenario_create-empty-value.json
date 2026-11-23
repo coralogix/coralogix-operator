@@ -1,6 +1,6 @@
 [
   {
-    "step": "create with a field whose value is empty",
+    "step": "create with a field whose value is empty: the API rejects it, a channel is non-empty",
     "spec": {
       "connectorConfig": {
         "fields": [

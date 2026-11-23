@@ -168,20 +168,13 @@
       ]
     },
     {
-      "name": "create with a name and a type only, then get",
+      "name": "rejection: a connector with a name and a type only, no connectorConfig",
       "steps": [
         {
           "status": 400,
           "response": {
             "code": 400,
             "message": "Bad Request: {\"reason\":\"connector_config is required\"}"
-          }
-        },
-        {
-          "status": 400,
-          "response": {
-            "code": 400,
-            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
           }
         }
       ]
@@ -337,7 +330,7 @@
       ]
     },
     {
-      "name": "create with an empty connectorConfig, then get",
+      "name": "rejection: an empty connectorConfig",
       "steps": [
         {
           "status": 400,
@@ -345,18 +338,11 @@
             "code": 400,
             "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Required field 'channel' is missing in connector config\"}"
           }
-        },
-        {
-          "status": 400,
-          "response": {
-            "code": 400,
-            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
-          }
         }
       ]
     },
     {
-      "name": "create with an empty list of fields, then get",
+      "name": "rejection: slack with an empty list of fields",
       "steps": [
         {
           "status": 400,
@@ -364,18 +350,11 @@
             "code": 400,
             "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Required field 'channel' is missing in connector config\"}"
           }
-        },
-        {
-          "status": 400,
-          "response": {
-            "code": 400,
-            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
-          }
         }
       ]
     },
     {
-      "name": "create with a field that has an empty value, then get",
+      "name": "rejection: slack with a channel that has an empty value",
       "steps": [
         {
           "status": 400,
@@ -383,31 +362,17 @@
             "code": 400,
             "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Failed to parse field channel into type NonEmptyString: Template must be a non-empty string\"}"
           }
-        },
-        {
-          "status": 400,
-          "response": {
-            "code": 400,
-            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
-          }
         }
       ]
     },
     {
-      "name": "create with a field that has no value, then get",
+      "name": "rejection: slack with a channel that has no value",
       "steps": [
         {
           "status": 400,
           "response": {
             "code": 400,
             "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Failed to parse field channel into type NonEmptyString: Template must be a non-empty string\"}"
-          }
-        },
-        {
-          "status": 400,
-          "response": {
-            "code": 400,
-            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
           }
         }
       ]
@@ -1090,20 +1055,13 @@
       ]
     },
     {
-      "name": "create with an override field that the connector config does not have, then get",
+      "name": "rejection: an override for a slack field that is not templated",
       "steps": [
         {
           "status": 400,
           "response": {
             "code": 400,
             "message": "Bad Request: {\"reason\":\"Error while validating connector config overrides for entity type: 'alerts', output schema with id 'slack_structured': Connector config override field is not templated: fallbackChannel\"}"
-          }
-        },
-        {
-          "status": 400,
-          "response": {
-            "code": 400,
-            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
           }
         }
       ]

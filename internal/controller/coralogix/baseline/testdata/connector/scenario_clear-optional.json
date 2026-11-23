@@ -175,7 +175,7 @@
     }
   },
   {
-    "step": "remove the fields",
+    "step": "remove the fields: the API rejects the update, a slack connector needs a channel",
     "spec": {
       "connectorConfig": {
         "fields": []

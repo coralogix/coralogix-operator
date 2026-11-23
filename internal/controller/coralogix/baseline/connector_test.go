@@ -251,9 +251,10 @@ var connectorScenarios = map[string]func(h *harness){
 		requireSent(h, "POST", `"description":""`)
 	},
 
-	// An empty field list sends an empty connectorConfig: the request has no "fields" key.
+	// An empty field list sends an empty connectorConfig: the request has no "fields" key. The API
+	// rejects it with a 400, because a Slack connector needs a channel.
 	"create-empty-fields": func(h *harness) {
-		h.Create("create with an empty list of fields", connectorManifest(`  name: baseline-connector
+		h.Create("create with an empty list of fields: the API rejects it, a slack connector needs a channel", connectorManifest(`  name: baseline-connector
   description: Baseline description
   type: slack
   connectorConfig:
@@ -270,9 +271,10 @@ var connectorScenarios = map[string]func(h *harness){
 		requireSent(h, "POST", `"configOverrides":[{"entityType":"ALERTS"}]`)
 	},
 
-	// value: "" passes the exactly-one rule, because the field is set. It is sent as "".
+	// value: "" passes the exactly-one rule, because the field is set. It is sent as "". The API
+	// rejects it with a 400, because a channel is a non-empty string.
 	"create-empty-value": func(h *harness) {
-		h.Create("create with a field whose value is empty", connectorManifest(`  name: baseline-connector
+		h.Create("create with a field whose value is empty: the API rejects it, a channel is non-empty", connectorManifest(`  name: baseline-connector
   description: Baseline description
   type: slack
   connectorConfig:
@@ -420,12 +422,12 @@ var connectorScenarios = map[string]func(h *harness){
 		h.Create("create with every optional field", connectorFull)
 		h.SetSpec("remove the overrides", connectorSpec("slack",
 			[]any{valueField("channel", "team-alerts"), valueField("fallbackChannel", "fallback_general")}, nil))
-		h.SetSpec("remove the fields", connectorSpec("slack", []any{}, nil))
+		h.SetSpec("remove the fields: the API rejects the update, a slack connector needs a channel", connectorSpec("slack", []any{}, nil))
 	},
 
 	"switch-type": func(h *harness) {
 		h.Create("create a slack connector", connectorMinimal)
-		h.SetSpec("switch the type to genericHttps", connectorSpec("genericHttps",
+		h.SetSpec("switch the type to genericHttps: the API rejects the update, a connector keeps its type", connectorSpec("genericHttps",
 			[]any{valueField("url", "https://example.com/hook"), valueField("method", "POST")}, nil))
 	},
 
@@ -467,6 +469,9 @@ var connectorScenarios = map[string]func(h *harness){
 
 	"delete-not-found": func(h *harness) {
 		h.Create("create", connectorMinimal)
+		// The 404 is synthetic. The real API answers a DELETE of an unknown id with a 200 (see
+		// "delete twice" in the fidelity cases), so the operator never sees it there. Forcing it is the
+		// only way to reach the not-found branch of HandleDeletion.
 		connectorAPI(h).answerNextError("DELETE", 404, "connector not found")
 		h.Delete("delete: a 404 that names a resource is success")
 	},

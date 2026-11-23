@@ -45,9 +45,16 @@ import (
 type connectorFake struct {
 	mu         sync.Mutex
 	connectors map[string]map[string]any // id -> stored connector
-	// integrations are the ids of the integrations that the team has. The recorded team has none, so
-	// the fake starts with none. A scenario that needs a working Slack, PagerDuty Incidents, Microsoft
-	// Teams, or EventBridge connector adds one.
+	// integrations are the ids of the integrations that a request can name in an integrationId field.
+	// The recorded team has none, so the fake starts with none. A scenario that needs a working
+	// PagerDuty Incidents, Microsoft Teams, or EventBridge connector, or a Slack connector that names
+	// an integration, adds one.
+	//
+	// A Slack connector that names no integration still resolves one: the recording shows the API
+	// adding an integrationId to resolvedConnectorConfig (a UUID that the recorder shows as <id>). The
+	// API chooses that value, and the recording does not say from where. Whatever it is, a request
+	// cannot name it: the recorded team has no integration that a request is allowed to name. The fake
+	// makes up a UUID for it. It is not in the integrations set.
 	integrations map[string]bool
 	// serviceNowInstances are the instance URLs that resolve. The recorded team has none.
 	serviceNowInstances map[string]bool
@@ -419,7 +426,9 @@ func (f *connectorFake) validate(connector map[string]any) (resolved []any, stat
 	if !ok {
 		return fail(fmt.Sprintf("unknown enumeration value %d", connectorEnumTypes[typ]))
 	}
-	// "create with a name and a type only": a config is required, but it can be empty.
+	// "rejection: a connector with a name and a type only, no connectorConfig": the config is
+	// required. An empty one passes this check and fails the required fields of the schema below
+	// ("rejection: an empty connectorConfig"): every schema has a required field.
 	config, ok := connector["connectorConfig"].(map[string]any)
 	if !ok {
 		return fail("connector_config is required")

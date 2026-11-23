@@ -86,7 +86,7 @@
       ]
     },
     {
-      "name": "create with a name and a type only, then get",
+      "name": "rejection: a connector with a name and a type only, no connectorConfig",
       "steps": [
         {
           "method": "POST",
@@ -98,10 +98,6 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
@@ -163,7 +159,7 @@
       ]
     },
     {
-      "name": "create with an empty connectorConfig, then get",
+      "name": "rejection: an empty connectorConfig",
       "steps": [
         {
           "method": "POST",
@@ -177,15 +173,11 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
     {
-      "name": "create with an empty list of fields, then get",
+      "name": "rejection: slack with an empty list of fields",
       "steps": [
         {
           "method": "POST",
@@ -201,15 +193,11 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
     {
-      "name": "create with a field that has an empty value, then get",
+      "name": "rejection: slack with a channel that has an empty value",
       "steps": [
         {
           "method": "POST",
@@ -230,15 +218,11 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
     {
-      "name": "create with a field that has no value, then get",
+      "name": "rejection: slack with a channel that has no value",
       "steps": [
         {
           "method": "POST",
@@ -258,10 +242,6 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
@@ -540,7 +520,7 @@
       ]
     },
     {
-      "name": "create with an override field that the connector config does not have, then get",
+      "name": "rejection: an override for a slack field that is not templated",
       "steps": [
         {
           "method": "POST",
@@ -572,10 +552,6 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
