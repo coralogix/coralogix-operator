@@ -1,0 +1,4069 @@
+{
+  "cases": [
+    {
+      "name": "lifecycle: create, get, replace, get, delete, delete again, get and replace after delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-life-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-life-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-life-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-life-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"reason\":\"Connector with id {{id}} not found\"}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"reason\":\"Connector with id {{id}} not found\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a name and a type only, then get",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"connector_config is required\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create without a description, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-no-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-no-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an empty description, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-empty-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-empty-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an empty connectorConfig, then get",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Required field 'channel' is missing in connector config\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an empty list of fields, then get",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Required field 'channel' is missing in connector config\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a field that has an empty value, then get",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Failed to parse field channel into type NonEmptyString: Template must be a non-empty string\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a field that has no value, then get",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Failed to parse field channel into type NonEmptyString: Template must be a non-empty string\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with the same field name twice, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "two"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-dup-field-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "two"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "two"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-dup-field-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "two"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with fields in reverse order, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-order-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "GENERIC_HTTPS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-order-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "GENERIC_HTTPS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with a long description",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-long-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-long-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with several fields and an override for each entity type, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-full-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-full-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an override that has no fields, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": []
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-override-bare-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": []
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-override-bare-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an override that has an empty list of fields, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": []
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-override-empty-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": []
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-override-empty-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with two overrides for one entity type, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "one"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "two"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-override-twice-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "one"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "two"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-override-twice-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with an override field that the connector config does not have, then get",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating connector config overrides for entity type: 'alerts', output schema with id 'slack_structured': Connector config override field is not templated: fallbackChannel\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'{{id}}' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create generic https with alert overrides, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "additionalBodyFields",
+                      "template": "{\"alias\":\"{{alert.groupingKey}}\"}"
+                    },
+                    {
+                      "fieldName": "url",
+                      "template": "https://example.com/alerts"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-https-override-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "GENERIC_HTTPS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "additionalBodyFields",
+                      "template": "{\"alias\":\"{{alert.groupingKey}}\"}"
+                    },
+                    {
+                      "fieldName": "url",
+                      "template": "https://example.com/alerts"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-https-override-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "GENERIC_HTTPS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a slack connector, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-slack-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-slack-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a generic-https connector, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-generic-https-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "GENERIC_HTTPS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-generic-https-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "value": "{\"text\":\"fidelity\"}"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "value": "{\"Content-Type\":\"application/json\"}"
+                  },
+                  {
+                    "fieldName": "method",
+                    "value": "POST"
+                  },
+                  {
+                    "fieldName": "url",
+                    "value": "https://example.com/hook"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "GENERIC_HTTPS",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a pager-duty connector, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-integration-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-pager-duty-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-integration-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-integration-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-pager-duty-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-integration-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a pager-duty-incidents connector: rejected, the team has no such integration or instance",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Integration 'some-integration-id' not found or not authorized for this team\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a email connector, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"\u003cemail\u003e\",\"\u003cemail\u003e\"]"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-email-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"\u003cemail\u003e\",\"\u003cemail\u003e\"]"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "EMAIL",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"\u003cemail\u003e\",\"\u003cemail\u003e\"]"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-email-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"\u003cemail\u003e\",\"\u003cemail\u003e\"]"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "EMAIL",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a service-now connector: rejected, the team has no such integration or instance",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Failed to resolve ServiceNow instance url\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a microsoft-teams connector: rejected, the team has no such integration or instance",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Integration 'some-integration-id' not found or not authorized for this team\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a eventbridge connector: rejected, the team has no such integration or instance",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Integration 'some-integration-id' not found or not authorized for this team\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a incident-io connector, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-incident-io-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "INCIDENT_IO",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-type-incident-io-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "INCIDENT_IO",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a slack connector with an integration that the team does not have: rejected",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Integration 'some-integration-id' not found or not authorized for this team\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create a slack connector with an empty integration id: rejected",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Integration '' not found or not authorized for this team\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "secret fields of a pagerDuty connector: get shows the key or hides it",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-pd-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-pd-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "secret fields of an incidentIo connector: get shows the key or hides it",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-iio-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "INCIDENT_IO",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-iio-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "apiKey",
+                    "value": "some-api-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "INCIDENT_IO",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace a secret field with the same value, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-same-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-same-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-same-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace a secret field with a new value, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-new-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-secret-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-other-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-new-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-other-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-other-key"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-secret-new-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "fidelity-other-key"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps without a url",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'generic_https_default': Required field 'url' is missing in connector config\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with no fields",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'generic_https_default': Required field 'url' is missing in connector config\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with a url that is not a url",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'generic_https_default': Failed to parse field url into type Url: url not a url is not a valid URL\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with a method that does not exist",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'generic_https_default': Field 'method' has invalid value. Allowed values: [\\\"POST\\\", \\\"GET\\\", \\\"PUT\\\"]\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: genericHttps with headers that are not JSON",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'generic_https_default': Failed to parse field additionalHeaders into type KeyValuePairs: Template must be a valid JSON object with top-level string fields only\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a field name that no slack connector has",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Unknown connector config field: nope\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: slack without a channel",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Required field 'channel' is missing in connector config\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: email with an address that is not one",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating email addresses for output schema with id 'email_default': The following emails are invalid: not-an-email\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: email with addresses that are not a JSON list",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'email_default': Failed to parse field emailAddresses into type ArrayOfStrings: Template must be an array of strings\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: serviceNow with an instance url that is not a url",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'service_now_default': Failed to parse field instanceUrl into type Url: url not a url is not a valid URL\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: type CONNECTOR_TYPE_UNSPECIFIED",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"unknown enumeration value 0\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: type IBM_EVENT_NOTIFICATIONS",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"unknown enumeration value 5\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a type that the enum does not have",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line 1:188): invalid value for enum field type: \"NOPE\""
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a type in lower case",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line 1:186): invalid value for enum field type: \"slack\""
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: override for TEST_NOTIFICATIONS",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Config overrides for entity type 'testNotifications' are not supported.\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: override for ENTITY_TYPE_UNSPECIFIED",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Valid entity_type must be provided\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: override for OLLY_SCHEDULED_TASKS",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Config overrides for entity type 'ollyScheduledTasks' are not supported.\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: an override for a field name that no slack connector has",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating connector config overrides for entity type: 'alerts', output schema with id 'slack_structured': Unknown connector config field: nope\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: an override with a template that does not parse",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Failed to validate connector config templates for entity_type 'alerts' and field 'channel': invalid template syntax\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: an empty name",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"name must not be empty\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a body without a connector",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Connector input is required\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a connector without a name",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"name must not be empty\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a connector without a type",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"unknown enumeration value 0\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejection: a connector with a property that the API does not know",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line 1:183): unknown field \"nope\""
+          }
+        }
+      ]
+    },
+    {
+      "name": "server fields: the client sends id, team, times, and a resolved config",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-server-fields-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-server-fields-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate name: create twice, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-dup-twice-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Connector with name cxo-fidelity-connector-dup-twice-{{run}} already exists\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-dup-twice-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate name: the same name in another type",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-dup-type-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"\u003cemail\u003e\",\"\u003cemail\u003e\"]"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id2}}",
+              "name": "cxo-fidelity-connector-dup-type-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "emailAddresses",
+                    "value": "[\"\u003cemail\u003e\",\"\u003cemail\u003e\"]"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "EMAIL",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate name: the same name in upper case",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-dup-case-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id2}}",
+              "name": "CXO-FIDELITY-CONNECTOR-DUP-CASE-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate name on replace: rename a connector to the name of another",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-dup-a-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id2}}",
+              "name": "cxo-fidelity-connector-dup-b-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Connector with name cxo-fidelity-connector-dup-a-{{run}} already exists\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id2}}",
+              "name": "cxo-fidelity-connector-dup-b-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace is a full replace: a body with a name and a type only clears the rest, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-full-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"connector_config is required\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-full-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "fallbackChannel",
+                    "value": "fallback_general"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace without a description, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-desc-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace removes the overrides, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [
+                {
+                  "entityType": "ALERTS",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "{{alertDef.priority}}"
+                    }
+                  ]
+                },
+                {
+                  "entityType": "CASES",
+                  "fields": [
+                    {
+                      "fieldName": "channel",
+                      "template": "cases-channel"
+                    }
+                  ]
+                }
+              ],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-overrides-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-overrides-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-overrides-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace renames a connector, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-rename-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-renamed-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-renamed-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace changes the type and the fields, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-type-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Changing connector type is not allowed. Original: Slack\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-type-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace changes the type and keeps the fields of the old type, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-type-keep-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'generic_https_default': Unknown connector config field: channel\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-type-keep-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace with an invalid type, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-bad-type-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"unknown enumeration value 0\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-bad-type-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace with a field that the type does not have, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-bad-field-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Error while validating config for output schema with id 'slack_structured': Unknown connector config field: nope\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-bad-field-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace without an id, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-id-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"reason\":\"Connector with id \u003cid\u003e not found\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-no-id-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace with an empty id, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-empty-id-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"id must not be empty\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-empty-id-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace without a connector",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Connector data is required\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace with the secret rotated, then get",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-one"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-secret-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-one"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-two"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-secret-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-two"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-two"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-replace-secret-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "value": "key-two"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "PAGERDUTY",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown id: get, replace, delete",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"reason\":\"Connector with id 00000000-0000-4000-8000-00000000dead not found\"}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"reason\":\"Connector with id 00000000-0000-4000-8000-00000000dead not found\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "malformed id _bad: get, replace, delete",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'_bad' is not a valid identifier\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Failed to validate id: '_bad' does not match regex ^[a-zA-Z0-9][a-zA-Z0-9_-]*$\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'_bad' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "malformed id has.dot: get, replace, delete",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'has.dot' is not a valid identifier\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Failed to validate id: 'has.dot' does not match regex ^[a-zA-Z0-9][a-zA-Z0-9_-]*$\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'has.dot' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "malformed id -leading: get, replace, delete",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'-leading' is not a valid identifier\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"Failed to validate id: '-leading' does not match regex ^[a-zA-Z0-9][a-zA-Z0-9_-]*$\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: {\"reason\":\"'-leading' is not a valid identifier\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete twice, then get and replace",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-delete-twice-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"reason\":\"Connector with id {{id}} not found\"}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: {\"reason\":\"Connector with id {{id}} not found\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a name can be used again after delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-connector-reuse-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "connector": {
+              "configOverrides": [],
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  }
+                ]
+              },
+              "createTime": "\u003ctime\u003e",
+              "description": "Fidelity connector",
+              "id": "{{id2}}",
+              "name": "cxo-fidelity-connector-reuse-{{run}}",
+              "resolvedConnectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "\u003cid\u003e"
+                  }
+                ]
+              },
+              "teamId": "\u003credacted\u003e",
+              "type": "SLACK",
+              "updateTime": "\u003ctime\u003e"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
