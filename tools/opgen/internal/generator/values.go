@@ -228,6 +228,8 @@ type upgradeData struct {
 // the value that the API then returns, and the expression that reads it from the response "got".
 type updateData struct {
 	Field, Set, Want, Got string
+	// ListGet and Match select the updated item when the mutable field is inside a list.
+	ListGet, Match string
 	// Check is the resource property that the step compares for a kind with the content key.
 	// Want is then the new JSON text.
 	Check string
@@ -398,7 +400,7 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 			break
 		}
 	}
-	if e2e.Update, err = updateStep(d, ix, candidates, file, e2e.NameField); err != nil {
+	if e2e.Update, err = updateStep(d, ix, candidates, file, e2e.NameField, full); err != nil {
 		return nil, nil, nil, err
 	}
 	return full, minimal, e2e, nil
@@ -1016,7 +1018,7 @@ func objectValue(object any, field string) any {
 
 // updateStep picks the change of the update step: the update line of e2e.yaml, or the first
 // mutable scalar outside a oneOf. A top-level field takes precedence over a grouped field.
-func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e2eFile, nameField string) (*updateData, error) {
+func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e2eFile, nameField string, full *omap) (*updateData, error) {
 	if d.Content != nil {
 		return contentUpdateStep(file)
 	}
@@ -1091,10 +1093,93 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		return &updateData{Field: candidate.goPath, Set: set, Want: value, Got: read, NotNil: notNil}, nil
 	}
 	if file.Update != nil {
+		if step, err := listUpdateStep(d, ix, file, resource.Name, full); step != nil || err != nil {
+			return step, err
+		}
 		return nil, &shapeError{code: codeE2EUnused, path: e2eFileName + ":update.field", msg: "the spec has no such field"}
 	}
 	return nil, &shapeError{code: codeE2ERequired, path: e2eFileName + ":update",
 		msg: "the spec has no mutable string, bool, or integer outside a oneOf that the update step can change; set update in " + e2eFileName}
+}
+
+// listUpdateStep changes the first item of a list-map. It reads the item back by its key because
+// the API may return list items in another order.
+func listUpdateStep(d *kindData, ix *refIndex, file *e2eFile, resourceName string, full *omap) (*updateData, error) {
+	listName, fieldName, ok := strings.Cut(file.Update.Field, ".")
+	if !ok {
+		return nil, nil
+	}
+	for _, list := range d.Spec.Fields {
+		if list.JSON != listName || list.object == nil || !strings.HasPrefix(list.GoType, "[]") {
+			continue
+		}
+		keys := listMapKeys(list)
+		if len(keys) != 1 {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "a list item update needs one listMapKey"}
+		}
+		var target, key *crField
+		for _, f := range list.object.Fields {
+			if f.JSON == fieldName {
+				target = f
+			}
+			if f.JSON == keys[0] {
+				key = f
+			}
+		}
+		if target == nil || key == nil {
+			return nil, nil
+		}
+		if target.synthetic || target.immutable || target.enum != nil || target.ref != "" || target.typ.Pattern != "" || target.typ.WireString ||
+			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, target.typ.Kind) {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "the list item field is not a mutable string, bool, or integer"}
+		}
+		values, ok := full.get(list.JSON).([]any)
+		if !ok || len(values) == 0 {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "the full spec needs one list item"}
+		}
+		item := values[0]
+		keyValue, ok := objectValue(item, key.JSON).(string)
+		if !ok {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "the list-map key needs a string value"}
+		}
+		value, err := updateValue(target, objectValue(item, target.JSON), file, false)
+		if err != nil {
+			return nil, err
+		}
+		listRef, err := ix.field(resourceName, list.API)
+		if err != nil {
+			return nil, err
+		}
+		itemType := strings.TrimPrefix(strings.TrimPrefix(listRef.Want, "[]"), "*")
+		keyRef, err := ix.field(itemType, key.API)
+		if err != nil {
+			return nil, err
+		}
+		fieldRef, err := ix.field(itemType, target.API)
+		if err != nil {
+			return nil, err
+		}
+		match := "item." + keyRef.Name
+		if strings.HasPrefix(keyRef.Want, "*") {
+			match = "ptr.Deref(" + match + ", \"\")"
+		}
+		got := "item." + fieldRef.Name
+		if strings.HasPrefix(fieldRef.Want, "*") {
+			got = fmt.Sprintf("ptr.Deref(%s, %s)", got, zeroLiteral(target.typ))
+		}
+		set := value
+		if target.Optional {
+			set = "ptr.To(" + value + ")"
+		}
+		read := "got."
+		if d.GetResponseField != "" {
+			read += d.GetResponseField + "."
+		}
+		read += listRef.Name
+		return &updateData{Field: list.GoName + "[0]." + target.GoName, Set: set, Want: value, Got: got,
+			ListGet: read, Match: match + " == " + strconv.Quote(keyValue)}, nil
+	}
+	return nil, nil
 }
 
 // overwriteStep builds the e2e test of an overwrite resource: the list field, the name of an item,

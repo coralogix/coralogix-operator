@@ -167,8 +167,12 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 // delete: none). The POST is Create and Update, and the status id is the fixed singletonID. The
 // generated Delete makes no call, so DeleteMethod is unused.
 func (b *builder) singletonOperations(r *model.Resource, d *kindData) error {
-	d.Singleton, d.SingletonID = true, b.file.SingletonID.Fixed
-	if d.CreateMethod != d.UpdateMethod || d.CreateBody != d.UpdateBody || d.CreateSetter != d.UpdateSetter {
+	d.Singleton = true
+	d.StatuslessSingleton = b.file.StatuslessSingleton()
+	if !d.StatuslessSingleton {
+		d.SingletonID = b.file.SingletonID.Fixed
+	}
+	if !d.StatuslessSingleton && (d.CreateMethod != d.UpdateMethod || d.CreateBody != d.UpdateBody || d.CreateSetter != d.UpdateSetter) {
 		return unsupported("api.operations", "a singleton uses one POST for Create and Update")
 	}
 	for _, response := range []struct {
@@ -193,6 +197,20 @@ func (b *builder) singletonOperations(r *model.Resource, d *kindData) error {
 			return err
 		}
 		*response.name, *response.value = field.Name, field.Want == resource.Name
+	}
+	if r.Policy.RequestWrapper != "" {
+		for _, request := range []struct {
+			body  string
+			field *string
+			value *bool
+			inner *string
+		}{{d.CreateBody, &d.CreateWrapperField, &d.CreateWrapperValue, &d.CreateResourceBody}, {d.UpdateBody, &d.UpdateWrapperField, &d.UpdateWrapperValue, &d.UpdateResourceBody}} {
+			ref, err := b.ix.field(request.body, r.Policy.RequestWrapper)
+			if err != nil {
+				return err
+			}
+			*request.field, *request.value, *request.inner = ref.Name, !strings.HasPrefix(ref.Want, "*"), strings.TrimPrefix(ref.Want, "*")
+		}
 	}
 	return nil
 }

@@ -107,6 +107,12 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	return nil
 }
 {{- else}}
+{{if .StatuslessSingleton}}
+// HasIDInStatus is always true, so the shared reconciler takes the Update path.
+func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
+	return r.HandleUpdate(ctx, log, obj)
+}
+{{else}}
 {{if .Hooks.AfterCreate -}}
 // HandleCreationWithFollowUp creates the remote {{.Kind}} and sets status.id. It returns the step that
 // calls the afterCreate hook. The shared reconciler runs the step after it saves status.id and
@@ -250,6 +256,7 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 	return nil
 }
 {{- end}}
+{{end}}
 
 func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
@@ -260,6 +267,7 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		return coralogixreconciler.NewValidationError(fmt.Errorf("validation of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
+{{- if not .StatuslessSingleton}}
 	id := ptr.Deref(cr.Status.ID, "")
 {{- if and .IDBits (not .UpdateIDInBody)}}
 	parsedID, err := strconv.ParseInt(id, 10, {{.IDBits}})
@@ -267,6 +275,7 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		return fmt.Errorf("invalid status id of {{.Kind}} %q: %w", id, err)
 	}
 	backendID := {{.IDGoType}}(parsedID)
+{{- end}}
 {{- end}}
 	body, err := cr.UpdateRequest(ctx{{if .HasNameLookup}}, r.ClientSet{{end}})
 	if err != nil {
@@ -281,18 +290,27 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	}
 {{- end}}
 {{- if .HideBodiesInLogs}}
-	log.Info("Updating remote {{.Kind}}", "id", id)
+	log.Info("Updating remote {{.Kind}}"{{if not .StatuslessSingleton}}, "id", id{{end}})
+{{- else}}
+{{- if .StatuslessSingleton}}
+	log.Info("Replacing remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
 {{- else}}
 	log.Info("Updating remote {{.Kind}}", "id", id, "{{.Kind}}", utils.FormatJSON(body))
 {{- end}}
+{{- end}}
 	{{if and .HideBodiesInLogs (not .Hooks.AfterUpdate)}}_{{else}}resp{{end}}, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not (or .UpdateIDInBody .Singleton)}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}({{if .MaskArms}}cr.UpdateMask(){{else}}coralogixv1alpha1.{{.Kind}}UpdateMask{{end}}){{end}}.Execute()
 	if err != nil {
-		return fmt.Errorf("error on updating remote {{.Kind}} %s: %w", id, cxsdk.NewAPIError(httpResp, err))
+		return fmt.Errorf("error on updating remote {{.Kind}}{{if not .StatuslessSingleton}} %s{{end}}: %w"{{if not .StatuslessSingleton}}, id{{end}}, cxsdk.NewAPIError(httpResp, err))
 	}
 {{- if .HideBodiesInLogs}}
-	log.Info("Remote {{.Kind}} updated", "id", id)
+	log.Info("Remote {{.Kind}} updated"{{if not .StatuslessSingleton}}, "id", id{{end}})
 {{- else}}
 	log.Info("Remote {{.Kind}} updated", "response", utils.FormatJSON(resp))
+{{- end}}
+{{- if .StatuslessSingleton}}
+	if err := coralogixreconciler.AddFinalizer(ctx, log, cr, r); err != nil {
+		return err
+	}
 {{- end}}
 {{- if .Hooks.AfterUpdate}}
 	// afterUpdate runs after every successful Update, also when nothing changed, and after a
@@ -306,7 +324,11 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 }
 
 func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
+{{- if or (not .StatuslessSingleton) .Hooks.Delete .Hooks.BeforeDelete}}
 	cr := obj.(*coralogixv1alpha1.{{.Kind}})
+{{- else}}
+	_ = obj
+{{- end}}
 {{- if .Hooks.Delete}}
 	// delete replaces the generated DELETE. It runs on deletion, on a selector mismatch, and again
 	// after a failure. A resource that is already gone is a success.
@@ -325,7 +347,17 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeDelete hook of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
-{{- if .Singleton}}
+{{- if .StatuslessSingleton}}
+	log.Info("Deleting remote {{.Kind}}")
+	_, httpResp, err := r.Client.{{.DeleteMethod}}(ctx).Execute()
+	if err != nil {
+		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
+			return fmt.Errorf("error on deleting remote {{.Kind}}: %w", apiErr)
+		}
+	}
+	return nil
+}
+{{- else if .Singleton}}
 	// The API cannot remove the {{.Kind}} of the team, so it keeps its last configuration.
 	log.Info("The API keeps the remote {{.Kind}}: it has no Delete", "id", ptr.Deref(cr.Status.ID, ""))
 	return nil
