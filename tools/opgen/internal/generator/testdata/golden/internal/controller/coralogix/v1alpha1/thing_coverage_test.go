@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -174,6 +175,7 @@ var _ = Describe("Thing coverage specs (generated)", func() {
 // that the e2e test sets.
 func newThingCoverageCR(name, spec string) *coralogixv1alpha1.Thing {
 	cr := &coralogixv1alpha1.Thing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
+	spec = strings.ReplaceAll(spec, "sample-tags", strings.ReplaceAll(strings.ReplaceAll("@{uuid}", "@{run}", name), "@{uuid}", uuid.NewString()))
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())

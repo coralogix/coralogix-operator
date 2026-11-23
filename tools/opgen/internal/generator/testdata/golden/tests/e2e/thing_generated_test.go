@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -188,6 +189,7 @@ func removeThingGenerated(ctx context.Context, apiClient *thingsservice.ThingsSe
 // newThingGenerated returns a Thing with the spec that the JSON holds.
 func newThingGenerated(name, spec string) *coralogixv1alpha1.Thing {
 	cr := &coralogixv1alpha1.Thing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}}
+	spec = strings.ReplaceAll(spec, "sample-tags", strings.ReplaceAll(strings.ReplaceAll("@{uuid}", "@{run}", name), "@{uuid}", uuid.NewString()))
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())
