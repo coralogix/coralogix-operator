@@ -50,7 +50,7 @@ const (
       "tags": [
         "sample-tags"
       ],
-      "level": "low",
+      "level": "high",
       "pattern": "sample-pattern"
     }
   ]
@@ -240,7 +240,7 @@ var thingPoliciesCoverageSteps = [][]string{
       "tags": [
         "sample-tags"
       ],
-      "level": "high",
+      "level": "low",
       "pattern": "sample-pattern"
     }
   ]

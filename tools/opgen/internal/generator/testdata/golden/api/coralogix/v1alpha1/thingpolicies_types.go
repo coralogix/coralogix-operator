@@ -43,7 +43,7 @@ type ThingPoliciesThingPolicy struct {
 	Tags []string `json:"tags,omitempty"`
 
 	// +optional
-	// +kubebuilder:validation:Enum=low;high
+	// +kubebuilder:validation:Enum=high;low
 	Level *string `json:"level,omitempty"`
 
 	// +optional

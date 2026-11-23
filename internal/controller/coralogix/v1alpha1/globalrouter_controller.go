@@ -69,10 +69,7 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 		return fmt.Errorf("error on creating remote GlobalRouter: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote GlobalRouter created")
-	if resp == nil {
-		return fmt.Errorf("the create response of GlobalRouter has no resource")
-	}
-	if resp.Router == nil {
+	if resp == nil || resp.Router == nil {
 		return fmt.Errorf("the create response of GlobalRouter has no resource")
 	}
 	id := ptr.Deref(resp.Router.Id, "")

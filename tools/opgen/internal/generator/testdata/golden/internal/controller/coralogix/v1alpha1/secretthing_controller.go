@@ -70,10 +70,7 @@ func (r *SecretThingReconciler) HandleCreation(ctx context.Context, log logr.Log
 		return fmt.Errorf("error on creating remote SecretThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote SecretThing created")
-	if resp == nil {
-		return fmt.Errorf("the create response of SecretThing has no resource")
-	}
-	if resp.Item == nil {
+	if resp == nil || resp.Item == nil {
 		return fmt.Errorf("the create response of SecretThing has no resource")
 	}
 	id := ptr.Deref(resp.Item.Id, "")

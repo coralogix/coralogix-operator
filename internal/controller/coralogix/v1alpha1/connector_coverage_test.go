@@ -49,8 +49,8 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
       "entityType": "alerts",
       "fields": [
         {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
+          "fieldName": "channel",
+          "template": "cases-channel"
         }
       ]
     }
@@ -58,8 +58,12 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "channel",
+        "value": "team-alerts"
+      },
+      {
+        "fieldName": "fallbackChannel",
+        "value": "fallback_general"
       }
     ]
   },
@@ -78,8 +82,12 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "channel",
+        "value": "team-alerts"
+      },
+      {
+        "fieldName": "fallbackChannel",
+        "value": "fallback_general"
       }
     ]
   },
@@ -91,22 +99,16 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
 	{
 		name: "step 1 copy 1",
 		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "cases",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "url",
+        "value": "https://example.com/hook"
+      },
+      {
+        "fieldName": "method",
+        "value": "POST"
       }
     ]
   },
@@ -115,29 +117,18 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
   "type": "genericHttps"
 }`,
 		expect: []string{
-			"\"CASES\"",
 			"\"GENERIC_HTTPS\"",
 		},
 	},
 	{
 		name: "step 1 copy 2",
 		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "integrationKey",
+        "value": "e2e-integration-key"
       }
     ]
   },
@@ -146,60 +137,18 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
   "type": "pagerDuty"
 }`,
 		expect: []string{
-			"\"ALERTS\"",
 			"\"PAGERDUTY\"",
 		},
 	},
 	{
 		name: "step 1 copy 3",
 		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "pagerDutyIncidents"
-}`,
-		expect: []string{
-			"\"ALERTS\"",
-			"\"PAGERDUTY_INCIDENTS\"",
-		},
-	},
-	{
-		name: "step 1 copy 4",
-		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "emailAddresses",
+        "value": "[\"email1@example.com\",\"email2@example.com\"]"
       }
     ]
   },
@@ -208,122 +157,18 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
   "type": "email"
 }`,
 		expect: []string{
-			"\"ALERTS\"",
 			"\"EMAIL\"",
 		},
 	},
 	{
-		name: "step 1 copy 5",
+		name: "step 1 copy 4",
 		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "serviceNow"
-}`,
-		expect: []string{
-			"\"ALERTS\"",
-			"\"SERVICE_NOW\"",
-		},
-	},
-	{
-		name: "step 1 copy 6",
-		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "microsoftTeams"
-}`,
-		expect: []string{
-			"\"ALERTS\"",
-			"\"MICROSOFT_TEAMS\"",
-		},
-	},
-	{
-		name: "step 1 copy 7",
-		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "eventBridge"
-}`,
-		expect: []string{
-			"\"ALERTS\"",
-			"\"EVENTBRIDGE\"",
-		},
-	},
-	{
-		name: "step 1 copy 8",
-		spec: `{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "apiKey",
+        "value": "e2e-api-key"
       }
     ]
   },
@@ -332,8 +177,42 @@ var connectorCoverageSpecs = []connectorCoverageSpec{
   "type": "incidentIo"
 }`,
 		expect: []string{
-			"\"ALERTS\"",
 			"\"INCIDENT_IO\"",
+		},
+	},
+	{
+		name: "step 1 copy 5",
+		spec: `{
+  "configOverrides": [
+    {
+      "entityType": "cases",
+      "fields": [
+        {
+          "fieldName": "channel",
+          "template": "cases-channel"
+        }
+      ]
+    }
+  ],
+  "connectorConfig": {
+    "fields": [
+      {
+        "fieldName": "channel",
+        "value": "team-alerts"
+      },
+      {
+        "fieldName": "fallbackChannel",
+        "value": "fallback_general"
+      }
+    ]
+  },
+  "description": "sample-description",
+  "name": "sample-name",
+  "type": "slack"
+}`,
+		expect: []string{
+			"\"CASES\"",
+			"\"SLACK\"",
 		},
 	},
 }

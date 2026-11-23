@@ -69,10 +69,7 @@ func (r *WrappedThingReconciler) HandleCreation(ctx context.Context, log logr.Lo
 		return fmt.Errorf("error on creating remote WrappedThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote WrappedThing created")
-	if resp == nil {
-		return fmt.Errorf("the create response of WrappedThing has no resource")
-	}
-	if resp.Item == nil {
+	if resp == nil || resp.Item == nil {
 		return fmt.Errorf("the create response of WrappedThing has no resource")
 	}
 	id := ptr.Deref(resp.Item.Id, "")

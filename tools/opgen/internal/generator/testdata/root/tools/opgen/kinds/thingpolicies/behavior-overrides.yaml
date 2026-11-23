@@ -21,3 +21,8 @@ types:
       tags: {joinedBy: ","}
 # The logs of an overwrite resource leave out the bodies too.
 hideBodiesInLogs: true
+enums:
+  ThingPolicyLevel:
+    zero: unspecified
+    rejectZero: true
+    order: [THING_POLICY_LEVEL_HIGH]

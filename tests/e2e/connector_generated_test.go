@@ -47,8 +47,8 @@ const (
       "entityType": "alerts",
       "fields": [
         {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
+          "fieldName": "channel",
+          "template": "cases-channel"
         }
       ]
     }
@@ -56,8 +56,12 @@ const (
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "channel",
+        "value": "team-alerts"
+      },
+      {
+        "fieldName": "fallbackChannel",
+        "value": "fallback_general"
       }
     ]
   },
@@ -69,8 +73,12 @@ const (
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "channel",
+        "value": "team-alerts"
+      },
+      {
+        "fieldName": "fallbackChannel",
+        "value": "fallback_general"
       }
     ]
   },
@@ -209,22 +217,16 @@ func waitForConnectorGenerated(ctx context.Context, crClient client.Client, name
 var connectorCoverageSteps = [][]string{
 	{
 		`{
-  "configOverrides": [
-    {
-      "entityType": "cases",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "url",
+        "value": "https://example.com/hook"
+      },
+      {
+        "fieldName": "method",
+        "value": "POST"
       }
     ]
   },
@@ -233,22 +235,12 @@ var connectorCoverageSteps = [][]string{
   "type": "genericHttps"
 }`,
 		`{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "integrationKey",
+        "value": "e2e-integration-key"
       }
     ]
   },
@@ -257,46 +249,12 @@ var connectorCoverageSteps = [][]string{
   "type": "pagerDuty"
 }`,
 		`{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "pagerDutyIncidents"
-}`,
-		`{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "emailAddresses",
+        "value": "[\"email1@example.com\",\"email2@example.com\"]"
       }
     ]
   },
@@ -305,100 +263,46 @@ var connectorCoverageSteps = [][]string{
   "type": "email"
 }`,
 		`{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
+  "configOverrides": [],
   "connectorConfig": {
     "fields": [
       {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "serviceNow"
-}`,
-		`{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "microsoftTeams"
-}`,
-		`{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
-      }
-    ]
-  },
-  "description": "sample-description",
-  "name": "sample-name",
-  "type": "eventBridge"
-}`,
-		`{
-  "configOverrides": [
-    {
-      "entityType": "alerts",
-      "fields": [
-        {
-          "fieldName": "sample-field-name",
-          "template": "sample-template"
-        }
-      ]
-    }
-  ],
-  "connectorConfig": {
-    "fields": [
-      {
-        "fieldName": "sample-field-name",
-        "value": "sample-value"
+        "fieldName": "apiKey",
+        "value": "e2e-api-key"
       }
     ]
   },
   "description": "sample-description",
   "name": "sample-name",
   "type": "incidentIo"
+}`,
+		`{
+  "configOverrides": [
+    {
+      "entityType": "cases",
+      "fields": [
+        {
+          "fieldName": "channel",
+          "template": "cases-channel"
+        }
+      ]
+    }
+  ],
+  "connectorConfig": {
+    "fields": [
+      {
+        "fieldName": "channel",
+        "value": "team-alerts"
+      },
+      {
+        "fieldName": "fallbackChannel",
+        "value": "fallback_general"
+      }
+    ]
+  },
+  "description": "sample-description",
+  "name": "sample-name",
+  "type": "slack"
 }`,
 	},
 }

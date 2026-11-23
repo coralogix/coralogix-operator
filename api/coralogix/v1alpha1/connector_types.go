@@ -24,56 +24,57 @@ import (
 
 // ConnectorSpec defines the desired state of a Connector.
 type ConnectorSpec struct {
-	// The config overrides.
+	// ConfigOverrides are the entity type config overrides for the connector.
 	// +optional
 	ConfigOverrides []ConnectorEntityTypeConfigOverrides `json:"configOverrides,omitempty"`
 
-	// Configuration for a specific output schema of a connector
+	// ConnectorConfig is the configuration of the connector.
 	ConnectorConfig ConnectorConfig `json:"connectorConfig"`
 
-	// Human-readable description.
+	// Description is the description of the connector.
 	Description string `json:"description"`
 
-	// Display name.
+	// Name is the name of the connector.
 	Name string `json:"name"`
 
-	// Connector type.
+	// Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, or incidentIo (preview).
 	// +kubebuilder:validation:Enum=slack;genericHttps;pagerDuty;pagerDutyIncidents;email;serviceNow;microsoftTeams;eventBridge;incidentIo
 	Type string `json:"type"`
 }
 
 // ConnectorEntityTypeConfigOverrides is the EntityTypeConfigOverrides object of the API.
 type ConnectorEntityTypeConfigOverrides struct {
+	// EntityType is the entity type for the config override. Can be one of alerts or cases.
 	// +kubebuilder:validation:Enum=alerts;cases
 	EntityType string `json:"entityType"`
 
-	// List of fields. The server does not keep the order of the fields.
+	// Fields are the templated fields for the config override.
 	// +optional
 	Fields []ConnectorTemplatedConnectorConfigField `json:"fields,omitempty"`
 }
 
 // ConnectorTemplatedConnectorConfigField is the TemplatedConnectorConfigField object of the API.
 type ConnectorTemplatedConnectorConfigField struct {
-	// The field name.
+	// FieldName is the name of the field. e.g. "channel" for slack.
 	FieldName string `json:"fieldName"`
 
-	// Template.
+	// Template is the template for the field.
 	Template string `json:"template"`
 }
 
 // ConnectorConfig is the ConnectorConfig object of the API.
 type ConnectorConfig struct {
-	// List of fields. The server does not keep the order of the fields.
+	// Fields are the fields of the connector config.
 	Fields []ConnectorNotificationCenterConnectorConfigField `json:"fields"`
 }
 
 // ConnectorNotificationCenterConnectorConfigField is the notification_center.ConnectorConfigField object of the API.
 // +kubebuilder:validation:XValidation:rule="(has(self.value) ? 1 : 0) + (has(self.secretKeyRef) ? 1 : 0) == 1",message="Exactly one of value or secretKeyRef must be set"
 type ConnectorNotificationCenterConnectorConfigField struct {
-	// The field name.
+	// FieldName is the name of the field. e.g. "channel" for slack.
 	FieldName string `json:"fieldName"`
 
-	// The value.
+	// Value is the literal value of the field. Conflicts with SecretKeyRef.
 	// +optional
 	Value *string `json:"value,omitempty"`
 

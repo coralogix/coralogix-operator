@@ -8,12 +8,14 @@ spec:
   configOverrides:
     - entityType: alerts
       fields:
-        - fieldName: sample-field-name
-          template: sample-template
+        - fieldName: channel
+          template: cases-channel
   connectorConfig:
     fields:
-      - fieldName: sample-field-name
-        value: sample-value
+      - fieldName: channel
+        value: team-alerts
+      - fieldName: fallbackChannel
+        value: fallback_general
   description: sample-description
   name: sample-name
   type: slack

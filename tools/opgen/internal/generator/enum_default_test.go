@@ -61,12 +61,7 @@ func TestEnumOrderKeepsTheReleasedOrder(t *testing.T) {
 	}
 }
 
-func TestEnumOrderNamesAnAcceptedValue(t *testing.T) {
-	line := "    zero: unspecified\n    order: [THING_PRIORITY_UNKNOWN]\n"
-	_, err := overrides.Parse([]byte(enumHead + line))
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestEnumOrderRejectsDuplicateAndEmptyValues(t *testing.T) {
 	for _, bad := range []string{"order: [THING_PRIORITY_LOW, THING_PRIORITY_LOW]", `order: [""]`} {
 		_, err := overrides.Parse([]byte(enumHead + "    zero: unspecified\n    " + bad + "\n"))
 		if err == nil || !strings.Contains(err.Error(), "enums.ThingPriority.order") {

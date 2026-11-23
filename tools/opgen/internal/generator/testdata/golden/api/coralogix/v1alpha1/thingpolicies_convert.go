@@ -80,8 +80,8 @@ func (in *ThingPoliciesSpec) toOverwriteThingPoliciesRequest(ctx context.Context
 
 // thingPoliciesThingPolicyLevelValues maps each value of the spec to the API value.
 var thingPoliciesThingPolicyLevelValues = map[string]thingpoliciesservice.ThingPolicyLevel{
-	"low":  thingpoliciesservice.THINGPOLICYLEVEL_THING_POLICY_LEVEL_LOW,
 	"high": thingpoliciesservice.THINGPOLICYLEVEL_THING_POLICY_LEVEL_HIGH,
+	"low":  thingpoliciesservice.THINGPOLICYLEVEL_THING_POLICY_LEVEL_LOW,
 }
 
 // thingPoliciesThingPolicyLevelToAPI returns the API value of a spec value.
