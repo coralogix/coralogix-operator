@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	gouuid "github.com/google/uuid"
@@ -740,13 +741,15 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(resultCount.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING))
 			g.Expect(resultCount.NoDataPolicy.GetAutoRetireSeconds()).To(Equal(int32(3600)))
 			g.Expect(resultCount.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_EQUALS))
-			g.Expect(resultCount.Rules).To(HaveLen(2))
-			g.Expect(resultCount.Rules[0].Condition.GetCountThreshold()).To(Equal(int64(3)))
-			g.Expect(resultCount.Rules[0].Condition.GetExpression()).To(Equal("cnt > 100"))
-			g.Expect(resultCount.Rules[0].Override.GetPriority()).To(Equal(alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1))
-			g.Expect(resultCount.Rules[1].Condition.GetCountThreshold()).To(Equal(int64(10)))
-			// A rule without an override takes the alert priority.
-			g.Expect(resultCount.Rules[1].Override.GetPriority()).To(Equal(alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3))
+			// The API may return the rules in any order. A rule without an override takes the alert priority.
+			var rules []string
+			for _, rule := range resultCount.Rules {
+				rules = append(rules, fmt.Sprintf("%d|%s|%s", rule.Condition.GetCountThreshold(), rule.Condition.GetExpression(), rule.Override.GetPriority()))
+			}
+			g.Expect(rules).To(ConsistOf(
+				fmt.Sprintf("3|cnt > 100|%s", alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1),
+				fmt.Sprintf("10||%s", alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3),
+			))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Clearing the optional fields")
