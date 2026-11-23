@@ -1,0 +1,12 @@
+# The bucket must exist, so the live test reads it from the environment of CI.
+values:
+  item.bucket: e2e-setting-bucket
+env: [SETTING_BUCKET]
+substitutions:
+  e2e-setting-bucket: '@{env.SETTING_BUCKET}'
+upgrade:
+  from: '1.0'
+  spec:
+    item: {bucket: '@{env.SETTING_BUCKET}'}
+  field: level
+  value: high
