@@ -22,7 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
@@ -35,17 +34,17 @@ func connectorSecretRef(name string) *corev1.SecretKeySelector {
 
 func TestConnectorSecretNamesCoverFieldsAndTemplates(t *testing.T) {
 	connector := &coralogixv1alpha1.Connector{Spec: coralogixv1alpha1.ConnectorSpec{
-		ConnectorConfig: coralogixv1alpha1.ConnectorConfig{Fields: []coralogixv1alpha1.ConnectorConfigField{
+		ConnectorConfig: coralogixv1alpha1.ConnectorConfig{Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 			{FieldName: "a", SecretKeyRef: connectorSecretRef("shared")},
 			{FieldName: "b", Value: new(string)},
 		}},
-		ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{{EntityType: "alerts", Fields: []coralogixv1alpha1.TemplatedConnectorConfigField{
+		ConfigOverrides: []coralogixv1alpha1.ConnectorEntityTypeConfigOverrides{{EntityType: "alerts", Fields: []coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{
 			{FieldName: "a", TemplateSecretKeyRef: connectorSecretRef("shared")},
 			{FieldName: "c", TemplateSecretKeyRef: connectorSecretRef("templates")},
-			{FieldName: "d", Template: "example-value"},
+			{FieldName: "d", Template: new("example-value")},
 		}}},
 	}}
-	names := connectorSecretNames(connector)
+	names := secretNames(connector)
 	if len(names) != 2 || names[0] != "shared" || names[1] != "templates" {
 		t.Fatalf("Secret names = %v", names)
 	}
@@ -62,16 +61,14 @@ func TestConnectorSecretWatchSelectsReferences(t *testing.T) {
 	withTemplate := func(name, secret string) *coralogixv1alpha1.Connector {
 		return &coralogixv1alpha1.Connector{
 			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "test"},
-			Spec: coralogixv1alpha1.ConnectorSpec{ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{{
+			Spec: coralogixv1alpha1.ConnectorSpec{ConfigOverrides: []coralogixv1alpha1.ConnectorEntityTypeConfigOverrides{{
 				EntityType: "alerts",
-				Fields:     []coralogixv1alpha1.TemplatedConnectorConfigField{{FieldName: "f", TemplateSecretKeyRef: connectorSecretRef(secret)}},
+				Fields:     []coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{{FieldName: "f", TemplateSecretKeyRef: connectorSecretRef(secret)}},
 			}}},
 		}
 	}
 	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(withTemplate("first", "shared"), withTemplate("second", "other")).
-		WithIndex(&coralogixv1alpha1.Connector{}, connectorSecretIndex, func(obj client.Object) []string {
-			return connectorSecretNames(obj.(*coralogixv1alpha1.Connector))
-		}).Build()
+		WithIndex(&coralogixv1alpha1.Connector{}, secretIndex, secretNames).Build()
 	previousClient := config.GetClient()
 	t.Cleanup(func() { config.InitClient(previousClient) })
 	config.InitClient(c)
@@ -81,15 +78,15 @@ func TestConnectorSecretWatchSelectsReferences(t *testing.T) {
 	secret := func(namespace string) *corev1.Secret {
 		return &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: "shared", Namespace: namespace}}
 	}
-	requests := (&ConnectorReconciler{}).connectorsForSecret(context.Background(), secret("test"))
+	requests := requestsForSecret(context.Background(), &coralogixv1alpha1.ConnectorList{}, secret("test"))
 	if len(requests) != 1 || requests[0].Name != "first" {
 		t.Fatalf("Secret event requests = %v", requests)
 	}
-	if requests = (&ConnectorReconciler{}).connectorsForSecret(context.Background(), secret("another")); len(requests) != 0 {
+	if requests = requestsForSecret(context.Background(), &coralogixv1alpha1.ConnectorList{}, secret("another")); len(requests) != 0 {
 		t.Fatalf("cross-namespace Secret event requests = %v", requests)
 	}
 	config.GetConfig().Selector = config.Selector{LabelSelector: labels.SelectorFromSet(labels.Set{"selected": "true"})}
-	if requests = (&ConnectorReconciler{}).connectorsForSecret(context.Background(), secret("test")); len(requests) != 0 {
+	if requests = requestsForSecret(context.Background(), &coralogixv1alpha1.ConnectorList{}, secret("test")); len(requests) != 0 {
 		t.Fatalf("unselected connector requests = %v", requests)
 	}
 }

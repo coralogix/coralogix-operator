@@ -23,8 +23,10 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
@@ -117,8 +119,13 @@ func (r *SecretThingReconciler) HandleDeletion(ctx context.Context, log logr.Log
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SecretThingReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	secrets, err := watchSecrets(mgr, &coralogixv1alpha1.SecretThing{}, &coralogixv1alpha1.SecretThingList{})
+	if err != nil {
+		return err
+	}
+	// The selector filters the resources only: a Secret has no labels of the selector.
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&coralogixv1alpha1.SecretThing{}).
-		WithEventFilter(config.GetConfig().Selector.Predicate()).
+		For(&coralogixv1alpha1.SecretThing{}, builder.WithPredicates(config.GetConfig().Selector.Predicate())).
+		Watches(&corev1.Secret{}, secrets).
 		Complete(r)
 }

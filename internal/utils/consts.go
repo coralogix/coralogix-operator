@@ -30,7 +30,6 @@ const (
 	ApiKeyKind                = "ApiKey"
 	GroupKind                 = "Group"
 	PrometheusRuleKind        = "PrometheusRule"
-	ConnectorKind             = "Connector"
 	ArchiveMetricsTargetKind  = "ArchiveMetricsTarget"
 	IPAccess                  = "IPAccess"
 	CustomEnrichmentKind      = "CustomEnrichment"

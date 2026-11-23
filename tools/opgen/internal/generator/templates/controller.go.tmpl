@@ -13,8 +13,14 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	{{- if .UsesSecrets}}
+	corev1 "k8s.io/api/core/v1"
+	{{- end}}
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
+	{{- if .UsesSecrets}}
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	{{- end}}
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{.CxsdkPath}}"
@@ -415,8 +421,20 @@ func (r *{{.Kind}}Reconciler) RemoteStatusFields() [][]string {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *{{.Kind}}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+{{- if .UsesSecrets}}
+	secrets, err := watchSecrets(mgr, &coralogixv1alpha1.{{.Kind}}{}, &coralogixv1alpha1.{{.Kind}}List{})
+	if err != nil {
+		return err
+	}
+	// The selector filters the resources only: a Secret has no labels of the selector.
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&coralogixv1alpha1.{{.Kind}}{}, builder.WithPredicates(config.GetConfig().Selector.Predicate())).
+		Watches(&corev1.Secret{}, secrets).
+		Complete(r)
+{{- else}}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.{{.Kind}}{}).
 		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
+{{- end}}
 }

@@ -26,6 +26,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	connectorsservice "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/connectors_service"
+
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 )
 
@@ -61,14 +63,14 @@ func templateSecretRef(key string) *corev1.SecretKeySelector {
 	}
 }
 
-func connectorWithOverrideFields(fields ...TemplatedConnectorConfigField) *Connector {
+func connectorWithOverrideFields(fields ...ConnectorTemplatedConnectorConfigField) *Connector {
 	return &Connector{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test"},
 		Spec: ConnectorSpec{
 			Name:            "example",
 			Type:            "pagerDuty",
-			ConnectorConfig: ConnectorConfig{Fields: []ConnectorConfigField{{FieldName: "integrationKey", Value: new(string)}}},
-			ConfigOverrides: []EntityTypeConfigOverrides{{EntityType: "alerts", Fields: fields}},
+			ConnectorConfig: ConnectorConfig{Fields: []ConnectorNotificationCenterConnectorConfigField{{FieldName: "integrationKey", Value: new(string)}}},
+			ConfigOverrides: []ConnectorEntityTypeConfigOverrides{{EntityType: "alerts", Fields: fields}},
 		},
 	}
 }
@@ -77,17 +79,23 @@ func TestConnectorOverrideTemplateReadsSecret(t *testing.T) {
 	sentinel := connectorTestSentinel(t)
 	connectorTestClient(t, map[string][]byte{"template": []byte(sentinel)})
 	connector := connectorWithOverrideFields(
-		TemplatedConnectorConfigField{FieldName: "from-secret", TemplateSecretKeyRef: templateSecretRef("template")},
-		TemplatedConnectorConfigField{FieldName: "literal", Template: "example-value"},
+		ConnectorTemplatedConnectorConfigField{FieldName: "from-secret", TemplateSecretKeyRef: templateSecretRef("template")},
+		ConnectorTemplatedConnectorConfigField{FieldName: "literal", Template: new("example-value")},
 	)
 
-	got, err := connector.ExtractConnector(context.Background())
+	// The operator reads the Secret on every create and update.
+	create, err := connector.CreateRequest(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	fields := got.ConfigOverrides[0].Fields
-	if len(fields) != 2 || fields[0].GetTemplate() != sentinel || fields[1].GetTemplate() != "example-value" {
-		t.Fatalf("override templates do not match the sources")
+	update, err := connector.UpdateRequest(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fields := range [][]connectorsservice.TemplatedConnectorConfigField{create.Connector.ConfigOverrides[0].Fields, update.Connector.ConfigOverrides[0].Fields} {
+		if len(fields) != 2 || fields[0].GetTemplate() != sentinel || fields[1].GetTemplate() != "example-value" {
+			t.Fatalf("override templates do not match the sources")
+		}
 	}
 }
 
@@ -95,25 +103,25 @@ func TestConnectorOverrideTemplateSecretErrorsHideValues(t *testing.T) {
 	sentinel := connectorTestSentinel(t)
 	connectorTestClient(t, map[string][]byte{"template": []byte(sentinel)})
 
-	missingKey := connectorWithOverrideFields(TemplatedConnectorConfigField{FieldName: "f", TemplateSecretKeyRef: templateSecretRef("absent")})
-	_, err := missingKey.ExtractConnector(context.Background())
-	if err == nil || !strings.Contains(err.Error(), "'f'") || !strings.Contains(err.Error(), "absent") || !strings.Contains(err.Error(), "example-credentials") {
+	missingKey := connectorWithOverrideFields(ConnectorTemplatedConnectorConfigField{FieldName: "f", TemplateSecretKeyRef: templateSecretRef("absent")})
+	_, err := missingKey.CreateRequest(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "fields[].template") || !strings.Contains(err.Error(), "absent") || !strings.Contains(err.Error(), "example-credentials") {
 		t.Fatalf("missing key error = %v", err)
 	}
 	if strings.Contains(err.Error(), sentinel) {
 		t.Fatal("error contains the secret value")
 	}
 
-	missingSecret := connectorWithOverrideFields(TemplatedConnectorConfigField{FieldName: "f", TemplateSecretKeyRef: &corev1.SecretKeySelector{
+	missingSecret := connectorWithOverrideFields(ConnectorTemplatedConnectorConfigField{FieldName: "f", TemplateSecretKeyRef: &corev1.SecretKeySelector{
 		LocalObjectReference: corev1.LocalObjectReference{Name: "other"}, Key: "template"}})
-	if _, err := missingSecret.ExtractConnector(context.Background()); err == nil || !strings.Contains(err.Error(), "other") {
+	if _, err := missingSecret.CreateRequest(context.Background()); err == nil || !strings.Contains(err.Error(), "other") {
 		t.Fatalf("missing secret error = %v", err)
 	}
 
 	// The reference reads the namespace of the Connector, not another namespace.
-	cross := connectorWithOverrideFields(TemplatedConnectorConfigField{FieldName: "f", TemplateSecretKeyRef: templateSecretRef("template")})
+	cross := connectorWithOverrideFields(ConnectorTemplatedConnectorConfigField{FieldName: "f", TemplateSecretKeyRef: templateSecretRef("template")})
 	cross.Namespace = "another"
-	if _, err := cross.ExtractConnector(context.Background()); err == nil {
+	if _, err := cross.CreateRequest(context.Background()); err == nil {
 		t.Fatal("a Secret in another namespace must not be read")
 	}
 }
@@ -121,8 +129,8 @@ func TestConnectorOverrideTemplateSecretErrorsHideValues(t *testing.T) {
 func TestConnectorOverrideTemplateRejectsTwoSources(t *testing.T) {
 	sentinel := connectorTestSentinel(t)
 	connectorTestClient(t, map[string][]byte{"template": []byte(sentinel)})
-	connector := connectorWithOverrideFields(TemplatedConnectorConfigField{FieldName: "f", Template: "example-value", TemplateSecretKeyRef: templateSecretRef("template")})
-	_, err := connector.ExtractConnector(context.Background())
+	connector := connectorWithOverrideFields(ConnectorTemplatedConnectorConfigField{FieldName: "f", Template: new("example-value"), TemplateSecretKeyRef: templateSecretRef("template")})
+	_, err := connector.CreateRequest(context.Background())
 	if err == nil || strings.Contains(err.Error(), sentinel) {
 		t.Fatalf("two sources error = %v", err)
 	}

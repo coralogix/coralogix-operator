@@ -24,7 +24,7 @@ import (
 
 // SecretThingSpec defines the desired state of a SecretThing.
 // +kubebuilder:validation:XValidation:rule="(has(self.apiKey) ? 1 : 0) + (has(self.apiKeySecretKeyRef) ? 1 : 0) == 1",message="Exactly one of apiKey or apiKeySecretKeyRef must be set"
-// +kubebuilder:validation:XValidation:rule="(has(self.token) ? 1 : 0) + (has(self.tokenSecretKeyRef) ? 1 : 0) <= 1",message="At most one of token or tokenSecretKeyRef can be set"
+// +kubebuilder:validation:XValidation:rule="!(has(self.token) && has(self.tokenSecretKeyRef))",message="Only one of token or tokenSecretKeyRef can be set"
 type SecretThingSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`

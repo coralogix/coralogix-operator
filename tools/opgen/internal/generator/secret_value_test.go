@@ -44,14 +44,14 @@ func TestValueFromReadsTheSecretInBothRequests(t *testing.T) {
 }
 
 // The CR sets the string or the Secret. The rule needs exactly one when the contract requires the
-// string, or the line says requireOne, and at most one otherwise.
+// string, or the line says requireOne, and only one otherwise.
 func TestValueFromRule(t *testing.T) {
 	for name, tc := range map[string]struct {
 		line, rule, message string
 	}{
 		"contract requires the string": {"apiKey: {valueFrom: {secret: keyRef}}", "(has(self.apiKey) ? 1 : 0) + (has(self.keyRef) ? 1 : 0) == 1", "Exactly one of apiKey or keyRef must be set"},
 		"requireOne":                   {"token: {valueFrom: {secret: tokenRef}, requireOne: true}", "(has(self.token) ? 1 : 0) + (has(self.tokenRef) ? 1 : 0) == 1", "Exactly one of token or tokenRef must be set"},
-		"optional":                     {"token: {valueFrom: {secret: tokenRef}}", "(has(self.token) ? 1 : 0) + (has(self.tokenRef) ? 1 : 0) <= 1", "At most one of token or tokenRef can be set"},
+		"optional":                     {"token: {valueFrom: {secret: tokenRef}}", "!(has(self.token) && has(self.tokenRef))", "Only one of token or tokenRef can be set"},
 	} {
 		root, input := syntheticRoot(t)
 		writeSecretThingOverrides(t, root, "  SecretThing:\n    fields:\n      id: {readOnly: true}\n      "+tc.line+"\n")

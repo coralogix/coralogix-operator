@@ -501,7 +501,10 @@ type Enum struct {
 	TrimPrefix string            `yaml:"trimPrefix"`
 	Names      map[string]string `yaml:"names"`
 	Aliases    map[string]string `yaml:"aliases"`
-	Rejected   []RejectedValue   `yaml:"rejected"`
+	// Order lists API values in the order of the released CRD. The CR enum lists them first, in
+	// this order, then the accepted values that the line does not list, in contract order.
+	Order    []string        `yaml:"order"`
+	Rejected []RejectedValue `yaml:"rejected"`
 	// Values is the removed list of accepted values. The key is read only to tell the user to delete it.
 	Values []string `yaml:"values"`
 }
@@ -533,6 +536,26 @@ func (e Enum) RejectedAPIValues() []string {
 // IsRejected reports whether an API value is in the rejected list.
 func (e Enum) IsRejected(value string) bool {
 	return slices.ContainsFunc(e.Rejected, func(r RejectedValue) bool { return r.Value == value })
+}
+
+// Ordered returns the accepted API values in the order of the line: the values of order first, then
+// the others in the order given. A new contract value keeps its place at the end.
+func (e Enum) Ordered(accepted []string) []string {
+	if len(e.Order) == 0 {
+		return accepted
+	}
+	ordered := make([]string, 0, len(accepted))
+	for _, value := range e.Order {
+		if slices.Contains(accepted, value) {
+			ordered = append(ordered, value)
+		}
+	}
+	for _, value := range accepted {
+		if !slices.Contains(e.Order, value) {
+			ordered = append(ordered, value)
+		}
+	}
+	return ordered
 }
 
 // Ref is the ref key of a field line.
@@ -1144,6 +1167,13 @@ func (e Enum) check(name string) error {
 			return fmt.Errorf("enums.%s.rejected: value %q needs a reason", name, rejected.Value)
 		}
 		seen[rejected.Value] = true
+	}
+	listed := map[string]bool{}
+	for _, value := range e.Order {
+		if value == "" || listed[value] || e.IsRejected(value) {
+			return fmt.Errorf("enums.%s.order: value %q is empty, listed twice, or rejected", name, value)
+		}
+		listed[value] = true
 	}
 	for value, cr := range e.Names {
 		if e.IsRejected(value) || !validEnumValue(cr) {

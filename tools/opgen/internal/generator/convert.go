@@ -1073,8 +1073,9 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		}
 		sibling := strings.TrimSuffix(src, f.GoName) + goName(f.secretRef)
 		resolved := b.temp("secret")
-		return fmt.Sprintf("if %s != nil {\n%s} else if %s != nil {\n%s, err := ResolveSecretKeyRef(ctx, namespace, *%s)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n%s}\n",
-			src, b.set(target, ref.Want, src, true), sibling, resolved, sibling, path, b.set(target, ref.Want, resolved, false)), nil
+		// The CRD rule rejects two sources. This check is a backstop for objects that skip admission.
+		return fmt.Sprintf("if %s != nil && %s != nil {\nreturn nil, fmt.Errorf(\"%s: only one of %s or %s can be set\")\n}\nif %s != nil {\n%s} else if %s != nil {\n%s, err := ResolveSecretKeyRef(ctx, namespace, *%s)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n%s}\n",
+			src, sibling, path, f.JSON, f.secretRef, src, b.set(target, ref.Want, src, true), sibling, resolved, sibling, path, b.set(target, ref.Want, resolved, false)), nil
 	}
 	if f.joinedBy != "" {
 		if strings.TrimPrefix(ref.Want, "*") != "string" {

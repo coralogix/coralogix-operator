@@ -611,7 +611,7 @@ func resolveWebhookValue(ctx context.Context, namespace, field, literal string, 
 	if literal != "" {
 		return "", fmt.Errorf("%s has both a literal value and a Secret reference", field)
 	}
-	value, err := readSecret(ctx, *ref, namespace)
+	value, err := ResolveSecretKeyRef(ctx, namespace, *ref)
 	if err != nil {
 		return "", fmt.Errorf("failed to read Secret for %s: %w", field, err)
 	}
@@ -631,7 +631,7 @@ func resolveWebhookHeaders(ctx context.Context, namespace string, literals map[s
 		if _, exists := headers[name]; exists {
 			return nil, fmt.Errorf("header %q has both a literal value and a Secret reference", name)
 		}
-		value, err := readSecret(ctx, ref, namespace)
+		value, err := ResolveSecretKeyRef(ctx, namespace, ref)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read Secret for header %q: %w", name, err)
 		}

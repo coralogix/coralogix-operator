@@ -4,17 +4,16 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/source"
 )
 
-// The released Connector is not a listed kind yet, because its handwritten files still exist and
-// the generator would stop on them. Its behavior-overrides file waits in testdata/connector until
-// the migration moves it to kinds/connector. This test keeps the file true to the pinned contract: it
-// generates the Connector from the real SDK, in a root that has no handwritten files, and checks
-// the shapes of the released CRD.
+// This test keeps the behavior-overrides file of the released Connector true to the pinned
+// contract: it generates the Connector from the real SDK, in a root that has no handwritten files,
+// and checks the shapes of the released CRD.
 func TestReleasedConnectorShapes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("loads the pinned SDK")
@@ -37,7 +36,7 @@ func TestReleasedConnectorShapes(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(root, kindsDir, "connector"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	overrides, err := os.ReadFile(filepath.Join("testdata", "connector", "behavior-overrides.yaml"))
+	overrides, err := os.ReadFile(filepath.Join(operatorRoot, kindsDir, "connector", "behavior-overrides.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,24 +51,19 @@ func TestReleasedConnectorShapes(t *testing.T) {
 	}
 	types := readGenerated(t, root, apiDir+"/connector_types.go")
 
-	// The released type enum has every API value except IBM_EVENT_NOTIFICATIONS, in the released spelling.
-	enum := regexp.MustCompile(`\+kubebuilder:validation:Enum=([^\n]+)`).FindAllStringSubmatch(types, -1)
-	var got [][]string
-	for _, m := range enum {
-		got = append(got, strings.Split(m[1], ";"))
+	// The released type enum has every API value except IBM_EVENT_NOTIFICATIONS, in the released
+	// spelling and the released order.
+	enums := regexp.MustCompile(`\+kubebuilder:validation:Enum=([^\n]+)`).FindAllStringSubmatch(types, -1)
+	var got []string
+	for _, m := range enums {
+		got = append(got, m[1])
 	}
-	want := map[string]bool{"slack": true, "genericHttps": true, "pagerDuty": true, "pagerDutyIncidents": true, "email": true, "serviceNow": true, "microsoftTeams": true, "eventBridge": true, "incidentIo": true, "alerts": true, "cases": true}
-	seen := 0
-	for _, values := range got {
-		for _, value := range values {
-			if !want[value] {
-				t.Errorf("the CRD accepts %q, which the released CRD does not", value)
-			}
-			seen++
-		}
+	want := []string{
+		"slack;genericHttps;pagerDuty;pagerDutyIncidents;email;serviceNow;microsoftTeams;eventBridge;incidentIo",
+		"alerts;cases",
 	}
-	if seen != len(want) {
-		t.Errorf("the CRD has %d enum values, the released CRD has %d: %v", seen, len(want), got)
+	if !slices.Equal(got, want) {
+		t.Errorf("the CRD enums are %q, the released CRD has %q", got, want)
 	}
 
 	// The released rule of a connector config field, word for word: the schema check hashes the message.

@@ -1383,11 +1383,12 @@ func secretReferenceRules(t *crType) {
 		if f.secretRef == "" {
 			continue
 		}
-		terms := fmt.Sprintf("(has(self.%s) ? 1 : 0) + (has(self.%s) ? 1 : 0)", f.JSON, f.secretRef)
 		if f.secretExactlyOne {
+			terms := fmt.Sprintf("(has(self.%s) ? 1 : 0) + (has(self.%s) ? 1 : 0)", f.JSON, f.secretRef)
 			t.Markers = append(t.Markers, celMarker(terms+" == 1", fmt.Sprintf("Exactly one of %s or %s must be set", f.JSON, f.secretRef)))
 		} else {
-			t.Markers = append(t.Markers, celMarker(terms+" <= 1", fmt.Sprintf("At most one of %s or %s can be set", f.JSON, f.secretRef)))
+			// The released Connector rule for an optional string: a CR may leave both out.
+			t.Markers = append(t.Markers, celMarker(fmt.Sprintf("!(has(self.%s) && has(self.%s))", f.JSON, f.secretRef), fmt.Sprintf("Only one of %s or %s can be set", f.JSON, f.secretRef)))
 		}
 	}
 }
@@ -1413,6 +1414,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 				values = append(values, v)
 			}
 		}
+		values = line.Ordered(values)
 		if line.Zero != "" && !line.RejectZero {
 			values = append([]string{t.EnumZero}, values...)
 		}

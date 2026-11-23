@@ -55,6 +55,9 @@ func (in *SecretThing) UpdateRequest(ctx context.Context) (*secretthingsservice.
 func (in *SecretThingField) toSecretThingFieldCreate(ctx context.Context, namespace string) (*secretthingsservice.SecretThingField, error) {
 	out := &secretthingsservice.SecretThingField{}
 	out.FieldName = in.FieldName
+	if in.Value != nil && in.SecretKeyRef != nil {
+		return nil, fmt.Errorf("spec.settings.fields[].value: only one of value or secretKeyRef can be set")
+	}
 	if in.Value != nil {
 		out.Value = in.Value
 	} else if in.SecretKeyRef != nil {
@@ -88,6 +91,9 @@ func (in *SecretThingSettings) toSecretThingSettingsCreate(ctx context.Context, 
 func (in *SecretThingSpec) toSecretThingCreate(ctx context.Context, namespace string) (*secretthingsservice.SecretThing, error) {
 	out := &secretthingsservice.SecretThing{}
 	out.Name = in.Name
+	if in.ApiKey != nil && in.ApiKeySecretKeyRef != nil {
+		return nil, fmt.Errorf("spec.apiKey: only one of apiKey or apiKeySecretKeyRef can be set")
+	}
 	if in.ApiKey != nil {
 		out.ApiKey = *in.ApiKey
 	} else if in.ApiKeySecretKeyRef != nil {
@@ -96,6 +102,9 @@ func (in *SecretThingSpec) toSecretThingCreate(ctx context.Context, namespace st
 			return nil, fmt.Errorf("spec.apiKey: %w", err)
 		}
 		out.ApiKey = secret1
+	}
+	if in.Token != nil && in.TokenSecretKeyRef != nil {
+		return nil, fmt.Errorf("spec.token: only one of token or tokenSecretKeyRef can be set")
 	}
 	if in.Token != nil {
 		out.Token = in.Token
@@ -118,6 +127,9 @@ func (in *SecretThingSpec) toSecretThingCreate(ctx context.Context, namespace st
 func (in *SecretThingField) toSecretThingFieldUpdate(ctx context.Context, namespace string) (*secretthingsservice.SecretThingField, error) {
 	out := &secretthingsservice.SecretThingField{}
 	out.FieldName = in.FieldName
+	if in.Value != nil && in.SecretKeyRef != nil {
+		return nil, fmt.Errorf("spec.settings.fields[].value: only one of value or secretKeyRef can be set")
+	}
 	if in.Value != nil {
 		out.Value = in.Value
 	} else if in.SecretKeyRef != nil {
@@ -151,6 +163,9 @@ func (in *SecretThingSettings) toSecretThingSettingsUpdate(ctx context.Context, 
 func (in *SecretThingSpec) toSecretThingUpdate(ctx context.Context, namespace string) (*secretthingsservice.SecretThing, error) {
 	out := &secretthingsservice.SecretThing{}
 	out.Name = in.Name
+	if in.ApiKey != nil && in.ApiKeySecretKeyRef != nil {
+		return nil, fmt.Errorf("spec.apiKey: only one of apiKey or apiKeySecretKeyRef can be set")
+	}
 	if in.ApiKey != nil {
 		out.ApiKey = *in.ApiKey
 	} else if in.ApiKeySecretKeyRef != nil {
@@ -159,6 +174,9 @@ func (in *SecretThingSpec) toSecretThingUpdate(ctx context.Context, namespace st
 			return nil, fmt.Errorf("spec.apiKey: %w", err)
 		}
 		out.ApiKey = secret8
+	}
+	if in.Token != nil && in.TokenSecretKeyRef != nil {
+		return nil, fmt.Errorf("spec.token: only one of token or tokenSecretKeyRef can be set")
 	}
 	if in.Token != nil {
 		out.Token = in.Token
