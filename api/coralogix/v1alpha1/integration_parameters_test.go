@@ -53,7 +53,7 @@ func TestExtractParameters(t *testing.T) {
 		{
 			name: "inline params merged with secret-sourced param",
 			spec: IntegrationSpec{
-				Parameters: runtime.RawExtension{Raw: []byte(`{"AppName":"prod"}`)},
+				Parameters: IntegrationParameters{RawExtension: runtime.RawExtension{Raw: []byte(`{"AppName":"prod"}`)}},
 				ParametersFromSecret: map[string]corev1.SecretKeySelector{
 					"Token": {
 						LocalObjectReference: corev1.LocalObjectReference{Name: "creds"},
@@ -78,7 +78,7 @@ func TestExtractParameters(t *testing.T) {
 		{
 			name: "key collision between Parameters and ParametersFromSecret",
 			spec: IntegrationSpec{
-				Parameters: runtime.RawExtension{Raw: []byte(`{"Token":"inline"}`)},
+				Parameters: IntegrationParameters{RawExtension: runtime.RawExtension{Raw: []byte(`{"Token":"inline"}`)}},
 				ParametersFromSecret: map[string]corev1.SecretKeySelector{
 					"Token": {
 						LocalObjectReference: corev1.LocalObjectReference{Name: "creds"},
@@ -115,7 +115,7 @@ func TestExtractParameters(t *testing.T) {
 		{
 			name: "optional ref, secret missing — skipped",
 			spec: IntegrationSpec{
-				Parameters: runtime.RawExtension{Raw: []byte(`{"AppName":"prod"}`)},
+				Parameters: IntegrationParameters{RawExtension: runtime.RawExtension{Raw: []byte(`{"AppName":"prod"}`)}},
 				ParametersFromSecret: map[string]corev1.SecretKeySelector{
 					"Token": {
 						LocalObjectReference: corev1.LocalObjectReference{Name: "missing"},
@@ -130,7 +130,7 @@ func TestExtractParameters(t *testing.T) {
 		{
 			name: "optional ref, key missing in secret — skipped",
 			spec: IntegrationSpec{
-				Parameters: runtime.RawExtension{Raw: []byte(`{"AppName":"prod"}`)},
+				Parameters: IntegrationParameters{RawExtension: runtime.RawExtension{Raw: []byte(`{"AppName":"prod"}`)}},
 				ParametersFromSecret: map[string]corev1.SecretKeySelector{
 					"Token": {
 						LocalObjectReference: corev1.LocalObjectReference{Name: "creds"},

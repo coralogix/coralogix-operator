@@ -44,7 +44,7 @@ func init() {
 		resource: "integrations",
 		newFake:  newIntegrationFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.IntegrationReconciler{IntegrationsClient: cs.Integrations(), Interval: reconcileInterval}
+			return &v1alpha1controllers.IntegrationReconciler{Client: cs.Integrations(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: integrationScenarios,
 		admission: integrationAdmission(),

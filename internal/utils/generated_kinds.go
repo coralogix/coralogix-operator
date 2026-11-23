@@ -28,6 +28,7 @@ const (
 	DashboardsFolderKind         = "DashboardsFolder"
 	Events2MetricKind            = "Events2Metric"
 	GlobalRouterKind             = "GlobalRouter"
+	IntegrationKind              = "Integration"
 	PresetKind                   = "Preset"
 	ProductAnalyticsSettingsKind = "ProductAnalyticsSettings"
 	QuotaAllocationRuleSetKind   = "QuotaAllocationRuleSet"

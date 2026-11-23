@@ -1,0 +1,44 @@
+resource: DeployedIntegrationInformation
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD accepts an empty key and version. The API rejects both with 400.
+    spec.integrationKey: {inferred: false}
+    spec.version: {inferred: false}
+api:
+  # Create and Update are on /integrations/metadata/v1, Get is on .../deployed/{id}, and Delete is
+  # on .../instances/{id}.
+  operations:
+    create: IntegrationService_SaveIntegration
+    get: IntegrationService_GetDeployedIntegration
+    update: IntegrationService_UpdateIntegration
+    delete: IntegrationService_DeleteIntegration
+  customMethods: true
+  # Create and Update send {metadata: {...}}. Update sends the id beside metadata.
+  requestWrapper: metadata
+  idProperty: id
+  updateIDInBody: true
+  # Create answers {integrationId}.
+  createResponseOnlyIDProperty: integrationId
+types:
+  DeployedIntegrationInformation:
+    fields:
+      definitionKey: {name: integrationKey, requestAs: integrationKey}
+      definitionVersion: {name: version, requestAs: version}
+      # The released CR holds the parameters as an object of names and values, and Secret
+      # references beside it. The hooks build the parameter list of the API from both. The
+      # request keeps integrationParameters, which the API requires, as an empty object when
+      # there are no parameters.
+      parameters: {requestAs: integrationParameters.parameters, setByHook: true}
+      # The connection status of the cloud account. Its enum has no UNSPECIFIED zero value, and the
+      # released CR never showed it.
+      integrationStatus: {skip: true}
+# The released spec fields that the hooks read (integration_parameters.go).
+spec:
+  parameters: {type: IntegrationParameters, value: true}
+  parametersFromSecret: {type: IntegrationParametersFromSecret, value: true}
+hooks: [beforeCreate, beforeUpdate]
+# The parameters can hold Secret values, so the logs leave out the request and response bodies, as
+# the released controller does.
+hideBodiesInLogs: true

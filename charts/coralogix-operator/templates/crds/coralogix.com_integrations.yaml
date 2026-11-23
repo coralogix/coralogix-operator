@@ -25,13 +25,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          Integration is the Schema for the Integrations API.
-          See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-          For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
-
-          **Added in v0.4.0**
+        description: Integration is the Schema for the integrations API.
         properties:
           apiVersion:
             description: |-
@@ -51,16 +45,12 @@ spec:
           metadata:
             type: object
           spec:
-            description: IntegrationSpec defines the desired state of a Coralogix
-              (managed) integration.
+            description: IntegrationSpec defines the desired state of a Integration.
             properties:
               integrationKey:
-                description: Unique name of the integration.
+                description: The definition key.
                 type: string
               parameters:
-                description: |-
-                  Inline parameters for the integration. May be omitted entirely when all
-                  parameters come from ParametersFromSecret.
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               parametersFromSecret:
@@ -88,7 +78,7 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 description: |-
-                  ParametersFromSecret is a map of parameter names to references of Kubernetes
+                  IntegrationParametersFromSecret is a map of parameter names to references of Kubernetes
                   Secret keys whose values should be used as the parameter value at reconcile time.
                   Use this for sensitive parameters (API keys, service account keys, tokens, etc.)
                   so that secret material does not need to live in the manifest.
@@ -103,14 +93,14 @@ spec:
                   failures) still cause reconciliation to fail and retry.
                 type: object
               version:
-                description: Desired version of the integration
+                description: The definition version.
                 type: string
             required:
             - integrationKey
             - version
             type: object
           status:
-            description: IntegrationStatus defines the observed state of Integration.
+            description: IntegrationStatus defines the observed state of a Integration.
             properties:
               conditions:
                 items:

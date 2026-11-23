@@ -1,0 +1,136 @@
+// Copyright 2024 Coralogix Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v1alpha1
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/config"
+
+	integrations "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/integration_service"
+)
+
+// The handwritten parts of the generated Integration kind: the parameter fields that the
+// beforeCreate and beforeUpdate hooks turn into the parameter list of the API.
+
+// IntegrationParameters holds the inline parameters of the integration, as an object of
+// parameter names and values. It may be omitted entirely when all parameters come from
+// ParametersFromSecret.
+// +kubebuilder:pruning:PreserveUnknownFields
+// +kubebuilder:validation:Type=object
+type IntegrationParameters struct {
+	runtime.RawExtension `json:",inline"`
+}
+
+// IntegrationParametersFromSecret is a map of parameter names to references of Kubernetes
+// Secret keys whose values should be used as the parameter value at reconcile time.
+// Use this for sensitive parameters (API keys, service account keys, tokens, etc.)
+// so that secret material does not need to live in the manifest.
+//
+// A given parameter name must appear in either Parameters or ParametersFromSecret,
+// not both. Only string-valued parameters are supported via this field; numeric,
+// boolean, and list-valued parameters must be set inline in Parameters.
+//
+// If a SecretKeySelector has Optional set to true, a missing Secret or missing
+// key is silently skipped — the resulting Integration will be created or updated
+// in Coralogix without that parameter. Other read errors (RBAC, transient API
+// failures) still cause reconciliation to fail and retry.
+type IntegrationParametersFromSecret map[string]corev1.SecretKeySelector
+
+// ExtractParameters returns the merged parameter set for the Integration, with
+// inline Parameters values combined with ParametersFromSecret references resolved
+// from Kubernetes Secrets in the given namespace.
+//
+// A parameter name appearing in both Parameters and ParametersFromSecret is rejected.
+// References whose Optional flag is set to true are silently skipped if the Secret
+// or key is missing; other read errors propagate.
+func (s *IntegrationSpec) ExtractParameters(ctx context.Context, namespace string) ([]integrations.Parameter, error) {
+	logger := log.FromContext(ctx)
+	rawParams := map[string]interface{}{}
+	if len(s.Parameters.Raw) > 0 {
+		if err := json.Unmarshal(s.Parameters.Raw, &rawParams); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal parameters: %w", err)
+		}
+	}
+
+	for key, ref := range s.ParametersFromSecret {
+		if _, exists := rawParams[key]; exists {
+			return nil, fmt.Errorf("parameter %q is set in both parameters and parametersFromSecret; only one source is allowed", key)
+		}
+		optional := ref.Optional != nil && *ref.Optional
+
+		secret := &corev1.Secret{}
+		if err := config.GetClient().Get(ctx, client.ObjectKey{Namespace: namespace, Name: ref.Name}, secret); err != nil {
+			if optional && apierrors.IsNotFound(err) {
+				logger.V(1).Info("optional secret reference skipped: secret not found", "parameter", key, "secret", ref.Name, "namespace", namespace)
+				continue
+			}
+			return nil, fmt.Errorf("failed to read secret for parameter %q: %w", key, err)
+		}
+
+		value, ok := secret.Data[ref.Key]
+		if !ok {
+			if optional {
+				logger.V(1).Info("optional secret reference skipped: key not found in secret", "parameter", key, "secret", ref.Name, "key", ref.Key)
+				continue
+			}
+			return nil, fmt.Errorf("failed to read secret for parameter %q: cannot find key %q in secret %q", key, ref.Key, ref.Name)
+		}
+		rawParams[key] = string(value)
+	}
+
+	var parameters []integrations.Parameter
+	for key, value := range rawParams {
+		switch v := value.(type) {
+		case string:
+			parameters = append(parameters, integrations.Parameter{
+				Key:         integrations.PtrString(key),
+				StringValue: integrations.PtrString(v),
+			})
+		case float64:
+			parameters = append(parameters, integrations.Parameter{
+				Key:          integrations.PtrString(key),
+				NumericValue: integrations.PtrFloat64(v),
+			})
+		case bool:
+			parameters = append(parameters, integrations.Parameter{
+				Key:          integrations.PtrString(key),
+				BooleanValue: integrations.PtrBool(v),
+			})
+		case []interface{}:
+			var stringList integrations.StringList
+			for _, item := range v {
+				if str, ok := item.(string); ok {
+					stringList.Values = append(stringList.Values, str)
+				}
+			}
+			parameters = append(parameters, integrations.Parameter{
+				Key:        integrations.PtrString(key),
+				StringList: &stringList,
+			})
+		default:
+			return nil, fmt.Errorf("unsupported value type for parameter %s", key)
+		}
+	}
+	return parameters, nil
+}

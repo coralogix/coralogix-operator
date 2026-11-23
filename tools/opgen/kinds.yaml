@@ -44,3 +44,5 @@ kinds:
     resource: ProductAnalyticsSettings
   - kind: AlertScheduler
     resource: AlertSchedulerRule
+  - kind: Integration
+    resource: DeployedIntegrationInformation

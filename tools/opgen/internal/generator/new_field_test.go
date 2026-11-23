@@ -956,3 +956,89 @@ func TestQuotaAllocationRuleSetNewRuleFieldWithoutOverrides(t *testing.T) {
 		t.Errorf("want probeNote in Create and Update, got %d conversions", n)
 	}
 }
+
+// A new field of Integration reaches the type, both conversions, the sample, and the e2e test with
+// no new override line. The fields that the hooks set stay out of the conversions.
+func TestIntegrationNewFieldWithoutOverrides(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		if os.Getenv("CI") != "" {
+			t.Fatal(err)
+		}
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	entry := kindEntry{Kind: "Integration", Resource: "DeployedIntegrationInformation"}
+	dir := filepath.Join(input.ModuleRoot, entry.dir())
+	file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	render := func(spec []byte) map[string][]byte {
+		t.Helper()
+		doc, err := model.Load(spec)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.files
+	}
+	before := render(input.OpenAPI)
+	after := render(withComponentField(t, input.OpenAPI, "DeployedIntegrationInformation", "IntegrationMetadata"))
+	for name, text := range after {
+		if removed := removedLines(string(before[name]), string(text)); len(removed) != 0 {
+			t.Errorf("%s: a new field changed lines that were there before:\n%s", name, strings.Join(removed, "\n"))
+		}
+	}
+	for _, want := range []struct{ file, text string }{
+		{"api/coralogix/v1alpha1/integration_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+		{"config/samples/v1alpha1/generated/integration.yaml", "probeNote:"},
+		{"tests/e2e/integration_generated_test.go", `"probeNote":`},
+	} {
+		if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+			t.Errorf("%s has no %q", want.file, want.text)
+		}
+	}
+	convert := string(after["api/coralogix/v1alpha1/integration_convert.go"])
+	if n := strings.Count(convert, "out.ProbeNote = in.ProbeNote"); n != 2 {
+		t.Errorf("want probeNote in the Create and the Update request, got %d conversions", n)
+	}
+	if strings.Contains(convert, ".Parameters =") {
+		t.Error("the hooks set the parameters: the conversions must leave them out")
+	}
+	if strings.Count(convert, "out.IntegrationParameters = ") != 2 {
+		t.Error("Create and Update must build the object that holds the parameters")
+	}
+}
+
+// withComponentField adds an optional string probeNote to the named components of the contract.
+func withComponentField(t *testing.T, spec []byte, components ...string) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := yaml.Unmarshal(spec, &doc); err != nil {
+		t.Fatal(err)
+	}
+	schemas := doc["components"].(map[string]any)["schemas"].(map[string]any)
+	for _, name := range components {
+		props, ok := schemas[name].(map[string]any)["properties"].(map[string]any)
+		if !ok {
+			t.Fatalf("the contract has no component %s with properties", name)
+		}
+		props["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A note."}
+	}
+	out, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
