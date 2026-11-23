@@ -80,6 +80,10 @@ after)
     # The field is a path into the list, such as policies/0/description.
     patch="$(jq -n --arg path '/spec/{{.E2E.Upgrade.Field}}' --arg value "$value" '[{op:"add", path:$path, value:$value}]')"
     kubectl patch {{.Lower}} "$cr" -n "$namespace" --type json -p "$patch"
+{{- else if .E2E.Upgrade.Nested}}
+    # The field is a dotted path into the spec, such as parameters.IntegrationName.
+    patch="$(jq -n --arg field '{{.E2E.Upgrade.Field}}' --arg value "$value" '{} | setpath(["spec"] + ($field | split(".")); $value)')"
+    kubectl patch {{.Lower}} "$cr" -n "$namespace" --type merge -p "$patch"
 {{- else}}
     patch="$(jq -n --arg field '{{.E2E.Upgrade.Field}}' --arg value "$value" '{spec:{($field):$value}}')"
     kubectl patch {{.Lower}} "$cr" -n "$namespace" --type merge -p "$patch"
