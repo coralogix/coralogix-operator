@@ -298,24 +298,10 @@
     "accepted": true
   },
   "recurring always and dynamic": {
-    "accepted": false,
-    "causes": [
-      {
-        "type": "FieldValueInvalid",
-        "field": "spec.schedule.recurring",
-        "message": "Invalid value: \"object\": Exactly one of always or dynamic must be set"
-      }
-    ]
+    "accepted": true
   },
   "recurring empty": {
-    "accepted": false,
-    "causes": [
-      {
-        "type": "FieldValueInvalid",
-        "field": "spec.schedule.recurring",
-        "message": "Invalid value: \"object\": Exactly one of always or dynamic must be set"
-      }
-    ]
+    "accepted": true
   },
   "schedule with oneTime and recurring": {
     "accepted": false,

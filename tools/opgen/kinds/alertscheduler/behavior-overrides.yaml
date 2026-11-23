@@ -1,0 +1,124 @@
+resource: AlertSchedulerRule
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD has none of the contract limits on these fields.
+    spec.name: {inferred: false}
+    spec.filter.whatExpression: {inferred: false}
+    spec.schedule.recurring.dynamic.frequency.monthly.days: {inferred: false}
+    spec.schedule.recurring.dynamic.frequency.weekly.days: {inferred: false}
+    # The released CRD enables a scheduler by default.
+    spec.enabled:
+      remove: ['+kubebuilder:default=false']
+      add: ['+kubebuilder:default=true']
+    # The released rules keep their messages.
+    spec.filter#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.metaLabels) ? 1 : 0) + (has(self.alerts) ? 1 : 0) == 1",message="Exactly one of metaLabels, alerts must be set"']
+      add: ['+kubebuilder:validation:XValidation:rule="has(self.metaLabels) != has(self.alerts)",message="Exactly one of metaLabels or alerts must be set"']
+    spec.schedule#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.oneTime) ? 1 : 0) + (has(self.recurring) ? 1 : 0) == 1",message="Exactly one of oneTime, recurring must be set"']
+      add: ['+kubebuilder:validation:XValidation:rule="has(self.oneTime) != has(self.recurring)",message="Exactly one of oneTime or recurring must be set"']
+    # always is an empty object. Kubernetes 1.28 and earlier cannot evaluate a CEL rule that reads
+    # such a field, so a released CRD with this rule rejected every always schedule there. The
+    # validate hook checks that exactly one of always and dynamic is set.
+    spec.schedule.recurring#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.always) ? 1 : 0) + (has(self.dynamic) ? 1 : 0) == 1",message="Exactly one of always, dynamic must be set"']
+    # The released CRD has no rule on frequency: with two frequencies, the first of daily, weekly,
+    # and monthly is sent.
+    spec.schedule.recurring.dynamic.frequency#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.daily) ? 1 : 0) + (has(self.weekly) ? 1 : 0) + (has(self.monthly) ? 1 : 0) == 1",message="Exactly one of daily, weekly, monthly must be set"']
+    # Both time frames keep the released rule and patterns.
+    spec.schedule.oneTime#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.endTime) ? 1 : 0) + (has(self.duration) ? 1 : 0) == 1",message="Exactly one of endTime, duration must be set"']
+      add: ['+kubebuilder:validation:XValidation:rule="has(self.endTime) != has(self.duration)",message="Exactly one of endTime or duration must be set"']
+    spec.schedule.oneTime.startTime:
+      add: ['+kubebuilder:validation:Pattern=`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$`']
+    spec.schedule.oneTime.endTime:
+      add: ['+kubebuilder:validation:Pattern=`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$`']
+    spec.schedule.oneTime.timezone:
+      inferred: false
+      add: ['+kubebuilder:validation:Pattern=`^UTC[+-]\d{1,2}$`']
+    spec.schedule.recurring.dynamic.timeFrame#type:
+      remove: ['+kubebuilder:validation:XValidation:rule="(has(self.endTime) ? 1 : 0) + (has(self.duration) ? 1 : 0) == 1",message="Exactly one of endTime, duration must be set"']
+      add: ['+kubebuilder:validation:XValidation:rule="has(self.endTime) != has(self.duration)",message="Exactly one of endTime or duration must be set"']
+    spec.schedule.recurring.dynamic.timeFrame.startTime:
+      add: ['+kubebuilder:validation:Pattern=`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$`']
+    spec.schedule.recurring.dynamic.timeFrame.endTime:
+      add: ['+kubebuilder:validation:Pattern=`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$`']
+    spec.schedule.recurring.dynamic.timeFrame.timezone:
+      inferred: false
+      add: ['+kubebuilder:validation:Pattern=`^UTC[+-]\d{1,2}$`']
+    spec.schedule.recurring.dynamic.terminationDate:
+      add: ['+kubebuilder:validation:Pattern=`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$`']
+api:
+  requestWrapper: alertSchedulerRule
+  # Each Replace makes a new version id. uniqueIdentifier stays, and the Get path takes it.
+  idProperty: uniqueIdentifier
+  updateIDInBody: true
+  # The AlertSchedulerRule schema is shared with the requests, so the contract cannot require the
+  # id in Get.
+  serverSetID: true
+types:
+  AlertSchedulerRule:
+    fields:
+      # The version id of the rule, and times that the server sets.
+      id: {skip: true}
+      createdAt: {skip: true}
+      updatedAt: {skip: true}
+      uniqueIdentifier: {readOnly: true}
+      # The API stores a set. The released CR is a plain list.
+      metaLabels: {collection: list}
+  alert_scheduler_rule_protobuf.v1.Filter:
+    fields:
+      alertMetaLabels: {name: metaLabels, collection: list}
+      alertUniqueIds: {name: alerts, ref: {kind: Alert, version: v1beta1, form: resourceRefOnly}, collection: list}
+  meta_labels_protobuf.v1.MetaLabel:
+    fields:
+      # The id that the API gives each label.
+      id: {skip: true}
+      key: {required: true}
+  Schedule:
+    fields:
+      scheduleOperation: {name: operation}
+  Timeframe:
+    fields:
+      startTime: {required: true}
+  v1.Duration:
+    fields:
+      forOver: {required: true}
+  Recurring:
+    fields:
+      alwaysActive: {name: always}
+      schedule: {name: dynamic}
+  Recurring.Dynamic:
+    groups:
+      frequency:
+        fields: [daily, weekly, monthly]
+    fields:
+      timeframe: {name: timeFrame}
+      repeatEvery: {required: true}
+  Weekly:
+    fields:
+      # The released CR names the days. The API numbers them from Sunday (1) to Saturday (7).
+      daysOfWeek:
+        name: days
+        collection: list
+        integerNames:
+          - {name: Sunday, value: 1}
+          - {name: Monday, value: 2}
+          - {name: Tuesday, value: 3}
+          - {name: Wednesday, value: 4}
+          - {name: Thursday, value: 5}
+          - {name: Friday, value: 6}
+          - {name: Saturday, value: 7}
+  Monthly:
+    fields:
+      daysOfMonth: {name: days, collection: list}
+unwrap: [OneTime, MetaLabels, AlertUniqueIds]
+hooks: [validate]
+enums:
+  DurationFrequency:
+    zero: unspecified
+    rejectZero: true
+    names: {DURATION_FREQUENCY_MINUTE: minutes, DURATION_FREQUENCY_HOUR: hours, DURATION_FREQUENCY_DAY: days}

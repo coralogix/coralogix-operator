@@ -24,12 +24,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          AlertScheduler is the Schema for the AlertSchedulers API.
-          It is used to suppress or activate alerts based on a schedule.
-          See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
-
-          **Added in v0.4.0**
+        description: AlertScheduler is the Schema for the alertschedulers API.
         properties:
           apiVersion:
             description: |-
@@ -49,29 +44,29 @@ spec:
           metadata:
             type: object
           spec:
-            description: AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
+            description: AlertSchedulerSpec defines the desired state of a AlertScheduler.
             properties:
               description:
-                description: Alert Scheduler description.
+                description: Human-readable description.
                 type: string
               enabled:
                 default: true
-                description: Alert Scheduler enabled. If set to `false`, the alert
-                  scheduler will be disabled. True by default.
+                description: Whether this resource is enabled.
                 type: boolean
               filter:
-                description: |-
-                  Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-                  If none of them set, all alerts will be affected.
+                description: Alert scheduler rule protobuf.v1.filter.
                 properties:
                   alerts:
-                    description: Alert references. Conflicts with `metaLabels`.
+                    description: |-
+                      Alert unique ids.
+                      It refers to a Alert custom resource through resourceRef.
                     items:
+                      description: ResourceOnlyRef names a custom resource without
+                        a direct backend id option.
                       properties:
                         resourceRef:
-                          description: Alert custom resource name and namespace. If
-                            namespace is not set, the AlertScheduler namespace will
-                            be used.
+                          description: Reference to a Coralogix resource within the
+                            cluster.
                           properties:
                             name:
                               description: Name of the resource (not id).
@@ -87,19 +82,24 @@ spec:
                       type: object
                     type: array
                   metaLabels:
-                    description: Alert Scheduler meta labels. Conflicts with `alerts`.
+                    description: Meta labels.
                     items:
+                      description: AlertSchedulerMetaLabelsProtobufV1MetaLabel is
+                        the meta_labels_protobuf.v1.MetaLabel object of the API.
                       properties:
                         key:
+                          description: The key.
                           type: string
                         value:
+                          description: The value.
                           type: string
                       required:
                       - key
                       type: object
                     type: array
                   whatExpression:
-                    description: DataPrime query expression - https://coralogix.com/docs/dataprime-query-language.
+                    description: Dataprime expression that filters the alerts by group-by
+                      values.
                     type: string
                 required:
                 - whatExpression
@@ -108,41 +108,39 @@ spec:
                 - message: Exactly one of metaLabels or alerts must be set
                   rule: has(self.metaLabels) != has(self.alerts)
               metaLabels:
-                description: Alert Scheduler meta labels.
+                description: Metadata labels.
                 items:
+                  description: AlertSchedulerMetaLabelsProtobufV1MetaLabel is the
+                    meta_labels_protobuf.v1.MetaLabel object of the API.
                   properties:
                     key:
+                      description: The key.
                       type: string
                     value:
+                      description: The value.
                       type: string
                   required:
                   - key
                   type: object
                 type: array
               name:
-                description: Alert Scheduler name.
+                description: Display name.
                 type: string
               schedule:
-                description: Alert Scheduler schedule. Exactly one of `oneTime` or
-                  `recurring` must be set.
+                description: Schedule.
                 properties:
                   oneTime:
-                    description: One-time schedule. Conflicts with `recurring`.
+                    description: One time.
                     properties:
                       duration:
-                        description: |-
-                          The duration from the start time to wait before the operation is performed.
-                          Conflicts with `endTime`.
+                        description: Duration.
                         properties:
                           forOver:
-                            description: |-
-                              The number of time units to wait before the alert is triggered. For example,
-                              if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.
+                            description: The for over.
                             format: int32
                             type: integer
                           frequency:
-                            description: The time unit to wait before the alert is
-                              triggered. Can be `minutes`, `hours` or `days`.
+                            description: Duration frequency.
                             enum:
                             - minutes
                             - hours
@@ -153,19 +151,15 @@ spec:
                         - frequency
                         type: object
                       endTime:
-                        description: |-
-                          The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
-                          Conflicts with `duration`.
+                        description: End time.
                         pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$
                         type: string
                       startTime:
-                        description: The start time of the time frame. In isodate
-                          format. For example, `2021-01-01T00:00:00.000`.
+                        description: Start time.
                         pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$
                         type: string
                       timezone:
-                        description: The timezone of the time frame. For example,
-                          `UTC-4` or `UTC+10`.
+                        description: Timezone.
                         pattern: ^UTC[+-]\d{1,2}$
                         type: string
                     required:
@@ -176,31 +170,33 @@ spec:
                     - message: Exactly one of endTime or duration must be set
                       rule: has(self.endTime) != has(self.duration)
                   operation:
-                    description: The operation to perform. Can be `mute` or `activate`.
+                    description: Schedule operation.
                     enum:
                     - mute
                     - activate
                     type: string
                   recurring:
-                    description: Recurring schedule. Conflicts with `oneTime`.
+                    description: Recurring schedule that activates the alert scheduler
+                      rule on a repeating cadence.
                     properties:
                       always:
-                        description: Recurring always.
+                        description: Always.
                         type: object
                       dynamic:
-                        description: Dynamic schedule.
+                        description: Dynamic.
                         properties:
                           frequency:
-                            description: The rule will be activated in a recurring
-                              mode (daily, weekly or monthly).
+                            description: AlertSchedulerRecurringDynamicFrequency holds
+                              the frequency fields of the released CR.
                             properties:
                               daily:
+                                description: Daily.
                                 type: object
                               monthly:
+                                description: Monthly.
                                 properties:
                                   days:
-                                    description: The days of the month to activate
-                                      the rule.
+                                    description: The days of month.
                                     items:
                                       format: int32
                                       type: integer
@@ -209,10 +205,12 @@ spec:
                                 - days
                                 type: object
                               weekly:
+                                description: Weekly.
                                 properties:
                                   days:
-                                    description: The days of the week to activate
-                                      the rule.
+                                    description: |-
+                                      The days of week.
+                                      The API holds each name as an integer: Sunday=1, Monday=2, Tuesday=3, Wednesday=4, Thursday=5, Friday=6, Saturday=7.
                                     items:
                                       enum:
                                       - Sunday
@@ -229,32 +227,27 @@ spec:
                                 type: object
                             type: object
                           repeatEvery:
-                            description: The rule will be activated in a recurring
-                              mode according to the interval.
+                            description: Interval multiplier controlling how often
+                              the rule recurs (e.g., every N days, weeks, or months).
                             format: int32
                             type: integer
                           terminationDate:
-                            description: The termination date of the rule.
+                            description: ISO 8601 date after which the recurring rule
+                              stops being applied.
                             pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$
                             type: string
                           timeFrame:
-                            description: The time frame of the rule.
+                            description: Timeframe.
                             properties:
                               duration:
-                                description: |-
-                                  The duration from the start time to wait before the operation is performed.
-                                  Conflicts with `endTime`.
+                                description: Duration.
                                 properties:
                                   forOver:
-                                    description: |-
-                                      The number of time units to wait before the alert is triggered. For example,
-                                      if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.
+                                    description: The for over.
                                     format: int32
                                     type: integer
                                   frequency:
-                                    description: The time unit to wait before the
-                                      alert is triggered. Can be `minutes`, `hours`
-                                      or `days`.
+                                    description: Duration frequency.
                                     enum:
                                     - minutes
                                     - hours
@@ -265,19 +258,15 @@ spec:
                                 - frequency
                                 type: object
                               endTime:
-                                description: |-
-                                  The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
-                                  Conflicts with `duration`.
+                                description: End time.
                                 pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$
                                 type: string
                               startTime:
-                                description: The start time of the time frame. In
-                                  isodate format. For example, `2021-01-01T00:00:00.000`.
+                                description: Start time.
                                 pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$
                                 type: string
                               timezone:
-                                description: The timezone of the time frame. For example,
-                                  `UTC-4` or `UTC+10`.
+                                description: Timezone.
                                 pattern: ^UTC[+-]\d{1,2}$
                                 type: string
                             required:
@@ -294,9 +283,6 @@ spec:
                         - timeFrame
                         type: object
                     type: object
-                    x-kubernetes-validations:
-                    - message: Exactly one of always or dynamic must be set
-                      rule: has(self.always) != has(self.dynamic)
                 required:
                 - operation
                 type: object
@@ -309,7 +295,7 @@ spec:
             - schedule
             type: object
           status:
-            description: AlertSchedulerStatus defines the observed state of AlertScheduler.
+            description: AlertSchedulerStatus defines the observed state of a AlertScheduler.
             properties:
               conditions:
                 items:

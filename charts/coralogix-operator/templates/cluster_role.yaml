@@ -61,7 +61,6 @@ rules:
     resources:
       - aicustomevaluations
       - alerts
-      - alertschedulers
       - alertsets
       - apikeys
       - archivemetricstargets
@@ -88,7 +87,6 @@ rules:
     resources:
       - aicustomevaluations/finalizers
       - alerts/finalizers
-      - alertschedulers/finalizers
       - alertsets/finalizers
       - apikeys/finalizers
       - archivemetricstargets/finalizers
@@ -109,7 +107,6 @@ rules:
     resources:
       - aicustomevaluations/status
       - alerts/status
-      - alertschedulers/status
       - alertsets/status
       - apikeys/status
       - archivemetricstargets/status
@@ -140,6 +137,7 @@ rules:
       - coralogix.com
     resources:
       - aievaluations
+      - alertschedulers
       - archivelogstargets
       - configurationgroups
       - customroles
@@ -171,6 +169,7 @@ rules:
       - coralogix.com
     resources:
       - aievaluations/finalizers
+      - alertschedulers/finalizers
       - archivelogstargets/finalizers
       - configurationgroups/finalizers
       - customroles/finalizers
@@ -196,6 +195,7 @@ rules:
       - coralogix.com
     resources:
       - aievaluations/status
+      - alertschedulers/status
       - archivelogstargets/status
       - configurationgroups/status
       - customroles/status

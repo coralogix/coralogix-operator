@@ -17,34 +17,7 @@
         "operation": "mute"
       }
     },
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
-        "body": {
-          "alertSchedulerRule": {
-            "description": "",
-            "enabled": true,
-            "filter": {
-              "alertMetaLabels": {},
-              "whatExpression": "source logs | filter true"
-            },
-            "name": "Baseline scheduler",
-            "schedule": {
-              "oneTime": {
-                "timeframe": {
-                  "endTime": "2027-01-05T00:00:00.000",
-                  "startTime": "2027-01-04T00:00:00.000",
-                  "timezone": "UTC+0"
-                }
-              },
-              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
-            }
-          }
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
       "error": true
     },
@@ -54,50 +27,20 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "InternalK8sError",
+            "reason": "RemoteCreationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "id": "<id-1>",
         "printableStatus": "RemoteUnsynced"
       }
     }
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "PUT",
-        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
-        "body": {
-          "alertSchedulerRule": {
-            "description": "",
-            "enabled": true,
-            "filter": {
-              "alertMetaLabels": {},
-              "whatExpression": "source logs | filter true"
-            },
-            "name": "Baseline scheduler",
-            "schedule": {
-              "oneTime": {
-                "timeframe": {
-                  "endTime": "2027-01-05T00:00:00.000",
-                  "startTime": "2027-01-04T00:00:00.000",
-                  "timezone": "UTC+0"
-                }
-              },
-              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
-            },
-            "uniqueIdentifier": "<id-1>"
-          }
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
       "finalizers": [],
@@ -105,13 +48,12 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteCreationFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "id": "<id-1>",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   },
@@ -130,34 +72,6 @@
       "error": false
     },
     "object": null,
-    "remote": {
-      "<id-1>": {
-        "createdAt": "2026-01-01T00:00:00.000Z",
-        "description": "",
-        "enabled": true,
-        "filter": {
-          "alertMetaLabels": {
-            "value": []
-          },
-          "whatExpression": "source logs | filter true"
-        },
-        "id": "<id-2>",
-        "metaLabels": [],
-        "name": "Baseline scheduler",
-        "schedule": {
-          "oneTime": {
-            "timeframe": {
-              "endTime": "2027-01-05T00:00:00.000",
-              "startTime": "2027-01-04T00:00:00.000",
-              "submittedStartTime": "2027-01-04T00:00:00.000",
-              "timezone": "UTC+0"
-            }
-          },
-          "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
-        },
-        "uniqueIdentifier": "<id-1>",
-        "updatedAt": "2026-01-01T00:00:00.000Z"
-      }
-    }
+    "remote": {}
   }
 ]

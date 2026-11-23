@@ -1,0 +1,48 @@
+[
+  {
+    "step": "create a recurring schedule without always or dynamic: no request",
+    "spec": {
+      "enabled": true,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "operation": "mute",
+        "recurring": {}
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "ValidationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

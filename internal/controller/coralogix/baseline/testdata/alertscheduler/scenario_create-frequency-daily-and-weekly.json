@@ -38,67 +38,22 @@
         }
       }
     },
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
-        "body": {
-          "alertSchedulerRule": {
-            "description": "",
-            "enabled": true,
-            "filter": {
-              "alertMetaLabels": {
-                "value": [
-                  {
-                    "key": "app",
-                    "value": "cxo"
-                  }
-                ]
-              },
-              "whatExpression": "source logs | filter true"
-            },
-            "name": "Baseline scheduler",
-            "schedule": {
-              "recurring": {
-                "schedule": {
-                  "daily": {},
-                  "repeatEvery": 1,
-                  "timeframe": {
-                    "duration": {
-                      "forOver": 30,
-                      "frequency": "DURATION_FREQUENCY_MINUTE"
-                    },
-                    "startTime": "2027-01-04T08:00:00.000",
-                    "timezone": "UTC+2"
-                  }
-                }
-              },
-              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
-            }
-          }
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
-      "finalizers": [
-        "alert-scheduler.coralogix.com/finalizer"
-      ],
+      "finalizers": [],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteCreationFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "id": "<id-1>",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   }

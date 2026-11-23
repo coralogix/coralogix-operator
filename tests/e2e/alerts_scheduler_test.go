@@ -95,7 +95,7 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 	It("Should be rejected when filter has both MetaLabels and Alerts", func(ctx context.Context) {
 		By("Creating an AlertScheduler with both MetaLabels and Alerts")
 		invalidScheduler := alertScheduler.DeepCopy()
-		invalidScheduler.Spec.Filter.Alerts = []coralogixv1alpha1.AlertRef{
+		invalidScheduler.Spec.Filter.Alerts = []coralogixv1alpha1.ResourceOnlyRef{
 			{
 				ResourceRef: &coralogixv1alpha1.ResourceRef{
 					Name: "invalid-alert",
@@ -109,10 +109,10 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 	It("Should be rejected when schedule has both OneTime and Recurring", func(ctx context.Context) {
 		By("Creating an AlertScheduler with both OneTime and Recurring")
 		invalidScheduler := alertScheduler.DeepCopy()
-		invalidScheduler.Spec.Schedule.OneTime = &coralogixv1alpha1.TimeFrame{
+		invalidScheduler.Spec.Schedule.OneTime = &coralogixv1alpha1.AlertSchedulerTimeframe{
 			StartTime: "2026-03-14T00:00:00.000",
 			Timezone:  "UTC+0",
-			Duration: &coralogixv1alpha1.Duration{
+			Duration: &coralogixv1alpha1.AlertSchedulerV1Duration{
 				ForOver:   2,
 				Frequency: "hours",
 			},
@@ -122,12 +122,24 @@ var _ = Describe("AlertScheduler", Ordered, func() {
 		Expect(err.Error()).To(ContainSubstring("Exactly one of oneTime or recurring must be set"))
 	})
 
-	It("Should be rejected when recurring has both always and dynamic", func(ctx context.Context) {
+	// always is an empty object, which a CEL rule cannot read on Kubernetes 1.28 and earlier, so the
+	// operator checks the recurring arms before any API call.
+	It("Should fail validation when recurring has both always and dynamic", func(ctx context.Context) {
 		By("Creating an AlertScheduler with both always and dynamic")
-		invalidScheduler := alertScheduler.DeepCopy()
-		invalidScheduler.Spec.Schedule.Recurring.Always = &coralogixv1alpha1.Always{}
-		err := crClient.Create(ctx, invalidScheduler)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of always or dynamic must be set"))
+		invalidScheduler := getSampleAlertScheduler(uniqueName("alert-scheduler-invalid"), testNamespace)
+		invalidScheduler.Spec.Schedule.Recurring.Always = &coralogixv1alpha1.AlertSchedulerAlways{}
+		Expect(crClient.Create(ctx, invalidScheduler)).To(Succeed())
+		DeferCleanup(func(ctx context.Context) { _ = crClient.Delete(ctx, invalidScheduler) })
+
+		By("Checking that the operator rejects it without a status id")
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1alpha1.AlertScheduler{}
+			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: invalidScheduler.Name, Namespace: testNamespace}, fetched)).To(Succeed())
+			condition := meta.FindStatusCondition(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)
+			g.Expect(condition).NotTo(BeNil())
+			g.Expect(condition.Reason).To(Equal(utils.ReasonValidationFailed))
+			g.Expect(fetched.Status.ID).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("Should be deleted successfully", func(ctx context.Context) {
@@ -150,28 +162,28 @@ func getSampleAlertScheduler(name, namespace string) *coralogixv1alpha1.AlertSch
 		},
 		Spec: coralogixv1alpha1.AlertSchedulerSpec{
 			Name:        name,
-			Description: "This is a sample alert scheduler",
-			Enabled:     true,
-			Filter: coralogixv1alpha1.Filter{
+			Description: ptr.To("This is a sample alert scheduler"),
+			Enabled:     ptr.To(true),
+			Filter: coralogixv1alpha1.AlertSchedulerRuleProtobufV1Filter{
 				WhatExpression: "source logs | filter $d.cpodId:string == '122'",
-				MetaLabels: []coralogixv1alpha1.MetaLabel{
+				MetaLabels: []coralogixv1alpha1.AlertSchedulerMetaLabelsProtobufV1MetaLabel{
 					{Key: "environment", Value: ptr.To("production")},
 				},
 			},
-			Schedule: coralogixv1alpha1.Schedule{
+			Schedule: coralogixv1alpha1.AlertSchedulerSchedule{
 				Operation: "mute",
-				Recurring: &coralogixv1alpha1.Recurring{
-					Dynamic: &coralogixv1alpha1.Dynamic{
+				Recurring: &coralogixv1alpha1.AlertSchedulerRecurring{
+					Dynamic: &coralogixv1alpha1.AlertSchedulerRecurringDynamic{
 						RepeatEvery: 1,
-						Frequency: &coralogixv1alpha1.Frequency{
-							Weekly: &coralogixv1alpha1.Weekly{
-								Days: []coralogixv1alpha1.Day{"Monday", "Thursday"},
+						Frequency: coralogixv1alpha1.AlertSchedulerRecurringDynamicFrequency{
+							Weekly: &coralogixv1alpha1.AlertSchedulerWeekly{
+								Days: []string{"Monday", "Thursday"},
 							},
 						},
-						TimeFrame: &coralogixv1alpha1.TimeFrame{
+						TimeFrame: coralogixv1alpha1.AlertSchedulerTimeframe{
 							StartTime: "2026-03-14T00:00:00.000",
 							Timezone:  "UTC+0",
-							Duration: &coralogixv1alpha1.Duration{
+							Duration: &coralogixv1alpha1.AlertSchedulerV1Duration{
 								ForOver:   2,
 								Frequency: "hours",
 							},

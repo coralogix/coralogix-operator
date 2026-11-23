@@ -1,0 +1,42 @@
+fixtures:
+  # The alert that the filter by alerts names.
+  - kind: Alert
+    version: v1beta1
+    suffix: -alert
+    statusField: ID
+    spec:
+      name: '@{run}-alert'
+      priority: p5
+      alertType:
+        logsImmediate:
+          logsFilter:
+            simpleFilter:
+              luceneQuery: error
+substitutions:
+  alert-sample: '@{run}-alert'
+values:
+  filter.alerts: [{resourceRef: {name: alert-sample}}]
+  # The API takes only an expression that starts with "source logs | filter".
+  filter.whatExpression: source logs | filter true
+  # The released CRD takes these times and zones only in this form.
+  schedule.oneTime.startTime: '2027-01-04T00:00:00.000'
+  schedule.oneTime.endTime: '2027-01-05T00:00:00.000'
+  schedule.oneTime.timezone: UTC+0
+  schedule.recurring.dynamic.timeFrame.startTime: '2027-01-04T08:00:00.000'
+  schedule.recurring.dynamic.timeFrame.timezone: UTC+2
+  schedule.recurring.dynamic.terminationDate: '2028-01-01T00:00:00.000'
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    filter:
+      whatExpression: source logs | filter true
+      metaLabels: [{key: app, value: upgrade}]
+    schedule:
+      operation: mute
+      oneTime:
+        startTime: '2027-01-04T00:00:00.000'
+        timezone: UTC+0
+        endTime: '2027-01-05T00:00:00.000'
+  field: name
+  value: '@{run}-updated'

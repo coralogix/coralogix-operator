@@ -209,9 +209,6 @@ spec:
                         - timeFrame
                         type: object
                     type: object
-                    x-kubernetes-validations:
-                    - message: Exactly one of always or dynamic must be set
-                      rule: has(self.always) != has(self.dynamic)
                 required:
                 - operation
                 type: object
