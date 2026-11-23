@@ -84,6 +84,33 @@ func TestExtractAlertDefPropertiesAnalyticsResultCount(t *testing.T) {
 			},
 		},
 		{
+			name: "rules and operator are sent; a rule without override takes the alert priority",
+			resultCount: &AnalyticsResultCount{
+				DataprimeQuery:   DataprimeQuery{Query: "source logs | count"},
+				TimeframeMinutes: 15,
+				Operator:         ptr.To(AnalyticsThresholdOperatorMoreThanOrEquals),
+				Rules: []AnalyticsResultCountRule{
+					{
+						Condition: &AnalyticsResultCountRuleCondition{CountThreshold: ptr.To[int64](3), Expression: ptr.To("errors > 100")},
+						Override:  &AlertOverride{Priority: AlertPriorityP1},
+					},
+					{},
+				},
+			},
+			want: &alerts.AnalyticsResultCountType{
+				DataprimeQuery:   &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count")},
+				TimeframeMinutes: ptr.To[int32](15),
+				Operator:         alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_EQUALS.Ptr(),
+				Rules: []alerts.AnalyticsResultCountRule{
+					{
+						Condition: &alerts.AnalyticsResultCountRuleCondition{CountThreshold: ptr.To[int64](3), Expression: ptr.To("errors > 100")},
+						Override:  alerts.AlertDefOverride{Priority: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1.Ptr()},
+					},
+					{Override: alerts.AlertDefOverride{Priority: alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3.Ptr()}},
+				},
+			},
+		},
+		{
 			name: "full",
 			resultCount: &AnalyticsResultCount{
 				DataprimeQuery:    DataprimeQuery{Query: "source logs | count"},
@@ -269,7 +296,10 @@ func TestExtractAlertDefPropertiesCaseSettings(t *testing.T) {
 				},
 				Destinations: []CaseDestination{
 					{Connector: backendRef("connector-1"), Preset: ptr.To(backendRef("preset-1")), Condition: "true"},
-					{Connector: backendRef("connector-2"), Condition: "caseMetadata.notificationReason == 'caseResolved'"},
+					{
+						Connector: backendRef("connector-2"), Condition: "caseMetadata.notificationReason == 'caseResolved'",
+						ConnectorConfigOverrides: []ConfigField{{FieldName: "channel", Template: "cases-resolved"}},
+					},
 				},
 			},
 			want: &alerts.AlertDefCaseSettings{
@@ -279,7 +309,10 @@ func TestExtractAlertDefPropertiesCaseSettings(t *testing.T) {
 				},
 				Destinations: []alerts.AlertDefCaseDestination{
 					{ConnectorId: "connector-1", PresetId: ptr.To("preset-1"), Condition: "true"},
-					{ConnectorId: "connector-2", Condition: "caseMetadata.notificationReason == 'caseResolved'"},
+					{
+						ConnectorId: "connector-2", Condition: "caseMetadata.notificationReason == 'caseResolved'",
+						ConnectorConfigOverrides: []alerts.V3ConnectorConfigField{{FieldName: ptr.To("channel"), Template: ptr.To("cases-resolved")}},
+					},
 				},
 			},
 		},

@@ -700,6 +700,14 @@ var _ = Describe("Alert", Ordered, func() {
 							State:             coralogixv1beta1.NoDataPolicyStateAlerting,
 							AutoRetireSeconds: ptr.To(int32(3600)),
 						},
+						Operator: ptr.To(coralogixv1beta1.AnalyticsThresholdOperatorMoreThanOrEquals),
+						Rules: []coralogixv1beta1.AnalyticsResultCountRule{
+							{
+								Condition: &coralogixv1beta1.AnalyticsResultCountRuleCondition{CountThreshold: ptr.To(int64(3)), Expression: ptr.To("cnt > 100")},
+								Override:  &coralogixv1beta1.AlertOverride{Priority: coralogixv1beta1.AlertPriorityP1},
+							},
+							{Condition: &coralogixv1beta1.AnalyticsResultCountRuleCondition{CountThreshold: ptr.To(int64(10))}},
+						},
 					},
 				},
 			},
@@ -731,6 +739,14 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(resultCount.EvaluationDelayMs).To(Equal(ptr.To(int32(120000))))
 			g.Expect(resultCount.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_ALERTING))
 			g.Expect(resultCount.NoDataPolicy.GetAutoRetireSeconds()).To(Equal(int32(3600)))
+			g.Expect(resultCount.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_EQUALS))
+			g.Expect(resultCount.Rules).To(HaveLen(2))
+			g.Expect(resultCount.Rules[0].Condition.GetCountThreshold()).To(Equal(int64(3)))
+			g.Expect(resultCount.Rules[0].Condition.GetExpression()).To(Equal("cnt > 100"))
+			g.Expect(resultCount.Rules[0].Override.GetPriority()).To(Equal(alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P1))
+			g.Expect(resultCount.Rules[1].Condition.GetCountThreshold()).To(Equal(int64(10)))
+			// A rule without an override takes the alert priority.
+			g.Expect(resultCount.Rules[1].Override.GetPriority()).To(Equal(alerts.ALERTDEFPRIORITY_ALERT_DEF_PRIORITY_P3))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Clearing the optional fields")
@@ -756,6 +772,9 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(resultCount.EvaluationPeriodMinutes).To(BeNil())
 			g.Expect(resultCount.EvaluationDelayMs).To(BeNil())
 			g.Expect(resultCount.NoDataPolicy).To(BeNil())
+			// Omitted in the spec, so the API compares with moreThan and counts every row.
+			g.Expect(resultCount.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_UNSPECIFIED))
+			g.Expect(resultCount.Rules).To(BeEmpty())
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Deleting the Alert")

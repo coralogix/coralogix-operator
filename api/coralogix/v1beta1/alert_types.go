@@ -569,6 +569,10 @@ type CaseDestination struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=20000
 	Condition string `json:"condition"`
+
+	// Connector configuration fields that override the connector's own values for case notifications.
+	// +optional
+	ConnectorConfigOverrides []ConfigField `json:"connectorConfigOverrides,omitempty"`
 }
 
 // Settings for a notification webhook.
@@ -839,6 +843,16 @@ type AnalyticsResultCount struct {
 	// DataPrime query that triggers the alert when it returns results.
 	DataprimeQuery DataprimeQuery `json:"dataprimeQuery"`
 
+	// Per-priority trigger rules. Each rule compares the number of result rows that meet its condition to its count threshold;
+	// when several rules hold, the highest priority wins. When unset, the alert fires at its own priority on any result row.
+	// +kubebuilder:validation:MaxItems=5
+	// +optional
+	Rules []AnalyticsResultCountRule `json:"rules,omitempty"`
+
+	// Comparison operator applied to the row count of every rule. When unset, moreThan.
+	// +optional
+	Operator *AnalyticsThresholdOperator `json:"operator,omitempty"`
+
 	// Time frame in minutes the query is evaluated over.
 	// +kubebuilder:validation:Minimum=1
 	TimeframeMinutes int32 `json:"timeframeMinutes"`
@@ -902,6 +916,29 @@ type AnalyticsThreshold struct {
 	// Policy for handling missing data.
 	// +optional
 	NoDataPolicy *NoDataPolicy `json:"noDataPolicy,omitempty"`
+}
+
+// A per-priority trigger rule of an analyticsResultCount alert.
+type AnalyticsResultCountRule struct {
+	// Which result rows the rule counts and the count it is compared against. When unset, every row counts against 0.
+	// +optional
+	Condition *AnalyticsResultCountRuleCondition `json:"condition,omitempty"`
+
+	// Alert property overrides. Defaults to the alert priority when unset.
+	// +optional
+	Override *AlertOverride `json:"override,omitempty"`
+}
+
+// Which result rows a rule counts, and the count it is compared against.
+type AnalyticsResultCountRuleCondition struct {
+	// Number of matching result rows the operator compares against. When unset, 0.
+	// +optional
+	CountThreshold *int64 `json:"countThreshold,omitempty"`
+
+	// DataPrime boolean expression over the columns of the query result. Only rows it holds for are counted.
+	// When unset, every result row counts.
+	// +optional
+	Expression *string `json:"expression,omitempty"`
 }
 
 // Rules that match the alert to the data.
@@ -2244,7 +2281,7 @@ func (in *AlertSpec) ExtractAlertDefProperties(listingAlertsAndWebhooksPropertie
 			PhantomMode:             alerts.PtrBool(in.PhantomMode),
 			ActiveOn:                expandAlertSchedule(in.Schedule),
 			Type:                    alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_RESULT_COUNT.Ptr(),
-			AnalyticsResultCount:    expandAnalyticsResultCount(analyticsResultCount),
+			AnalyticsResultCount:    expandAnalyticsResultCount(analyticsResultCount, priority),
 		}, nil
 	} else if analyticsThreshold := in.TypeDefinition.AnalyticsThreshold; analyticsThreshold != nil {
 		return &alerts.AlertDefProperties{
@@ -2549,6 +2586,8 @@ func expandCaseSettings(caseSettings *AlertCaseSettings, properties *GetResource
 			ConnectorId: connectorId,
 			PresetId:    presetId,
 			Condition:   destination.Condition,
+
+			ConnectorConfigOverrides: extractConnectorOverrides(destination.ConnectorConfigOverrides),
 		})
 	}
 
@@ -3367,14 +3406,38 @@ func expandMetricThreshold(threshold *MetricThreshold, priority alerts.AlertDefP
 	return thresholdType
 }
 
-func expandAnalyticsResultCount(resultCount *AnalyticsResultCount) *alerts.AnalyticsResultCountType {
-	return &alerts.AnalyticsResultCountType{
+func expandAnalyticsResultCount(resultCount *AnalyticsResultCount, priority alerts.AlertDefPriority) *alerts.AnalyticsResultCountType {
+	resultCountType := &alerts.AnalyticsResultCountType{
 		DataprimeQuery:          expandDataprimeQuery(resultCount.DataprimeQuery),
+		Rules:                   expandAnalyticsResultCountRules(resultCount.Rules, priority),
 		TimeframeMinutes:        alerts.PtrInt32(resultCount.TimeframeMinutes),
 		EvaluationPeriodMinutes: resultCount.EvaluationPeriodMinutes,
 		EvaluationDelayMs:       resultCount.EvaluationDelayMs,
 		NoDataPolicy:            expandNoDataPolicy(resultCount.NoDataPolicy),
 	}
+	if resultCount.Operator != nil {
+		resultCountType.Operator = AnalyticsThresholdOperatorToOpenAPI[*resultCount.Operator].Ptr()
+	}
+
+	return resultCountType
+}
+
+func expandAnalyticsResultCountRules(rules []AnalyticsResultCountRule, priority alerts.AlertDefPriority) []alerts.AnalyticsResultCountRule {
+	if len(rules) == 0 {
+		return nil
+	}
+	result := make([]alerts.AnalyticsResultCountRule, len(rules))
+	for i := range rules {
+		result[i] = alerts.AnalyticsResultCountRule{Override: *expandAlertOverride(rules[i].Override, priority)}
+		if condition := rules[i].Condition; condition != nil {
+			result[i].Condition = &alerts.AnalyticsResultCountRuleCondition{
+				CountThreshold: condition.CountThreshold,
+				Expression:     condition.Expression,
+			}
+		}
+	}
+
+	return result
 }
 
 func expandAnalyticsThreshold(threshold *AnalyticsThreshold, priority alerts.AlertDefPriority) *alerts.AnalyticsThresholdType {

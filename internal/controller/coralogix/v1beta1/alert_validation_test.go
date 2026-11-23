@@ -190,6 +190,32 @@ var _ = Describe("Alert validation", func() {
 		Expect(err.Error()).To(ContainSubstring("dataprimeQuery.query"))
 	})
 
+	It("should accept analytics result count rules that the API accepts", func(ctx context.Context) {
+		for name, rules := range map[string][]coralogixv1beta1.AnalyticsResultCountRule{
+			"threshold-and-expression": {{Condition: &coralogixv1beta1.AnalyticsResultCountRuleCondition{CountThreshold: ptr.To[int64](3), Expression: ptr.To("errors > 100")}}},
+			"no-condition":             {{}},
+			"zero-threshold":           {{Condition: &coralogixv1beta1.AnalyticsResultCountRuleCondition{CountThreshold: ptr.To[int64](0)}}},
+			"blank-expression":         {{Condition: &coralogixv1beta1.AnalyticsResultCountRuleCondition{Expression: ptr.To(" ")}}},
+			"five-rules":               make([]coralogixv1beta1.AnalyticsResultCountRule, 5),
+		} {
+			// No operator: the API compares with moreThan.
+			alert := analyticsResultCountAlert("analytics-result-count-" + name)
+			alert.Spec.TypeDefinition.AnalyticsResultCount.Rules = rules
+
+			Expect(k8sClient.Create(ctx, alert)).To(Succeed(), name)
+			Expect(k8sClient.Delete(ctx, alert)).To(Succeed(), name)
+		}
+	})
+
+	It("should reject more than five analytics result count rules", func(ctx context.Context) {
+		alert := analyticsResultCountAlert("analytics-result-count-six-rules")
+		alert.Spec.TypeDefinition.AnalyticsResultCount.Rules = make([]coralogixv1beta1.AnalyticsResultCountRule, 6)
+
+		err := k8sClient.Create(ctx, alert)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("rules"))
+	})
+
 	It("should reject an analytics threshold alert without rules", func(ctx context.Context) {
 		err := k8sClient.Create(ctx, analyticsThresholdAlert("analytics-threshold-no-rules"))
 		Expect(err).To(HaveOccurred())
