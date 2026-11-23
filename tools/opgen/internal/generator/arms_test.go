@@ -87,9 +87,10 @@ func TestUpdateMaskOmitSendsNoMask(t *testing.T) {
 // The key needs a mask in the body, and an existing kind.
 func TestUpdateMaskOmitNeedsABodyMaskOfAnExistingKind(t *testing.T) {
 	for name, file := range map[string]string{
-		"a query mask":  "resource: PatchThing\nmode: existing\nvalidators: {inferred: true}\nupdateMask: omit\n",
-		"a new kind":    "resource: PatchThing\nmode: new\nupdateMask: omit\n",
-		"another value": patchThingExisting + "updateMask: all\n",
+		"a query mask":        "resource: PatchThing\nmode: existing\nvalidators: {inferred: true}\nupdateMask: omit\n",
+		"a new kind":          "resource: PatchThing\nmode: new\nupdateMask: omit\n",
+		"another value":       patchThingExisting + "updateMask: all\n",
+		"with api.updateMask": "resource: PatchThing\nmode: existing\nvalidators: {inferred: true}\napi:\n  updateMaskInBody: true\n  updateMask: {nested: [target]}\nupdateMask: omit\n",
 	} {
 		if _, err := overrides.Parse([]byte(file)); err == nil {
 			t.Errorf("%s: the file parses", name)

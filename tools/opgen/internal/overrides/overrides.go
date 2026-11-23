@@ -62,6 +62,11 @@ type File struct {
 	// Finalizer keeps the released finalizer name of an existing kind. It is an operator key; the
 	// shared iac module does not know it. The generated name is kebab(Kind).coralogix.com/finalizer.
 	Finalizer string `yaml:"finalizer"`
+	// HideBodiesInLogs keeps the Create and Update bodies and responses out of the operator logs,
+	// for a kind whose spec can hold secrets, such as a collector configuration with credentials.
+	// The logs name the kind and the id only. It is an operator key; the shared iac module does not
+	// know it.
+	HideBodiesInLogs bool `yaml:"hideBodiesInLogs"`
 	// Hooks names the handwritten steps that the generated lifecycle calls. Each hook is an
 	// unexported method of the reconciler, defined in a handwritten file of the same package. Hooks
 	// change the generated body; they never replace it. Mode existing only.
@@ -186,6 +191,16 @@ type API struct {
 	iacoverrides.API `yaml:",inline"`
 	// RequestValues sets fields beside a request wrapper from the CR or a generated value.
 	RequestValues map[string]map[string]RequestValue `yaml:"requestValues"`
+	// UpdateMask changes the paths of the update mask of a PATCH Update.
+	UpdateMask *UpdateMask `yaml:"updateMask"`
+}
+
+// UpdateMask changes the paths of the update mask of a PATCH Update.
+type UpdateMask struct {
+	// Nested names object fields of the resource that the mask names by the paths of their fields,
+	// such as family.active, when the API rejects the bare object path. A oneOf in the object adds
+	// the path of the arm that the CR sets, and no other arm.
+	Nested []string `yaml:"nested"`
 }
 
 // RequestValue names the source of a string field beside a request wrapper.
@@ -201,6 +216,21 @@ type RequestValue struct {
 func (a API) Check() error {
 	if err := a.API.Check(); err != nil {
 		return err
+	}
+	if a.UpdateMask != nil {
+		if len(a.UpdateMask.Nested) == 0 {
+			return errors.New("api.updateMask: name an object field in nested")
+		}
+		seen := map[string]bool{}
+		for _, name := range a.UpdateMask.Nested {
+			if name == "" || strings.Contains(name, ".") {
+				return fmt.Errorf("api.updateMask.nested: %q must be a top-level field of the resource", name)
+			}
+			if seen[name] {
+				return fmt.Errorf("api.updateMask.nested: %s is listed twice", name)
+			}
+			seen[name] = true
+		}
 	}
 	if len(a.RequestValues) == 0 {
 		return nil
@@ -939,7 +969,7 @@ func (f *File) checkAPI() error {
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
 		switch key {
-		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty":
+		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask":
 		default:
 			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}
@@ -1187,6 +1217,8 @@ func (f *File) checkUpdateMask() error {
 		return errors.New("updateMask: a new kind follows the contract")
 	case !f.API.UpdateMaskInBody:
 		return errors.New("updateMask: omit needs api.updateMaskInBody: true")
+	case f.API.UpdateMask != nil:
+		return errors.New("updateMask: omit sends no mask, so api.updateMask has no paths to change")
 	}
 	return nil
 }

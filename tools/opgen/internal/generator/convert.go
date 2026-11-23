@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"go/token"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -200,10 +201,92 @@ func (b *builder) specConversions(d *kindData, create, update []*model.Field) er
 	return err
 }
 
+// nestedMask returns the update mask paths of an object field that api.updateMask.nested names: one
+// path for each field of the object that Update sends, and for each oneOf of the object, one
+// conditional path per arm. A CR sets one arm, so the mask names only that arm: an API that rejects
+// the bare object path also rejects a mask with an arm that the body does not have. The object must
+// be required, and each oneOf must require one arm. Otherwise a CR that leaves the object or the
+// arm out adds no path, and the API would keep the stored value instead of clearing it.
+func (b *builder) nestedMask(d *kindData, f *model.ResourceField) ([]string, []maskArm, error) {
+	location := "api.updateMask.nested." + f.Name
+	if f.Type == nil || f.Type.Kind != model.Object {
+		return nil, nil, unsupported(location, "the field must be an object with fields of its own; an object that is only a oneOf is not supported yet")
+	}
+	i := slices.IndexFunc(d.Spec.Fields, func(c *crField) bool { return c.API == f.Name })
+	if i < 0 || d.Spec.Fields[i].object == nil {
+		return nil, nil, unsupported(location, "the custom resource has no object field %s", f.Name)
+	}
+	owner := d.Spec.Fields[i]
+	if owner.Optional {
+		return nil, nil, unsupported(location, "the object must be required: a CR that leaves it out would add no path, and the API would keep the stored value")
+	}
+	arms := map[string]bool{}
+	for _, g := range owner.object.groups {
+		if g.AllowNone {
+			return nil, nil, unsupported(location, "the oneOf of %s permits no arm: a CR with no arm would add no path, and the API would keep the stored arm; add requireOne", strings.Join(g.Arms, ", "))
+		}
+		for _, arm := range g.Arms {
+			arms[arm] = true
+		}
+	}
+	// An arm of a oneOf of the API that the CR does not show as a choice, such as a group with one
+	// settable arm, would be a plain path, and the mask would name it also when the body lacks it.
+	for _, g := range f.Type.Groups {
+		for _, arm := range g.Arms {
+			if !arms[arm] && slices.ContainsFunc(owner.object.Fields, func(c *crField) bool { return c.API == arm }) {
+				return nil, nil, unsupported(location+"."+arm, "an arm of a oneOf that the custom resource does not show as a choice is not supported in a nested mask")
+			}
+		}
+	}
+	var paths []string
+	var out []maskArm
+	for _, child := range f.Type.Fields {
+		if child.Update == nil {
+			continue // Update does not send it
+		}
+		j := slices.IndexFunc(owner.object.Fields, func(c *crField) bool { return c.API == child.Name })
+		if j < 0 && b.file != nil && len(b.file.Field(f.Type.Schema, child.Name).RequestValueBy) != 0 {
+			// Update sends a value that the selected arm decides, so the mask would have to name it
+			// too, with the arm that the body has.
+			return nil, nil, unsupported(location+"."+child.Name, "a field with requestValueBy is not supported in a nested mask: Update sends it, and the mask would not name it")
+		}
+		if j < 0 && slices.ContainsFunc(owner.object.Fields, func(c *crField) bool { return c.inlineParent == child.Name }) {
+			// Update rebuilds the inlined object from its fields beside the others, and sends it.
+			return nil, nil, unsupported(location+"."+child.Name, "an inlined object is not supported in a nested mask: Update sends it, and the mask would not name it")
+		}
+		if j < 0 {
+			continue // the CR does not have it, so Update does not send it
+		}
+		field := owner.object.Fields[j]
+		if field.synthetic || field.group || field.fold != nil || field.inlineParent != "" {
+			return nil, nil, unsupported(location+"."+child.Name, "a nested mask path of a field that the CR moves or renames in the request is not supported")
+		}
+		path := f.Name + "." + child.Name
+		if arms[child.Name] {
+			out = append(out, maskArm{Path: path, Check: "in.Spec." + owner.GoName + "." + field.GoName + " != nil"})
+			continue
+		}
+		paths = append(paths, path)
+	}
+	if len(paths) == 0 && len(out) == 0 {
+		return nil, nil, unsupported(location, "Update sends no field of %s", f.Name)
+	}
+	return paths, out, nil
+}
+
 // requests builds the conversions of the spec to the Create and Update bodies, and the update mask.
 func (b *builder) requests(r *model.Resource, d *kindData) error {
 	var create, update []*model.Field
 	var mask []string
+	nested, used := map[string]bool{}, map[string]bool{}
+	if b.file != nil && b.file.API.UpdateMask != nil {
+		if r.Replace {
+			return unsupported("api.updateMask", "a full-replace Update has no update mask")
+		}
+		for _, name := range b.file.API.UpdateMask.Nested {
+			nested[name] = true
+		}
+	}
 	bodyID := r.Policy.UpdateIDInBody
 	for _, f := range r.Fields {
 		var requestPath []string
@@ -226,7 +309,17 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 		}
 		if f.Update != nil {
 			update = append(update, &model.Field{Name: f.Name, Type: f.Type.UpdateType(), Update: f.Update, Attrs: *f.Update, RequestPath: requestPath})
-			mask = append(mask, f.Name)
+			if nested[f.Name] {
+				paths, arms, err := b.nestedMask(d, f)
+				if err != nil {
+					return err
+				}
+				mask = append(mask, paths...)
+				d.MaskArms = append(d.MaskArms, arms...)
+				used[f.Name] = true
+			} else {
+				mask = append(mask, f.Name)
+			}
 		}
 	}
 	if d.Content != nil {
@@ -253,12 +346,21 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 	if r.Replace || b.file.OmitsUpdateMask() {
 		return b.requestValues(r, d)
 	}
+	for _, name := range slices.Sorted(maps.Keys(nested)) {
+		if !used[name] {
+			return unsupported("api.updateMask.nested."+name, "the Update request has no field %s", name)
+		}
+	}
 	if r.UpdateMaskPattern != "" {
 		valid, _, err := model.UpdateMaskRule(r.UpdateMaskPattern)
 		if err != nil {
 			return unsupported("update.mask", "%s", err)
 		}
-		for _, path := range mask {
+		all := slices.Clone(mask)
+		for _, arm := range d.MaskArms {
+			all = append(all, arm.Path)
+		}
+		for _, path := range all {
 			if !valid(path) {
 				return unsupported("update.mask", "the update mask pattern rejects the field %s", path)
 			}
