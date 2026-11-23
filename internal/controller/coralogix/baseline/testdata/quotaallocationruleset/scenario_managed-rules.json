@@ -1,0 +1,174 @@
+[
+  {
+    "step": "replace user rules and preserve the managed rule",
+    "spec": {
+      "rules": [
+        {
+          "allocation": 50,
+          "canOverflow": false,
+          "enabled": true,
+          "entityType": "logs"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "query": {
+          "id": [
+            "quota-allocation-rule-set"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "body": {
+          "ruleSet": {
+            "rules": [
+              {
+                "allocation": 50,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+                "canOverflow": false,
+                "enabled": true,
+                "entityType": "logs"
+              },
+              {
+                "allocation": 25,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+                "canOverflow": false,
+                "enabled": true,
+                "entityType": "metrics"
+              }
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "quota-allocation-rule-set.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote has the new user rule and the managed rule",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "quota-allocation-rule-set.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "id": "quota-allocation-rule-set",
+      "rules": [
+        {
+          "allocation": 50,
+          "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+          "canOverflow": false,
+          "cxManaged": false,
+          "enabled": true,
+          "entityType": "logs"
+        },
+        {
+          "allocation": 25,
+          "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+          "canOverflow": false,
+          "cxManaged": true,
+          "enabled": true,
+          "entityType": "metrics"
+        }
+      ]
+    }
+  },
+  {
+    "step": "delete only customer-managed rules",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "query": {
+          "id": [
+            "quota-allocation-rule-set"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "body": {
+          "ruleSet": {
+            "rules": [
+              {
+                "allocation": 25,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+                "canOverflow": false,
+                "enabled": true,
+                "entityType": "metrics"
+              }
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "the managed rule remains",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null,
+    "remote": {
+      "id": "quota-allocation-rule-set",
+      "rules": [
+        {
+          "allocation": 25,
+          "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+          "canOverflow": false,
+          "cxManaged": true,
+          "enabled": true,
+          "entityType": "metrics"
+        }
+      ]
+    }
+  }
+]

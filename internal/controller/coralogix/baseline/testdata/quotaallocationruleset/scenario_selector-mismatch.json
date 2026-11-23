@@ -1,0 +1,107 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "rules": [
+        {
+          "allocation": 50,
+          "canOverflow": false,
+          "enabled": true,
+          "entityType": "logs"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "query": {
+          "id": [
+            "quota-allocation-rule-set"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "body": {
+          "ruleSet": {
+            "rules": [
+              {
+                "allocation": 50,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+                "canOverflow": false,
+                "enabled": true,
+                "entityType": "logs"
+              }
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "quota-allocation-rule-set.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile after the selector stops matching",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "query": {
+          "id": [
+            "quota-allocation-rule-set"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {}
+    }
+  },
+  {
+    "step": "the remote after selector cleanup",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {}
+    },
+    "remote": {
+      "id": "quota-allocation-rule-set",
+      "rules": []
+    }
+  }
+]
