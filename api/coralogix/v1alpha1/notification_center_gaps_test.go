@@ -30,6 +30,14 @@ func extractPresetForTest(preset *Preset) (*presets.Preset, error) {
 	return request.Preset, nil
 }
 
+func extractConnectorForTest(connector *Connector) (*connectors.Connector, error) {
+	request, err := connector.CreateRequest(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return &request.Connector, nil
+}
+
 // Preset attachmentConfig maps to the AttachmentConfig policy.
 func TestPresetExtractAttachmentConfig(t *testing.T) {
 	policy := "ENABLED"
@@ -98,17 +106,17 @@ func TestConnectorExtractPagerdutyIncidentsAndCases(t *testing.T) {
 			Description: "d",
 			Type:        "pagerDutyIncidents",
 			ConnectorConfig: ConnectorConfig{
-				Fields: []ConnectorConfigField{{FieldName: "integrationId", Value: &value}},
+				Fields: []ConnectorNotificationCenterConnectorConfigField{{FieldName: "integrationId", Value: &value}},
 			},
-			ConfigOverrides: []EntityTypeConfigOverrides{
-				{EntityType: "cases", Fields: []TemplatedConnectorConfigField{{FieldName: "service", Template: "PXXXXXX"}}},
+			ConfigOverrides: []ConnectorEntityTypeConfigOverrides{
+				{EntityType: "cases", Fields: []ConnectorTemplatedConnectorConfigField{{FieldName: "service", Template: "PXXXXXX"}}},
 			},
 		},
 	}
 
-	got, err := connector.ExtractConnector(context.Background())
+	got, err := extractConnectorForTest(connector)
 	if err != nil {
-		t.Fatalf("ExtractConnector returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_PAGERDUTY_INCIDENTS {
 		t.Fatalf("Type = %v, want PAGERDUTY_INCIDENTS", got.Type)
@@ -151,7 +159,7 @@ func TestConnectorExtractMicrosoftTeams(t *testing.T) {
 			Description: "d",
 			Type:        "microsoftTeams",
 			ConnectorConfig: ConnectorConfig{
-				Fields: []ConnectorConfigField{
+				Fields: []ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "integrationId", Value: &value},
 					{FieldName: "teamId", Value: &teamID},
 					{FieldName: "channelId", Value: &channelID},
@@ -160,9 +168,9 @@ func TestConnectorExtractMicrosoftTeams(t *testing.T) {
 		},
 	}
 
-	got, err := connector.ExtractConnector(context.Background())
+	got, err := extractConnectorForTest(connector)
 	if err != nil {
-		t.Fatalf("ExtractConnector returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_MICROSOFT_TEAMS {
 		t.Fatalf("Type = %v, want MICROSOFT_TEAMS", got.Type)
@@ -178,7 +186,7 @@ func TestConnectorExtractEventBridge(t *testing.T) {
 			Description: "d",
 			Type:        "eventBridge",
 			ConnectorConfig: ConnectorConfig{
-				Fields: []ConnectorConfigField{
+				Fields: []ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "integrationId", Value: &value},
 					{FieldName: "additionalDetail", Value: &additionalDetail},
 				},
@@ -186,9 +194,9 @@ func TestConnectorExtractEventBridge(t *testing.T) {
 		},
 	}
 
-	got, err := connector.ExtractConnector(context.Background())
+	got, err := extractConnectorForTest(connector)
 	if err != nil {
-		t.Fatalf("ExtractConnector returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_EVENTBRIDGE {
 		t.Fatalf("Type = %v, want EVENTBRIDGE", got.Type)
@@ -243,7 +251,7 @@ func TestConnectorExtractIncidentIO(t *testing.T) {
 			Description: "d",
 			Type:        "incidentIo",
 			ConnectorConfig: ConnectorConfig{
-				Fields: []ConnectorConfigField{
+				Fields: []ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "apiKey", Value: &apiKey},
 					{FieldName: "alertEventsUrl", Value: &alertEventsURL},
 					{FieldName: "alertSourceToken", Value: &alertSourceToken},
@@ -252,9 +260,9 @@ func TestConnectorExtractIncidentIO(t *testing.T) {
 		},
 	}
 
-	got, err := connector.ExtractConnector(context.Background())
+	got, err := extractConnectorForTest(connector)
 	if err != nil {
-		t.Fatalf("ExtractConnector returned error: %v", err)
+		t.Fatalf("CreateRequest returned error: %v", err)
 	}
 	if got.Type != connectors.NOTIFICATIONCENTERCONNECTORTYPE_INCIDENT_IO {
 		t.Fatalf("Type = %v, want INCIDENT_IO", got.Type)

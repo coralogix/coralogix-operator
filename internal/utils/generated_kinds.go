@@ -23,6 +23,7 @@ const (
 	AlertSchedulerKind           = "AlertScheduler"
 	ArchiveLogsTargetKind        = "ArchiveLogsTarget"
 	ConfigurationGroupKind       = "ConfigurationGroup"
+	ConnectorKind                = "Connector"
 	CustomRoleKind               = "CustomRole"
 	DashboardKind                = "Dashboard"
 	DashboardsFolderKind         = "DashboardsFolder"

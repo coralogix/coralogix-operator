@@ -132,7 +132,7 @@ var _ = Describe("GlobalRouter (generated)", Ordered, Serial, func() {
 			Eventually(func(g Gomega) {
 				current := &coralogixv1alpha1.Connector{}
 				g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
-				g.Expect(current.Status.Id).NotTo(BeNil())
+				g.Expect(current.Status.ID).NotTo(BeNil())
 			}, time.Minute, time.Second).Should(Succeed())
 		}
 		DeferCleanup(func(ctx context.Context) {
@@ -347,7 +347,7 @@ var _ = Describe("GlobalRouter (coverage)", Ordered, Serial, Label("coverage"), 
 					Eventually(func(g Gomega) {
 						current := &coralogixv1alpha1.Connector{}
 						g.Expect(crClient.Get(ctx, types.NamespacedName{Name: fixture.Name, Namespace: testNamespace}, current)).To(Succeed())
-						g.Expect(current.Status.Id).NotTo(BeNil())
+						g.Expect(current.Status.ID).NotTo(BeNil())
 					}, time.Minute, time.Second).Should(Succeed())
 				}
 				cr := newGlobalRouterGenerated(name, spec)

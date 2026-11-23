@@ -52,7 +52,7 @@ var _ = Describe("GlobalRouter", Ordered, Serial, func() {
 		Eventually(func(g Gomega) *string {
 			fetchedConnector := &coralogixv1alpha1.Connector{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
-			return fetchedConnector.Status.Id
+			return fetchedConnector.Status.ID
 		}, time.Minute, time.Second).ShouldNot(BeNil())
 
 		Eventually(func(g Gomega) *string {
@@ -213,7 +213,7 @@ var _ = Describe("GlobalRouter with disabled and fallbackTargets", Ordered, Seri
 		Eventually(func(g Gomega) bool {
 			fetched := &coralogixv1alpha1.Connector{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
-			return fetched.Status.Id != nil
+			return fetched.Status.ID != nil
 		}, time.Minute, time.Second).Should(BeTrue())
 
 		By("Creating the GlobalRouter with disabled + fallbackTargets")
@@ -307,7 +307,7 @@ func getSampleGenericHttpsConnectorForRouterGaps(name, namespace string) *coralo
 			Description: "generic https connector for global router gap-fields test",
 			Type:        "genericHttps",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "url", Value: ptr.To("https://httpbun.org/post")},
 					{FieldName: "method", Value: ptr.To("post")},
 				},

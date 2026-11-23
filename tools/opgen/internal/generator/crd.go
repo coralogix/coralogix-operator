@@ -1405,6 +1405,7 @@ func (b *builder) enum(t *model.Type, path string) (*enumMap, error) {
 				values = append(values, v)
 			}
 		}
+		values = line.Ordered(values)
 		if line.Zero != "" && !line.RejectZero {
 			values = append([]string{t.EnumZero}, values...)
 		}

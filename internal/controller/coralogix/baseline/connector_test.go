@@ -44,7 +44,7 @@ func init() {
 		resource: "connectors",
 		newFake:  newConnectorFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.ConnectorReconciler{ConnectorsClient: cs.Connectors(), Interval: reconcileInterval}
+			return &v1alpha1controllers.ConnectorReconciler{Client: cs.Connectors(), Interval: reconcileInterval}
 		},
 		scenarios: connectorScenarios,
 		admission: connectorAdmission(),

@@ -11708,9 +11708,6 @@ with respect to the current state of the instance.<br/>
 
 Connector is the Schema for the connectors API.
 
-**Added in v0.4.0**
-NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
-
 <table>
     <thead>
         <tr>
@@ -11741,15 +11738,14 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
         <td><b><a href="#connectorspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ConnectorSpec defines the desired state of Connector.
-See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/<br/>
+          ConnectorSpec defines the desired state of a Connector.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#connectorstatus">status</a></b></td>
         <td>object</td>
         <td>
-          ConnectorStatus defines the observed state of Connector.<br/>
+          ConnectorStatus defines the observed state of a Connector.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11761,8 +11757,7 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
 
 
 
-ConnectorSpec defines the desired state of Connector.
-See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
+ConnectorSpec defines the desired state of a Connector.
 
 <table>
     <thead>
@@ -11777,28 +11772,28 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
         <td><b><a href="#connectorspecconnectorconfig">connectorConfig</a></b></td>
         <td>object</td>
         <td>
-          ConnectorConfig is the configuration of the connector.<br/>
+          Configuration for a specific output schema of a connector<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description is the description of the connector.<br/>
+          Human-readable description.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name is the name of the connector.<br/>
+          Display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>enum</td>
         <td>
-          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, or incidentIo (preview).<br/>
+          Connector type.<br/>
           <br/>
             <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, incidentIo<br/>
         </td>
@@ -11807,7 +11802,7 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
         <td><b><a href="#connectorspecconfigoverridesindex">configOverrides</a></b></td>
         <td>[]object</td>
         <td>
-          ConfigOverrides are the entity type config overrides for the connector.<br/>
+          The config overrides.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11819,7 +11814,7 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
 
 
 
-ConnectorConfig is the configuration of the connector.
+Configuration for a specific output schema of a connector
 
 <table>
     <thead>
@@ -11834,7 +11829,7 @@ ConnectorConfig is the configuration of the connector.
         <td><b><a href="#connectorspecconnectorconfigfieldsindex">fields</a></b></td>
         <td>[]object</td>
         <td>
-          Fields are the fields of the connector config.<br/>
+          List of fields. The server does not keep the order of the fields.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11846,7 +11841,7 @@ ConnectorConfig is the configuration of the connector.
 
 
 
-ConnectorConfigField defines a field in the connector configuration.
+ConnectorNotificationCenterConnectorConfigField is the notification_center.ConnectorConfigField object of the API.
 
 <table>
     <thead>
@@ -11861,23 +11856,22 @@ ConnectorConfigField defines a field in the connector configuration.
         <td><b>fieldName</b></td>
         <td>string</td>
         <td>
-          FieldName is the name of the field. e.g. "channel" for slack.<br/>
+          The field name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#connectorspecconnectorconfigfieldsindexsecretkeyref">secretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          SecretKeyRef is a reference to a secret key containing the field value.
-Use this for sensitive data like API keys, integration keys, or tokens.
-Conflicts with Value.<br/>
+          SecretKeyRef is a reference to a Secret key that holds the value of value.
+The operator reads the Secret in the namespace of the resource. Conflicts with Value.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          Value is the literal value of the field. Conflicts with SecretKeyRef.<br/>
+          The value.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11889,9 +11883,8 @@ Conflicts with Value.<br/>
 
 
 
-SecretKeyRef is a reference to a secret key containing the field value.
-Use this for sensitive data like API keys, integration keys, or tokens.
-Conflicts with Value.
+SecretKeyRef is a reference to a Secret key that holds the value of value.
+The operator reads the Secret in the namespace of the resource. Conflicts with Value.
 
 <table>
     <thead>
@@ -11938,7 +11931,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-
+ConnectorEntityTypeConfigOverrides is the EntityTypeConfigOverrides object of the API.
 
 <table>
     <thead>
@@ -11953,7 +11946,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          EntityType is the entity type for the config override. Can be one of alerts or cases.<br/>
+          <br/>
           <br/>
             <i>Enum</i>: alerts, cases<br/>
         </td>
@@ -11962,7 +11955,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
         <td><b><a href="#connectorspecconfigoverridesindexfieldsindex">fields</a></b></td>
         <td>[]object</td>
         <td>
-          Fields are the templated fields for the config override.<br/>
+          List of fields. The server does not keep the order of the fields.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11974,7 +11967,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-
+ConnectorTemplatedConnectorConfigField is the TemplatedConnectorConfigField object of the API.
 
 <table>
     <thead>
@@ -11989,14 +11982,14 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
         <td><b>fieldName</b></td>
         <td>string</td>
         <td>
-          FieldName is the name of the field. e.g. "channel" for slack.<br/>
+          The field name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>template</b></td>
         <td>string</td>
         <td>
-          Template is the template for the field.<br/>
+          Template.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -12008,7 +12001,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-ConnectorStatus defines the observed state of Connector.
+ConnectorStatus defines the observed state of a Connector.
 
 <table>
     <thead>

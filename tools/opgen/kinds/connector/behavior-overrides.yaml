@@ -28,7 +28,7 @@ types:
       value: {valueFrom: {secret: secretKeyRef}, requireOne: true}
   ConnectorConfig:
     fields:
-      fields: {required: true, collection: list}
+      fields: {required: true, collection: list, omitEmptyInRequest: true}
   EntityTypeConfigOverrides:
     fields:
       fields: {collection: list}
@@ -39,6 +39,7 @@ enums:
   notification_center.ConnectorType:
     zero: unspecified
     rejectZero: true
+    order: [SLACK, GENERIC_HTTPS, PAGERDUTY, PAGERDUTY_INCIDENTS, EMAIL, SERVICE_NOW, MICROSOFT_TEAMS, EVENTBRIDGE, INCIDENT_IO]
     rejected:
       - {value: IBM_EVENT_NOTIFICATIONS, reason: the released CRD never accepted this value}
     names:

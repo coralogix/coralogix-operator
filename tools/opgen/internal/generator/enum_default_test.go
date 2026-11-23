@@ -49,3 +49,28 @@ func TestEnumRejectedNeedsAMappingWithAReason(t *testing.T) {
 		t.Fatalf("Parse() error = %v, want a missing reason message", err)
 	}
 }
+
+// order puts the released values first, in the released order. A contract value that the line does
+// not list follows in contract order, so a new API value is still accepted with no edit.
+func TestEnumOrderKeepsTheReleasedOrder(t *testing.T) {
+	line := "    zero: unspecified\n    order: [THING_PRIORITY_PAGER_DUTY_INCIDENTS]\n    names: {THING_PRIORITY_LOW: alerts}\n"
+	files := checkLifecycleFixture(t, "Thing", syntheticContract(t), enumHead+line)
+	types := string(files["api/coralogix/v1alpha1/thing_types.go"])
+	if !strings.Contains(types, "Enum=unspecified;pagerDutyIncidents;alerts") {
+		t.Errorf("the CR enum must list the ordered value first, then the rest in contract order:\n%s", types)
+	}
+}
+
+func TestEnumOrderNamesAnAcceptedValue(t *testing.T) {
+	line := "    zero: unspecified\n    order: [THING_PRIORITY_UNKNOWN]\n"
+	_, err := overrides.Parse([]byte(enumHead + line))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, bad := range []string{"order: [THING_PRIORITY_LOW, THING_PRIORITY_LOW]", `order: [""]`} {
+		_, err := overrides.Parse([]byte(enumHead + "    zero: unspecified\n    " + bad + "\n"))
+		if err == nil || !strings.Contains(err.Error(), "enums.ThingPriority.order") {
+			t.Errorf("%s: Parse() error = %v, want an order message", bad, err)
+		}
+	}
+}

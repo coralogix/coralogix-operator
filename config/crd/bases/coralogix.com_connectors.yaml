@@ -24,11 +24,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          Connector is the Schema for the connectors API.
-
-          **Added in v0.4.0**
-          NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
+        description: Connector is the Schema for the connectors API.
         properties:
           apiVersion:
             description: |-
@@ -48,33 +44,31 @@ spec:
           metadata:
             type: object
           spec:
-            description: |-
-              ConnectorSpec defines the desired state of Connector.
-              See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
+            description: ConnectorSpec defines the desired state of a Connector.
             properties:
               configOverrides:
-                description: ConfigOverrides are the entity type config overrides
-                  for the connector.
+                description: The config overrides.
                 items:
+                  description: ConnectorEntityTypeConfigOverrides is the EntityTypeConfigOverrides
+                    object of the API.
                   properties:
                     entityType:
-                      description: EntityType is the entity type for the config override.
-                        Can be one of alerts or cases.
                       enum:
                       - alerts
                       - cases
                       type: string
                     fields:
-                      description: Fields are the templated fields for the config
-                        override.
+                      description: List of fields. The server does not keep the order
+                        of the fields.
                       items:
+                        description: ConnectorTemplatedConnectorConfigField is the
+                          TemplatedConnectorConfigField object of the API.
                         properties:
                           fieldName:
-                            description: FieldName is the name of the field. e.g.
-                              "channel" for slack.
+                            description: The field name.
                             type: string
                           template:
-                            description: Template is the template for the field.
+                            description: Template.
                             type: string
                         required:
                         - fieldName
@@ -86,23 +80,23 @@ spec:
                   type: object
                 type: array
               connectorConfig:
-                description: ConnectorConfig is the configuration of the connector.
+                description: Configuration for a specific output schema of a connector
                 properties:
                   fields:
-                    description: Fields are the fields of the connector config.
+                    description: List of fields. The server does not keep the order
+                      of the fields.
                     items:
-                      description: ConnectorConfigField defines a field in the connector
-                        configuration.
+                      description: ConnectorNotificationCenterConnectorConfigField
+                        is the notification_center.ConnectorConfigField object of
+                        the API.
                       properties:
                         fieldName:
-                          description: FieldName is the name of the field. e.g. "channel"
-                            for slack.
+                          description: The field name.
                           type: string
                         secretKeyRef:
                           description: |-
-                            SecretKeyRef is a reference to a secret key containing the field value.
-                            Use this for sensitive data like API keys, integration keys, or tokens.
-                            Conflicts with Value.
+                            SecretKeyRef is a reference to a Secret key that holds the value of value.
+                            The operator reads the Secret in the namespace of the resource. Conflicts with Value.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -126,8 +120,7 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         value:
-                          description: Value is the literal value of the field. Conflicts
-                            with SecretKeyRef.
+                          description: The value.
                           type: string
                       required:
                       - fieldName
@@ -141,15 +134,13 @@ spec:
                 - fields
                 type: object
               description:
-                description: Description is the description of the connector.
+                description: Human-readable description.
                 type: string
               name:
-                description: Name is the name of the connector.
+                description: Display name.
                 type: string
               type:
-                description: Type is the type of the connector. Can be one of slack,
-                  genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow,
-                  microsoftTeams, eventBridge, or incidentIo (preview).
+                description: Connector type.
                 enum:
                 - slack
                 - genericHttps
@@ -168,7 +159,7 @@ spec:
             - type
             type: object
           status:
-            description: ConnectorStatus defines the observed state of Connector.
+            description: ConnectorStatus defines the observed state of a Connector.
             properties:
               conditions:
                 items:
