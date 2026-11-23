@@ -51,13 +51,13 @@ var thingPoliciesCoverageSpecs = []thingPoliciesCoverageSpec{
       "tags": [
         "sample-tags"
       ],
-      "level": "low",
+      "level": "high",
       "pattern": "sample-pattern"
     }
   ]
 }`,
 		expect: []string{
-			"\"THING_POLICY_LEVEL_LOW\"",
+			"\"THING_POLICY_LEVEL_HIGH\"",
 		},
 	},
 	{
@@ -80,13 +80,13 @@ var thingPoliciesCoverageSpecs = []thingPoliciesCoverageSpec{
       "tags": [
         "sample-tags"
       ],
-      "level": "high",
+      "level": "low",
       "pattern": "sample-pattern"
     }
   ]
 }`,
 		expect: []string{
-			"\"THING_POLICY_LEVEL_HIGH\"",
+			"\"THING_POLICY_LEVEL_LOW\"",
 		},
 	},
 }

@@ -45,7 +45,7 @@ func TestWrappedRequestsAndResponses(t *testing.T) {
 	}
 	controller := string(files["internal/controller/coralogix/v1alpha1/wrappedthing_controller.go"])
 	conversion := string(files["api/coralogix/v1alpha1/wrappedthing_convert.go"])
-	for _, want := range []string{"resp.Item.Id", "if resp == nil", "if resp.Item == nil"} {
+	for _, want := range []string{"resp.Item.Id", "if resp == nil || resp.Item == nil"} {
 		if !strings.Contains(controller, want) {
 			t.Errorf("controller misses %q", want)
 		}

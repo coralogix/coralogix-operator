@@ -1,0 +1,51 @@
+# Values come from the recorded answers of the live API (internal/controller/coralogix/baseline/testdata/connector/fidelity/recorded.json).
+# A Slack connector that names no integration gets the integration of the team, so no test needs an integration id.
+values:
+  connectorConfig.fields:
+    - {fieldName: channel, value: team-alerts}
+    - {fieldName: fallbackChannel, value: fallback_general}
+  configOverrides.fields:
+    - {fieldName: channel, template: cases-channel}
+when:
+  - match: {type: genericHttps}
+    set:
+      configOverrides: []
+      connectorConfig.fields:
+        - {fieldName: url, value: 'https://example.com/hook'}
+        - {fieldName: method, value: POST}
+  - match: {type: pagerDuty}
+    set:
+      configOverrides: []
+      connectorConfig.fields:
+        - {fieldName: integrationKey, value: e2e-integration-key}
+  - match: {type: email}
+    set:
+      configOverrides: []
+      connectorConfig.fields:
+        - {fieldName: emailAddresses, value: '["email1@example.com","email2@example.com"]'}
+  - match: {type: incidentIo}
+    set:
+      configOverrides: []
+      connectorConfig.fields:
+        - {fieldName: apiKey, value: e2e-api-key}
+  - match: {type: slack}
+    set:
+      connectorConfig.fields:
+        - {fieldName: channel, value: team-alerts}
+        - {fieldName: fallbackChannel, value: fallback_general}
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    description: Connector created before the operator upgrade
+    type: genericHttps
+    connectorConfig:
+      fields:
+        - {fieldName: url, value: 'https://example.com/hook'}
+        - {fieldName: method, value: POST}
+  field: description
+  value: Connector updated after the operator upgrade
+skipValues:
+  notification_center.ConnectorType:
+    values: [PAGERDUTY_INCIDENTS, MICROSOFT_TEAMS, EVENTBRIDGE, SERVICE_NOW]
+    reason: the API answers "Integration 'some-integration-id' not found or not authorized for this team" and the e2e team has no such integration

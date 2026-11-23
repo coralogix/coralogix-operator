@@ -11774,28 +11774,28 @@ ConnectorSpec defines the desired state of a Connector.
         <td><b><a href="#connectorspecconnectorconfig">connectorConfig</a></b></td>
         <td>object</td>
         <td>
-          Configuration for a specific output schema of a connector<br/>
+          ConnectorConfig is the configuration of the connector.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Human-readable description.<br/>
+          Description is the description of the connector.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Display name.<br/>
+          Name is the name of the connector.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>enum</td>
         <td>
-          Connector type.<br/>
+          Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, or incidentIo (preview).<br/>
           <br/>
             <i>Enum</i>: slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, incidentIo<br/>
         </td>
@@ -11804,7 +11804,7 @@ ConnectorSpec defines the desired state of a Connector.
         <td><b><a href="#connectorspecconfigoverridesindex">configOverrides</a></b></td>
         <td>[]object</td>
         <td>
-          The config overrides.<br/>
+          ConfigOverrides are the entity type config overrides for the connector.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11816,7 +11816,7 @@ ConnectorSpec defines the desired state of a Connector.
 
 
 
-Configuration for a specific output schema of a connector
+ConnectorConfig is the configuration of the connector.
 
 <table>
     <thead>
@@ -11831,7 +11831,7 @@ Configuration for a specific output schema of a connector
         <td><b><a href="#connectorspecconnectorconfigfieldsindex">fields</a></b></td>
         <td>[]object</td>
         <td>
-          List of fields. The server does not keep the order of the fields.<br/>
+          Fields are the fields of the connector config.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -11858,7 +11858,7 @@ ConnectorNotificationCenterConnectorConfigField is the notification_center.Conne
         <td><b>fieldName</b></td>
         <td>string</td>
         <td>
-          The field name.<br/>
+          FieldName is the name of the field. e.g. "channel" for slack.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -11873,7 +11873,7 @@ The operator reads the Secret in the namespace of the resource. Conflicts with V
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          The value.<br/>
+          Value is the literal value of the field. Conflicts with SecretKeyRef.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11948,7 +11948,7 @@ ConnectorEntityTypeConfigOverrides is the EntityTypeConfigOverrides object of th
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          EntityType is the entity type for the config override. Can be one of alerts or cases.<br/>
           <br/>
             <i>Enum</i>: alerts, cases<br/>
         </td>
@@ -11957,7 +11957,7 @@ ConnectorEntityTypeConfigOverrides is the EntityTypeConfigOverrides object of th
         <td><b><a href="#connectorspecconfigoverridesindexfieldsindex">fields</a></b></td>
         <td>[]object</td>
         <td>
-          List of fields. The server does not keep the order of the fields.<br/>
+          Fields are the templated fields for the config override.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11984,14 +11984,14 @@ ConnectorTemplatedConnectorConfigField is the TemplatedConnectorConfigField obje
         <td><b>fieldName</b></td>
         <td>string</td>
         <td>
-          The field name.<br/>
+          FieldName is the name of the field. e.g. "channel" for slack.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>template</b></td>
         <td>string</td>
         <td>
-          Template.<br/>
+          Template is the literal template for the field. Conflicts with TemplateSecretKeyRef. Use TemplateSecretKeyRef when the template holds a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>

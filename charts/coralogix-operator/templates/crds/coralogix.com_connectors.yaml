@@ -48,28 +48,34 @@ spec:
             description: ConnectorSpec defines the desired state of a Connector.
             properties:
               configOverrides:
-                description: The config overrides.
+                description: ConfigOverrides are the entity type config overrides
+                  for the connector.
                 items:
                   description: ConnectorEntityTypeConfigOverrides is the EntityTypeConfigOverrides
                     object of the API.
                   properties:
                     entityType:
+                      description: EntityType is the entity type for the config override.
+                        Can be one of alerts or cases.
                       enum:
                       - alerts
                       - cases
                       type: string
                     fields:
-                      description: List of fields. The server does not keep the order
-                        of the fields.
+                      description: Fields are the templated fields for the config
+                        override.
                       items:
                         description: ConnectorTemplatedConnectorConfigField is the
                           TemplatedConnectorConfigField object of the API.
                         properties:
                           fieldName:
-                            description: The field name.
+                            description: FieldName is the name of the field. e.g.
+                              "channel" for slack.
                             type: string
                           template:
-                            description: Template.
+                            description: Template is the literal template for the
+                              field. Conflicts with TemplateSecretKeyRef. Use TemplateSecretKeyRef
+                              when the template holds a credential.
                             type: string
                           templateSecretKeyRef:
                             description: |-
@@ -110,18 +116,18 @@ spec:
                   type: object
                 type: array
               connectorConfig:
-                description: Configuration for a specific output schema of a connector
+                description: ConnectorConfig is the configuration of the connector.
                 properties:
                   fields:
-                    description: List of fields. The server does not keep the order
-                      of the fields.
+                    description: Fields are the fields of the connector config.
                     items:
                       description: ConnectorNotificationCenterConnectorConfigField
                         is the notification_center.ConnectorConfigField object of
                         the API.
                       properties:
                         fieldName:
-                          description: The field name.
+                          description: FieldName is the name of the field. e.g. "channel"
+                            for slack.
                           type: string
                         secretKeyRef:
                           description: |-
@@ -150,7 +156,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         value:
-                          description: The value.
+                          description: Value is the literal value of the field. Conflicts
+                            with SecretKeyRef.
                           type: string
                       required:
                       - fieldName
@@ -164,13 +171,15 @@ spec:
                 - fields
                 type: object
               description:
-                description: Human-readable description.
+                description: Description is the description of the connector.
                 type: string
               name:
-                description: Display name.
+                description: Name is the name of the connector.
                 type: string
               type:
-                description: Connector type.
+                description: Type is the type of the connector. Can be one of slack,
+                  genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow,
+                  microsoftTeams, eventBridge, or incidentIo (preview).
                 enum:
                 - slack
                 - genericHttps

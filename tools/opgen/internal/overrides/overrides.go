@@ -545,11 +545,7 @@ func (e Enum) Ordered(accepted []string) []string {
 		return accepted
 	}
 	ordered := make([]string, 0, len(accepted))
-	for _, value := range e.Order {
-		if slices.Contains(accepted, value) {
-			ordered = append(ordered, value)
-		}
-	}
+	ordered = append(ordered, e.Order...)
 	for _, value := range accepted {
 		if !slices.Contains(e.Order, value) {
 			ordered = append(ordered, value)

@@ -72,10 +72,7 @@ func (r *ConnectorReconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return fmt.Errorf("error on creating remote Connector: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote Connector created")
-	if resp == nil {
-		return fmt.Errorf("the create response of Connector has no resource")
-	}
-	if resp.Connector == nil {
+	if resp == nil || resp.Connector == nil {
 		return fmt.Errorf("the create response of Connector has no resource")
 	}
 	id := ptr.Deref(resp.Connector.Id, "")
