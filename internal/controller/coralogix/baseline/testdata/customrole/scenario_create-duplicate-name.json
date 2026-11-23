@@ -1,0 +1,88 @@
+[
+  {
+    "step": "name already in use",
+    "spec": {
+      "description": "Baseline role",
+      "name": "baseline-role",
+      "parentRoleName": "Standard User",
+      "permissions": [
+        "team-actions:UpdateConfig"
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1",
+        "body": {
+          "description": "Baseline role",
+          "name": "baseline-role",
+          "parentRoleName": "Standard User",
+          "permissions": [
+            "team-actions:UpdateConfig"
+          ]
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1",
+        "body": {
+          "description": "Baseline role",
+          "name": "baseline-role",
+          "parentRoleName": "Standard User",
+          "permissions": [
+            "team-actions:UpdateConfig"
+          ]
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete the CR without a remote id",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

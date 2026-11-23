@@ -1,0 +1,89 @@
+{
+  "description absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.description",
+        "message": "Required value"
+      }
+    ]
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.description",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.parentRoleName",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.permissions",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name empty": {
+    "accepted": true
+  },
+  "parent absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.parentRoleName",
+        "message": "Required value"
+      }
+    ]
+  },
+  "parent empty": {
+    "accepted": true
+  },
+  "permissions absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.permissions",
+        "message": "Required value"
+      }
+    ]
+  },
+  "permissions empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.permissions",
+        "message": "Invalid value: 0: spec.permissions in body should have at least 1 items"
+      }
+    ]
+  },
+  "sample": {
+    "accepted": true
+  },
+  "without spec": {
+    "accepted": true
+  }
+}
