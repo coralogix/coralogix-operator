@@ -1,0 +1,81 @@
+{
+  "cases": [
+    {
+      "name": "create, update, clear permissions, duplicate, empty permissions, missing parent, and delete",
+      "steps": [
+        {"status": 200, "response": {"id": "{{role}}"}},
+        {
+          "status": 200,
+          "response": {
+            "role": {
+              "roleId": "{{role}}",
+              "teamId": "<redacted>",
+              "name": "cxo-customrole-probe-{{run}}",
+              "description": "Control role",
+              "parentRoleId": "<parent-role-id>",
+              "permissions": ["team-actions:UpdateConfig"],
+              "parentRoleName": "Standard User"
+            }
+          }
+        },
+        {"status": 200, "response": {}},
+        {
+          "status": 200,
+          "response": {
+            "role": {
+              "roleId": "{{role}}",
+              "teamId": "<redacted>",
+              "name": "cxo-customrole-probe-{{run}}-updated",
+              "description": "Updated role",
+              "parentRoleId": "<parent-role-id>",
+              "permissions": ["TEAM-CUSTOM-API-KEYS:READCONFIG"],
+              "parentRoleName": "Standard User"
+            }
+          }
+        },
+        {"status": 200, "response": {}},
+        {
+          "status": 200,
+          "response": {
+            "role": {
+              "roleId": "{{role}}",
+              "teamId": "<redacted>",
+              "name": "cxo-customrole-probe-{{run}}-updated",
+              "description": "Updated role",
+              "parentRoleId": "<parent-role-id>",
+              "permissions": [],
+              "parentRoleName": "Standard User"
+            }
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: Could not create custom role cxo-customrole-probe-{{run}}-updated for team <redacted> as it already exists."
+          }
+        },
+        {"status": 200, "response": {"id": "{{empty}}"}},
+        {
+          "status": 200,
+          "response": {
+            "role": {
+              "roleId": "{{empty}}",
+              "teamId": "<redacted>",
+              "name": "cxo-customrole-probe-{{run}}-empty",
+              "description": "",
+              "parentRoleId": "<parent-role-id>",
+              "permissions": [],
+              "parentRoleName": "Standard User"
+            }
+          }
+        },
+        {"status": 400, "response": {"code": 400, "message": "Bad Request: Parent role is required"}},
+        {"status": 200, "response": {}},
+        {"status": 404, "response": {"code": 404, "message": "Not Found: Role not found"}},
+        {"status": 404, "response": {"code": 404, "message": "Not Found: Role not found"}},
+        {"status": 404, "response": {"code": 404, "message": "Not Found: Role not found"}}
+      ]
+    }
+  ]
+}

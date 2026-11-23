@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -29,6 +30,7 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -51,6 +53,9 @@ type fidelityConfig struct {
 	// deletePath returns the path that deletes a resource. The recorder calls it for each
 	// captured id when it ends, so a failed run leaves nothing behind.
 	deletePath func(id string) string
+	// numericID is true when Create returns an integer id. The recorder stores the integer as a
+	// path variable and masks it in response bodies.
+	numericID bool
 	// cleanup returns the requests that remove a resource, for an API that has no DELETE, such as
 	// one that archives with a POST. The recorder sends them in order instead of a DELETE of
 	// deletePath. A 404 of any request is no problem: a case already removed the resource.
@@ -417,18 +422,27 @@ func sendRecordRequest(base, apiKey, method, path string, body any) (int, any, e
 
 // capturedID reads the id of a new resource from a response, or "" when the path has no string.
 func capturedID(resp any, k kind) string {
+	if k.fidelity.numericID {
+		if id, ok := valueAt(resp, k.fidelity.captureField).(float64); ok {
+			return strconv.FormatInt(int64(id), 10)
+		}
+	}
 	return stringAt(resp, k.fidelity.captureField)
 }
 
 // stringAt reads the string at a dotted path of a response, or "" when the path has no string.
 func stringAt(resp any, path string) string {
+	value, _ := valueAt(resp, path).(string)
+	return value
+}
+
+func valueAt(resp any, path string) any {
 	current := resp
 	for _, key := range strings.Split(path, ".") {
 		m, _ := current.(map[string]any)
 		current = m[key]
 	}
-	value, _ := current.(string)
-	return value
+	return current
 }
 
 // normalizeAnswer stores a captured id under its name, then writes {{name}} for each captured
@@ -447,6 +461,9 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 	// field of its name. A substring replace would rewrite a key that contains it, and two starting
 	// values that are equal would get the same placeholder.
 	resp = replaceFieldVars(roundTrip(t, resp), k.fidelity.fakeVars, vars)
+	if k.fidelity.numericID {
+		resp = maskNumericIDs(resp, vars)
+	}
 	raw, err := json.Marshal(resp)
 	if err != nil {
 		t.Fatal(err)
@@ -455,6 +472,11 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 	for name, value := range vars {
 		if _, field := k.fidelity.fakeVars[name]; field || value == "" {
 			continue
+		}
+		if k.fidelity.numericID {
+			if _, err := strconv.ParseUint(value, 10, 32); err == nil {
+				continue // numeric ids were replaced in the decoded response
+			}
 		}
 		text = strings.ReplaceAll(text, value, "{{"+name+"}}")
 	}
@@ -473,6 +495,38 @@ func normalizeAnswer(t *testing.T, k kind, s fidelityStep, status int, resp any,
 		out = k.fidelity.normalize(out)
 	}
 	return out
+}
+
+// maskNumericIDs replaces captured integer ids before JSON text substitution. A bare number
+// cannot hold the string placeholder in JSON.
+func maskNumericIDs(v any, vars map[string]string) any {
+	switch v := v.(type) {
+	case float64:
+		if v != math.Trunc(v) {
+			return v
+		}
+		for name, value := range vars {
+			if value != "" && strconv.FormatInt(int64(v), 10) == value {
+				return "{{" + name + "}}"
+			}
+		}
+	case string:
+		for name, value := range vars {
+			if _, err := strconv.ParseUint(value, 10, 32); err == nil {
+				v = regexp.MustCompile(`\b`+regexp.QuoteMeta(value)+`\b`).ReplaceAllString(v, "{{"+name+"}}")
+			}
+		}
+		return v
+	case map[string]any:
+		for key, value := range v {
+			v[key] = maskNumericIDs(value, vars)
+		}
+	case []any:
+		for i := range v {
+			v[i] = maskNumericIDs(v[i], vars)
+		}
+	}
+	return v
 }
 
 // replaceFieldVars writes {{name}} for each string field named after a starting value that holds

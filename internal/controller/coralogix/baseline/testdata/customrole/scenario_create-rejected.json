@@ -1,0 +1,84 @@
+[
+  {
+    "step": "create returns an API error",
+    "spec": {
+      "description": "Baseline role",
+      "name": "baseline-role",
+      "parentRoleName": "Standard User",
+      "permissions": [
+        "team-actions:UpdateConfig"
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1",
+        "body": {
+          "description": "Baseline role",
+          "name": "baseline-role",
+          "parentRoleName": "Standard User",
+          "permissions": [
+            "team-actions:UpdateConfig"
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry creates the role",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1",
+        "body": {
+          "description": "Baseline role",
+          "name": "baseline-role",
+          "parentRoleName": "Standard User",
+          "permissions": [
+            "team-actions:UpdateConfig"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "custom-role.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

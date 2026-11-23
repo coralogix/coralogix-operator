@@ -1,0 +1,92 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "description": "This is a sample custom role",
+      "name": "custom-role-sample",
+      "parentRoleName": "Standard User",
+      "permissions": [
+        "team-actions:UpdateConfig",
+        "TEAM-CUSTOM-API-KEYS:READCONFIG"
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1",
+        "body": {
+          "description": "This is a sample custom role",
+          "name": "custom-role-sample",
+          "parentRoleName": "Standard User",
+          "permissions": [
+            "team-actions:UpdateConfig",
+            "TEAM-CUSTOM-API-KEYS:READCONFIG"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "custom-role.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole mutable spec",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1/1001",
+        "body": {
+          "newDescription": "This is a sample custom role",
+          "newName": "custom-role-sample",
+          "newPermissions": {
+            "permissions": [
+              "team-actions:UpdateConfig",
+              "TEAM-CUSTOM-API-KEYS:READCONFIG"
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "custom-role.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

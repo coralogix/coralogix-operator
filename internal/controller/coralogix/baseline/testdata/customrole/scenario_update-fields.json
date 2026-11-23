@@ -1,0 +1,137 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "description": "Baseline role",
+      "name": "baseline-role",
+      "parentRoleName": "Standard User",
+      "permissions": [
+        "team-actions:UpdateConfig"
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1",
+        "body": {
+          "description": "Baseline role",
+          "name": "baseline-role",
+          "parentRoleName": "Standard User",
+          "permissions": [
+            "team-actions:UpdateConfig"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "custom-role.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "rename and replace permissions",
+    "spec": {
+      "description": "Changed",
+      "name": "renamed-role",
+      "parentRoleName": "Standard User",
+      "permissions": [
+        "TEAM-CUSTOM-API-KEYS:READCONFIG"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1/1001",
+        "body": {
+          "newDescription": "Changed",
+          "newName": "renamed-role",
+          "newPermissions": {
+            "permissions": [
+              "TEAM-CUSTOM-API-KEYS:READCONFIG"
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "custom-role.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/custom-roles/v1/1001",
+        "body": {
+          "newDescription": "Changed",
+          "newName": "renamed-role",
+          "newPermissions": {
+            "permissions": [
+              "TEAM-CUSTOM-API-KEYS:READCONFIG"
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "custom-role.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "1001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

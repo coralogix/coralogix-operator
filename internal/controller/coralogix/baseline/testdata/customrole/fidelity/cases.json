@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "name": "create, update, clear permissions, duplicate, empty permissions, missing parent, and delete",
+      "steps": [
+        {
+          "method": "PUT",
+          "path": "/aaa/custom-roles/v1",
+          "body": {
+            "name": "cxo-customrole-probe-{{run}}",
+            "description": "Control role",
+            "parentRoleName": "Standard User",
+            "permissions": ["team-actions:UpdateConfig"]
+          },
+          "capture": "role"
+        },
+        {"method": "GET", "path": "/aaa/custom-roles/v1/{{role}}"},
+        {
+          "method": "POST",
+          "path": "/aaa/custom-roles/v1/{{role}}",
+          "body": {
+            "newName": "cxo-customrole-probe-{{run}}-updated",
+            "newDescription": "Updated role",
+            "newPermissions": {"permissions": ["TEAM-CUSTOM-API-KEYS:READCONFIG"]}
+          }
+        },
+        {"method": "GET", "path": "/aaa/custom-roles/v1/{{role}}"},
+        {"method": "POST", "path": "/aaa/custom-roles/v1/{{role}}", "body": {"newPermissions": {}}},
+        {"method": "GET", "path": "/aaa/custom-roles/v1/{{role}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/custom-roles/v1",
+          "body": {"name": "cxo-customrole-probe-{{run}}-updated", "parentRoleName": "Standard User"},
+          "capture": "duplicate"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/custom-roles/v1",
+          "body": {"name": "cxo-customrole-probe-{{run}}-empty", "parentRoleName": "Standard User"},
+          "capture": "empty"
+        },
+        {"method": "GET", "path": "/aaa/custom-roles/v1/{{empty}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/custom-roles/v1",
+          "body": {"name": "cxo-customrole-probe-{{run}}-no-parent"},
+          "capture": "noParent"
+        },
+        {"method": "DELETE", "path": "/aaa/custom-roles/v1/{{role}}"},
+        {"method": "GET", "path": "/aaa/custom-roles/v1/{{role}}"},
+        {"method": "DELETE", "path": "/aaa/custom-roles/v1/{{role}}"},
+        {
+          "method": "POST",
+          "path": "/aaa/custom-roles/v1/{{role}}",
+          "body": {
+            "newName": "cxo-customrole-probe-{{run}}-updated",
+            "newDescription": "Updated role",
+            "newPermissions": {"permissions": ["TEAM-CUSTOM-API-KEYS:READCONFIG"]}
+          }
+        }
+      ]
+    }
+  ]
+}
