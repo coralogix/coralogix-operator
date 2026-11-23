@@ -165,7 +165,15 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if resp == nil {
 		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
 	}
-{{- if .CreateResponseIDField}}
+{{- if .Singleton}}
+{{- if and .CreateResponseField (not .CreateResponseValue)}}
+	if resp.{{.CreateResponseField}} == nil {
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
+	}
+{{- end}}
+	// The API has one {{.Kind}} per team and no id, so status.id is fixed.
+	id := "{{.SingletonID}}"
+{{- else if .CreateResponseIDField}}
 	id := {{if .CreateResponseIDValue}}resp.{{.CreateResponseIDField}}{{else}}ptr.Deref(resp.{{.CreateResponseIDField}}, ""){{end}}
 {{- else}}
 {{- if and .CreateResponseField (not .CreateResponseValue)}}
@@ -194,7 +202,7 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 	id := ptr.Deref(resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}, "")
 {{- end}}
 {{- end}}
-{{- if not .IDBits}}
+{{- if not (or .IDBits .Singleton)}}
 	if id == "" {
 		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no id")
 	}
@@ -260,7 +268,7 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 {{- else}}
 	log.Info("Updating remote {{.Kind}}", "id", id, "{{.Kind}}", utils.FormatJSON(body))
 {{- end}}
-	{{if and .HideBodiesInLogs (not .Hooks.AfterUpdate)}}_{{else}}resp{{end}}, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not .UpdateIDInBody}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}({{if .MaskArms}}cr.UpdateMask(){{else}}coralogixv1alpha1.{{.Kind}}UpdateMask{{end}}){{end}}.Execute()
+	{{if and .HideBodiesInLogs (not .Hooks.AfterUpdate)}}_{{else}}resp{{end}}, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not (or .UpdateIDInBody .Singleton)}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}({{if .MaskArms}}cr.UpdateMask(){{else}}coralogixv1alpha1.{{.Kind}}UpdateMask{{end}}){{end}}.Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote {{.Kind}} %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
@@ -300,6 +308,12 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeDelete hook of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
+{{- if .Singleton}}
+	// The API cannot remove the {{.Kind}} of the team, so it keeps its last configuration.
+	log.Info("The API keeps the remote {{.Kind}}: it has no Delete", "id", ptr.Deref(cr.Status.ID, ""))
+	return nil
+}
+{{- else}}
 	id := ptr.Deref(cr.Status.ID, "")
 {{- if .IDBits}}
 	parsedID, err := strconv.ParseInt(id, 10, {{.IDBits}})
@@ -319,6 +333,7 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 	log.Info("Remote {{.Kind}} deleted", "id", id)
 	return nil
 }
+{{- end}}
 {{- end}}
 {{- end}}
 {{- if .Hooks.Any}}

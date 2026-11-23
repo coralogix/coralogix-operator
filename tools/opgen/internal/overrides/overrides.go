@@ -87,6 +87,17 @@ type File struct {
 	// fields, which the shared module cannot check. Mode existing only.
 	UpdateMask string `yaml:"updateMask"`
 
+	// SingletonID is the status id of a singleton: the API has one resource per team and no id.
+	// It is an operator key. Mode existing only.
+	SingletonID *SingletonID `yaml:"singletonID"` //nolint:tagliatelle // the key of the Terraform generator and of serverSetID, clientSetID
+
+	// Inlined is set by the generator when it reshapes the contract: the object of the API
+	// response that holds each field of an inline line on the resource.
+	Inlined map[string]InlineParent `yaml:"-"`
+	// PrunedArms is set by the generator: the skipped arms of the oneOf group of the resource that
+	// it removed from the response, because no request has them.
+	PrunedArms []string `yaml:"-"`
+
 	// hooksNode is the hooks key as the file writes it, nil without one. A written empty list is an
 	// error, and a Go slice cannot tell it from a missing key.
 	hooksNode *yaml.Node
@@ -96,6 +107,57 @@ type File struct {
 	// validatorsNode is the validators section as the file writes it, nil without one. A written
 	// validators: null decodes as a missing section.
 	validatorsNode *yaml.Node
+}
+
+// SingletonID is the singletonID key.
+type SingletonID struct {
+	// Fixed is the status id that Create writes. A released kind keeps the id that its objects
+	// hold.
+	Fixed string `yaml:"fixed"`
+}
+
+// InlineParent is the object of the API response that holds an inlined field.
+type InlineParent struct {
+	// Field is the property of the resource that holds the object, Schema is its component.
+	Field, Schema string
+}
+
+// UpsertDelete is the value of api.operations.delete for a singleton that the API cannot remove.
+const UpsertDelete = "none"
+
+// The operationIds of the PUT and the DELETE that opgen adds to the contract of an upsert, so that
+// the shared module sees every lifecycle step. The generated code calls the Set operation for both
+// Create and Update, and makes no Delete call.
+const (
+	UpsertPutSuffix    = "_UpsertPut"
+	UpsertDeleteSuffix = "_UpsertDelete"
+)
+
+// Upserts reports whether the kind is a singleton that one POST creates and replaces, and that the
+// API cannot remove: api.operations names the POST as create and update, and delete is none.
+func (f *File) Upserts() bool {
+	return f != nil && f.API.Operations != nil && f.API.Operations.Delete == UpsertDelete
+}
+
+// UpsertOperations returns the operation ids that the shared module reads for an upsert: the ids of
+// the PUT and the DELETE that opgen adds to the contract.
+func (f *File) UpsertOperations() model.OperationIDs {
+	o := f.API.Operations
+	return model.OperationIDs{Create: o.Create, Get: o.Get, Update: o.Create + UpsertPutSuffix, Delete: o.Get + UpsertDeleteSuffix}
+}
+
+// InlinedFields returns the fields of the resource that inline lines name, in name order.
+func (f *File) InlinedFields() []string {
+	if f == nil {
+		return nil
+	}
+	var out []string
+	for _, name := range slices.Sorted(maps.Keys(f.Types[f.Resource].Fields)) {
+		if f.Types[f.Resource].Fields[name].Inline {
+			out = append(out, name)
+		}
+	}
+	return out
 }
 
 // Content is the content key: the CR holds the resource as JSON from one of three sources, json,
@@ -494,6 +556,9 @@ func (f *File) check() error {
 	if err := f.checkValidators(); err != nil {
 		return err
 	}
+	if err := f.checkSingleton(); err != nil {
+		return err
+	}
 	if err := f.checkFinalizer(); err != nil {
 		return err
 	}
@@ -582,9 +647,6 @@ func (f *File) check() error {
 		if field.Inline {
 			if f.Mode != ModeExisting {
 				return fmt.Errorf("%s.inline: a new kind follows the contract", line)
-			}
-			if line.Component == f.Resource {
-				return fmt.Errorf("%s.inline: it applies to a field of a nested component", line)
 			}
 			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest {
 				return fmt.Errorf("%s.inline: the line cannot set another key", line)
@@ -751,6 +813,33 @@ func (f *File) checkFinalizer() error {
 	prefix, name, _ := strings.Cut(f.Finalizer, "/")
 	if !finalizerPattern.MatchString(f.Finalizer) || len(prefix) > 253 || len(name) > 63 {
 		return fmt.Errorf("finalizer: %q is not a qualified name such as example.coralogix.com/finalizer", f.Finalizer)
+	}
+	return nil
+}
+
+// checkSingleton checks an upsert and its singletonID. One POST creates and replaces the singleton,
+// so create and update name it. The API cannot remove it, so delete is none. The status id is fixed.
+func (f *File) checkSingleton() error {
+	if !f.Upserts() {
+		if f.SingletonID != nil {
+			return errors.New("singletonID: only a singleton that api.operations sets with delete: none has a fixed id")
+		}
+		return nil
+	}
+	o, a := f.API.Operations, f.API
+	switch {
+	case f.Mode != ModeExisting:
+		return errors.New("api.operations.delete: none: a new kind follows the contract")
+	case o.Create != o.Update:
+		return errors.New("api.operations.delete: none needs create and update to name the same POST, which sets the singleton")
+	case strings.HasSuffix(o.Create, UpsertPutSuffix) || strings.HasSuffix(o.Get, UpsertDeleteSuffix):
+		return fmt.Errorf("api.operations: an operation id cannot end in %s or %s", UpsertPutSuffix, UpsertDeleteSuffix)
+	case a.Overwrite != nil || a.Delete != nil || a.RequestWrapper != "" || a.UpdateIDInBody || a.ClientSetID || a.ServerSetID || a.IDProperty != "" || a.CustomMethods || a.UpdateMaskInBody || a.CreateResponseOnlyIDProperty != "" || len(a.RequestValues) != 0:
+		return errors.New("api.operations.delete: none describes a singleton without an id or a wrapper; it cannot go with the other api keys")
+	case f.SingletonID == nil || f.SingletonID.Fixed == "":
+		return errors.New("singletonID.fixed is required: the API has no id, so Create writes this one to status.id")
+	case f.Content != nil:
+		return errors.New("api.operations.delete: none cannot go with content")
 	}
 	return nil
 }
@@ -1067,6 +1156,9 @@ func (f *File) Policy() model.Policy {
 		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap, CreateAs: field.CreateAs, RequestAs: field.RequestAs}
 	}
 	p := exceptions.Policy()
+	if f.Upserts() {
+		p.Operations = f.UpsertOperations()
+	}
 	for _, line := range f.Lines() {
 		if field := f.Field(line.Component, line.Field); field.Optional || field.Required {
 			p.Released = append(p.Released, line.Component+"."+line.Field)

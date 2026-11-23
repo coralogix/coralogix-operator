@@ -65,6 +65,9 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 	if r.Overwrite {
 		return b.overwriteOperations(r, d)
 	}
+	if r.Singleton {
+		return b.singletonOperations(r, d)
+	}
 	id, err := b.ix.field(resource.Name, r.ID())
 	if err != nil {
 		return err
@@ -152,6 +155,40 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 			return err
 		}
 		d.MaskInBody, d.MaskBodyField, d.MaskBodyValue = true, field.Name, field.Want == "string"
+	}
+	return nil
+}
+
+// singletonOperations reads the SDK names of a singleton that one POST sets (api.operations with
+// delete: none). The POST is Create and Update, and the status id is the fixed singletonID. The
+// generated Delete makes no call, so DeleteMethod is unused.
+func (b *builder) singletonOperations(r *model.Resource, d *kindData) error {
+	d.Singleton, d.SingletonID = true, b.file.SingletonID.Fixed
+	if d.CreateMethod != d.UpdateMethod || d.CreateBody != d.UpdateBody || d.CreateSetter != d.UpdateSetter {
+		return unsupported("api.operations", "a singleton uses one POST for Create and Update")
+	}
+	for _, response := range []struct {
+		path  string
+		field string
+		name  *string
+		value *bool
+	}{{"create.response", r.Create.Response.Field, &d.CreateResponseField, &d.CreateResponseValue}, {"get.response", r.Get.Response.Field, &d.GetResponseField, &d.GetResponseValue}} {
+		if response.field == "" {
+			continue
+		}
+		owner, err := b.ix.typeRef(response.path)
+		if err != nil {
+			return err
+		}
+		field, err := b.ix.field(owner.Name, response.field)
+		if err != nil {
+			return err
+		}
+		resource, err := b.ix.typeRef("fields")
+		if err != nil {
+			return err
+		}
+		*response.name, *response.value = field.Name, field.Want == resource.Name
 	}
 	return nil
 }

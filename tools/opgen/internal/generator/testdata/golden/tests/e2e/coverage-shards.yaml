@@ -5,12 +5,17 @@
   "shards": [
     {
       "name": "coverage-1",
-      "filter": "coverage && (coverage-maskthing-1 || coverage-patchthing-1 || coverage-thing-1 || coverage-thingpolicies-1)",
+      "filter": "coverage && (coverage-maskthing-1 || coverage-patchthing-1 || coverage-settingthing-1 || coverage-thing-1)",
       "steps": 4
     },
     {
+      "name": "coverage-2",
+      "filter": "coverage && (coverage-thingpolicies-1)",
+      "steps": 1
+    },
+    {
       "name": "coverage-rest",
-      "filter": "coverage && !(coverage-maskthing-1 || coverage-patchthing-1 || coverage-thing-1 || coverage-thingpolicies-1)",
+      "filter": "coverage && !(coverage-maskthing-1 || coverage-patchthing-1 || coverage-settingthing-1 || coverage-thing-1 || coverage-thingpolicies-1)",
       "steps": 0
     }
   ]

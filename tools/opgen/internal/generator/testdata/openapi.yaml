@@ -26,6 +26,10 @@
 # MaskThing: a kind that users already have, with a PATCH whose API rejects the bare path of its
 # required rule object (api.updateMask.nested). The rule has plain fields and a oneOf that
 # requires one arm, so the mask names rule.enabled, rule.note, and the arm that the CR sets.
+# SettingThing: a singleton that a GET reads and a POST sets, as the archive target API has it. The
+# API cannot remove it (api.operations with delete: none). Get nests isActive and level in spec,
+# which the POST sends at the top level (inline on the resource). Get has an item or an otherItem,
+# and the POST sends only an item (otherItem is skipped).
 openapi: 3.1.0
 info:
   title: Synthetic things API
@@ -670,8 +674,82 @@ paths:
           content:
             application/json:
               schema: {type: object}
+  /setting-things:
+    get:
+      tags: [Setting Things Service]
+      operationId: SettingThingsService_GetSettingThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GetSettingThingResponse'}
+    post:
+      tags: [Setting Things Service]
+      operationId: SettingThingsService_SetSettingThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: SetSettingThingRequest
+              type: object
+              required: [item]
+              properties:
+                isActive: {type: boolean, description: Whether the setting is active.}
+                level: {$ref: '#/components/schemas/SettingThingLevel'}
+                item: {$ref: '#/components/schemas/SettingThingItem'}
+      responses:
+        '200':
+          description: Set
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SetSettingThingResponse'}
 components:
   schemas:
+    GetSettingThingResponse:
+      type: object
+      required: [setting]
+      properties:
+        setting: {$ref: '#/components/schemas/SettingThing'}
+    SetSettingThingResponse:
+      type: object
+      required: [setting]
+      properties:
+        setting: {$ref: '#/components/schemas/SettingThing'}
+    SettingThing:
+      type: object
+      description: The one setting of the team.
+      required: [spec]
+      oneOf:
+        - required: [item]
+        - required: [otherItem]
+      properties:
+        item: {$ref: '#/components/schemas/SettingThingItem'}
+        otherItem: {$ref: '#/components/schemas/SettingThingOtherItem'}
+        spec: {$ref: '#/components/schemas/SettingThingSpec'}
+    SettingThingSpec:
+      type: object
+      description: How the setting is used.
+      properties:
+        isActive: {type: boolean, description: Whether the setting is active.}
+        level: {$ref: '#/components/schemas/SettingThingLevel'}
+    SettingThingItem:
+      type: object
+      description: The bucket of the setting.
+      required: [bucket]
+      properties:
+        bucket: {type: string, minLength: 3, description: Bucket name.}
+        region: {type: string, description: Region.}
+    SettingThingOtherItem:
+      type: object
+      description: A bucket of another provider, which this API does not set.
+      properties:
+        crn: {type: string, description: Bucket CRN.}
+    SettingThingLevel:
+      type: string
+      description: Setting level.
+      enum: [SETTING_THING_LEVEL_UNSPECIFIED, SETTING_THING_LEVEL_LOW, SETTING_THING_LEVEL_HIGH]
     Thing:
       type: object
       required: [id, name, enabled, kind, config, createTime]

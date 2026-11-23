@@ -362,6 +362,9 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		e2e.Serial = true // every write replaces the list of the whole account
 		return full, minimal, e2e, nil
 	}
+	if d.Singleton {
+		e2e.Serial = true // every CR writes the one resource of the team
+	}
 	candidates := updateCandidates(d.Spec, full)
 	for _, candidate := range candidates {
 		if candidate.field.API == "name" && candidate.field.typ.Kind == model.String {
@@ -1024,6 +1027,18 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		// The CR holds a createAs field flat. The response nests it in an object.
 		var notNil []string
 		owner, name := resource.Name, f.API
+		if parent, ok := d.inlined[f.API]; ok {
+			// An inline line on the resource: the response nests the field in an object.
+			object, err := ix.field(resource.Name, parent.Field)
+			if err != nil {
+				return nil, err
+			}
+			base += object.Name + "."
+			if strings.HasPrefix(object.Want, "*") {
+				notNil = append(notNil, strings.TrimSuffix(base, "."))
+			}
+			owner = strings.TrimPrefix(object.Want, "*")
+		}
 		if f.fold != nil {
 			object, err := ix.field(resource.Name, f.fold.Object)
 			if err != nil {

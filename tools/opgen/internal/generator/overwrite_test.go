@@ -109,7 +109,6 @@ func TestNewKeysAreChecked(t *testing.T) {
 	const head = "resource: Thing\nmode: existing\nvalidators: {inferred: true}\n"
 	for name, tc := range map[string]string{
 		"inline in a new kind":           "resource: Thing\nmode: new\ntypes:\n  Item:\n    fields:\n      rules: {inline: true}\n",
-		"inline on the resource":         head + "types:\n  Thing:\n    fields:\n      rules: {inline: true}\n",
 		"inline with another key":        head + "types:\n  Item:\n    fields:\n      rules: {inline: true, name: x}\n",
 		"inline with skip":               head + "types:\n  Item:\n    fields:\n      rules: {inline: true, skip: true}\n",
 		"joinedBy in a new kind":         "resource: Thing\nmode: new\ntypes:\n  Item:\n    fields:\n      tags: {joinedBy: \",\"}\n",

@@ -1,0 +1,964 @@
+# Synthetic contracts of the golden tests.
+# Thing: a full replace (PUT). Required and optional scalars, an immutable enum, a required oneOf,
+# a nested object with an immutable and a computed field, an ordered list of objects, a list with
+# a pattern, a set, a map, a 64-bit number, a server default, and computed fields.
+# PatchThing: a PATCH with updateMask, an immutable enum, an optional oneOf, and a server default.
+# BodyIDThing: a kind that users already have, as the view folders API has it. Replace is a PUT on
+# the Create path with the id in the body (api.updateIDInBody), and the released kind has no
+# contract limits (validators.inferred: false).
+# HookThing: a kind that users already have, with every hook except delete and with extra status
+# fields. Its Replace returns an empty object. HookDeleteThing: the delete hook, which replaces the
+# generated DELETE; its Replace returns the resource.
+# WrappedThing: a kind that users already have. Its request wrapper holds a request component of its
+# own: title is heading in the requests, and note is extra.note (requestAs).
+# ContentThing: a kind that users already have, with the content key: the CR holds the resource as
+# JSON text. Create answers only the id (api.createResponseOnlyIDProperty). The request wrapper
+# has the resource beside a policy that the CR holds (requestValues source field) and a flag that
+# it never sends (omit). It has the adopt hook and a handwritten spec field (the spec key).
+# RefThing: a kind that users already have, with a required and an optional id of a Thing. Its
+# behavior-overrides file makes both ids references (the ref key).
+# ThingPolicies: an overwrite resource (api.overwrite), as the TCO policies API has it. One PUT
+# replaces the whole list, and Delete sends it empty. A written item holds its fields in "item"
+# (types.<Component>.requestWrapper), next to its rules, an arm of a oneOf of the response that the
+# CR shows inline. The response has the other arm too, which no request sends. Its enabled is
+# disabled in the request, and its tags are one string of comma-separated values (joinedBy). Its
+# level is an enum, so the e2e test has a coverage step.
+# MaskThing: a kind that users already have, with a PATCH whose API rejects the bare path of its
+# required rule object (api.updateMask.nested). The rule has plain fields and a oneOf that
+# requires one arm, so the mask names rule.enabled, rule.note, and the arm that the CR sets.
+openapi: 3.1.0
+info:
+  title: Synthetic things API
+  version: 1.0.0
+paths:
+  /things:
+    post:
+      tags: [Things Service]
+      operationId: ThingsService_CreateThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateThingRequest
+              type: object
+              required: [name, kind, config]
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                enabled: {type: boolean, default: true, x-coralogix-presence: true}
+                kind: {$ref: '#/components/schemas/ThingKind'}
+                priority: {$ref: '#/components/schemas/ThingPriority'}
+                quota: {type: string, format: int64, x-coralogix-presence: true}
+                ratio: {type: number, format: float, x-coralogix-presence: true}
+                buckets:
+                  type: array
+                  maxItems: 8
+                  items: {type: number, format: float}
+                config: {$ref: '#/components/schemas/ThingConfig'}
+                settings: {$ref: '#/components/schemas/ThingSettingsCreate'}
+                items:
+                  type: array
+                  items: {$ref: '#/components/schemas/ThingItem'}
+                destinations:
+                  type: array
+                  maxItems: 10
+                  items: {type: string, pattern: '^https://[a-z.]+$'}
+                tags:
+                  type: array
+                  uniqueItems: true
+                  x-coralogix-collection: set
+                  items: {type: string, minLength: 1}
+                labels:
+                  type: object
+                  additionalProperties: {type: string, minLength: 1, maxLength: 63}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Thing'}
+  /things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Things Service]
+      operationId: ThingsService_GetThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Thing'}
+    put:
+      tags: [Things Service]
+      operationId: ThingsService_ReplaceThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceThingRequest
+              type: object
+              required: [name, config]
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                enabled: {type: boolean, default: true, x-coralogix-presence: true}
+                priority: {$ref: '#/components/schemas/ThingPriority'}
+                quota: {type: string, format: int64, x-coralogix-presence: true}
+                ratio: {type: number, format: float, x-coralogix-presence: true}
+                buckets:
+                  type: array
+                  maxItems: 8
+                  items: {type: number, format: float}
+                config: {$ref: '#/components/schemas/ThingConfig'}
+                settings: {$ref: '#/components/schemas/ThingSettingsUpdate'}
+                items:
+                  type: array
+                  items: {$ref: '#/components/schemas/ThingItem'}
+                destinations:
+                  type: array
+                  maxItems: 10
+                  items: {type: string, pattern: '^https://[a-z.]+$'}
+                tags:
+                  type: array
+                  uniqueItems: true
+                  x-coralogix-collection: set
+                  items: {type: string, minLength: 1}
+                labels:
+                  type: object
+                  additionalProperties: {type: string, minLength: 1, maxLength: 63}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Thing'}
+    delete:
+      tags: [Things Service]
+      operationId: ThingsService_DeleteThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /patch-things:
+    post:
+      tags: [Patch Things Service]
+      operationId: PatchThingsService_CreatePatchThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreatePatchThingRequest
+              type: object
+              required: [name, kind]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                enabled: {type: boolean, default: true, x-coralogix-presence: true}
+                kind: {$ref: '#/components/schemas/PatchThingKind'}
+                target: {$ref: '#/components/schemas/PatchThingTarget'}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PatchThing'}
+  /patch-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Patch Things Service]
+      operationId: PatchThingsService_GetPatchThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PatchThing'}
+    patch:
+      tags: [Patch Things Service]
+      operationId: PatchThingsService_UpdatePatchThing
+      parameters:
+        - name: updateMask
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)*(,[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)*)*$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: UpdatePatchThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                enabled: {type: boolean, default: true, x-coralogix-presence: true}
+                target: {$ref: '#/components/schemas/PatchThingTarget'}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PatchThing'}
+    delete:
+      tags: [Patch Things Service]
+      operationId: PatchThingsService_DeletePatchThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /ref-things:
+    post:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_CreateRefThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateRefThingRequest
+              type: object
+              required: [name, thingId]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                thingId: {type: string, minLength: 1, x-coralogix-presence: true}
+                parentId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RefThing'}
+  /ref-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_GetRefThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RefThing'}
+    put:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_ReplaceRefThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceRefThingRequest
+              type: object
+              required: [name, thingId]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                thingId: {type: string, minLength: 1, x-coralogix-presence: true}
+                parentId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RefThing'}
+    delete:
+      tags: [Ref Things Service]
+      operationId: RefThingsService_DeleteRefThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /body-id-things:
+    post:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_CreateBodyIDThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateBodyIDThingRequest
+              type: object
+              required: [name]
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+                mode: {$ref: '#/components/schemas/BodyIDThingMode'}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BodyIDThing'}
+    put:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_ReplaceBodyIDThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: BodyIDThing
+              type: object
+              required: [id, name]
+              properties:
+                id: {type: string, minLength: 1, x-coralogix-presence: true}
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+                mode: {$ref: '#/components/schemas/BodyIDThingMode'}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BodyIDThing'}
+  /body-id-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_GetBodyIDThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BodyIDThing'}
+    delete:
+      tags: [Body ID Things Service]
+      operationId: BodyIDThingsService_DeleteBodyIDThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /wrapped-things:
+    post:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_CreateWrappedThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateWrappedThingRequest
+              type: object
+              required: [item]
+              properties:
+                item: {$ref: '#/components/schemas/WrappedThingBody'}
+                label: {type: string}
+                requestId: {type: string}
+      responses:
+        '200': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/WrappedThingResponse'}}}}
+    put:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_ReplaceWrappedThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceWrappedThingRequest
+              type: object
+              required: [item]
+              properties:
+                item: {$ref: '#/components/schemas/WrappedThingBody'}
+                id: {type: string}
+                label: {type: string}
+                requestId: {type: string}
+      responses:
+        '200': {description: Replaced, content: {application/json: {schema: {$ref: '#/components/schemas/WrappedThingResponse'}}}}
+  /wrapped-things/{item_id}:
+    parameters:
+      - {name: item_id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_GetWrappedThing
+      responses:
+        '200': {description: Found, content: {application/json: {schema: {$ref: '#/components/schemas/WrappedThingResponse'}}}}
+    delete:
+      tags: [Wrapped Things Service]
+      operationId: WrappedThingsService_DeleteWrappedThing
+      responses:
+        '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
+  /content-things:
+    post:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_CreateContentThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateContentThingRequest
+              type: object
+              required: [requestId, item]
+              properties:
+                item: {$ref: '#/components/schemas/ContentThing'}
+                policy: {type: string, maxLength: 100, description: The access policy of the thing., x-coralogix-presence: true}
+                locked: {type: boolean, x-coralogix-presence: true}
+                requestId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/CreateContentThingResponse'}}}}
+    put:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_ReplaceContentThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceContentThingRequest
+              type: object
+              required: [requestId]
+              properties:
+                item: {$ref: '#/components/schemas/ContentThing'}
+                policy: {type: string, maxLength: 100, description: The access policy of the thing., x-coralogix-presence: true}
+                locked: {type: boolean, x-coralogix-presence: true}
+                requestId: {type: string, x-coralogix-presence: true}
+      responses:
+        '200': {description: Replaced, content: {application/json: {schema: {type: object}}}}
+  /content-things/{thing_id}:
+    parameters:
+      - {name: thing_id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_GetContentThing
+      responses:
+        '200': {description: Found, content: {application/json: {schema: {$ref: '#/components/schemas/GetContentThingResponse'}}}}
+    delete:
+      tags: [Content Things Service]
+      operationId: ContentThingsService_DeleteContentThing
+      responses:
+        '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
+  /hook-things:
+    post:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_CreateHookThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateHookThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookThing'}
+  /hook-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_GetHookThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookThing'}
+    put:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_ReplaceHookThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceHookThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {type: object}
+    delete:
+      tags: [Hook Things Service]
+      operationId: HookThingsService_DeleteHookThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /hook-delete-things:
+    post:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_CreateHookDeleteThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateHookDeleteThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookDeleteThing'}
+  /hook-delete-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_GetHookDeleteThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookDeleteThing'}
+    put:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_ReplaceHookDeleteThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceHookDeleteThingRequest
+              type: object
+              required:
+                - name
+              properties:
+                name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true}
+                limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/HookDeleteThing'}
+    delete:
+      tags: [Hook Delete Things Service]
+      operationId: HookDeleteThingsService_DeleteHookDeleteThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /thing-policies:
+    get:
+      tags: [Thing Policies Service]
+      operationId: ThingPoliciesService_GetThingPolicies
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GetThingPoliciesResponse'}
+    put:
+      tags: [Thing Policies Service]
+      operationId: ThingPoliciesService_OverwriteThingPolicies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: OverwriteThingPoliciesRequest
+              type: object
+              required: [policies]
+              properties:
+                policies:
+                  type: array
+                  maxItems: 10
+                  items: {$ref: '#/components/schemas/CreateThingPolicyRequest'}
+      responses:
+        '200':
+          description: Overwritten
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OverwriteThingPoliciesResponse'}
+  /mask-things:
+    post:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_CreateMaskThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateMaskThingRequest
+              type: object
+              required: [name, rule]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                rule: {$ref: '#/components/schemas/MaskThingRule'}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MaskThing'}
+  /mask-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_GetMaskThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MaskThing'}
+    patch:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_UpdateMaskThing
+      parameters:
+        - {name: updateMask, in: query, required: true, schema: {type: string, pattern: '^[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)*(,[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)*)*$'}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: UpdateMaskThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                rule: {$ref: '#/components/schemas/MaskThingRule'}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MaskThing'}
+    delete:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_DeleteMaskThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+components:
+  schemas:
+    Thing:
+      type: object
+      required: [id, name, enabled, kind, config, createTime]
+      properties:
+        id: {type: string, readOnly: true, description: The id that the server sets.}
+        name: {type: string, minLength: 1, maxLength: 100, description: The display name.}
+        description: {type: string, description: An optional description.}
+        enabled: {type: boolean, description: Whether the thing is enabled. The server sets true when it is omitted.}
+        kind:
+          $ref: '#/components/schemas/ThingKind'
+          description: The kind. It cannot change.
+        priority: {$ref: '#/components/schemas/ThingPriority'}
+        quota: {type: string, format: int64, description: "The quota, a 64-bit number."}
+        ratio: {type: number, format: float, description: A fraction that the thing uses.}
+        buckets:
+          type: array
+          maxItems: 8
+          items: {type: number, format: float}
+          description: Upper bounds of the buckets.
+        config: {$ref: '#/components/schemas/ThingConfig'}
+        settings: {$ref: '#/components/schemas/ThingSettings'}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ThingItem'}
+          description: Ordered items.
+        destinations:
+          type: array
+          maxItems: 10
+          items: {type: string, pattern: '^https://[a-z.]+$'}
+          description: Ordered destination URLs.
+        tags:
+          type: array
+          uniqueItems: true
+          x-coralogix-collection: set
+          items: {type: string, minLength: 1}
+          description: Unordered unique tags.
+        labels:
+          type: object
+          additionalProperties: {type: string, minLength: 1, maxLength: 63}
+          description: Labels by key.
+        createTime: {type: string, format: date-time, readOnly: true, description: When the server created the thing.}
+    ThingKind:
+      type: string
+      enum: [THING_KIND_UNSPECIFIED, THING_KIND_STANDARD, THING_KIND_ADVANCED]
+    ThingPriority:
+      type: string
+      enum: [THING_PRIORITY_UNSPECIFIED, THING_PRIORITY_LOW, THING_PRIORITY_PAGER_DUTY_INCIDENTS]
+    ThingConfig:
+      type: object
+      properties:
+        http: {$ref: '#/components/schemas/HttpThingConfig'}
+        queue: {$ref: '#/components/schemas/QueueThingConfig'}
+      oneOf:
+        - required: [http]
+        - required: [queue]
+    HttpThingConfig:
+      type: object
+      required: [endpoint]
+      properties:
+        endpoint: {type: string, minLength: 1, description: The endpoint URL.}
+    QueueThingConfig:
+      type: object
+      required: [topic]
+      properties:
+        topic: {type: string, minLength: 1}
+    ThingSettings:
+      type: object
+      required: [mode, revision]
+      properties:
+        mode: {type: string, minLength: 1, description: The processing mode.}
+        retries: {type: integer, format: int32, minimum: 0, maximum: 10, description: How many times the thing retries.}
+        region: {type: string, description: The region. It cannot change.}
+        revision: {type: string, description: The revision that the server sets.}
+    ThingSettingsCreate:
+      type: object
+      required: [mode]
+      properties:
+        mode: {type: string, minLength: 1}
+        retries: {type: integer, format: int32, minimum: 0, maximum: 10, x-coralogix-presence: true}
+        region: {type: string, x-coralogix-presence: true}
+    ThingSettingsUpdate:
+      type: object
+      required: [mode]
+      properties:
+        mode: {type: string, minLength: 1}
+        retries: {type: integer, format: int32, minimum: 0, maximum: 10, x-coralogix-presence: true}
+    ThingItem:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1}
+        weight: {type: integer, format: int32, minimum: 1}
+    PatchThing:
+      type: object
+      required: [id, name, enabled, kind]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1}
+        description: {type: string}
+        enabled: {type: boolean}
+        kind: {$ref: '#/components/schemas/PatchThingKind'}
+        target: {$ref: '#/components/schemas/PatchThingTarget'}
+    MaskThing:
+      type: object
+      required: [id, name, rule]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1}
+        description: {type: string}
+        rule: {$ref: '#/components/schemas/MaskThingRule'}
+    MaskThingRule:
+      type: object
+      description: The rule. The API rejects the bare path rule in the update mask.
+      properties:
+        enabled: {type: boolean, x-coralogix-presence: true}
+        note: {type: string, x-coralogix-presence: true}
+        some: {$ref: '#/components/schemas/PatchThingSome'}
+        prefix: {$ref: '#/components/schemas/PatchThingPrefix'}
+      oneOf:
+        - required: [some]
+        - required: [prefix]
+    PatchThingKind:
+      type: string
+      enum: [PATCH_THING_KIND_UNSPECIFIED, PATCH_THING_KIND_ALERTS, PATCH_THING_KIND_CASES]
+    PatchThingTarget:
+      type: object
+      description: The things that it applies to. Without a target, it applies to every thing.
+      properties:
+        some: {$ref: '#/components/schemas/PatchThingSome'}
+        prefix: {$ref: '#/components/schemas/PatchThingPrefix'}
+      oneOf:
+        - required: [some]
+        - required: [prefix]
+        - not:
+            anyOf:
+              - required: [some]
+              - required: [prefix]
+    PatchThingSome:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          items: {type: string, minLength: 1}
+    PatchThingPrefix:
+      type: object
+      required: [value]
+      properties:
+        value: {type: string, minLength: 1}
+    RefThing:
+      type: object
+      required: [id, name, thingId]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1}
+        thingId: {type: string, minLength: 1, description: The id of the Thing that it uses.}
+        parentId: {type: string, description: The id of the parent Thing.}
+    BodyIDThing:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, minLength: 1, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
+        limit: {type: integer, format: int32, minimum: 1, maximum: 10, x-coralogix-presence: true}
+        mode: {$ref: '#/components/schemas/BodyIDThingMode'}
+    BodyIDThingMode:
+      type: string
+      enum: [BODY_ID_THING_MODE_UNSPECIFIED, BODY_ID_THING_MODE_LOW, BODY_ID_THING_MODE_HIGH]
+    WrappedThingResponse:
+      type: object
+      required: [item]
+      properties:
+        item: {$ref: '#/components/schemas/WrappedThing'}
+    WrappedThingBody:
+      type: object
+      required: [name]
+      properties:
+        id: {type: string}
+        name: {type: string, minLength: 1, x-coralogix-presence: true}
+        heading: {type: string, x-coralogix-presence: true}
+        extra: {$ref: '#/components/schemas/WrappedThingExtra'}
+    WrappedThingExtra:
+      type: object
+      properties:
+        note: {type: string, x-coralogix-presence: true}
+    WrappedThing:
+      type: object
+      required: [name]
+      properties:
+        id: {type: string}
+        name: {type: string, minLength: 1, x-coralogix-presence: true}
+        title: {type: string, x-coralogix-presence: true}
+        note: {type: string, x-coralogix-presence: true}
+    ContentThing:
+      type: object
+      required: [name, layout]
+      properties:
+        id: {type: string, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, x-coralogix-presence: true}
+        layout: {$ref: '#/components/schemas/ContentThingLayout'}
+        mode: {type: string, enum: [MODE_A, MODE_B]}
+    ContentThingLayout:
+      type: object
+      oneOf:
+        - {required: [rows], type: object}
+        - {required: [columns], type: object}
+      properties:
+        rows: {type: integer, format: int32, x-coralogix-presence: true}
+        columns: {type: integer, format: int32, x-coralogix-presence: true}
+    CreateContentThingResponse:
+      type: object
+      properties:
+        thingId: {type: string, x-coralogix-presence: true}
+    GetContentThingResponse:
+      type: object
+      properties:
+        item: {$ref: '#/components/schemas/ContentThing'}
+        policy: {type: string, x-coralogix-presence: true}
+    HookThing:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
+        limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+    HookDeleteThing:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1, maxLength: 100, x-coralogix-presence: true, description: The name.}
+        limit: {type: integer, format: int32, minimum: 1, maximum: 5, x-coralogix-presence: true}
+    GetThingPoliciesResponse:
+      type: object
+      required: [policies]
+      properties:
+        policies:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/ThingPolicy'}
+    OverwriteThingPoliciesResponse:
+      type: object
+      properties:
+        policies:
+          type: array
+          items: {$ref: '#/components/schemas/ThingPolicy'}
+    ThingPolicy:
+      type: object
+      required: [id, name]
+      oneOf:
+        - {type: object, required: [rules]}
+        - {type: object, required: [otherRules]}
+      properties:
+        id: {type: string, readOnly: true, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, maxLength: 50, x-coralogix-presence: true}
+        enabled: {type: boolean}
+        tags: {type: string, maxLength: 200, x-coralogix-presence: true}
+        level: {$ref: '#/components/schemas/ThingPolicyLevel'}
+        rules: {$ref: '#/components/schemas/ThingPolicyRules'}
+        otherRules: {$ref: '#/components/schemas/ThingPolicyOtherRules'}
+    CreateThingPolicyRequest:
+      type: object
+      required: [item, rules]
+      properties:
+        item: {$ref: '#/components/schemas/CreateThingPolicyItem'}
+        rules: {$ref: '#/components/schemas/ThingPolicyRules'}
+    CreateThingPolicyItem:
+      type: object
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 50, x-coralogix-presence: true}
+        disabled: {type: boolean}
+        tags: {type: string, maxLength: 200, x-coralogix-presence: true}
+        level: {$ref: '#/components/schemas/ThingPolicyLevel'}
+    ThingPolicyLevel:
+      type: string
+      enum: [THING_POLICY_LEVEL_UNSPECIFIED, THING_POLICY_LEVEL_LOW, THING_POLICY_LEVEL_HIGH]
+    ThingPolicyRules:
+      type: object
+      properties:
+        pattern: {type: string, minLength: 1, x-coralogix-presence: true}
+        levels:
+          type: array
+          maxItems: 3
+          items: {type: string}
+    ThingPolicyOtherRules:
+      type: object
+      properties:
+        code: {type: string, x-coralogix-presence: true}
