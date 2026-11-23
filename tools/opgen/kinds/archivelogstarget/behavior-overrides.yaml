@@ -32,6 +32,11 @@ spec:
 # validate: an S3 target is required. afterCreate and afterUpdate activate the retentions. delete
 # sets the target inactive, as the released kind did.
 hooks: [validate, afterCreate, afterUpdate, delete]
+# afterCreate and afterUpdate record here that they activated the retentions of the active target, so
+# Update activates them only when they are not yet: after a failed afterCreate, or when the target
+# becomes active (isActive false to true). A selector mismatch sets the target inactive and clears it.
+status:
+  retentionsActivated: {type: bool}
 types:
   v2.Target:
     fields:

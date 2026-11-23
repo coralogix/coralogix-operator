@@ -79,7 +79,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteSynced",
+        "retentionsActivated": true
       }
     }
   }

@@ -109,6 +109,8 @@ spec:
                 type: string
               printableStatus:
                 type: string
+              retentionsActivated:
+                type: boolean
             type: object
         type: object
     served: true

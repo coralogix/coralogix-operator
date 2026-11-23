@@ -45,7 +45,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteSynced",
+        "retentionsActivated": true
       }
     }
   },
@@ -88,7 +89,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteUnsynced"
+        "printableStatus": "RemoteUnsynced",
+        "retentionsActivated": true
       }
     }
   },
@@ -105,11 +107,6 @@
             "region": "eu-north-1"
           }
         },
-        "status": 200
-      },
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1/activate",
         "status": 200
       }
     ],
@@ -131,7 +128,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteSynced",
+        "retentionsActivated": true
       }
     }
   }

@@ -32,7 +32,6 @@ import (
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // archiveCall is one request that a hook sent.
@@ -98,11 +97,10 @@ func newArchiveHooks(t *testing.T, api *archiveAPI) *ArchiveLogsTargetReconciler
 	return &ArchiveLogsTargetReconciler{Client: cs.ArchiveLogs(), ClientSet: cs}
 }
 
-func archiveTarget(s3 *coralogixv1alpha1.ArchiveLogsTargetS3TargetSpec, conditions ...metav1.Condition) *coralogixv1alpha1.ArchiveLogsTarget {
+func archiveTarget(s3 *coralogixv1alpha1.ArchiveLogsTargetS3TargetSpec) *coralogixv1alpha1.ArchiveLogsTarget {
 	return &coralogixv1alpha1.ArchiveLogsTarget{
 		ObjectMeta: metav1.ObjectMeta{Name: "target", Namespace: "default", Generation: 1},
 		Spec:       coralogixv1alpha1.ArchiveLogsTargetSpec{S3Target: s3, IsActive: ptr.To(true)},
-		Status:     coralogixv1alpha1.ArchiveLogsTargetStatus{Conditions: conditions},
 	}
 }
 
@@ -116,27 +114,58 @@ func TestArchiveLogsTargetValidateNeedsAnS3Target(t *testing.T) {
 	require.NoError(t, r.validate(context.Background(), logr.Discard(), archiveTarget(archiveS3)))
 }
 
-// afterUpdate activates the retentions only when the previous run did not sync, and a second run
-// sends the same one call.
-func TestArchiveLogsTargetAfterUpdateActivatesOnlyAfterAFailure(t *testing.T) {
+// afterCreate and afterUpdate activate the retentions once and record it: a run after a failed
+// afterCreate activates them, and a second run makes no call.
+func TestArchiveLogsTargetActivatesTheRetentionsOnce(t *testing.T) {
 	api := &archiveAPI{}
 	r := newArchiveHooks(t, api)
-	synced := metav1.Condition{Type: utils.ConditionTypeRemoteSynced, Status: metav1.ConditionTrue, Reason: utils.ReasonRemoteSyncedSuccessfully}
-	require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), archiveTarget(archiveS3, synced), nil))
-	require.Empty(t, api.takeCalls(), "a synced resync makes no call")
+	activate := []archiveCall{{Method: http.MethodPost, Path: "/dataengine/retention-tags/v1/activate"}}
 
-	failed := metav1.Condition{Type: utils.ConditionTypeRemoteSynced, Status: metav1.ConditionFalse, Reason: "HookFailed"}
+	cr := archiveTarget(archiveS3)
+	require.NoError(t, r.afterCreate(context.Background(), logr.Discard(), cr, nil))
+	require.Equal(t, activate, api.takeCalls())
+	require.Equal(t, ptr.To(true), cr.Status.RetentionsActivated)
+	require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), cr, nil))
+	require.Empty(t, api.takeCalls(), "a resync makes no call")
+
+	// A failed activation records nothing, so the next Update activates.
+	failed := archiveTarget(archiveS3)
+	api.status = http.StatusInternalServerError
+	require.Error(t, r.afterCreate(context.Background(), logr.Discard(), failed, nil))
+	require.Nil(t, failed.Status.RetentionsActivated)
+	api.takeCalls()
+	api.status = 0
 	for range 2 {
-		require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), archiveTarget(archiveS3, failed), nil))
-		require.Equal(t, []archiveCall{{Method: http.MethodPost, Path: "/dataengine/retention-tags/v1/activate"}}, api.takeCalls())
+		require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), failed, nil))
 	}
+	require.Equal(t, activate, api.takeCalls())
+}
 
-	// An inactive target activates nothing, on Create or after a failure.
-	inactive := archiveTarget(archiveS3, failed)
-	inactive.Spec.IsActive = ptr.To(false)
-	require.NoError(t, r.afterCreate(context.Background(), logr.Discard(), inactive, nil))
-	require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), inactive, nil))
-	require.Empty(t, api.takeCalls())
+// A target created inactive activates nothing. When the spec sets it active, Update activates the
+// retentions once; when it is set inactive and active again, they are activated again.
+func TestArchiveLogsTargetActivatesATargetThatBecomesActive(t *testing.T) {
+	api := &archiveAPI{}
+	r := newArchiveHooks(t, api)
+	activate := []archiveCall{{Method: http.MethodPost, Path: "/dataengine/retention-tags/v1/activate"}}
+
+	cr := archiveTarget(archiveS3)
+	cr.Spec.IsActive = ptr.To(false)
+	require.NoError(t, r.afterCreate(context.Background(), logr.Discard(), cr, nil))
+	require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), cr, nil))
+	require.Empty(t, api.takeCalls(), "an inactive target activates nothing")
+
+	cr.Spec.IsActive = ptr.To(true)
+	for range 2 {
+		require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), cr, nil))
+	}
+	require.Equal(t, activate, api.takeCalls())
+
+	cr.Spec.IsActive = ptr.To(false)
+	require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), cr, nil))
+	require.Nil(t, cr.Status.RetentionsActivated)
+	cr.Spec.IsActive = ptr.To(true)
+	require.NoError(t, r.afterUpdate(context.Background(), logr.Discard(), cr, nil))
+	require.Equal(t, activate, api.takeCalls())
 }
 
 // delete sets the target of the spec inactive. A second run sends the same request, and a target

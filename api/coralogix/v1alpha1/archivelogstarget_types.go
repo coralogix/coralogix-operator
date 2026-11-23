@@ -71,6 +71,9 @@ type ArchiveLogsTargetStatus struct {
 
 	// +optional
 	PrintableStatus string `json:"printableStatus,omitempty"`
+
+	// +optional
+	RetentionsActivated *bool `json:"retentionsActivated,omitempty"`
 }
 
 func (in *ArchiveLogsTarget) GetConditions() []metav1.Condition {

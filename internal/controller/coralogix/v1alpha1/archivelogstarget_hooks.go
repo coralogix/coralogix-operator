@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/utils/ptr"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	targetservice "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/target_service"
@@ -33,10 +33,10 @@ import (
 //
 //   - validate: the REST API sets only S3 targets, so a CR without s3Target (an IBM COS target)
 //     fails before any call.
-//   - afterCreate: the released kind activated the archive retentions after it set the target. An
-//     inactive target (spec.isActive: false) activates nothing.
-//   - afterUpdate: activates them when the previous run did not sync, so a failed afterCreate is
-//     repaired. A synced resync makes no extra call.
+//   - afterCreate and afterUpdate: the released kind activated the archive retentions after it set
+//     the target. status.retentionsActivated records the activation, so it runs once for an active
+//     target: on Create, after a failed afterCreate, and when the target becomes active (isActive
+//     false to true). An inactive target clears it. A resync makes no extra call.
 //   - delete: the API cannot remove the target, so delete sets it inactive.
 
 func (r *ArchiveLogsTargetReconciler) validate(_ context.Context, _ logr.Logger, cr *coralogixv1alpha1.ArchiveLogsTarget) error {
@@ -47,18 +47,29 @@ func (r *ArchiveLogsTargetReconciler) validate(_ context.Context, _ logr.Logger,
 }
 
 func (r *ArchiveLogsTargetReconciler) afterCreate(ctx context.Context, _ logr.Logger, cr *coralogixv1alpha1.ArchiveLogsTarget, _ *targetservice.S3TargetServiceSetTargetResponse) error {
-	if !active(cr) {
-		return nil
-	}
-	return r.activateRetentions(ctx)
+	return r.syncRetentions(ctx, cr)
 }
 
 func (r *ArchiveLogsTargetReconciler) afterUpdate(ctx context.Context, _ logr.Logger, cr *coralogixv1alpha1.ArchiveLogsTarget, _ *targetservice.S3TargetServiceSetTargetResponse) error {
-	// The conditions are those of the previous run: the shared reconciler sets them after this hook.
-	if !active(cr) || meta.IsStatusConditionTrue(cr.Status.Conditions, utils.ConditionTypeRemoteSynced) {
+	return r.syncRetentions(ctx, cr)
+}
+
+// syncRetentions activates the retentions of an active target that status does not record as
+// activated, and records it. An inactive target clears the record, so the target activates them
+// again when it becomes active.
+func (r *ArchiveLogsTargetReconciler) syncRetentions(ctx context.Context, cr *coralogixv1alpha1.ArchiveLogsTarget) error {
+	if !active(cr) {
+		cr.Status.RetentionsActivated = nil
 		return nil
 	}
-	return r.activateRetentions(ctx)
+	if ptr.Deref(cr.Status.RetentionsActivated, false) {
+		return nil
+	}
+	if err := r.activateRetentions(ctx); err != nil {
+		return err
+	}
+	cr.Status.RetentionsActivated = ptr.To(true)
+	return nil
 }
 
 // active reports whether the spec sets the target active. The CRD defaults isActive to true.

@@ -45,7 +45,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteSynced",
+        "retentionsActivated": true
       }
     }
   },
@@ -86,7 +87,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteUnsynced"
+        "printableStatus": "RemoteUnsynced",
+        "retentionsActivated": true
       }
     }
   },

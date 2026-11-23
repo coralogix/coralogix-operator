@@ -10655,6 +10655,13 @@ ArchiveLogsTargetStatus defines the observed state of a ArchiveLogsTarget.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>retentionsActivated</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
