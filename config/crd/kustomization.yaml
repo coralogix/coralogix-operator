@@ -9,7 +9,6 @@ resources:
   - bases/coralogix.com_outboundwebhooks.yaml
   - bases/coralogix.com_apikeys.yaml
   - bases/coralogix.com_connectors.yaml
-  - bases/coralogix.com_scopes.yaml
   - bases/coralogix.com_groups.yaml
   - bases/coralogix.com_archivemetricstargets.yaml
   - bases/coralogix.com_ipaccesses.yaml
@@ -34,6 +33,7 @@ resources:
   - bases/coralogix.com_savedfunnels.yaml
   - bases/coralogix.com_savedheatmaps.yaml
   - bases/coralogix.com_savedpathways.yaml
+  - bases/coralogix.com_scopes.yaml
   - bases/coralogix.com_tcologspolicies.yaml
   - bases/coralogix.com_tcorumpolicies.yaml
   - bases/coralogix.com_tcotracespolicies.yaml

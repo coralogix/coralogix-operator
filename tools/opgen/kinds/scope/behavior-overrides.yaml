@@ -1,0 +1,44 @@
+resource: v1.Scope
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD needs at least one filter. The API accepts an empty list.
+    spec.filters:
+      inferred: false
+      add: ['+kubebuilder:validation:MinItems=1']
+    # The released CRD accepts an empty expression. The API rejects it with a 412.
+    spec.filters[].expression: {inferred: false}
+    # The released CRD lists the two default expressions that the API accepts.
+    spec.defaultExpression:
+      inferred: false
+      add: ['+kubebuilder:validation:Enum=<v1>true;<v1>false']
+api:
+  operations:
+    create: ScopesService_CreateScope
+    get: ScopesService_GetTeamScopesByIds
+    update: ScopesService_UpdateScope
+    delete: ScopesService_DeleteScope
+  customMethods: true
+  # Get takes the id in its ids query list and answers a list.
+  getByIDs: ids
+  # Update is a PUT on the Create path with the id in the body.
+  updateIDInBody: true
+types:
+  v1.Scope:
+    fields:
+      displayName:
+        name: name
+        required: true
+        description: Display name of the scope. An empty name is stored and returned as an empty string.
+      filters:
+        required: true
+        description: Filters applied by this scope. The CR needs at least one.
+  scopes.v1.Filter:
+    fields:
+      entityType:
+        description: Entity type of the filter. The API rejects `unspecified`.
+enums:
+  v1.EntityType:
+    # The released CRD accepts unspecified. The API rejects it with a 400.
+    zero: unspecified

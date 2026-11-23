@@ -7,7 +7,8 @@
         "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
         "body": {
           "defaultExpression": "",
-          "displayName": ""
+          "displayName": "",
+          "filters": []
         },
         "status": 412
       }
@@ -38,7 +39,8 @@
         "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
         "body": {
           "defaultExpression": "",
-          "displayName": ""
+          "displayName": "",
+          "filters": []
         },
         "status": 412
       }

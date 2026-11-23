@@ -141,6 +141,12 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.SavedPathwayKind, err)
 	}
+	if err := (&ScopeReconciler{
+		Client:   clientSet.Scopes(),
+		Interval: intervals[utils.ScopeKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.ScopeKind, err)
+	}
 	if err := (&TCOLogsPoliciesReconciler{
 		Client:    clientSet.TCOPolicies(),
 		ClientSet: clientSet,

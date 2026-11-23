@@ -42,9 +42,9 @@ spec:
                   properties:
                     entityType:
                       enum:
+                      - unspecified
                       - logs
                       - spans
-                      - unspecified
                       type: string
                     expression:
                       type: string

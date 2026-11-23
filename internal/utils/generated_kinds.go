@@ -36,6 +36,7 @@ const (
 	SavedFunnelKind              = "SavedFunnel"
 	SavedHeatmapKind             = "SavedHeatmap"
 	SavedPathwayKind             = "SavedPathway"
+	ScopeKind                    = "Scope"
 	TCOLogsPoliciesKind          = "TCOLogsPolicies"
 	TCORumPoliciesKind           = "TCORumPolicies"
 	TCOTracesPoliciesKind        = "TCOTracesPolicies"

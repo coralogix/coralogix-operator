@@ -25,11 +25,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          Scope is the Schema for the scopes API.
-          See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
-
-          **Added in v0.4.0**
+        description: Scope is the Schema for the scopes API.
         properties:
           apiVersion:
             description: |-
@@ -49,34 +45,35 @@ spec:
           metadata:
             type: object
           spec:
-            description: ScopeSpec defines the desired state of a Coralogix Scope.
+            description: ScopeSpec defines the desired state of a Scope.
             properties:
               defaultExpression:
-                description: Default expression to use when no filter matches the
-                  query. Until further notice, this is limited to `true` (everything
-                  is included) or `false` (nothing is included). Use a version tag
-                  (e.g `<v1>true` or `<v1>false`)
+                description: Default expression with a version tag, for example `<v1>true`
+                  or `<v1>false`.
                 enum:
                 - <v1>true
                 - <v1>false
                 type: string
               description:
-                description: Description of the scope. Optional.
+                description: Human-readable description.
                 type: string
               filters:
-                description: Filters applied to include data in the scope.
+                description: Filters applied by this scope. The CR needs at least
+                  one.
                 items:
-                  description: ScopeFilter defines a filter to include data in a scope.
+                  description: ScopesV1Filter is the scopes.v1.Filter object of the
+                    API.
                   properties:
                     entityType:
-                      description: Entity type to apply the expression on.
+                      description: Entity type of the filter. The API rejects `unspecified`.
                       enum:
+                      - unspecified
                       - logs
                       - spans
-                      - unspecified
                       type: string
                     expression:
-                      description: Expression to run.
+                      description: Expression with a version tag, for example `<v1>true`.
+                        Omitted or empty expressions are rejected.
                       type: string
                   required:
                   - entityType
@@ -85,7 +82,8 @@ spec:
                 minItems: 1
                 type: array
               name:
-                description: Scope display name.
+                description: Display name of the scope. An empty name is stored and
+                  returned as an empty string.
                 type: string
             required:
             - defaultExpression
@@ -93,7 +91,7 @@ spec:
             - name
             type: object
           status:
-            description: ScopeStatus defines the observed state of Coralogix Scope.
+            description: ScopeStatus defines the observed state of a Scope.
             properties:
               conditions:
                 items:

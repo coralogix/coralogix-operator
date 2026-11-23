@@ -22406,9 +22406,6 @@ with respect to the current state of the instance.<br/>
 
 
 Scope is the Schema for the scopes API.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/scopes/
-
-**Added in v0.4.0**
 
 <table>
     <thead>
@@ -22440,14 +22437,14 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
         <td><b><a href="#scopespec">spec</a></b></td>
         <td>object</td>
         <td>
-          ScopeSpec defines the desired state of a Coralogix Scope.<br/>
+          ScopeSpec defines the desired state of a Scope.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#scopestatus">status</a></b></td>
         <td>object</td>
         <td>
-          ScopeStatus defines the observed state of Coralogix Scope.<br/>
+          ScopeStatus defines the observed state of a Scope.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -22459,7 +22456,7 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
 
 
 
-ScopeSpec defines the desired state of a Coralogix Scope.
+ScopeSpec defines the desired state of a Scope.
 
 <table>
     <thead>
@@ -22474,7 +22471,7 @@ ScopeSpec defines the desired state of a Coralogix Scope.
         <td><b>defaultExpression</b></td>
         <td>enum</td>
         <td>
-          Default expression to use when no filter matches the query. Until further notice, this is limited to `true` (everything is included) or `false` (nothing is included). Use a version tag (e.g `<v1>true` or `<v1>false`)<br/>
+          Default expression with a version tag, for example `<v1>true` or `<v1>false`.<br/>
           <br/>
             <i>Enum</i>: <v1>true, <v1>false<br/>
         </td>
@@ -22483,21 +22480,21 @@ ScopeSpec defines the desired state of a Coralogix Scope.
         <td><b><a href="#scopespecfiltersindex">filters</a></b></td>
         <td>[]object</td>
         <td>
-          Filters applied to include data in the scope.<br/>
+          Filters applied by this scope. The CR needs at least one.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Scope display name.<br/>
+          Display name of the scope. An empty name is stored and returned as an empty string.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description of the scope. Optional.<br/>
+          Human-readable description.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -22509,7 +22506,7 @@ ScopeSpec defines the desired state of a Coralogix Scope.
 
 
 
-ScopeFilter defines a filter to include data in a scope.
+ScopesV1Filter is the scopes.v1.Filter object of the API.
 
 <table>
     <thead>
@@ -22524,16 +22521,16 @@ ScopeFilter defines a filter to include data in a scope.
         <td><b>entityType</b></td>
         <td>enum</td>
         <td>
-          Entity type to apply the expression on.<br/>
+          Entity type of the filter. The API rejects `unspecified`.<br/>
           <br/>
-            <i>Enum</i>: logs, spans, unspecified<br/>
+            <i>Enum</i>: unspecified, logs, spans<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>expression</b></td>
         <td>string</td>
         <td>
-          Expression to run.<br/>
+          Expression with a version tag, for example `<v1>true`. Omitted or empty expressions are rejected.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -22545,7 +22542,7 @@ ScopeFilter defines a filter to include data in a scope.
 
 
 
-ScopeStatus defines the observed state of Coralogix Scope.
+ScopeStatus defines the observed state of a Scope.
 
 <table>
     <thead>

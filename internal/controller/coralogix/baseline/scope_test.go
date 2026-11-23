@@ -36,7 +36,7 @@ func init() {
 		resource: "scopes",
 		newFake:  newScopeFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.ScopeReconciler{ScopesClient: cs.Scopes(), Interval: reconcileInterval}
+			return &v1alpha1controllers.ScopeReconciler{Client: cs.Scopes(), Interval: reconcileInterval}
 		},
 		scenarios: scopeScenarios,
 		admission: scopeAdmission(),
