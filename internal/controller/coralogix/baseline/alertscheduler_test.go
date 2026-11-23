@@ -251,6 +251,7 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 	"create-disabled": func(h *harness) {
 		h.Create("create disabled: enabled false is sent", alertSchedulerManifest(
 			"  name: Baseline scheduler\n  enabled: false\n"+asLabelsFilter+asOneTime))
+		h.Reconcile("resync: adding the finalizer dropped enabled false, the default set it to true, and the Replace enables the rule")
 	},
 
 	"create-meta-label-without-value": func(h *harness) {
@@ -392,7 +393,7 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 
 	"create-rejected-expression": func(h *harness) {
 		h.Create("create with an expression that the API rejects", alertSchedulerManifest(
-			asWhat+"  filter:\n    whatExpression: source logs\n    metaLabels: []\n"+asOneTime))
+			asWhat+"  filter:\n    whatExpression: source logs\n    metaLabels:\n      - key: app\n        value: cxo\n"+asOneTime))
 		h.Reconcile("reconcile again")
 		h.Delete("delete")
 	},
@@ -517,7 +518,7 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 		h.Create("create", asMinimal)
 		h.SetSpec("change the expression to one that the API rejects", asSpecMap("filter", map[string]any{
 			"whatExpression": "source logs",
-			"metaLabels":     []any{},
+			"metaLabels":     []any{map[string]any{"key": "app", "value": "cxo"}},
 		}))
 		h.RecordRemote("the remote rule keeps its expression", alertSchedulers(h).rule(h.StatusID()))
 		h.Reconcile("reconcile again")
