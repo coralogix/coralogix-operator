@@ -23,6 +23,7 @@ const (
 	ContentThingKind    = "ContentThing"
 	HookDeleteThingKind = "HookDeleteThing"
 	HookThingKind       = "HookThing"
+	MaskThingKind       = "MaskThing"
 	PatchThingKind      = "PatchThing"
 	RefThingKind        = "RefThing"
 	ThingKind           = "Thing"

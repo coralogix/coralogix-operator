@@ -23,6 +23,9 @@
 # CR shows inline. The response has the other arm too, which no request sends. Its enabled is
 # disabled in the request, and its tags are one string of comma-separated values (joinedBy). Its
 # level is an enum, so the e2e test has a coverage step.
+# MaskThing: a kind that users already have, with a PATCH whose API rejects the bare path of its
+# required rule object (api.updateMask.nested). The rule has plain fields and a oneOf that
+# requires one arm, so the mask names rule.enabled, rule.note, and the arm that the CR sets.
 openapi: 3.1.0
 info:
   title: Synthetic things API
@@ -602,6 +605,71 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/OverwriteThingPoliciesResponse'}
+  /mask-things:
+    post:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_CreateMaskThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateMaskThingRequest
+              type: object
+              required: [name, rule]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                rule: {$ref: '#/components/schemas/MaskThingRule'}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MaskThing'}
+  /mask-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_GetMaskThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MaskThing'}
+    patch:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_UpdateMaskThing
+      parameters:
+        - {name: updateMask, in: query, required: true, schema: {type: string, pattern: '^[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)*(,[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)*)*$'}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: UpdateMaskThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                description: {type: string, x-coralogix-presence: true}
+                rule: {$ref: '#/components/schemas/MaskThingRule'}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MaskThing'}
+    delete:
+      tags: [Mask Things Service]
+      operationId: MaskThingsService_DeleteMaskThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
 components:
   schemas:
     Thing:
@@ -706,6 +774,25 @@ components:
         enabled: {type: boolean}
         kind: {$ref: '#/components/schemas/PatchThingKind'}
         target: {$ref: '#/components/schemas/PatchThingTarget'}
+    MaskThing:
+      type: object
+      required: [id, name, rule]
+      properties:
+        id: {type: string, readOnly: true}
+        name: {type: string, minLength: 1}
+        description: {type: string}
+        rule: {$ref: '#/components/schemas/MaskThingRule'}
+    MaskThingRule:
+      type: object
+      description: The rule. The API rejects the bare path rule in the update mask.
+      properties:
+        enabled: {type: boolean, x-coralogix-presence: true}
+        note: {type: string, x-coralogix-presence: true}
+        some: {$ref: '#/components/schemas/PatchThingSome'}
+        prefix: {$ref: '#/components/schemas/PatchThingPrefix'}
+      oneOf:
+        - required: [some]
+        - required: [prefix]
     PatchThingKind:
       type: string
       enum: [PATCH_THING_KIND_UNSPECIFIED, PATCH_THING_KIND_ALERTS, PATCH_THING_KIND_CASES]

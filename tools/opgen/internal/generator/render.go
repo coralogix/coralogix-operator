@@ -21,7 +21,7 @@ import (
 //go:embed templates/*.tmpl
 var templateFS embed.FS
 
-var templates = template.Must(template.New("").Funcs(template.FuncMap{"lowerFirst": lowerFirst}).ParseFS(templateFS, "templates/*.tmpl"))
+var templates = template.Must(template.New("").Funcs(template.FuncMap{"lowerFirst": lowerFirst, "maskPaths": maskPaths}).ParseFS(templateFS, "templates/*.tmpl"))
 
 // Paths of the generated files, relative to the operator root.
 const (
@@ -246,4 +246,12 @@ func formatSource(name string, src []byte) ([]byte, error) {
 		return nil, fmt.Errorf("format generated %s: %w", name, err)
 	}
 	return buf.Bytes(), nil
+}
+
+// maskPaths splits an update mask into its paths. An empty mask has none.
+func maskPaths(mask string) []string {
+	if mask == "" {
+		return nil
+	}
+	return strings.Split(mask, ",")
 }
