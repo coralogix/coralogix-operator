@@ -14,6 +14,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - batchthings
       - bodyidthings
       - contentthings
       - hookdeletethings
@@ -36,6 +37,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - batchthings/finalizers
       - bodyidthings/finalizers
       - contentthings/finalizers
       - hookdeletethings/finalizers
@@ -52,6 +54,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - batchthings/status
       - bodyidthings/status
       - contentthings/status
       - hookdeletethings/status

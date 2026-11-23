@@ -21,7 +21,7 @@ import (
 //go:embed templates/*.tmpl
 var templateFS embed.FS
 
-var templates = template.Must(template.New("").Funcs(template.FuncMap{"lowerFirst": lowerFirst, "maskPaths": maskPaths}).ParseFS(templateFS, "templates/*.tmpl"))
+var templates = template.Must(template.New("").Funcs(template.FuncMap{"lowerFirst": lowerFirst, "maskPaths": maskPaths, "getCall": getCall}).ParseFS(templateFS, "templates/*.tmpl"))
 
 // Paths of the generated files, relative to the operator root.
 const (
@@ -257,4 +257,25 @@ func maskPaths(mask string) []string {
 		return nil
 	}
 	return strings.Split(mask, ",")
+}
+
+// getCall is the Go expression that builds the Get request of the resource with the id. A batch
+// Get (api.getByIDs) has no id in its path: it sends the id as the one item of its id list.
+func getCall(method, byIDs, id string) string {
+	if byIDs != "" {
+		return fmt.Sprintf("apiClient.%s(ctx).%s([]string{%s})", method, byIDs, id)
+	}
+	return fmt.Sprintf("apiClient.%s(ctx, %s)", method, id)
+}
+
+// GetItem is the Go expression of the resource in a Get response named got: the field that wraps
+// it, or the one item of the list of a batch Get (api.getByIDs).
+func (d *kindData) GetItem() string {
+	switch {
+	case d.GetByIDs != "":
+		return "got." + d.GetResponseField + "[0]"
+	case d.GetResponseField != "":
+		return "got." + d.GetResponseField
+	}
+	return "got"
 }

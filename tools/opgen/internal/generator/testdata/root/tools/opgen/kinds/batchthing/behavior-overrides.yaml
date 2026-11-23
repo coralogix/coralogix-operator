@@ -1,0 +1,13 @@
+# BatchThing: Get takes the id in its list of ids (api.getByIDs), as the team scopes API does.
+resource: BatchThing
+mode: existing
+validators:
+  inferred: true
+api:
+  operations:
+    create: BatchThingsService_CreateBatchThing
+    get: BatchThingsService_GetBatchThingsByIds
+    update: BatchThingsService_ReplaceBatchThing
+    delete: BatchThingsService_DeleteBatchThing
+  getByIDs: ids
+  updateIDInBody: true

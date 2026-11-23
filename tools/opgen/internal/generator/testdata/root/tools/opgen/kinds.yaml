@@ -21,3 +21,5 @@ kinds:
     resource: MaskThing
   - kind: SettingThing
     resource: SettingThing
+  - kind: BatchThing
+    resource: BatchThing
