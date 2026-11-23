@@ -1,0 +1,78 @@
+[
+  {
+    "step": "reject a user rule for a managed entity type",
+    "spec": {
+      "rules": [
+        {
+          "allocation": 50,
+          "canOverflow": false,
+          "enabled": true,
+          "entityType": "logs"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "query": {
+          "id": [
+            "quota-allocation-rule-set"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "leave the managed rule unchanged",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    },
+    "remote": {
+      "id": "quota-allocation-rule-set",
+      "rules": [
+        {
+          "allocation": 25,
+          "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+          "canOverflow": false,
+          "cxManaged": true,
+          "enabled": true,
+          "entityType": "logs"
+        }
+      ]
+    }
+  }
+]

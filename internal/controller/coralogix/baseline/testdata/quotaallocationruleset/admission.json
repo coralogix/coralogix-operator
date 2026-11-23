@@ -1,0 +1,67 @@
+{
+  "duplicate entity": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueDuplicate",
+        "field": "spec.rules[1]",
+        "message": "Duplicate value: map[string]interface {}{\"entityType\":\"logs\"}"
+      }
+    ]
+  },
+  "empty entity": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.rules[0].entityType",
+        "message": "Invalid value: \"\": spec.rules[0].entityType in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty rules": {
+    "accepted": true
+  },
+  "full": {
+    "accepted": true
+  },
+  "minimal": {
+    "accepted": true
+  },
+  "missing allocation": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.rules[0].allocation",
+        "message": "Required value"
+      }
+    ]
+  },
+  "missing rules": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.rules",
+        "message": "Required value"
+      }
+    ]
+  },
+  "negative allocation": {
+    "accepted": true
+  },
+  "over 100 percent": {
+    "accepted": true
+  },
+  "unknown allocation type": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.rules[0].allocationType",
+        "message": "Unsupported value: \"other\": supported values: \"percentage\", \"lockedUnits\", \"unspecified\""
+      }
+    ]
+  }
+}

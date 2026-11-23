@@ -1,0 +1,108 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "rules": [
+        {
+          "allocation": 50,
+          "allocationType": "percentage",
+          "canOverflow": true,
+          "enabled": true,
+          "entityType": "logs"
+        },
+        {
+          "allocation": 1,
+          "allocationType": "lockedUnits",
+          "canOverflow": false,
+          "enabled": true,
+          "entityType": "spans"
+        },
+        {
+          "allocation": 10,
+          "allocationType": "percentage",
+          "canOverflow": false,
+          "enabled": true,
+          "entityType": "browserLogs"
+        },
+        {
+          "allocation": 10,
+          "allocationType": "percentage",
+          "canOverflow": false,
+          "enabled": true,
+          "entityType": "browserLogs/v2"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "query": {
+          "id": [
+            "quota-allocation-rule-set"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "body": {
+          "ruleSet": {
+            "rules": [
+              {
+                "allocation": 50,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+                "canOverflow": true,
+                "enabled": true,
+                "entityType": "logs"
+              },
+              {
+                "allocation": 1,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_LOCKED_UNITS",
+                "canOverflow": false,
+                "enabled": true,
+                "entityType": "spans"
+              },
+              {
+                "allocation": 10,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+                "canOverflow": false,
+                "enabled": true,
+                "entityType": "browserLogs"
+              },
+              {
+                "allocation": 10,
+                "allocationType": "QUOTA_ALLOCATION_TYPE_PERCENTAGE",
+                "canOverflow": false,
+                "enabled": true,
+                "entityType": "browserLogs/v2"
+              }
+            ]
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "quota-allocation-rule-set.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

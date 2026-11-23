@@ -1,0 +1,33 @@
+[
+  {
+    "step": "reject a percentage over 100 before the API call",
+    "spec": {
+      "rules": [
+        {
+          "allocation": 101,
+          "canOverflow": false,
+          "enabled": true,
+          "entityType": "logs"
+        }
+      ]
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

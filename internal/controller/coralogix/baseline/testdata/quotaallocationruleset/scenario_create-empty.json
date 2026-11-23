@@ -1,0 +1,50 @@
+[
+  {
+    "step": "create with an empty rule list",
+    "spec": {
+      "rules": []
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "query": {
+          "id": [
+            "quota-allocation-rule-set"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/dataplan/quota-rules/v1",
+        "body": {
+          "ruleSet": {
+            "rules": []
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "quota-allocation-rule-set.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
