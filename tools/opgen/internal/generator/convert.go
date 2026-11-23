@@ -1024,6 +1024,7 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		if err != nil {
 			return "", err
 		}
+		// A list that an unwrapped object holds can be a pointer field in the SDK.
 		code := stmts + b.set(target, ref.Want, expr, isPtr)
 		if f.sendNullAsEmpty {
 			// The API needs [] where the CR has none, not null.
@@ -1104,6 +1105,10 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		statements, value := b.referenceValue(f, src, path)
 		return statements, value, false, nil
 	}
+	if f.intNames != nil && rt.Kind == model.Integer {
+		v := b.temp("v")
+		return fmt.Sprintf("%s, err := %s(%s)\nif err != nil {\nreturn nil, fmt.Errorf(\"%s: %%w\", err)\n}\n", v, f.intNames.Func, arg(src), path), v, false, nil
+	}
 	switch rt.Kind {
 	case model.List, model.Set, model.Map:
 		elemWant, ok := strings.CutPrefix(want, "[]")
@@ -1113,7 +1118,7 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		if !ok {
 			return "", "", false, fmt.Errorf("%s: the SDK type %s is not a collection", path, want)
 		}
-		elem := &crField{API: f.API, JSON: f.JSON, typ: f.typ.Elem, object: f.object, enum: f.enum}
+		elem := &crField{API: f.API, JSON: f.JSON, typ: f.typ.Elem, object: f.object, enum: f.enum, intNames: f.intNames}
 		v, e, k := b.temp("v"), b.temp("e"), "_"
 		if rt.Kind == model.Map {
 			k = b.temp("k")

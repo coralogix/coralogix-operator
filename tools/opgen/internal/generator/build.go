@@ -158,16 +158,19 @@ type crScalar struct {
 
 // crField is a field of a Go struct of the custom resource.
 type crField struct {
-	API            string // the API property name
-	JSON           string // the custom resource name: the API name, or the name of a reference
-	GoName         string
-	GoType         string
-	Optional       bool
-	Doc            []string
-	Markers        []string
-	typ            *model.Type // the type in the resource response
-	object         *crType     // the struct of an object, or of the items of a list or map
-	enum           *enumMap    // the enum, or the enum of the items of a list
+	API      string // the API property name
+	JSON     string // the custom resource name: the API name, or the name of a reference
+	GoName   string
+	GoType   string
+	Optional bool
+	Doc      []string
+	Markers  []string
+	typ      *model.Type // the type in the resource response
+	object   *crType     // the struct of an object, or of the items of a list or map
+	enum     *enumMap    // the enum, or the enum of the items of a list
+	// intNames maps the CR names of an integer field, or of the items of a list of integers, to
+	// their integers (integerNames). It is not an API enum, so coverage does not count its values.
+	intNames       *enumMap
 	immutable      bool
 	ref            string // the kind that a reference names, "" for a field that is not one
 	refType        string // the CR reference type, when it differs from ResourceIDRef
@@ -207,8 +210,11 @@ type enumMap struct {
 	Func    string // the function that maps a spec value to the SDK value
 	Var     string // the map
 	SDKType string
-	Values  []enumValue
-	schema  string // the contract component of the enum
+	// Zero is the Go zero value of SDKType that the function returns with an error: "" for an SDK
+	// enum, 0 for the integer of integerNames.
+	Zero   string
+	Values []enumValue
+	schema string // the contract component of the enum
 }
 
 type enumValue struct {
@@ -254,6 +260,15 @@ func (e *enumMap) Names() string {
 		return "{" + strings.Join(quoted, ",") + "}"
 	}
 	return strings.Join(names, ";")
+}
+
+// pairs lists each name with its API value, such as "Sunday=1, Monday=2".
+func (e *enumMap) pairs() string {
+	out := make([]string, len(e.Values))
+	for i, v := range e.Values {
+		out[i] = v.Name + "=" + v.API
+	}
+	return strings.Join(out, ", ")
 }
 
 // bareMarkerString reports whether controller-gen reads the unquoted value as the same string.

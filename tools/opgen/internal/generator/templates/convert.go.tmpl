@@ -125,7 +125,7 @@ var {{.Var}} = map[string]{{.SDKType}}{
 func {{.Func}}(value string) ({{.SDKType}}, error) {
 	v, ok := {{.Var}}[value]
 	if !ok {
-		return "", fmt.Errorf("unknown value %q", value)
+		return {{if .Zero}}{{.Zero}}{{else}}""{{end}}, fmt.Errorf("unknown value %q", value)
 	}
 	return v, nil
 }
