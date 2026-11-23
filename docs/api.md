@@ -2314,6 +2314,23 @@ The API checks the range (1-1440). May exceed timeframeMinutes, in which case da
           Policy for handling missing data.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Comparison operator applied to the row count of every rule. When unset, moreThan.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals, equals, notEquals<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsresultcountrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Per-priority trigger rules. Each rule compares the number of result rows that meet its condition to its count threshold;
+when several rules hold, the highest priority wins. When unset, the alert fires at its own priority on any result row.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -2380,6 +2397,106 @@ Must be a multiple of 60 seconds.<br/>
             <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsResultCount.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsresultcount)</sup></sup>
+
+
+
+A per-priority trigger rule of an analyticsResultCount alert.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsresultcountrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Which result rows the rule counts and the count it is compared against. When unset, every row counts against 0.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspecalerttypeanalyticsresultcountrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert property overrides. Defaults to the alert priority when unset.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsResultCount.rules[index].condition
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsresultcountrulesindex)</sup></sup>
+
+
+
+Which result rows the rule counts and the count it is compared against. When unset, every row counts against 0.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>countThreshold</b></td>
+        <td>integer</td>
+        <td>
+          Number of matching result rows the operator compares against. When unset, 0.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>expression</b></td>
+        <td>string</td>
+        <td>
+          DataPrime boolean expression over the columns of the query result. Only rows it holds for are counted.
+When unset, every result row counts.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.alertType.analyticsResultCount.rules[index].override
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspecalerttypeanalyticsresultcountrulesindex)</sup></sup>
+
+
+
+Alert property overrides. Defaults to the alert priority when unset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -7693,6 +7810,13 @@ Destination for case notifications (preview).
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexconnectorconfigoverridesindex">connectorConfigOverrides</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields that override the connector's own values for case notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertsetspecalertsindexspeccasesettingsdestinationsindexpreset">preset</a></b></td>
         <td>object</td>
         <td>
@@ -7797,6 +7921,40 @@ ResourceRef is a reference to a Kubernetes resource.
           Kubernetes namespace.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.destinations[index].connectorConfigOverrides[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsdestinationsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -23433,6 +23591,23 @@ The API checks the range (1-1440). May exceed timeframeMinutes, in which case da
           Policy for handling missing data.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Comparison operator applied to the row count of every rule. When unset, moreThan.<br/>
+          <br/>
+            <i>Enum</i>: moreThan, lessThan, moreThanOrEquals, lessThanOrEquals, equals, notEquals<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsresultcountrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Per-priority trigger rules. Each rule compares the number of result rows that meet its condition to its count threshold;
+when several rules hold, the highest priority wins. When unset, the alert fires at its own priority on any result row.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -23499,6 +23674,106 @@ Must be a multiple of 60 seconds.<br/>
             <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsResultCount.rules[index]
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsresultcount)</sup></sup>
+
+
+
+A per-priority trigger rule of an analyticsResultCount alert.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsresultcountrulesindexcondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Which result rows the rule counts and the count it is compared against. When unset, every row counts against 0.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspecalerttypeanalyticsresultcountrulesindexoverride">override</a></b></td>
+        <td>object</td>
+        <td>
+          Alert property overrides. Defaults to the alert priority when unset.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsResultCount.rules[index].condition
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsresultcountrulesindex)</sup></sup>
+
+
+
+Which result rows the rule counts and the count it is compared against. When unset, every row counts against 0.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>countThreshold</b></td>
+        <td>integer</td>
+        <td>
+          Number of matching result rows the operator compares against. When unset, 0.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>expression</b></td>
+        <td>string</td>
+        <td>
+          DataPrime boolean expression over the columns of the query result. Only rows it holds for are counted.
+When unset, every result row counts.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.alertType.analyticsResultCount.rules[index].override
+<sup><sup>[↩ Parent](#alertspecalerttypeanalyticsresultcountrulesindex)</sup></sup>
+
+
+
+Alert property overrides. Defaults to the alert priority when unset.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to override it<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -28812,6 +29087,13 @@ Destination for case notifications (preview).
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#alertspeccasesettingsdestinationsindexconnectorconfigoverridesindex">connectorConfigOverrides</a></b></td>
+        <td>[]object</td>
+        <td>
+          Connector configuration fields that override the connector's own values for case notifications.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#alertspeccasesettingsdestinationsindexpreset">preset</a></b></td>
         <td>object</td>
         <td>
@@ -28916,6 +29198,40 @@ ResourceRef is a reference to a Kubernetes resource.
           Kubernetes namespace.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.destinations[index].connectorConfigOverrides[index]
+<sup><sup>[↩ Parent](#alertspeccasesettingsdestinationsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fieldName</b></td>
+        <td>string</td>
+        <td>
+          The name of the configuration field.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>template</b></td>
+        <td>string</td>
+        <td>
+          The template for the configuration field.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 

@@ -28,3 +28,14 @@ spec:
       noDataPolicy:
         state: alerting
         autoRetireSeconds: 3600
+      # Optional. Without rules, the alert fires at its priority on any result row.
+      # operator defaults to moreThan. A rule without override fires at the alert priority.
+      operator: moreThanOrEquals
+      rules:
+        - condition:
+            countThreshold: 3
+            expression: errors > 100
+          override:
+            priority: p1
+        - condition:
+            countThreshold: 10

@@ -127,6 +127,61 @@ spec:
                                   required:
                                   - state
                                   type: object
+                                operator:
+                                  description: Comparison operator applied to the
+                                    row count of every rule. When unset, moreThan.
+                                  enum:
+                                  - moreThan
+                                  - lessThan
+                                  - moreThanOrEquals
+                                  - lessThanOrEquals
+                                  - equals
+                                  - notEquals
+                                  type: string
+                                rules:
+                                  description: |-
+                                    Per-priority trigger rules. Each rule compares the number of result rows that meet its condition to its count threshold;
+                                    when several rules hold, the highest priority wins. When unset, the alert fires at its own priority on any result row.
+                                  items:
+                                    description: A per-priority trigger rule of an
+                                      analyticsResultCount alert.
+                                    properties:
+                                      condition:
+                                        description: Which result rows the rule counts
+                                          and the count it is compared against. When
+                                          unset, every row counts against 0.
+                                        properties:
+                                          countThreshold:
+                                            description: Number of matching result
+                                              rows the operator compares against.
+                                              When unset, 0.
+                                            format: int64
+                                            type: integer
+                                          expression:
+                                            description: |-
+                                              DataPrime boolean expression over the columns of the query result. Only rows it holds for are counted.
+                                              When unset, every result row counts.
+                                            type: string
+                                        type: object
+                                      override:
+                                        description: Alert property overrides. Defaults
+                                          to the alert priority when unset.
+                                        properties:
+                                          priority:
+                                            description: Priority to override it
+                                            enum:
+                                            - p1
+                                            - p2
+                                            - p3
+                                            - p4
+                                            - p5
+                                            type: string
+                                        required:
+                                        - priority
+                                        type: object
+                                    type: object
+                                  maxItems: 5
+                                  type: array
                                 timeframeMinutes:
                                   description: Time frame in minutes the query is
                                     evaluated over.
@@ -2407,6 +2462,25 @@ spec:
                                     - message: Exactly one of backendRef or resourceRef
                                         must be set
                                       rule: has(self.backendRef) != has(self.resourceRef)
+                                  connectorConfigOverrides:
+                                    description: Connector configuration fields that
+                                      override the connector's own values for case
+                                      notifications.
+                                    items:
+                                      properties:
+                                        fieldName:
+                                          description: The name of the configuration
+                                            field.
+                                          type: string
+                                        template:
+                                          description: The template for the configuration
+                                            field.
+                                          type: string
+                                      required:
+                                      - fieldName
+                                      - template
+                                      type: object
+                                    type: array
                                   preset:
                                     description: |-
                                       Preset for the case notifications. Must be a cases preset for the connector type.
