@@ -404,8 +404,7 @@ type Field struct {
 	SendNullAsEmpty bool `yaml:"sendNullAsEmpty"`
 	// Skip omits an API field from the CR and requests. The field can belong to the resource or to
 	// a nested component. A nested skip applies to every CR path of the component. Skipping a oneOf
-	// arm removes the arm; the shared module accepts it only for an empty object arm of a group
-	// that allows no arm.
+	// arm removes the arm. A root oneOf with fewer than two arms left is no group.
 	Skip bool `yaml:"skip"`
 	// Immutable keeps a released CR field that cannot change after Create, when the PATCH Update
 	// of the API accepts it. The CRD rejects a change of the field, and Update leaves it out, as
@@ -434,6 +433,8 @@ type Field struct {
 	// The CR keeps the name of the field. It applies to a field of the resource in an existing kind,
 	// and, with one segment, to a field of a nested component.
 	RequestAs string `yaml:"requestAs"`
+	// UpdateAs names the Update-body field when it differs from Create and Get.
+	UpdateAs string `yaml:"updateAs"`
 	// Inline shows the fields of an optional object beside the other fields of its component, as the
 	// released CR does. Create and Update rebuild the object when the CR sets one of them. Mode
 	// existing only.
@@ -597,10 +598,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable) {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Immutable {
@@ -609,8 +610,8 @@ func (f *File) check() error {
 				return fmt.Errorf("%s.immutable: a new kind follows the contract", line)
 			case line.Component != f.Resource:
 				return fmt.Errorf("%s.immutable: only a top-level field of the resource can be immutable", line)
-			case field.ReadOnly || len(field.CreateAs) != 0 || field.RequestAs != "" || len(field.RequestValueBy) != 0:
-				return fmt.Errorf("%s.immutable: the line cannot set readOnly, createAs, requestAs, or requestValueBy", line)
+			case field.ReadOnly || len(field.CreateAs) != 0 || field.RequestAs != "" || field.UpdateAs != "" || len(field.RequestValueBy) != 0:
+				return fmt.Errorf("%s.immutable: the line cannot set readOnly, createAs, requestAs, updateAs, or requestValueBy", line)
 			}
 		}
 		if field.Skip && f.Mode != ModeExisting {
@@ -626,7 +627,7 @@ func (f *File) check() error {
 			if err := (iacoverrides.Field{CreateAs: field.CreateAs}).Check(); err != nil {
 				return fmt.Errorf("%s.%w", line, err)
 			}
-			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" {
+			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" {
 				return fmt.Errorf("%s.createAs: the line cannot set another key", line)
 			}
 		}
@@ -644,11 +645,22 @@ func (f *File) check() error {
 				return fmt.Errorf("%s.requestAs: the line cannot set ref, readOnly, requestValueBy, or unwrap", line)
 			}
 		}
+		if field.UpdateAs != "" {
+			if f.Mode != ModeExisting || line.Component != f.Resource {
+				return fmt.Errorf("%s.updateAs: use it on a released resource field", line)
+			}
+			if err := (iacoverrides.Field{UpdateAs: field.UpdateAs}).Check(); err != nil {
+				return fmt.Errorf("%s.%w", line, err)
+			}
+			if field.Ref != nil || field.ReadOnly || len(field.RequestValueBy) != 0 || field.Unwrap != nil || len(field.CreateAs) != 0 {
+				return fmt.Errorf("%s.updateAs: the line cannot set ref, readOnly, requestValueBy, unwrap, or createAs", line)
+			}
+		}
 		if field.Inline {
 			if f.Mode != ModeExisting {
 				return fmt.Errorf("%s.inline: a new kind follows the contract", line)
 			}
-			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest {
+			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest {
 				return fmt.Errorf("%s.inline: the line cannot set another key", line)
 			}
 		}
@@ -1058,7 +1070,7 @@ func (f *File) checkAPI() error {
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
 		switch key {
-		case "updateIDInBody", "operations", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask":
+		case "updateIDInBody", "operations", "methods", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask":
 		default:
 			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}
@@ -1147,13 +1159,13 @@ func (f *File) Policy() model.Policy {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil && len(field.CreateAs) == 0 && field.RequestAs == "" {
+		if !field.Skip && !field.ReadOnly && !field.Optional && field.Unwrap == nil && len(field.CreateAs) == 0 && field.RequestAs == "" && field.UpdateAs == "" {
 			continue
 		}
 		if exceptions.Fields[line.Component] == nil {
 			exceptions.Fields[line.Component] = map[string]iacoverrides.Field{}
 		}
-		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap, CreateAs: field.CreateAs, RequestAs: field.RequestAs}
+		exceptions.Fields[line.Component][line.Field] = iacoverrides.Field{Skip: field.Skip, ReadOnly: field.ReadOnly, Optional: field.Optional, Unwrap: field.Unwrap, CreateAs: field.CreateAs, RequestAs: field.RequestAs, UpdateAs: field.UpdateAs}
 	}
 	p := exceptions.Policy()
 	if f.Upserts() {
@@ -1297,18 +1309,21 @@ func (f *File) OmitsUpdateMask() bool {
 	return f != nil && f.UpdateMask == UpdateMaskOmit
 }
 
-// checkUpdateMask checks the updateMask key. It needs the mask in the PATCH body: a query mask is
-// a required parameter of the SDK call.
+// checkUpdateMask checks the updateMask key. It accepts a PATCH body mask or a POST Update with
+// no mask. A PATCH query mask is a required parameter of the SDK call.
 func (f *File) checkUpdateMask() error {
 	switch {
 	case f.UpdateMask == "":
+		if f.API.Methods != nil && f.API.Methods.Update == "POST" {
+			return errors.New("updateMask: api.methods.update: POST needs updateMask: omit")
+		}
 		return nil
 	case f.UpdateMask != UpdateMaskOmit:
 		return fmt.Errorf("updateMask: want %q", UpdateMaskOmit)
 	case f.Mode != ModeExisting:
 		return errors.New("updateMask: a new kind follows the contract")
-	case !f.API.UpdateMaskInBody:
-		return errors.New("updateMask: omit needs api.updateMaskInBody: true")
+	case !f.API.UpdateMaskInBody && (f.API.Methods == nil || f.API.Methods.Update != "POST"):
+		return errors.New("updateMask: omit needs api.updateMaskInBody: true or api.methods.update: POST")
 	case f.API.UpdateMask != nil:
 		return errors.New("updateMask: omit sends no mask, so api.updateMask has no paths to change")
 	}
