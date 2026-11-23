@@ -15,6 +15,11 @@
 # JSON text. Create answers only the id (api.createResponseOnlyIDProperty). The request wrapper
 # has the resource beside a policy that the CR holds (requestValues source field) and a flag that
 # it never sends (omit). It has the adopt hook and a handwritten spec field (the spec key).
+# SecretThing: a kind that users already have, with the valueFrom key. A string of the API is a
+# literal; the CR can name a Secret key instead, and the operator sends the value that it reads.
+# The root has a string that the contract requires (apiKey: exactly one of it and its Secret) and a
+# string that it leaves optional (token: at most one). The items of a set of fields have a value
+# with a requireOne line (exactly one).
 # RefThing: a kind that users already have, with a required and an optional id of a Thing. Its
 # behavior-overrides file makes both ids references (the ref key).
 # ThingPolicies: an overwrite resource (api.overwrite), as the TCO policies API has it. One PUT
@@ -442,6 +447,50 @@ paths:
       operationId: ContentThingsService_DeleteContentThing
       responses:
         '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
+  /secret-things:
+    post:
+      tags: [Secret Things Service]
+      operationId: SecretThingsService_CreateSecretThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateSecretThingRequest
+              type: object
+              required: [item]
+              properties:
+                item: {$ref: '#/components/schemas/SecretThing'}
+      responses:
+        '200': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/SecretThingResponse'}}}}
+    put:
+      tags: [Secret Things Service]
+      operationId: SecretThingsService_ReplaceSecretThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceSecretThingRequest
+              type: object
+              required: [item]
+              properties:
+                item: {$ref: '#/components/schemas/SecretThing'}
+      responses:
+        '200': {description: Replaced, content: {application/json: {schema: {$ref: '#/components/schemas/SecretThingResponse'}}}}
+  /secret-things/{item_id}:
+    parameters:
+      - {name: item_id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Secret Things Service]
+      operationId: SecretThingsService_GetSecretThing
+      responses:
+        '200': {description: Found, content: {application/json: {schema: {$ref: '#/components/schemas/SecretThingResponse'}}}}
+    delete:
+      tags: [Secret Things Service]
+      operationId: SecretThingsService_DeleteSecretThing
+      responses:
+        '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
   /hook-things:
     post:
       tags: [Hook Things Service]
@@ -804,6 +853,35 @@ components:
       properties:
         item: {$ref: '#/components/schemas/ContentThing'}
         policy: {type: string, x-coralogix-presence: true}
+    SecretThingResponse:
+      type: object
+      required: [item]
+      properties:
+        item: {$ref: '#/components/schemas/SecretThing'}
+    SecretThing:
+      type: object
+      required: [name, apiKey, settings]
+      properties:
+        id: {type: string, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, x-coralogix-presence: true}
+        apiKey: {type: string, minLength: 1, maxLength: 200, description: The API key of the thing., x-coralogix-presence: true}
+        token: {type: string, maxLength: 200, description: An optional token of the thing., x-coralogix-presence: true}
+        settings: {$ref: '#/components/schemas/SecretThingSettings'}
+    SecretThingSettings:
+      type: object
+      properties:
+        fields:
+          type: array
+          maxItems: 20
+          x-coralogix-collection: set
+          items: {$ref: '#/components/schemas/SecretThingField'}
+          description: The fields of the settings.
+    SecretThingField:
+      type: object
+      required: [fieldName]
+      properties:
+        fieldName: {type: string, minLength: 1, description: The name of the field., x-coralogix-presence: true}
+        value: {type: string, maxLength: 200, description: The value of the field., x-coralogix-presence: true}
     HookThing:
       type: object
       required: [id, name]

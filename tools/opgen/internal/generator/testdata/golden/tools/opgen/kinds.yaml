@@ -17,3 +17,5 @@ kinds:
     resource: GetThingPoliciesResponse
   - kind: ContentThing
     resource: ContentThing
+  - kind: SecretThing
+    resource: SecretThing

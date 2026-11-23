@@ -25,6 +25,7 @@ const (
 	HookThingKind       = "HookThing"
 	PatchThingKind      = "PatchThing"
 	RefThingKind        = "RefThing"
+	SecretThingKind     = "SecretThing"
 	ThingKind           = "Thing"
 	ThingPoliciesKind   = "ThingPolicies"
 	WrappedThingKind    = "WrappedThing"

@@ -401,7 +401,7 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 			}
 		}
 		_, inGroup := skip[f.API]
-		if skip[f.API] || (full && slices.Contains(v.file.Omit, prefix+f.JSON)) || (!full && f.Optional && !inGroup) {
+		if skip[f.API] || (full && slices.Contains(v.file.Omit, prefix+f.JSON)) || (!full && f.Optional && !inGroup && !f.secretExactlyOne) {
 			continue
 		}
 		value, err := v.field(f, prefix+f.JSON, full)

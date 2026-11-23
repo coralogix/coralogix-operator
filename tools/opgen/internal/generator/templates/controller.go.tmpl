@@ -41,6 +41,9 @@ type {{.Kind}}Reconciler struct {
 {{- if .Content}}
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
 {{- end}}
+{{- if .UsesSecrets}}
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+{{- end}}
 
 func (r *{{.Kind}}Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return coralogixreconciler.ReconcileResource(ctx, req, &coralogixv1alpha1.{{.Kind}}{}, r)
