@@ -1,0 +1,40 @@
+[
+  {
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    },
+    "requests": [
+      {
+        "body": {
+          "metadata": {
+            "integrationKey": "aws-metrics-collector",
+            "integrationParameters": {},
+            "version": "0.1.0"
+          }
+        },
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/metadata/v1",
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "spec": {
+      "integrationKey": "aws-metrics-collector",
+      "version": "0.1.0"
+    },
+    "step": "create without parameters sends an empty parameter object"
+  }
+]

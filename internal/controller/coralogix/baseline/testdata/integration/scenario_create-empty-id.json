@@ -1,0 +1,168 @@
+[
+  {
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "DeserializationError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    },
+    "requests": [
+      {
+        "body": {
+          "metadata": {
+            "integrationKey": "aws-metrics-collector",
+            "integrationParameters": {
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-integration-setup"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            },
+            "version": "0.1.0"
+          }
+        },
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/metadata/v1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "spec": {
+      "integrationKey": "aws-metrics-collector",
+      "parameters": {
+        "ApplicationName": "cxo",
+        "AwsRegion": "eu-north-1",
+        "AwsRoleArn": "arn:aws:iam::123456789012:role/example-role",
+        "EnrichWithTags": true,
+        "IntegrationName": "cxo-integration-setup",
+        "MetricNamespaces": [
+          "AWS/S3"
+        ],
+        "SubsystemName": "aws-metrics-collector",
+        "WithAggregations": false
+      },
+      "version": "0.1.0"
+    },
+    "step": "create succeeds without an id"
+  },
+  {
+    "object": {
+      "finalizers": [
+        "integration.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "requests": [
+      {
+        "body": {
+          "metadata": {
+            "integrationKey": "aws-metrics-collector",
+            "integrationParameters": {
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-integration-setup"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            },
+            "version": "0.1.0"
+          }
+        },
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/metadata/v1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "step": "retry creates the integration"
+  }
+]

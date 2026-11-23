@@ -1,0 +1,563 @@
+{
+  "cases": [
+    {
+      "name": "create, partial updates, rejected updates, and delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "aws-metrics-collector"
+                  },
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "AwsRoleArn",
+                    "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-{{run}}"
+                  },
+                  {
+                    "key": "AwsRegion",
+                    "stringValue": "eu-north-1"
+                  },
+                  {
+                    "key": "WithAggregations",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "EnrichWithTags",
+                    "booleanValue": true
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "integration"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{integration}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo-updated"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{integration}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {}
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": []
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {}
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{integration}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3",
+                        "AWS/EC2"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "9.9.9",
+              "integrationParameters": {}
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "",
+              "integrationParameters": {}
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "cxo-no-such-integration",
+              "version": "0.1.0",
+              "integrationParameters": {}
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{integration}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/integrations/v1/instances/{{integration}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/integrations/v1/instances/{{integration}}"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{integration}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{integration}}",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "aws-metrics-collector"
+                  },
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "AwsRoleArn",
+                    "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-{{run}}"
+                  },
+                  {
+                    "key": "AwsRegion",
+                    "stringValue": "eu-north-1"
+                  },
+                  {
+                    "key": "WithAggregations",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "EnrichWithTags",
+                    "booleanValue": true
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejected creates",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "9.9.9",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "aws-metrics-collector"
+                  },
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "AwsRoleArn",
+                    "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-{{run}}"
+                  },
+                  {
+                    "key": "AwsRegion",
+                    "stringValue": "eu-north-1"
+                  },
+                  {
+                    "key": "WithAggregations",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "EnrichWithTags",
+                    "booleanValue": true
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "badVersion"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "aws-metrics-collector"
+                  },
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "AwsRoleArn",
+                    "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-{{run}}"
+                  },
+                  {
+                    "key": "AwsRegion",
+                    "stringValue": "eu-north-1"
+                  },
+                  {
+                    "key": "WithAggregations",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "EnrichWithTags",
+                    "booleanValue": true
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "emptyVersion"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "cxo-no-such-integration",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "aws-metrics-collector"
+                  },
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "AwsRoleArn",
+                    "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-{{run}}"
+                  },
+                  {
+                    "key": "AwsRegion",
+                    "stringValue": "eu-north-1"
+                  },
+                  {
+                    "key": "WithAggregations",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "EnrichWithTags",
+                    "booleanValue": true
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "unknownKey"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "aws-metrics-collector"
+                  },
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "AwsRoleArn",
+                    "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-{{run}}"
+                  },
+                  {
+                    "key": "AwsRegion",
+                    "stringValue": "eu-north-1"
+                  },
+                  {
+                    "key": "WithAggregations",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "EnrichWithTags",
+                    "booleanValue": true
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "emptyKey"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0"
+            }
+          },
+          "capture": "noParameters"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "00000000-0000-4000-8000-000000000000",
+            "metadata": {
+              "integrationKey": "aws-metrics-collector",
+              "version": "0.1.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "aws-metrics-collector"
+                  },
+                  {
+                    "key": "MetricNamespaces",
+                    "stringList": {
+                      "values": [
+                        "AWS/S3"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "AwsRoleArn",
+                    "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-{{run}}"
+                  },
+                  {
+                    "key": "AwsRegion",
+                    "stringValue": "eu-north-1"
+                  },
+                  {
+                    "key": "WithAggregations",
+                    "booleanValue": false
+                  },
+                  {
+                    "key": "EnrichWithTags",
+                    "booleanValue": true
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

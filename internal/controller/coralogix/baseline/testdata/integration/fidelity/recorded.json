@@ -1,0 +1,338 @@
+{
+  "cases": [
+    {
+      "name": "create, partial updates, rejected updates, and delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "integrationId": "{{integration}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "integration": {
+              "definitionKey": "aws-metrics-collector",
+              "definitionVersion": "0.1.0",
+              "id": "{{integration}}",
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::\u003cnumber\u003e:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-fidelity-{{run}}"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "integration": {
+              "definitionKey": "aws-metrics-collector",
+              "definitionVersion": "0.1.0",
+              "id": "{{integration}}",
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo-updated"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::\u003cnumber\u003e:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-fidelity-{{run}}"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Required field MetricNamespaces not provided"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "integration": {
+              "definitionKey": "aws-metrics-collector",
+              "definitionVersion": "0.1.0",
+              "id": "{{integration}}",
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo-updated"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::\u003cnumber\u003e:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-fidelity-{{run}}"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Not supported parameter type"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Invalid version"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* version must not be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Unknown integration metadata specific data: Empty"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Integration type by integration key not found: cxo-no-such-integration"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "integration": {
+              "definitionKey": "aws-metrics-collector",
+              "definitionVersion": "0.1.0",
+              "id": "{{integration}}",
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo-updated"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::\u003cnumber\u003e:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-fidelity-{{run}}"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3",
+                      "AWS/EC2"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Integration not found: {{integration}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Integration not found: {{integration}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Integration not found: {{integration}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejected creates",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Invalid version"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* version must not be empty"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Integration type by integration key not found: cxo-no-such-integration"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* integrationKey must not be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Unknown integration metadata specific data: Empty"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Integration not found: 00000000-0000-4000-8000-000000000000"
+          }
+        }
+      ]
+    }
+  ]
+}

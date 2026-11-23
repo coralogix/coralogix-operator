@@ -1,0 +1,78 @@
+[
+  {
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    },
+    "requests": [
+      {
+        "body": {
+          "metadata": {
+            "integrationKey": "",
+            "integrationParameters": {},
+            "version": ""
+          }
+        },
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/metadata/v1",
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "step": "create without spec"
+  },
+  {
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    },
+    "requests": [
+      {
+        "body": {
+          "metadata": {
+            "integrationKey": "",
+            "integrationParameters": {},
+            "version": ""
+          }
+        },
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/metadata/v1",
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "step": "retry"
+  },
+  {
+    "object": null,
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "step": "delete"
+  }
+]
