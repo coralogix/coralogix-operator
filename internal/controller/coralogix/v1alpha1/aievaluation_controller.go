@@ -38,8 +38,9 @@ import (
 
 // AIEvaluationReconciler reconciles a AIEvaluation object.
 type AIEvaluationReconciler struct {
-	Client   *aievaluationsservice.AIEvaluationsServiceAPIService
-	Interval time.Duration
+	Client    *aievaluationsservice.AIEvaluationsServiceAPIService
+	ClientSet *cxsdk.ClientSet
+	Interval  time.Duration
 }
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=aievaluations,verbs=get;list;watch;create;update;patch;delete
@@ -60,6 +61,13 @@ func (r *AIEvaluationReconciler) FinalizerName() string {
 
 func (r *AIEvaluationReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.AIEvaluation)
+	// validate runs before any API call. An error stops the Create with reason ValidationFailed.
+	// A hook can run many times: it must be safe to repeat. Make a state true (get, then create or
+	// update); do not add or create blindly. Do not append to a field that the generated code
+	// filled. See AGENTS.md "Hooks".
+	if err := r.validate(ctx, log, cr); err != nil {
+		return coralogixreconciler.NewValidationError(fmt.Errorf("validation of AIEvaluation failed: %w", err))
+	}
 	body, err := cr.CreateRequest(ctx)
 	if err != nil {
 		return fmt.Errorf("error on building the create request of AIEvaluation: %w", err)
@@ -83,6 +91,13 @@ func (r *AIEvaluationReconciler) HandleCreation(ctx context.Context, log logr.Lo
 
 func (r *AIEvaluationReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	cr := obj.(*coralogixv1alpha1.AIEvaluation)
+	// validate runs before any API call. An error stops the Update with reason ValidationFailed.
+	// A hook can run many times: it must be safe to repeat. Make a state true (get, then create or
+	// update); do not add or create blindly. Do not append to a field that the generated code
+	// filled. See AGENTS.md "Hooks".
+	if err := r.validate(ctx, log, cr); err != nil {
+		return coralogixreconciler.NewValidationError(fmt.Errorf("validation of AIEvaluation failed: %w", err))
+	}
 	id := ptr.Deref(cr.Status.ID, "")
 	body, err := cr.UpdateRequest(ctx)
 	if err != nil {
@@ -110,6 +125,11 @@ func (r *AIEvaluationReconciler) HandleDeletion(ctx context.Context, log logr.Lo
 	}
 	log.Info("Remote AIEvaluation deleted", "id", id)
 	return nil
+}
+
+// SavesHookStatus makes the shared reconciler save the status that a hook changed.
+func (r *AIEvaluationReconciler) SavesHookStatus() bool {
+	return true
 }
 
 // SetupWithManager sets up the controller with the Manager.

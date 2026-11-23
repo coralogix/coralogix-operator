@@ -52,7 +52,7 @@ func init() {
 		resource: "aievaluations",
 		newFake:  func() apiFake { return newAIEvaluationFake() },
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.AIEvaluationReconciler{Client: cs.AIEvaluations(), Interval: reconcileInterval}
+			return &v1alpha1controllers.AIEvaluationReconciler{Client: cs.AIEvaluations(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: aiEvaluationScenarios(),
 		admission: aiEvaluationAdmission(),

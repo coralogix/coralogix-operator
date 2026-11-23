@@ -11,23 +11,7 @@
       "target": "response",
       "threshold": "-0.1"
     },
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/ai/evaluations/v3",
-        "body": {
-          "application": "cxo-baseline-app",
-          "config": {
-            "toxicity": {}
-          },
-          "isEnabled": true,
-          "subsystem": "cxo-baseline-subsystem",
-          "target": "RESPONSE",
-          "threshold": -0.1
-        },
-        "status": 400
-      }
-    ],
+    "requests": [],
     "result": {
       "error": true
     },
@@ -37,7 +21,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
