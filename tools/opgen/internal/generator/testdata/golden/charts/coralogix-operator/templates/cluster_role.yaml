@@ -22,6 +22,7 @@ rules:
       - maskthings
       - patchthings
       - refthings
+      - secretthings
       - settingthings
       - things
       - thingpolicies
@@ -45,6 +46,7 @@ rules:
       - maskthings/finalizers
       - patchthings/finalizers
       - refthings/finalizers
+      - secretthings/finalizers
       - settingthings/finalizers
       - things/finalizers
       - thingpolicies/finalizers
@@ -62,6 +64,7 @@ rules:
       - maskthings/status
       - patchthings/status
       - refthings/status
+      - secretthings/status
       - settingthings/status
       - things/status
       - thingpolicies/status

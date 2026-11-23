@@ -205,6 +205,11 @@ type crField struct {
 	inlineParent string
 	// joinedBy is the separator of a CR list of strings that the API holds as one string.
 	joinedBy string
+	// secretRef is the CR name of the sibling field that holds a Secret reference for this string
+	// (valueFrom). "" for a field without the key. secretExactlyOne: the CR sets this field or the
+	// sibling, never neither.
+	secretRef        string
+	secretExactlyOne bool
 }
 
 // JSONTag is the json struct tag of the field.

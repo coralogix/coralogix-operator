@@ -13,6 +13,7 @@ import (
 	maskthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/mask_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
+	secretthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/secret_things_service"
 	settingthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/setting_things_service"
 	thingpolicies "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/thing_policies_service"
 	things "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/things_service"
@@ -49,6 +50,10 @@ func (c *ClientSet) BodyIDThings() *bodyidthings.BodyIDThingsServiceAPIService {
 
 func (c *ClientSet) ContentThings() *contentthings.ContentThingsServiceAPIService {
 	return contentthings.NewContentThingsServiceAPIService()
+}
+
+func (c *ClientSet) SecretThings() *secretthings.SecretThingsServiceAPIService {
+	return secretthings.NewSecretThingsServiceAPIService()
 }
 
 func (c *ClientSet) WrappedThings() *wrappedthings.WrappedThingsServiceAPIService {

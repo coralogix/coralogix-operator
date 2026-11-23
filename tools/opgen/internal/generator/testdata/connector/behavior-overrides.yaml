@@ -1,0 +1,57 @@
+resource: Connector
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.configOverrides: {inferred: false}
+    spec.configOverrides[].fields: {inferred: false}
+    spec.configOverrides[].fields[].fieldName: {inferred: false}
+    spec.configOverrides[].fields[].template: {inferred: false}
+    spec.connectorConfig.fields: {inferred: false}
+    spec.connectorConfig.fields[].fieldName: {inferred: false}
+    spec.connectorConfig.fields[].value: {inferred: false}
+    spec.description: {inferred: false}
+    spec.name: {inferred: false}
+api:
+  requestWrapper: connector
+  updateIDInBody: true
+  serverSetID: true
+types:
+  Connector:
+    fields:
+      id: {readOnly: true}
+      diagnostics: {skip: true}
+      description: {required: true}
+      connectorConfig: {required: true}
+  notification_center.ConnectorConfigField:
+    fields:
+      value: {valueFrom: {secret: secretKeyRef}, requireOne: true}
+  ConnectorConfig:
+    fields:
+      fields: {required: true, collection: list}
+  EntityTypeConfigOverrides:
+    fields:
+      fields: {collection: list}
+  TemplatedConnectorConfigField:
+    fields:
+      template: {required: true}
+enums:
+  notification_center.ConnectorType:
+    zero: unspecified
+    rejectZero: true
+    rejected:
+      - {value: IBM_EVENT_NOTIFICATIONS, reason: the released CRD never accepted this value}
+    names:
+      GENERIC_HTTPS: genericHttps
+      PAGERDUTY: pagerDuty
+      PAGERDUTY_INCIDENTS: pagerDutyIncidents
+      MICROSOFT_TEAMS: microsoftTeams
+      SERVICE_NOW: serviceNow
+      EVENTBRIDGE: eventBridge
+      INCIDENT_IO: incidentIo
+  notification_center.EntityType:
+    zero: unspecified
+    rejectZero: true
+    rejected:
+      - {value: TEST_NOTIFICATIONS, reason: the released CRD never accepted this value}
+      - {value: OLLY_SCHEDULED_TASKS, reason: the released CRD never accepted this value}
