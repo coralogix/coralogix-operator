@@ -1,0 +1,99 @@
+[
+  {
+    "step": "create with a name that another connector has",
+    "spec": {
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "channel",
+            "value": "general"
+          }
+        ]
+      },
+      "description": "Baseline description",
+      "name": "baseline-connector",
+      "type": "slack"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

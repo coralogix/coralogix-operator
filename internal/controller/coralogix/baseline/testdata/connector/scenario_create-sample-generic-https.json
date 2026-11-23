@@ -1,0 +1,123 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "configOverrides": [
+        {
+          "entityType": "alerts",
+          "fields": [
+            {
+              "fieldName": "url",
+              "template": "{% if alert.status == 'Triggered' %}\nhttps://api.opsgenie.com/v2/alerts\n{% else %}\nhttps://api.opsgenie.com/v2/alerts/{{alert.groupingKey}}/close?identifierType=alias\n{% endif %}\n"
+            },
+            {
+              "fieldName": "additionalHeaders",
+              "template": "{\n  \"Authorization\": \"GenieKey some-key\",\n  \"Content-Type\": \"application/json\"\n}\n"
+            },
+            {
+              "fieldName": "additionalBodyFields",
+              "template": "{\n  \"alias\": \"{{alert.groupingKey}}\"\n}\n"
+            }
+          ]
+        }
+      ],
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "url",
+            "value": "https://api.opsgenie.com/v2/alerts"
+          },
+          {
+            "fieldName": "method",
+            "value": "POST"
+          },
+          {
+            "fieldName": "additionalHeaders",
+            "value": "{\n  \"Authorization\":\"GenieKey \u003ckey\u003e\",\"Content-Type\":\"application/json\"\n}\n"
+          },
+          {
+            "fieldName": "additionalBodyFields",
+            "value": "{\n  \"text\": \"This is a generic HTTPS connector general message\"\n}\n"
+          }
+        ]
+      },
+      "description": "This is a sample generic https connector",
+      "name": "generic-https-sample",
+      "type": "genericHttps"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "configOverrides": [
+              {
+                "entityType": "ALERTS",
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "template": "{% if alert.status == 'Triggered' %}\nhttps://api.opsgenie.com/v2/alerts\n{% else %}\nhttps://api.opsgenie.com/v2/alerts/{{alert.groupingKey}}/close?identifierType=alias\n{% endif %}\n"
+                  },
+                  {
+                    "fieldName": "additionalHeaders",
+                    "template": "{\n  \"Authorization\": \"GenieKey some-key\",\n  \"Content-Type\": \"application/json\"\n}\n"
+                  },
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "template": "{\n  \"alias\": \"{{alert.groupingKey}}\"\n}\n"
+                  }
+                ]
+              }
+            ],
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "url",
+                  "value": "https://api.opsgenie.com/v2/alerts"
+                },
+                {
+                  "fieldName": "method",
+                  "value": "POST"
+                },
+                {
+                  "fieldName": "additionalHeaders",
+                  "value": "{\n  \"Authorization\":\"GenieKey \u003ckey\u003e\",\"Content-Type\":\"application/json\"\n}\n"
+                },
+                {
+                  "fieldName": "additionalBodyFields",
+                  "value": "{\n  \"text\": \"This is a generic HTTPS connector general message\"\n}\n"
+                }
+              ]
+            },
+            "description": "This is a sample generic https connector",
+            "name": "generic-https-sample",
+            "type": "GENERIC_HTTPS"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

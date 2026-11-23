@@ -1,0 +1,167 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "channel",
+            "value": "general"
+          }
+        ]
+      },
+      "description": "Baseline description",
+      "name": "baseline-connector",
+      "type": "slack"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update with another status id: the API answers 404",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "id": "another-id",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeue": true
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: create",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

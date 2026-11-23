@@ -1,0 +1,145 @@
+[
+  {
+    "step": "create: the answer cannot be decoded",
+    "spec": {
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "channel",
+            "value": "general"
+          }
+        ]
+      },
+      "description": "Baseline description",
+      "name": "baseline-connector",
+      "type": "slack"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "DeserializationError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the answer cannot be decoded",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "DeserializationError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the API answers as it should",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "integrationId",
+            "value": "some-integration-id"
+          },
+          {
+            "fieldName": "teamId",
+            "value": "some-team-id"
+          },
+          {
+            "fieldName": "channelId",
+            "value": "19:channel-id@thread.tacv2"
+          }
+        ]
+      },
+      "description": "This is a sample Microsoft Teams connector",
+      "name": "microsoft-teams-sample",
+      "type": "microsoftTeams"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "integrationId",
+                  "value": "some-integration-id"
+                },
+                {
+                  "fieldName": "teamId",
+                  "value": "some-team-id"
+                },
+                {
+                  "fieldName": "channelId",
+                  "value": "19:channel-id@thread.tacv2"
+                }
+              ]
+            },
+            "description": "This is a sample Microsoft Teams connector",
+            "name": "microsoft-teams-sample",
+            "type": "MICROSOFT_TEAMS"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
