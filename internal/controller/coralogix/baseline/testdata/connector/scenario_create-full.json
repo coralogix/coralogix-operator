@@ -26,11 +26,7 @@
         "fields": [
           {
             "fieldName": "channel",
-            "value": "general"
-          },
-          {
-            "fieldName": "integrationId",
-            "value": "some-integration-id"
+            "value": "team-alerts"
           },
           {
             "fieldName": "fallbackChannel",
@@ -72,11 +68,7 @@
               "fields": [
                 {
                   "fieldName": "channel",
-                  "value": "general"
-                },
-                {
-                  "fieldName": "integrationId",
-                  "value": "some-integration-id"
+                  "value": "team-alerts"
                 },
                 {
                   "fieldName": "fallbackChannel",

@@ -26,11 +26,7 @@
         "fields": [
           {
             "fieldName": "channel",
-            "value": "general"
-          },
-          {
-            "fieldName": "integrationId",
-            "value": "some-integration-id"
+            "value": "team-alerts"
           },
           {
             "fieldName": "fallbackChannel",
@@ -72,11 +68,7 @@
               "fields": [
                 {
                   "fieldName": "channel",
-                  "value": "general"
-                },
-                {
-                  "fieldName": "integrationId",
-                  "value": "some-integration-id"
+                  "value": "team-alerts"
                 },
                 {
                   "fieldName": "fallbackChannel",
@@ -121,11 +113,7 @@
         "fields": [
           {
             "fieldName": "channel",
-            "value": "general"
-          },
-          {
-            "fieldName": "integrationId",
-            "value": "some-integration-id"
+            "value": "team-alerts"
           },
           {
             "fieldName": "fallbackChannel",
@@ -147,11 +135,7 @@
               "fields": [
                 {
                   "fieldName": "channel",
-                  "value": "general"
-                },
-                {
-                  "fieldName": "integrationId",
-                  "value": "some-integration-id"
+                  "value": "team-alerts"
                 },
                 {
                   "fieldName": "fallbackChannel",
@@ -213,12 +197,11 @@
             "type": "SLACK"
           }
         },
-        "status": 200
+        "status": 400
       }
     ],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
       "finalizers": [
@@ -228,13 +211,13 @@
         "conditions": [
           {
             "observedGeneration": 3,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
         "id": "<id-1>",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   }

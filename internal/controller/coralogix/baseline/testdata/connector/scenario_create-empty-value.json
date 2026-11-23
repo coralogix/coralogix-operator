@@ -33,28 +33,24 @@
             "type": "SLACK"
           }
         },
-        "status": 200
+        "status": 400
       }
     ],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
-      "finalizers": [
-        "connector.coralogix.com/finalizer"
-      ],
+      "finalizers": [],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteCreationFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "id": "<id-1>",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   }

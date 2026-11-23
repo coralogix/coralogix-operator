@@ -6,7 +6,7 @@
         "fields": [
           {
             "fieldName": "channel",
-            "value": "general"
+            "value": "team-alerts"
           }
         ]
       },
@@ -24,7 +24,7 @@
               "fields": [
                 {
                   "fieldName": "channel",
-                  "value": "general"
+                  "value": "team-alerts"
                 }
               ]
             },
@@ -70,7 +70,7 @@
               "fields": [
                 {
                   "fieldName": "channel",
-                  "value": "general"
+                  "value": "team-alerts"
                 }
               ]
             },

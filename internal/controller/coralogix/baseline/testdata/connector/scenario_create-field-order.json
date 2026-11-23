@@ -11,8 +11,8 @@
               "template": "https://example.com/cases"
             },
             {
-              "fieldName": "method",
-              "template": "PUT"
+              "fieldName": "additionalBodyFields",
+              "template": "{}"
             }
           ]
         },
@@ -20,8 +20,8 @@
           "entityType": "alerts",
           "fields": [
             {
-              "fieldName": "method",
-              "template": "POST"
+              "fieldName": "additionalBodyFields",
+              "template": "{\"a\": \"b\"}"
             }
           ]
         }
@@ -61,8 +61,8 @@
                     "template": "https://example.com/cases"
                   },
                   {
-                    "fieldName": "method",
-                    "template": "PUT"
+                    "fieldName": "additionalBodyFields",
+                    "template": "{}"
                   }
                 ]
               },
@@ -70,8 +70,8 @@
                 "entityType": "ALERTS",
                 "fields": [
                   {
-                    "fieldName": "method",
-                    "template": "POST"
+                    "fieldName": "additionalBodyFields",
+                    "template": "{\"a\": \"b\"}"
                   }
                 ]
               }

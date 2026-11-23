@@ -6,7 +6,7 @@
         "fields": [
           {
             "fieldName": "channel",
-            "value": "general"
+            "value": "team-alerts"
           }
         ]
       },
@@ -24,7 +24,7 @@
               "fields": [
                 {
                   "fieldName": "channel",
-                  "value": "general"
+                  "value": "team-alerts"
                 }
               ]
             },
@@ -101,12 +101,11 @@
             "type": "GENERIC_HTTPS"
           }
         },
-        "status": 200
+        "status": 400
       }
     ],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
       "finalizers": [
@@ -116,13 +115,13 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
         "id": "<id-1>",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   }

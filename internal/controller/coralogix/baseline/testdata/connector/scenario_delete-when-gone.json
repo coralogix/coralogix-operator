@@ -6,7 +6,7 @@
         "fields": [
           {
             "fieldName": "channel",
-            "value": "general"
+            "value": "team-alerts"
           }
         ]
       },
@@ -24,7 +24,7 @@
               "fields": [
                 {
                   "fieldName": "channel",
-                  "value": "general"
+                  "value": "team-alerts"
                 }
               ]
             },
@@ -64,7 +64,7 @@
       {
         "method": "DELETE",
         "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors/<id-1>",
-        "status": 404
+        "status": 200
       }
     ],
     "result": {

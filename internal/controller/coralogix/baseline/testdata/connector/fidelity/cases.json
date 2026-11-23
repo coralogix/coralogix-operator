@@ -15,7 +15,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -39,7 +39,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -75,7 +75,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -119,7 +119,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -148,7 +148,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -354,7 +354,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -383,11 +383,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
-                  },
-                  {
-                    "fieldName": "integrationId",
-                    "value": "some-integration-id"
+                    "value": "team-alerts"
                   },
                   {
                     "fieldName": "fallbackChannel",
@@ -440,7 +436,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -474,7 +470,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -509,7 +505,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -558,7 +554,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -646,11 +642,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
-                  },
-                  {
-                    "fieldName": "integrationId",
-                    "value": "some-integration-id"
+                    "value": "team-alerts"
                   },
                   {
                     "fieldName": "fallbackChannel",
@@ -739,7 +731,7 @@
       ]
     },
     {
-      "name": "create a pager-duty-incidents connector, then get",
+      "name": "create a pager-duty-incidents connector: rejected, the team has no such integration or instance",
       "steps": [
         {
           "method": "POST",
@@ -764,10 +756,6 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
@@ -801,7 +789,7 @@
       ]
     },
     {
-      "name": "create a service-now connector, then get",
+      "name": "create a service-now connector: rejected, the team has no such integration or instance",
       "steps": [
         {
           "method": "POST",
@@ -830,15 +818,11 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
     {
-      "name": "create a microsoft-teams connector, then get",
+      "name": "create a microsoft-teams connector: rejected, the team has no such integration or instance",
       "steps": [
         {
           "method": "POST",
@@ -867,15 +851,11 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
     {
-      "name": "create a eventbridge connector, then get",
+      "name": "create a eventbridge connector: rejected, the team has no such integration or instance",
       "steps": [
         {
           "method": "POST",
@@ -900,10 +880,6 @@
             }
           },
           "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
         }
       ]
     },
@@ -923,14 +899,6 @@
                   {
                     "fieldName": "apiKey",
                     "value": "some-api-key"
-                  },
-                  {
-                    "fieldName": "alertEventsUrl",
-                    "value": "https://api.incident.io/v2/alert_events/http/source-id"
-                  },
-                  {
-                    "fieldName": "alertSourceToken",
-                    "value": "some-alert-source-token"
                   }
                 ]
               }
@@ -941,6 +909,64 @@
         {
           "method": "GET",
           "path": "/notifications/notification-center/v1/connectors/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "create a slack connector with an integration that the team does not have: rejected",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-slack-integration-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": "some-integration-id"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
+        }
+      ]
+    },
+    {
+      "name": "create a slack connector with an empty integration id: rejected",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/notifications/notification-center/v1/connectors",
+          "body": {
+            "connector": {
+              "name": "cxo-fidelity-connector-slack-empty-integration-{{run}}",
+              "type": "SLACK",
+              "description": "Fidelity connector",
+              "connectorConfig": {
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "value": "team-alerts"
+                  },
+                  {
+                    "fieldName": "integrationId",
+                    "value": ""
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "id"
         }
       ]
     },
@@ -974,44 +1000,7 @@
       ]
     },
     {
-      "name": "secret fields of a serviceNow connector: get shows the password or hides it",
-      "steps": [
-        {
-          "method": "POST",
-          "path": "/notifications/notification-center/v1/connectors",
-          "body": {
-            "connector": {
-              "name": "cxo-fidelity-connector-secret-snow-{{run}}",
-              "type": "SERVICE_NOW",
-              "description": "Fidelity connector",
-              "connectorConfig": {
-                "fields": [
-                  {
-                    "fieldName": "instanceUrl",
-                    "value": "https://example.service-now.com"
-                  },
-                  {
-                    "fieldName": "username",
-                    "value": "username-example"
-                  },
-                  {
-                    "fieldName": "password",
-                    "value": "password-example"
-                  }
-                ]
-              }
-            }
-          },
-          "capture": "id"
-        },
-        {
-          "method": "GET",
-          "path": "/notifications/notification-center/v1/connectors/{{id}}"
-        }
-      ]
-    },
-    {
-      "name": "secret fields of an incidentIo connector: get shows the keys or hides them",
+      "name": "secret fields of an incidentIo connector: get shows the key or hides it",
       "steps": [
         {
           "method": "POST",
@@ -1026,14 +1015,6 @@
                   {
                     "fieldName": "apiKey",
                     "value": "some-api-key"
-                  },
-                  {
-                    "fieldName": "alertEventsUrl",
-                    "value": "https://api.incident.io/v2/alert_events/http/source-id"
-                  },
-                  {
-                    "fieldName": "alertSourceToken",
-                    "value": "some-alert-source-token"
                   }
                 ]
               }
@@ -1296,7 +1277,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   },
                   {
                     "fieldName": "nope",
@@ -1433,7 +1414,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1458,7 +1439,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1483,7 +1464,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1508,7 +1489,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1533,7 +1514,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -1569,7 +1550,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -1605,7 +1586,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -1641,7 +1622,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -1677,7 +1658,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -1713,7 +1694,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1746,7 +1727,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1768,7 +1749,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1793,7 +1774,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -1819,7 +1800,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -1853,14 +1834,14 @@
           "path": "/notifications/notification-center/v1/connectors",
           "body": {
             "connector": {
-              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "name": "cxo-fidelity-connector-dup-twice-{{run}}",
               "type": "SLACK",
               "description": "Fidelity connector",
               "connectorConfig": {
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1873,14 +1854,14 @@
           "path": "/notifications/notification-center/v1/connectors",
           "body": {
             "connector": {
-              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "name": "cxo-fidelity-connector-dup-twice-{{run}}",
               "type": "SLACK",
               "description": "Fidelity connector",
               "connectorConfig": {
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1902,14 +1883,14 @@
           "path": "/notifications/notification-center/v1/connectors",
           "body": {
             "connector": {
-              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "name": "cxo-fidelity-connector-dup-type-{{run}}",
               "type": "SLACK",
               "description": "Fidelity connector",
               "connectorConfig": {
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1922,7 +1903,7 @@
           "path": "/notifications/notification-center/v1/connectors",
           "body": {
             "connector": {
-              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "name": "cxo-fidelity-connector-dup-type-{{run}}",
               "type": "EMAIL",
               "description": "Fidelity connector",
               "connectorConfig": {
@@ -1947,14 +1928,14 @@
           "path": "/notifications/notification-center/v1/connectors",
           "body": {
             "connector": {
-              "name": "cxo-fidelity-connector-dup-{{run}}",
+              "name": "cxo-fidelity-connector-dup-case-{{run}}",
               "type": "SLACK",
               "description": "Fidelity connector",
               "connectorConfig": {
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1967,14 +1948,14 @@
           "path": "/notifications/notification-center/v1/connectors",
           "body": {
             "connector": {
-              "name": "CXO-FIDELITY-CONNECTOR-DUP-{{run}}",
+              "name": "CXO-FIDELITY-CONNECTOR-DUP-CASE-{{run}}",
               "type": "SLACK",
               "description": "Fidelity connector",
               "connectorConfig": {
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -1999,7 +1980,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2019,7 +2000,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2039,7 +2020,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2068,11 +2049,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
-                  },
-                  {
-                    "fieldName": "integrationId",
-                    "value": "some-integration-id"
+                    "value": "team-alerts"
                   },
                   {
                     "fieldName": "fallbackChannel",
@@ -2136,7 +2113,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2155,7 +2132,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2184,7 +2161,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2224,7 +2201,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2253,7 +2230,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2273,7 +2250,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2302,7 +2279,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2355,7 +2332,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2375,7 +2352,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2404,7 +2381,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2424,7 +2401,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2453,7 +2430,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2473,7 +2450,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   },
                   {
                     "fieldName": "nope",
@@ -2506,7 +2483,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2526,7 +2503,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2554,7 +2531,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2574,7 +2551,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2666,7 +2643,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2699,7 +2676,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2732,7 +2709,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2765,7 +2742,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2794,7 +2771,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2826,7 +2803,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               },
@@ -2851,7 +2828,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }
@@ -2875,7 +2852,7 @@
                 "fields": [
                   {
                     "fieldName": "channel",
-                    "value": "general"
+                    "value": "team-alerts"
                   }
                 ]
               }

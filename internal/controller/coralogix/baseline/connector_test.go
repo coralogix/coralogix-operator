@@ -71,7 +71,7 @@ const (
   connectorConfig:
     fields:
       - fieldName: channel
-        value: general
+        value: team-alerts
 `
 
 	connectorFullSpec = `  name: baseline-connector
@@ -80,9 +80,7 @@ const (
   connectorConfig:
     fields:
       - fieldName: channel
-        value: general
-      - fieldName: integrationId
-        value: some-integration-id
+        value: team-alerts
       - fieldName: fallbackChannel
         value: fallback_general
   configOverrides:
@@ -202,23 +200,39 @@ func createConnectorSampleWithSecret(h *harness, name, path string) {
 	h.Create(name, docs[0])
 }
 
-func createConnectorSample(file string) func(h *harness) {
+// createConnectorSample creates the sample file. setup prepares the fake: the recorded team has no
+// integration and no ServiceNow instance, so a sample that names one fails there, as it does on the
+// real API.
+func createConnectorSample(file string, setup func(f *connectorFake)) func(h *harness) {
 	return func(h *harness) {
+		if setup != nil {
+			setup(connectorAPI(h))
+		}
 		h.CreateFromFile("create the sample", "config/samples/v1alpha1/connectors/"+file+".yaml")
 	}
 }
 
+// withIntegration makes the team have the integration that the samples name.
+func withIntegration(f *connectorFake) { f.addIntegration("some-integration-id") }
+
+// withServiceNowInstance makes the instance of the sample resolve.
+func withServiceNowInstance(f *connectorFake) {
+	f.addServiceNowInstance("https://your-instance.service-now.com")
+}
+
 var connectorScenarios = map[string]func(h *harness){
 	// One scenario for each sample file.
-	"create-sample-slack":                createConnectorSample("slack"),
-	"create-sample-generic-https":        createConnectorSample("generic-https"),
-	"create-sample-pager-duty":           createConnectorSample("pager-duty"),
-	"create-sample-pager-duty-incidents": createConnectorSample("pager-duty-incidents"),
-	"create-sample-email":                createConnectorSample("email"),
-	"create-sample-service-now":          createConnectorSample("service-now"),
-	"create-sample-microsoft-teams":      createConnectorSample("microsoft-teams"),
-	"create-sample-eventbridge":          createConnectorSample("eventbridge"),
-	"create-sample-incident-io":          createConnectorSample("incident-io"),
+	"create-sample-slack":                createConnectorSample("slack", withIntegration),
+	"create-sample-generic-https":        createConnectorSample("generic-https", nil),
+	"create-sample-pager-duty":           createConnectorSample("pager-duty", nil),
+	"create-sample-pager-duty-incidents": createConnectorSample("pager-duty-incidents", withIntegration),
+	"create-sample-email":                createConnectorSample("email", nil),
+	"create-sample-service-now":          createConnectorSample("service-now", withServiceNowInstance),
+	"create-sample-microsoft-teams":      createConnectorSample("microsoft-teams", withIntegration),
+	"create-sample-eventbridge":          createConnectorSample("eventbridge", withIntegration),
+	// The real API rejects this sample: incident.io takes an apiKey only, and the sample also sets
+	// alertEventsUrl.
+	"create-sample-incident-io": createConnectorSample("incident-io", nil),
 	"create-sample-pager-duty-with-secret": func(h *harness) {
 		createConnectorSampleWithSecret(h, "create the sample", "config/samples/v1alpha1/connectors/pager-duty-with-secret.yaml")
 	},
@@ -287,12 +301,12 @@ var connectorScenarios = map[string]func(h *harness){
       fields:
         - fieldName: url
           template: https://example.com/cases
-        - fieldName: method
-          template: PUT
+        - fieldName: additionalBodyFields
+          template: '{}'
     - entityType: alerts
       fields:
-        - fieldName: method
-          template: POST
+        - fieldName: additionalBodyFields
+          template: '{"a": "b"}'
 `))
 	},
 
@@ -394,7 +408,7 @@ var connectorScenarios = map[string]func(h *harness){
 	"update": func(h *harness) {
 		h.Create("create", connectorMinimal)
 		h.SetSpec("rename, describe, change the fields, and add an override", connectorSpec("slack",
-			[]any{valueField("channel", "alerts"), valueField("integrationId", "some-integration-id")},
+			[]any{valueField("channel", "alerts"), valueField("fallbackChannel", "fallback_alerts")},
 			map[string]any{
 				"name":            "baseline-connector-renamed",
 				"description":     "Renamed",
@@ -405,7 +419,7 @@ var connectorScenarios = map[string]func(h *harness){
 	"clear-optional": func(h *harness) {
 		h.Create("create with every optional field", connectorFull)
 		h.SetSpec("remove the overrides", connectorSpec("slack",
-			[]any{valueField("channel", "general"), valueField("integrationId", "some-integration-id"), valueField("fallbackChannel", "fallback_general")}, nil))
+			[]any{valueField("channel", "team-alerts"), valueField("fallbackChannel", "fallback_general")}, nil))
 		h.SetSpec("remove the fields", connectorSpec("slack", []any{}, nil))
 	},
 
