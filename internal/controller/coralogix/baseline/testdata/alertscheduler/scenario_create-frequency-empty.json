@@ -1,0 +1,61 @@
+[
+  {
+    "step": "create with an empty frequency: no request",
+    "spec": {
+      "enabled": true,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "operation": "mute",
+        "recurring": {
+          "dynamic": {
+            "frequency": {},
+            "repeatEvery": 1,
+            "timeFrame": {
+              "duration": {
+                "forOver": 30,
+                "frequency": "minutes"
+              },
+              "startTime": "2027-01-04T08:00:00.000",
+              "timezone": "UTC+2"
+            }
+          }
+        }
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

@@ -1,0 +1,1138 @@
+{
+  "cases": [
+    {
+      "name": "create, read, replace, and delete a rule as the operator does",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-crud",
+              "description": "Baseline rule",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              },
+              "metaLabels": [
+                {
+                  "key": "team",
+                  "value": "cxo"
+                }
+              ]
+            }
+          },
+          "capture": "rule"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{rule}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-crud-renamed",
+              "description": "",
+              "enabled": false,
+              "filter": {
+                "whatExpression": "source logs | filter $d.app == 'x'",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "env"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE",
+                "recurring": {
+                  "alwaysActive": {}
+                }
+              },
+              "uniqueIdentifier": "{{rule}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{rule}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{rule}}"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{rule}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{rule}}"
+        }
+      ]
+    },
+    {
+      "name": "every schedule shape",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-one-time-duration",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T08:00:00.000",
+                    "timezone": "UTC+2",
+                    "duration": {
+                      "forOver": 7,
+                      "frequency": "DURATION_FREQUENCY_DAY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "capture": "oneTimeDuration"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{oneTimeDuration}}"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-one-time-end",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T08:00:00.000",
+                    "timezone": "UTC-4",
+                    "endTime": "2027-01-05T10:30:00.000"
+                  }
+                }
+              }
+            }
+          },
+          "capture": "oneTimeEnd"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-daily",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 2,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      }
+                    },
+                    "daily": {}
+                  }
+                }
+              }
+            }
+          },
+          "capture": "daily"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{daily}}"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-weekly",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "endTime": "2027-01-04T09:00:00.000"
+                    },
+                    "weekly": {
+                      "daysOfWeek": [
+                        2,
+                        4
+                      ]
+                    },
+                    "terminationDate": "2028-01-01T00:00:00.000"
+                  }
+                }
+              }
+            }
+          },
+          "capture": "weekly"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{weekly}}"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-monthly",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "duration": {
+                        "forOver": 2,
+                        "frequency": "DURATION_FREQUENCY_HOUR"
+                      }
+                    },
+                    "monthly": {
+                      "daysOfMonth": [
+                        4,
+                        15
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "capture": "monthly"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-always",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE",
+                "recurring": {
+                  "alwaysActive": {}
+                }
+              }
+            }
+          },
+          "capture": "always"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{oneTimeDuration}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{oneTimeEnd}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{daily}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{weekly}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{monthly}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{always}}"
+        }
+      ]
+    },
+    {
+      "name": "a recurring schedule with repeatEvery 0 becomes always active",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-repeat-zero",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 0,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      }
+                    },
+                    "daily": {}
+                  }
+                }
+              }
+            }
+          },
+          "capture": "repeatZero"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{repeatZero}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{repeatZero}}"
+        }
+      ]
+    },
+    {
+      "name": "optional fields left out",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-bare",
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": []
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          },
+          "capture": "bare"
+        },
+        {
+          "method": "PUT",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "uniqueIdentifier": "{{bare}}",
+              "name": "cxo-fidelity-{{run}}-bare",
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertUniqueIds": {
+                  "value": []
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "duration": {
+                      "frequency": "DURATION_FREQUENCY_HOUR"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-label-without-value",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "env"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              },
+              "metaLabels": [
+                {
+                  "key": "team"
+                }
+              ]
+            }
+          },
+          "capture": "labelWithoutValue"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{bare}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{labelWithoutValue}}"
+        }
+      ]
+    },
+    {
+      "name": "alert unique ids",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-alert-ids",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertUniqueIds": {
+                  "value": [
+                    "{{alert}}"
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          },
+          "capture": "alertIds"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{alertIds}}"
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-unknown-alert",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertUniqueIds": {
+                  "value": [
+                    "{{alert}}",
+                    "00000000-0000-4000-8000-0000000000a9"
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{alertIds}}"
+        }
+      ]
+    },
+    {
+      "name": "rejected rules",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-no-filter-prefix",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs",
+                "alertMetaLabels": {
+                  "value": []
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-no-alerts-arm",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true"
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-unspecified-operation",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_UNSPECIFIED",
+                "recurring": {
+                  "alwaysActive": {}
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-day-8",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      }
+                    },
+                    "weekly": {
+                      "daysOfWeek": [
+                        8
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-day-0",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      }
+                    },
+                    "weekly": {
+                      "daysOfWeek": [
+                        0
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-month-day-32",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      }
+                    },
+                    "monthly": {
+                      "daysOfMonth": [
+                        32
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-month-day-0",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "timeframe": {
+                      "startTime": "2027-01-04T08:00:00.000",
+                      "timezone": "UTC+2",
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      }
+                    },
+                    "monthly": {
+                      "daysOfMonth": [
+                        0
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-no-end",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown and malformed ids",
+      "steps": [
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/00000000-0000-4000-8000-0000000000a1"
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/not-a-uuid"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/00000000-0000-4000-8000-0000000000a1"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/not-a-uuid"
+        },
+        {
+          "method": "PUT",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-unknown",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              },
+              "uniqueIdentifier": "00000000-0000-4000-8000-0000000000a1"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-without-id",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-empty-id",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              },
+              "uniqueIdentifier": ""
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-empty-id",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              },
+              "uniqueIdentifier": "not-a-uuid"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a replace that the API rejects keeps the rule",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-keep",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          },
+          "capture": "keep"
+        },
+        {
+          "method": "PUT",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-keep-renamed",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs",
+                "alertMetaLabels": {
+                  "value": []
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              },
+              "uniqueIdentifier": "{{keep}}"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/alerts/suppression-rules/v1/{{keep}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/alerts/suppression-rules/v1/{{keep}}"
+        }
+      ]
+    }
+  ]
+}

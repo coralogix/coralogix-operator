@@ -1,0 +1,231 @@
+[
+  {
+    "step": "create with meta labels",
+    "spec": {
+      "enabled": true,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "metaLabels": [
+        {
+          "key": "team",
+          "value": "cxo"
+        }
+      ],
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "endTime": "2027-01-05T00:00:00.000",
+          "startTime": "2027-01-04T00:00:00.000",
+          "timezone": "UTC+0"
+        },
+        "operation": "mute"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "metaLabels": [
+              {
+                "key": "team",
+                "value": "cxo"
+              }
+            ],
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove the meta labels: the request leaves them out",
+    "spec": {
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "endTime": "2027-01-05T00:00:00.000",
+          "startTime": "2027-01-04T00:00:00.000",
+          "timezone": "UTC+0"
+        },
+        "operation": "mute"
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            },
+            "uniqueIdentifier": "<id-1>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote rule",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "description": "",
+      "enabled": true,
+      "filter": {
+        "alertMetaLabels": {
+          "value": [
+            {
+              "id": "<id-2>",
+              "key": "app",
+              "value": "cxo"
+            }
+          ]
+        },
+        "whatExpression": "source logs | filter true"
+      },
+      "id": "<id-3>",
+      "metaLabels": [],
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "timeframe": {
+            "endTime": "2027-01-05T00:00:00.000",
+            "startTime": "2027-01-04T00:00:00.000",
+            "submittedStartTime": "2027-01-04T00:00:00.000",
+            "timezone": "UTC+0"
+          }
+        },
+        "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+      },
+      "uniqueIdentifier": "<id-1>",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  }
+]

@@ -1,0 +1,171 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "enabled": true,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "endTime": "2027-01-05T00:00:00.000",
+          "startTime": "2027-01-04T00:00:00.000",
+          "timezone": "UTC+0"
+        },
+        "operation": "mute"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync with a status id that is not a UUID",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            },
+            "uniqueIdentifier": "not-a-uuid"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "not-a-uuid",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete with a status id that is not a UUID: the API rejects it",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1/not-a-uuid",
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteDeletionFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "not-a-uuid",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]
