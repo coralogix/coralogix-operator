@@ -2,7 +2,7 @@
   {
     "step": "create without a description",
     "spec": {
-      "defaultExpression": "\u003cv1\u003efalse",
+      "defaultExpression": "\u003cv1\u003etrue",
       "filters": [
         {
           "entityType": "spans",
@@ -16,7 +16,7 @@
         "method": "POST",
         "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
         "body": {
-          "defaultExpression": "\u003cv1\u003efalse",
+          "defaultExpression": "\u003cv1\u003etrue",
           "displayName": "baseline-scope",
           "filters": [
             {
@@ -57,7 +57,7 @@
         "method": "PUT",
         "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
         "body": {
-          "defaultExpression": "\u003cv1\u003efalse",
+          "defaultExpression": "\u003cv1\u003etrue",
           "displayName": "baseline-scope",
           "filters": [
             {
@@ -99,7 +99,7 @@
         "method": "PUT",
         "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
         "body": {
-          "defaultExpression": "\u003cv1\u003efalse",
+          "defaultExpression": "\u003cv1\u003etrue",
           "displayName": "baseline-scope",
           "filters": [
             {

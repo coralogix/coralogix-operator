@@ -98,9 +98,37 @@ var scopeScenarios = map[string]func(h *harness){
 		h.Reconcile("resync: update sends the whole spec")
 	},
 	"create-minimal": func(h *harness) {
-		h.Create("create without a description", scopeManifest("  name: baseline-scope\n  filters:\n    - entityType: spans\n      expression: <v1>true\n  defaultExpression: <v1>false\n"))
+		h.Create("create without a description", scopeManifest("  name: baseline-scope\n  filters:\n    - entityType: spans\n      expression: <v1>true\n  defaultExpression: <v1>true\n"))
 		h.Reconcile("resync")
 		h.Reconcile("resync again")
+	},
+	// The fake accepts <v1>false, and the controller sends it as it is. The live API does not
+	// always accept it: in one EU2 run most requests with <v1>false got the 412 "The default
+	// expression must be either 'true' or 'false'" while <v1>true passed every time, and in a
+	// later run 12 of 12 passed. The fidelity cases use only
+	// <v1>true for this reason. A rejected create follows create-rejected: the CR keeps no
+	// status id, and the next reconcile sends the same POST.
+	"create-default-false": func(h *harness) {
+		h.Create("create with the default <v1>false", scopeManifest("  name: baseline-scope\n  filters:\n    - entityType: logs\n      expression: <v1>true\n  defaultExpression: <v1>false\n"))
+		h.RecordRemote("the remote default is <v1>false", scopes(h).snapshot())
+	},
+	// A chart upgrade: the released operator created the scope and wrote status.id and its
+	// finalizer. The operator updates that scope, creates none, and deletes it on delete.
+	"upgrade-from-released": func(h *harness) {
+		const id = "22222222-2222-4222-8222-222222222222"
+		scopes(h).put(id, scopeRecord{
+			displayName: "baseline-scope", description: ptr.To("Baseline scope"),
+			filters:           []scopeFilter{{entityType: "ENTITY_TYPE_LOGS", expression: "<v1>subsystemName == 'purchases'"}},
+			defaultExpression: "<v1>true",
+		})
+		h.CreateReleased("the released operator made the scope: reconcile the CR", scopeManifest(scopeSpec),
+			[]string{"scope.coralogix.com/finalizer"}, map[string]any{"id": id, "printableStatus": "RemoteSynced"})
+		if got := h.StatusID(); got != id {
+			h.t.Fatalf("status.id changed from %s to %s", id, got)
+		}
+		h.Reconcile("reconcile again")
+		h.Delete("delete: the scope is deleted by its released id")
+		h.RecordRemote("no scope remains", scopes(h).snapshot())
 	},
 	"create-empty-description": func(h *harness) {
 		h.Create("an empty description is sent and stored", scopeManifest("  name: baseline-scope\n  description: \"\"\n  filters:\n    - entityType: logs\n      expression: <v1>true\n  defaultExpression: <v1>true\n"))
@@ -169,6 +197,19 @@ var scopeScenarios = map[string]func(h *harness){
 		h.SetSpec("update after remote deletion", scopeSpecMap("renamed-scope", ptr.To("Changed"), "<v1>true",
 			[2]string{"logs", "<v1>true"}))
 		h.Reconcile("recreate")
+	},
+	// The update 404 removes status.id. A delete before the retry finds a CR with a finalizer
+	// and no status id. The controller takes the create path before it looks at the deletion
+	// timestamp: it creates a new scope and keeps the finalizer. The next reconcile deletes it.
+	"delete-after-update-gone": func(h *harness) {
+		h.Create("create", scopeManifest(scopeSpec))
+		scopes(h).forget(h.StatusID())
+		h.SetSpec("update after remote deletion: the 404 removes status.id", scopeSpecMap("renamed-scope", ptr.To("Changed"), "<v1>true",
+			[2]string{"logs", "<v1>true"}))
+		h.Delete("delete a CR that has a finalizer and no status id: a new scope is created")
+		h.RecordRemote("the new scope exists", scopes(h).snapshot())
+		h.Reconcile("retry: the CR has a status id again")
+		h.RecordRemote("the remote scopes after the retry", scopes(h).snapshot())
 	},
 	"bad-status-id": func(h *harness) {
 		h.Create("create", scopeManifest(scopeSpec))
