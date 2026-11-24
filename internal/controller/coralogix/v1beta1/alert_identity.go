@@ -23,14 +23,10 @@ import (
 	"github.com/go-logr/logr"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
-	alerts "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/alert_definitions_service"
 
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
-
-// alertListPageSize is the largest page that ListAlertDefs accepts.
-const alertListPageSize int64 = 1000
 
 // withIdentityLabels returns a copy of labels with the remote identity labels of alert. The
 // identity labels replace spec labels with the same keys. The spec map is not changed: the
@@ -47,9 +43,14 @@ func withIdentityLabels(labels map[string]string, alert *coralogixv1beta1.Alert)
 }
 
 // findAdoptableAlert returns the id of a remote alert that carries the UID label of alert, or ""
-// when there is none. It reads every page and matches the label itself: the API does not apply
-// the entity label filter as the SDK encodes it (query_filter[...] form keys), and can return
-// every alert of the team. The filter is still sent, so a server that applies it returns less.
+// when there is none.
+//
+// It lists alerts with no query parameters, as the alert name lookups do, and matches the label
+// itself. The live API rejects the parameters as the SDK encodes them: pagination[pageSize]
+// answers 400 ("too many values for field pagination"), and the query_filter form is not applied.
+// So it reads only the page that a plain list returns. When that page has a next page token and
+// no match, the alert can be on a later page; it logs that and returns "", and Create runs as it
+// did before identity labels.
 //
 // When more than one remote alert carries the label, it returns the lowest id, so each run picks
 // the same alert, and logs the others. It never deletes them.
@@ -58,50 +59,27 @@ func (r *AlertReconciler) findAdoptableAlert(ctx context.Context, log logr.Logge
 		return "", nil
 	}
 	uid := string(alert.UID)
-	operator := alerts.FILTERVALUESOPERATOR_FILTER_VALUES_OPERATOR_AND
-	filter := alerts.AlertDefQueryFilter{
-		EntityLabelsFilter: &alerts.AlertDefEntityLabelsFilter{
-			EntityLabels:   map[string]string{utils.RemoteIdentityUIDLabelKey: uid},
-			ValuesOperator: &operator,
-		},
+	resp, httpResp, err := r.ClientSet.Alerts().AlertDefsServiceListAlertDefs(ctx).Execute()
+	if err != nil {
+		return "", fmt.Errorf("error on listing remote alerts to find one with %s=%s: %w",
+			utils.RemoteIdentityUIDLabelKey, uid, cxsdk.NewAPIError(httpResp, err))
 	}
 
 	var matches []string
-	var pageToken *string
-	for {
-		pagination := alerts.AlertDefsServiceListAlertDefsPaginationParameter{
-			PageSize:  alerts.PtrInt64(alertListPageSize),
-			PageToken: pageToken,
+	for _, def := range resp.GetAlertDefs() {
+		if def.GetId() == "" || def.AlertDefProperties == nil {
+			continue
 		}
-		resp, httpResp, err := r.ClientSet.Alerts().
-			AlertDefsServiceListAlertDefs(ctx).
-			QueryFilter(filter).
-			Pagination(pagination).
-			Execute()
-		if err != nil {
-			return "", fmt.Errorf("error on listing remote alerts to find one with %s=%s: %w",
-				utils.RemoteIdentityUIDLabelKey, uid, cxsdk.NewAPIError(httpResp, err))
+		if def.AlertDefProperties.GetEntityLabels()[utils.RemoteIdentityUIDLabelKey] == uid {
+			matches = append(matches, def.GetId())
 		}
-		for _, def := range resp.GetAlertDefs() {
-			if def.GetId() == "" || def.AlertDefProperties == nil {
-				continue
-			}
-			if def.AlertDefProperties.GetEntityLabels()[utils.RemoteIdentityUIDLabelKey] == uid {
-				matches = append(matches, def.GetId())
-			}
-		}
-		page, ok := resp.GetPaginationOk()
-		if !ok {
-			break
-		}
-		next := page.GetNextPageToken()
-		if next == "" || (pageToken != nil && next == *pageToken) {
-			break
-		}
-		pageToken = &next
 	}
 
 	if len(matches) == 0 {
+		if page, ok := resp.GetPaginationOk(); ok && page.GetNextPageToken() != "" {
+			log.Info("No remote alert on the first page carries the identity of this Alert; later pages are not read",
+				"alertsOnPage", len(resp.GetAlertDefs()), "totalSize", page.GetTotalSize())
+		}
 		return "", nil
 	}
 	slices.Sort(matches)

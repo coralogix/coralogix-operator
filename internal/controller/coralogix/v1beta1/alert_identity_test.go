@@ -89,6 +89,14 @@ func (f *fakeAlertsAPI) serve(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		f.lists++
+		// The live API rejects the query parameters as the SDK encodes them, for example
+		// pagination[pageSize]=1000 answers 400 "too many values for field \"pagination\"".
+		if r.URL.RawQuery != "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = fmt.Fprintf(w, `{"code":400,"message":"Bad Request: too many values for field: %s"}`, r.URL.RawQuery)
+			return
+		}
 		if !f.listOK {
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -96,10 +104,6 @@ func (f *fakeAlertsAPI) serve(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		page := 0
-		if token := r.URL.Query().Get("pagination[pageToken]"); token != "" {
-			_, err := fmt.Sscanf(token, "page-%d", &page)
-			assert.NoError(f.t, err)
-		}
 		resp := map[string]interface{}{"alertDefs": []map[string]interface{}{}}
 		if page < len(f.pages) {
 			resp["alertDefs"] = f.pages[page]
@@ -166,7 +170,10 @@ func TestReconcileAdoptsRemoteAlertAfterStatusIDIsLost(t *testing.T) {
 	require.Equal(t, "RemoteSynced", stored.Status.PrintableStatus)
 }
 
-func TestHandleCreationAdoptsMatchOnALaterPage(t *testing.T) {
+// The operator cannot ask for a later page: the API rejects the pagination parameter as the SDK
+// encodes it. It reads the first page, which is what a list with no parameters returns, and
+// creates when no alert there carries the identity.
+func TestHandleCreationReadsOnlyTheFirstPage(t *testing.T) {
 	alert := identityAlert()
 	api, server := newFakeAlertsAPI(t,
 		[]map[string]interface{}{remoteAlertJSON(t, unrelatedRemoteID, nil)},
@@ -177,10 +184,10 @@ func TestHandleCreationAdoptsMatchOnALaterPage(t *testing.T) {
 	require.NoError(t, testAlertReconciler(t, server).HandleCreation(context.Background(), logr.Discard(), alert))
 
 	posts, _, lists := api.recorded()
-	require.Empty(t, posts)
-	require.Equal(t, 2, lists)
+	require.Equal(t, 1, lists)
+	require.Len(t, posts, 1)
 	require.NotNil(t, alert.Status.ID)
-	require.Equal(t, existingRemoteID, *alert.Status.ID)
+	require.Equal(t, "created-id", *alert.Status.ID)
 }
 
 // The API does not apply the entity label filter as the SDK encodes it, so the operator must
