@@ -66,7 +66,7 @@ func TestMethodAndUpdateNameGapsRender(t *testing.T) {
 		t.Error("POST Update must not send an update mask")
 	}
 	conversion := string(files["api/coralogix/v1alpha1/methodthing_convert.go"])
-	for _, want := range []string{"out.NewName", "out.NewDescription", "out.NewPermissions"} {
+	for _, want := range []string{"out.NewName", "out.NewDescription", "out.NewPermissions = &w"} {
 		if !strings.Contains(conversion, want) {
 			t.Errorf("conversion misses %q", want)
 		}

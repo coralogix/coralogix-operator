@@ -107,6 +107,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-dashboardsfolder.sh before
+      - name: Create a CustomRole with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-customrole.sh before
       # Chart 0.5 has no ArchiveLogsTarget.
       - name: Create an ArchiveLogsTarget with the released operator
         if: inputs.operator_version != '0.5'
@@ -225,6 +229,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-dashboardsfolder.sh after
+      - name: Check the CustomRole of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-customrole.sh after
       - name: Check the ArchiveLogsTarget of the released operator
         if: inputs.operator_version != '0.5'
         env:
@@ -300,6 +308,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-dashboardsfolder.sh cleanup
+      - name: Delete the CustomRole of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-customrole.sh cleanup
       - name: Delete the ArchiveLogsTarget of the upgrade check
         if: always() && inputs.operator_version != '0.5'
         env:

@@ -1,0 +1,16 @@
+values:
+  name: custom-role-sample
+  description: This is a sample custom role
+  parentRoleName: Standard User
+  permissions: [team-actions:UpdateConfig, 'TEAM-CUSTOM-API-KEYS:READCONFIG']
+substitutions:
+  custom-role-sample: '@{run}'
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    description: Custom role created by the upgrade test
+    parentRoleName: Standard User
+    permissions: [team-actions:UpdateConfig]
+  field: name
+  value: '@{run}-updated'
