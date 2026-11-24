@@ -261,13 +261,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Enrichment")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.AIEvaluationReconciler{
-		AIEvaluationsClient: oapiClientSet.AIEvaluations(),
-		Interval:            cfg.ReconcileIntervals[utils.AIEvaluationKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AIEvaluation")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.AICustomEvaluationReconciler{
 		AIApplicationsClient: oapiClientSet.AIApplications(),
 		AIEvaluationsClient:  oapiClientSet.AIEvaluations(),

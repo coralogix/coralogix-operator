@@ -31,6 +31,13 @@ import (
 // SetupGeneratedControllers sets up the controller of every generated kind. The interval of a
 // kind is its reconcile interval.
 func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, intervals map[string]time.Duration) error {
+	if err := (&AIEvaluationReconciler{
+		Client:    clientSet.AIEvaluations(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.AIEvaluationKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.AIEvaluationKind, err)
+	}
 	if err := (&ArchiveLogsTargetReconciler{
 		Client:    clientSet.ArchiveLogs(),
 		ClientSet: clientSet,

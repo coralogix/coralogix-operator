@@ -26,3 +26,5 @@ kinds:
     resource: DashboardFolder
   - kind: ArchiveLogsTarget
     resource: v2.Target
+  - kind: AIEvaluation
+    resource: AiEvaluation

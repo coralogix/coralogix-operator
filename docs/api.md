@@ -465,8 +465,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-AIEvaluation is the Schema for the AI evaluations API.
-See also https://coralogix.com/docs/user-guides/ai/
+AIEvaluation is the Schema for the aievaluations API.
 
 <table>
     <thead>
@@ -498,14 +497,14 @@ See also https://coralogix.com/docs/user-guides/ai/
         <td><b><a href="#aievaluationspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AIEvaluationSpec defines the desired state of AIEvaluation.<br/>
+          AIEvaluationSpec defines the desired state of a AIEvaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aievaluationstatus">status</a></b></td>
         <td>object</td>
         <td>
-          AIEvaluationStatus defines the observed state of AIEvaluation.<br/>
+          AIEvaluationStatus defines the observed state of a AIEvaluation.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -517,7 +516,7 @@ See also https://coralogix.com/docs/user-guides/ai/
 
 
 
-AIEvaluationSpec defines the desired state of AIEvaluation.
+AIEvaluationSpec defines the desired state of a AIEvaluation.
 
 <table>
     <thead>
@@ -569,8 +568,7 @@ AIEvaluationSpec defines the desired state of AIEvaluation.
         <td><b>threshold</b></td>
         <td>int or string</td>
         <td>
-          Score threshold. Must be between 0.0 and 1.0 inclusive.
-Fractional values must be supplied as quoted quantities, for example "0.8".<br/>
+          Score threshold. Must be between 0.0 and 1.0 inclusive.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -606,119 +604,119 @@ AI evaluation configuration.
         <td><b><a href="#aievaluationspecconfigallowedtopics">allowedTopics</a></b></td>
         <td>object</td>
         <td>
-          Configuration for Allowed Topics evaluation.<br/>
+          Configuration for the AllowedTopics evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aievaluationspecconfigcompetition">competition</a></b></td>
         <td>object</td>
         <td>
-          Configuration for Competition evaluation.<br/>
+          Configuration for the Competition evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hallucinationCompleteness</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Hallucination Completeness evaluation. Hallucination Completeness has no nested fields and must be set to an empty object.<br/>
+          Configuration for the HallucinationCompleteness evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hallucinationContextAdherence</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Hallucination Context Adherence evaluation. Hallucination Context Adherence has no nested fields and must be set to an empty object.<br/>
+          Configuration for the HallucinationContextAdherence evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hallucinationContextRelevance</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Hallucination Context Relevance evaluation. Hallucination Context Relevance has no nested fields and must be set to an empty object.<br/>
+          Configuration for the HallucinationContextRelevance evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hallucinationCorrectness</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Hallucination Correctness evaluation. Hallucination Correctness has no nested fields and must be set to an empty object.<br/>
+          Configuration for the HallucinationCorrectness evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hallucinationTaskAdherence</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Hallucination Task Adherence evaluation. Hallucination Task Adherence has no nested fields and must be set to an empty object.<br/>
+          Configuration for the HallucinationTaskAdherence evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>languageMismatch</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Language Mismatch evaluation. Language Mismatch has no nested fields and must be set to an empty object.<br/>
+          Configuration for the LanguageMismatch evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aievaluationspecconfigpii">pii</a></b></td>
         <td>object</td>
         <td>
-          Configuration for PII evaluation.<br/>
+          Configuration for the PII evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aievaluationspecconfigpromptinjection">promptInjection</a></b></td>
         <td>object</td>
         <td>
-          Configuration for Prompt Injection evaluation.<br/>
+          Configuration for the PromptInjection evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aievaluationspecconfigrestrictedtopics">restrictedTopics</a></b></td>
         <td>object</td>
         <td>
-          Configuration for Restricted Topics evaluation.<br/>
+          Configuration for the RestrictedTopics evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>sexism</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Sexism evaluation. Sexism has no nested fields and must be set to an empty object.<br/>
+          Configuration for the Sexism evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aievaluationspecconfigsqlallowedtables">sqlAllowedTables</a></b></td>
         <td>object</td>
         <td>
-          Configuration for SQL Allowed Tables evaluation.<br/>
+          Configuration for the SqlAllowedTables evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>sqlHallucination</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for SQL Hallucination evaluation. SQL Hallucination has no nested fields and must be set to an empty object.<br/>
+          Configuration for the SqlHallucination evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>sqlReadOnly</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for SQL Read Only evaluation. SQL Read Only has no nested fields and must be set to an empty object.<br/>
+          Configuration for the SqlReadOnly evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aievaluationspecconfigsqlrestrictedtables">sqlRestrictedTables</a></b></td>
         <td>object</td>
         <td>
-          Configuration for SQL Restricted Tables evaluation.<br/>
+          Configuration for the SqlRestrictedTables evaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>toxicity</b></td>
         <td>map[string]string</td>
         <td>
-          Configuration for Toxicity evaluation. Toxicity has no nested fields and must be set to an empty object.<br/>
+          Configuration for the Toxicity evaluation (no fields).<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -730,7 +728,7 @@ AI evaluation configuration.
 
 
 
-Configuration for Allowed Topics evaluation.
+Configuration for the AllowedTopics evaluation.
 
 <table>
     <thead>
@@ -757,7 +755,7 @@ Configuration for Allowed Topics evaluation.
 
 
 
-Configuration for Competition evaluation.
+Configuration for the Competition evaluation.
 
 <table>
     <thead>
@@ -784,7 +782,7 @@ Configuration for Competition evaluation.
 
 
 
-Configuration for PII evaluation.
+Configuration for the PII evaluation.
 
 <table>
     <thead>
@@ -813,7 +811,7 @@ Configuration for PII evaluation.
 
 
 
-Configuration for Prompt Injection evaluation.
+Configuration for the PromptInjection evaluation.
 
 <table>
     <thead>
@@ -842,7 +840,7 @@ Configuration for Prompt Injection evaluation.
 
 
 
-Configuration for Restricted Topics evaluation.
+Configuration for the RestrictedTopics evaluation.
 
 <table>
     <thead>
@@ -869,7 +867,7 @@ Configuration for Restricted Topics evaluation.
 
 
 
-Configuration for SQL Allowed Tables evaluation.
+Configuration for the SqlAllowedTables evaluation.
 
 <table>
     <thead>
@@ -896,7 +894,7 @@ Configuration for SQL Allowed Tables evaluation.
 
 
 
-Configuration for SQL Restricted Tables evaluation.
+Configuration for the SqlRestrictedTables evaluation.
 
 <table>
     <thead>
@@ -923,7 +921,7 @@ Configuration for SQL Restricted Tables evaluation.
 
 
 
-AIEvaluationStatus defines the observed state of AIEvaluation.
+AIEvaluationStatus defines the observed state of a AIEvaluation.
 
 <table>
     <thead>
