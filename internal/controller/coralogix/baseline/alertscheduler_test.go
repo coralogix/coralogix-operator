@@ -204,6 +204,24 @@ func createAlert(h *harness, namespace, name, id string) {
 	}
 }
 
+// createAlertWithEmptyStatusID creates a v1beta1 Alert CR whose status id is present and empty.
+func createAlertWithEmptyStatusID(h *harness, namespace, name string) {
+	h.t.Helper()
+	createAlert(h, namespace, name, "")
+	obj := &unstructured.Unstructured{}
+	obj.SetAPIVersion("coralogix.com/v1beta1")
+	obj.SetKind("Alert")
+	if err := h.client.Get(context.Background(), client.ObjectKey{Namespace: namespace, Name: name}, obj); err != nil {
+		h.t.Fatalf("get Alert %s: %v", name, err)
+	}
+	if err := unstructured.SetNestedField(obj.Object, "", "status", "id"); err != nil {
+		h.t.Fatal(err)
+	}
+	if err := h.client.Status().Update(context.Background(), obj); err != nil {
+		h.t.Fatalf("set Alert %s status id: %v", name, err)
+	}
+}
+
 // setAlertSchedulerStatusID writes status.id of the CR, or removes it when id is nil, as a user
 // who edits the status could.
 func setAlertSchedulerStatusID(h *harness, id *string) {
@@ -236,6 +254,20 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 		h.Create("create with the required fields: description and enabled are sent", asMinimal)
 		h.Reconcile("reconcile again: the resync sends a Replace with the status id")
 		h.Reconcile("reconcile again")
+	},
+
+	// A released operator created the rule: the CR has its finalizer and status id. This is the
+	// first reconcile after an upgrade.
+	"upgrade-from-released": func(h *harness) {
+		id := alertSchedulers(h).seed()
+		h.CreateReleased("the released operator made the rule: reconcile the CR", asMinimal,
+			[]string{"alert-scheduler.coralogix.com/finalizer"}, map[string]any{"id": id, "printableStatus": "RemoteSynced"})
+		if got := h.StatusID(); got != id {
+			h.t.Fatalf("status.id changed from %s to %s", id, got)
+		}
+		h.Reconcile("reconcile again")
+		h.Delete("delete")
+		h.RecordRemote("the remote rule is gone", alertSchedulers(h).rules)
 	},
 
 	"create-every-field": func(h *harness) {
@@ -369,6 +401,15 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 		h.Delete("delete")
 	},
 
+	// A status id that is present but empty is not a missing id: the handwritten code sends the empty
+	// id, and the API rejects it.
+	"create-alerts-empty-id": func(h *harness) {
+		createAlertWithEmptyStatusID(h, h.namespace, "first")
+		h.Create("create with an Alert CR whose status id is empty: the empty id is sent", alertSchedulerManifest(
+			asWhat+asAlertsFilter("      - resourceRef:\n          name: first\n")+asOneTime))
+		h.Delete("delete")
+	},
+
 	"create-alerts-not-selected": func(h *harness) {
 		h.SetSelector(config.Selector{LabelSelector: labels.SelectorFromSet(labels.Set{"team": "alerts"})})
 		createAlert(h, h.namespace, "first", asAlertID)
@@ -389,6 +430,7 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 			asWhat+"  filter:\n    whatExpression: source logs | filter true\n    alerts: []\n"+asOneTime))
 		h.Reconcile("reconcile again")
 		h.Delete("delete")
+		h.RecordRemote("the remote rule stays", alertSchedulers(h).rules)
 	},
 
 	"create-rejected-expression": func(h *harness) {

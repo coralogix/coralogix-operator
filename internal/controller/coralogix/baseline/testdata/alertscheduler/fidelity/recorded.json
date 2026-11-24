@@ -867,6 +867,13 @@
           }
         },
         {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.filter.whichAlerts.alertUniqueIds.value ] invalid alert uniqe ids"
+          }
+        },
+        {
           "status": 200,
           "response": {}
         }

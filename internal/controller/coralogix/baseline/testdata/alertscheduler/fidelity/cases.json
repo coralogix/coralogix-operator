@@ -584,6 +584,35 @@
           }
         },
         {
+          "method": "POST",
+          "path": "/alerts/suppression-rules/v1",
+          "body": {
+            "alertSchedulerRule": {
+              "name": "cxo-fidelity-{{run}}-empty-alert",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "whatExpression": "source logs | filter true",
+                "alertUniqueIds": {
+                  "value": [
+                    ""
+                  ]
+                }
+              },
+              "schedule": {
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+                "oneTime": {
+                  "timeframe": {
+                    "startTime": "2027-01-04T00:00:00.000",
+                    "timezone": "UTC+0",
+                    "endTime": "2027-01-05T00:00:00.000"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
           "method": "DELETE",
           "path": "/alerts/suppression-rules/v1/{{alertIds}}"
         }

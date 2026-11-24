@@ -66,6 +66,34 @@ func (f *alertSchedulerFake) answerNextRouteNotFound(method string) {
 	f.answerNext(method, st, body)
 }
 
+// seed stores the rule that a released operator created for asMinimal, and returns its
+// uniqueIdentifier.
+func (f *alertSchedulerFake) seed() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	status, resp := f.create(map[string]any{"alertSchedulerRule": map[string]any{
+		"name":        "Baseline scheduler",
+		"description": "",
+		"enabled":     true,
+		"filter": map[string]any{
+			"whatExpression":  "source logs | filter true",
+			"alertMetaLabels": map[string]any{"value": []any{map[string]any{"key": "app", "value": "cxo"}}},
+		},
+		"schedule": map[string]any{
+			"scheduleOperation": "SCHEDULE_OPERATION_MUTE",
+			"oneTime": map[string]any{"timeframe": map[string]any{
+				"startTime": "2027-01-04T00:00:00.000",
+				"timezone":  "UTC+0",
+				"endTime":   "2027-01-05T00:00:00.000",
+			}},
+		},
+	}})
+	if status != http.StatusOK {
+		panic(fmt.Sprintf("seed: %d %v", status, resp))
+	}
+	return resp.(map[string]any)["alertSchedulerRule"].(map[string]any)["uniqueIdentifier"].(string)
+}
+
 // remove deletes a rule, as a user of the UI could.
 func (f *alertSchedulerFake) remove(id string) {
 	f.mu.Lock()
