@@ -1,0 +1,94 @@
+{
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.integrationKey",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.version",
+        "message": "Required value"
+      }
+    ]
+  },
+  "key absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.integrationKey",
+        "message": "Required value"
+      }
+    ]
+  },
+  "key empty": {
+    "accepted": true
+  },
+  "parameters a list": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.parameters",
+        "message": "Invalid value: \"array\": spec.parameters in body must be of type object: \"array\""
+      }
+    ]
+  },
+  "parameters a string": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.parameters",
+        "message": "Invalid value: \"string\": spec.parameters in body must be of type object: \"string\""
+      }
+    ]
+  },
+  "parameters empty": {
+    "accepted": true
+  },
+  "parameters nested object": {
+    "accepted": true
+  },
+  "sample": {
+    "accepted": true
+  },
+  "secret ref unknown field": {
+    "accepted": true
+  },
+  "secret ref without key": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.parametersFromSecret.AwsRoleArn.key",
+        "message": "Required value"
+      }
+    ]
+  },
+  "secret ref without name": {
+    "accepted": true
+  },
+  "secret refs empty": {
+    "accepted": true
+  },
+  "version absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.version",
+        "message": "Required value"
+      }
+    ]
+  },
+  "version empty": {
+    "accepted": true
+  },
+  "without spec": {
+    "accepted": true
+  }
+}

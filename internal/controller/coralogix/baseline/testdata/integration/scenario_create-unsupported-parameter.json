@@ -1,0 +1,33 @@
+[
+  {
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "spec": {
+      "integrationKey": "aws-metrics-collector",
+      "parameters": {
+        "ApplicationName": "cxo",
+        "Nested": {
+          "inner": "value"
+        }
+      },
+      "version": "0.1.0"
+    },
+    "step": "an object parameter is not supported"
+  }
+]

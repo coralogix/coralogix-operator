@@ -1,0 +1,261 @@
+[
+  {
+    "object": {
+      "finalizers": [
+        "integration.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "requests": [
+      {
+        "body": {
+          "metadata": {
+            "integrationKey": "aws-metrics-collector",
+            "integrationParameters": {
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-integration-setup"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            },
+            "version": "0.1.0"
+          }
+        },
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/metadata/v1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "spec": {
+      "integrationKey": "aws-metrics-collector",
+      "parameters": {
+        "ApplicationName": "cxo",
+        "AwsRegion": "eu-north-1",
+        "AwsRoleArn": "arn:aws:iam::123456789012:role/example-role",
+        "EnrichWithTags": true,
+        "IntegrationName": "cxo-integration-setup",
+        "MetricNamespaces": [
+          "AWS/S3"
+        ],
+        "SubsystemName": "aws-metrics-collector",
+        "WithAggregations": false
+      },
+      "version": "0.1.0"
+    },
+    "step": "create"
+  },
+  {
+    "object": {
+      "finalizers": [
+        "integration.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "requests": [
+      {
+        "body": {
+          "id": "<id-1>",
+          "metadata": {
+            "integrationKey": "aws-metrics-collector",
+            "integrationParameters": {
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo-updated"
+                },
+                {
+                  "key": "AwsRegion",
+                  "stringValue": "eu-north-1"
+                },
+                {
+                  "key": "AwsRoleArn",
+                  "stringValue": "arn:aws:iam::123456789012:role/example-role"
+                },
+                {
+                  "booleanValue": true,
+                  "key": "EnrichWithTags"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-integration-setup"
+                },
+                {
+                  "key": "MetricNamespaces",
+                  "stringList": {
+                    "values": [
+                      "AWS/S3",
+                      "AWS/EC2"
+                    ]
+                  }
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "aws-metrics-collector"
+                },
+                {
+                  "booleanValue": false,
+                  "key": "WithAggregations"
+                }
+              ]
+            },
+            "version": "0.1.0"
+          }
+        },
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/metadata/v1",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "spec": {
+      "integrationKey": "aws-metrics-collector",
+      "parameters": {
+        "ApplicationName": "cxo-updated",
+        "AwsRegion": "eu-north-1",
+        "AwsRoleArn": "arn:aws:iam::123456789012:role/example-role",
+        "EnrichWithTags": true,
+        "IntegrationName": "cxo-integration-setup",
+        "MetricNamespaces": [
+          "AWS/S3",
+          "AWS/EC2"
+        ],
+        "SubsystemName": "aws-metrics-collector",
+        "WithAggregations": false
+      },
+      "version": "0.1.0"
+    },
+    "step": "change parameters"
+  },
+  {
+    "object": {
+      "finalizers": [
+        "integration.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "definitionKey": "aws-metrics-collector",
+        "definitionVersion": "0.1.0",
+        "id": "<id-1>",
+        "parameters": [
+          {
+            "key": "ApplicationName",
+            "stringValue": "cxo-updated"
+          },
+          {
+            "key": "AwsRegion",
+            "stringValue": "eu-north-1"
+          },
+          {
+            "key": "AwsRoleArn",
+            "stringValue": "arn:aws:iam::123456789012:role/example-role"
+          },
+          {
+            "booleanValue": true,
+            "key": "EnrichWithTags"
+          },
+          {
+            "key": "IntegrationName",
+            "stringValue": "cxo-integration-setup"
+          },
+          {
+            "key": "MetricNamespaces",
+            "stringList": {
+              "values": [
+                "AWS/S3",
+                "AWS/EC2"
+              ]
+            }
+          },
+          {
+            "key": "SubsystemName",
+            "stringValue": "aws-metrics-collector"
+          },
+          {
+            "booleanValue": false,
+            "key": "WithAggregations"
+          }
+        ]
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "step": "the remote holds the new values"
+  }
+]

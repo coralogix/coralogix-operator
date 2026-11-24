@@ -1,0 +1,30 @@
+[
+  {
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "spec": {
+      "integrationKey": "aws-metrics-collector",
+      "parameters": {
+        "ApplicationName": null
+      },
+      "version": "0.1.0"
+    },
+    "step": "a null parameter"
+  }
+]
