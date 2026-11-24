@@ -16413,6 +16413,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Demisto notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16427,6 +16429,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Generic HTTP(s) webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li><li>!has(self.headers) || !has(self.headersFromSecret) || self.headersFromSecret.all(k, !(k in self.headers)): A header can have only one source</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16434,6 +16438,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Jira issue.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.apiToken) != has(self.apiTokenSecretKeyRef): Exactly one of apiToken or apiTokenSecretKeyRef must be set</li><li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16441,6 +16447,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Teams message.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16448,6 +16456,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Opsgenie notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16455,6 +16465,8 @@ Type of webhook.
         <td>object</td>
         <td>
           PagerDuty notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.serviceKey) != has(self.serviceKeySecretKeyRef): Exactly one of serviceKey or serviceKeySecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16462,6 +16474,8 @@ Type of webhook.
         <td>object</td>
         <td>
           SendLog notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16469,6 +16483,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Slack message.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16554,19 +16570,73 @@ Demisto notification.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>url</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>uuid</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypedemistourlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.demisto.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypedemisto)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16624,17 +16694,17 @@ Generic HTTP(s) webhook.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>url</b></td>
-        <td>string</td>
-        <td>
-          URL to call<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>headers</b></td>
         <td>map[string]string</td>
         <td>
-          Attached HTTP headers.<br/>
+          Attached HTTP headers. Use HeadersFromSecret for credential values.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhookheadersfromsecretkey">headersFromSecret</a></b></td>
+        <td>map[string]object</td>
+        <td>
+          HeadersFromSecret maps header names to Secret keys in the webhook's namespace.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16642,6 +16712,114 @@ Generic HTTP(s) webhook.
         <td>string</td>
         <td>
           Payload of the webhook call.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          URL to call. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhookurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.genericWebhook.headersFromSecret[key]
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypegenericwebhook)</sup></sup>
+
+
+
+SecretKeySelector selects a key of a Secret.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.genericWebhook.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypegenericwebhook)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16665,13 +16843,6 @@ Jira issue.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>apiToken</b></td>
-        <td>string</td>
-        <td>
-          API token<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
@@ -16686,12 +16857,127 @@ Jira issue.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>apiToken</b></td>
+        <td>string</td>
+        <td>
+          Deprecated: use ApiTokenSecretKeyRef for the Jira API token.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypejiraapitokensecretkeyref">apiTokenSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          ApiTokenSecretKeyRef reads the API token from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Jira URL<br/>
+          Jira URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypejiraurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.jira.apiTokenSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypejira)</sup></sup>
+
+
+
+ApiTokenSecretKeyRef reads the API token from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.jira.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypejira)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16716,9 +17002,63 @@ Teams message.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Teams URL<br/>
+          Teams URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypemicrosoftteamsurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.microsoftTeams.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypemicrosoftteams)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16743,9 +17083,63 @@ Opsgenie notification.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeopsgenieurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.opsgenie.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypeopsgenie)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16770,9 +17164,63 @@ PagerDuty notification.
         <td><b>serviceKey</b></td>
         <td>string</td>
         <td>
-          PagerDuty service key.<br/>
+          Deprecated: use ServiceKeySecretKeyRef for the PagerDuty service key.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypepagerdutyservicekeysecretkeyref">serviceKeySecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          ServiceKeySecretKeyRef reads the service key from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.pagerDuty.serviceKeySecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypepagerduty)</sup></sup>
+
+
+
+ServiceKeySecretKeyRef reads the service key from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16804,9 +17252,63 @@ SendLog notification.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Sendlog URL.<br/>
+          Sendlog URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypesendlogurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.sendLog.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypesendlog)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16828,13 +17330,6 @@ Slack message.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>url</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
         <td>[]object</td>
         <td>
@@ -16846,6 +17341,20 @@ Slack message.
         <td>[]object</td>
         <td>
           Digest configuration.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16916,6 +17425,53 @@ Digest config.
           Type of digest to send<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.slack.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypeslack)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

@@ -8,6 +8,10 @@ This is the public `coralogix/coralogix-operator` repo. Keep internal ticket IDs
 
 Use generic, public-safe names in examples and fixtures.
 
+For resources with credential fields, do not log full API requests or responses. The shared reconciler logs returned errors and writes their text to resource conditions, so sanitize API errors before returning them.
+
+When a custom resource reads a Secret, watch that Secret so a value change triggers reconciliation. Resolve the value on every create and update, and reject two sources for the same field.
+
 ## Architecture
 
 This is a Kubebuilder v4 operator for `coralogix.com` custom resources.
