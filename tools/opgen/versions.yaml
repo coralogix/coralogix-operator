@@ -9,6 +9,7 @@ DashboardsFolder: v0.1.0-beta.31
 Events2Metric: v0.1.0-beta.31
 GlobalRouter: v0.1.0-beta.31
 Preset: v0.1.0-beta.31
+QuotaAllocationRuleSet: v0.1.0-beta.31
 SLO: v0.1.0-beta.31
 TCOLogsPolicies: v0.1.0-beta.31
 TCORumPolicies: v0.1.0-beta.31

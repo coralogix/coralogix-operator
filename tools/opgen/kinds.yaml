@@ -32,3 +32,5 @@ kinds:
     resource: ConfigurationGroup
   - kind: CustomRole
     resource: CustomRole
+  - kind: QuotaAllocationRuleSet
+    resource: QuotaAllocationEntityTypeRuleSet

@@ -44,8 +44,8 @@ func init() {
 		newFake:  func() apiFake { return &quotaRulesFake{} },
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
 			return &v1alpha1controllers.QuotaAllocationRuleSetReconciler{
-				QuotaAllocationRulesClient: cs.Quotas(),
-				Interval:                   reconcileInterval,
+				Client:   cs.Quotas(),
+				Interval: reconcileInterval,
 			}
 		},
 		scenarios: quotaRulesScenariosWithCleanup(),

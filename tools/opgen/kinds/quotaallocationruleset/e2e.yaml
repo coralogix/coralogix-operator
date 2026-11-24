@@ -1,0 +1,15 @@
+serial: true
+values:
+  rules.entityType: logs
+  rules.allocation: '50'
+  rules.allocationType: percentage
+  rules.enabled: true
+  rules.canOverflow: false
+when:
+  - match: {rules.allocationType: percentage}
+    set: {rules.allocation: '50'}
+  - match: {rules.allocationType: lockedUnits}
+    set: {rules.allocation: '0', rules.enabled: false}
+update:
+  field: rules.enabled
+  value: false

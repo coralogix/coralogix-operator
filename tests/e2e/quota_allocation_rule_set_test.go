@@ -34,7 +34,7 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
-var _ = Describe("QuotaAllocationRuleSet", Ordered, func() {
+var _ = Describe("QuotaAllocationRuleSet", Ordered, Serial, func() {
 	var (
 		crClient     client.Client
 		quotasClient *quotas.QuotaAllocationRuleSetServiceAPIService

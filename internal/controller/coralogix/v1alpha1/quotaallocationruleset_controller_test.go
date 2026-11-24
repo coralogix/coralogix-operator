@@ -16,10 +16,15 @@ package v1alpha1
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	quotas "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/quota_allocation_rule_set_service"
+	"github.com/go-logr/logr"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,6 +34,70 @@ import (
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
+
+func TestQuotaAllocationRuleSetBeforeUpdateCanRunTwice(t *testing.T) {
+	gets := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		require.Equal(t, http.MethodGet, req.Method)
+		gets++
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ruleSet":{"rules":[{"entityType":"metrics","allocation":25,"enabled":true,"canOverflow":false,"cxManaged":true}]}}`))
+	}))
+	t.Cleanup(server.Close)
+	clientSet := cxsdk.NewClientSet(cxsdk.NewConfigBuilder().WithURL(server.URL).Build())
+	r := &QuotaAllocationRuleSetReconciler{Client: clientSet.Quotas()}
+	cr := &coralogixv1alpha1.QuotaAllocationRuleSet{Spec: coralogixv1alpha1.QuotaAllocationRuleSetSpec{
+		Rules: []coralogixv1alpha1.QuotaAllocationRule{{EntityType: "logs", Allocation: resource.MustParse("50"), Enabled: true}},
+	}}
+	body, err := cr.UpdateRequest(context.Background())
+	require.NoError(t, err)
+	for i := 0; i < 2; i++ {
+		require.NoError(t, r.beforeUpdate(context.Background(), logr.Discard(), cr, body))
+		require.Len(t, body.RuleSet.Rules, 2)
+		require.Equal(t, "logs", body.RuleSet.Rules[0].EntityType)
+		require.Equal(t, quotas.QUOTAALLOCATIONTYPE_QUOTA_ALLOCATION_TYPE_PERCENTAGE, body.RuleSet.Rules[0].GetAllocationType())
+		require.Equal(t, "metrics", body.RuleSet.Rules[1].EntityType)
+		require.Nil(t, body.RuleSet.Rules[1].CxManaged)
+	}
+	require.Equal(t, 2, gets)
+}
+
+func TestQuotaAllocationRuleSetValidateAndDeleteCanRunTwice(t *testing.T) {
+	scheme := runtime.NewScheme()
+	require.NoError(t, coralogixv1alpha1.AddToScheme(scheme))
+	originalClient := config.GetClient()
+	originalSelector := config.GetConfig().Selector
+	t.Cleanup(func() {
+		config.InitClient(originalClient)
+		config.GetConfig().Selector = originalSelector
+	})
+	config.InitClient(fake.NewClientBuilder().WithScheme(scheme).Build())
+	config.GetConfig().Selector = config.Selector{}
+
+	gets, deletes := 0, 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method {
+		case http.MethodGet:
+			gets++
+		case http.MethodDelete:
+			deletes++
+		default:
+			t.Errorf("unexpected method %s", req.Method)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	t.Cleanup(server.Close)
+	clientSet := cxsdk.NewClientSet(cxsdk.NewConfigBuilder().WithURL(server.URL).Build())
+	r := &QuotaAllocationRuleSetReconciler{Client: clientSet.Quotas()}
+	cr := &coralogixv1alpha1.QuotaAllocationRuleSet{}
+	for i := 0; i < 2; i++ {
+		require.NoError(t, r.validate(context.Background(), logr.Discard(), cr))
+		require.NoError(t, r.delete(context.Background(), logr.Discard(), cr))
+	}
+	require.Equal(t, 2, gets)
+	require.Equal(t, 2, deletes)
+}
 
 func TestPreserveManagedQuotaAllocationRulesAppendsManagedRules(t *testing.T) {
 	planned := []quotas.QuotaAllocationEntityTypeRule{quotaRule("logs", false)}

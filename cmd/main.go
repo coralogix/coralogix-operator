@@ -197,13 +197,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.QuotaAllocationRuleSetReconciler{
-		QuotaAllocationRulesClient: oapiClientSet.Quotas(),
-		Interval:                   cfg.ReconcileIntervals[utils.QuotaAllocationRuleSetKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "QuotaAllocationRuleSet")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.IntegrationReconciler{
 		IntegrationsClient: oapiClientSet.Integrations(),
 		Interval:           cfg.ReconcileIntervals[utils.IntegrationKind],

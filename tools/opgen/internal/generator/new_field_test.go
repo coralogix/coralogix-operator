@@ -890,3 +890,69 @@ func withNewFamilyField(t *testing.T, spec []byte) []byte {
 	}
 	return out
 }
+
+// A new rule field reaches the generated CR, both requests, the sample, and the live test.
+// The handwritten hooks only change the rules that the generated conversion built.
+func TestQuotaAllocationRuleSetNewRuleFieldWithoutOverrides(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	entry := kindEntry{Kind: "QuotaAllocationRuleSet", Resource: "QuotaAllocationEntityTypeRuleSet"}
+	dir := filepath.Join(input.ModuleRoot, entry.dir())
+	file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	render := func(spec []byte) map[string][]byte {
+		t.Helper()
+		doc, err := (&documents{raw: spec}).forKind(entry, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.files
+	}
+	before := render(input.OpenAPI)
+	var doc map[string]any
+	if err := yaml.Unmarshal(input.OpenAPI, &doc); err != nil {
+		t.Fatal(err)
+	}
+	props := doc["components"].(map[string]any)["schemas"].(map[string]any)["QuotaAllocationEntityTypeRule"].(map[string]any)["properties"].(map[string]any)
+	props["probeNote"] = map[string]any{"type": "string", "description": "A test note.", "maxLength": 20}
+	changed, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after := render(changed)
+	for name, content := range after {
+		if removed := removedLines(string(before[name]), string(content)); len(removed) != 0 {
+			t.Errorf("%s: a new field changed old lines: %s", name, strings.Join(removed, "\n"))
+		}
+	}
+	for _, want := range []struct{ file, text string }{
+		{"api/coralogix/v1alpha1/quotaallocationruleset_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+		{"api/coralogix/v1alpha1/quotaallocationruleset_types.go", "+kubebuilder:validation:MaxLength=20"},
+		{"api/coralogix/v1alpha1/quotaallocationruleset_convert.go", "out.ProbeNote = in.ProbeNote"},
+		{"config/samples/v1alpha1/generated/quotaallocationruleset.yaml", "probeNote:"},
+		{"tests/e2e/quotaallocationruleset_generated_test.go", `"probeNote":`},
+	} {
+		if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+			t.Errorf("%s has no %q", want.file, want.text)
+		}
+	}
+	if n := strings.Count(string(after["api/coralogix/v1alpha1/quotaallocationruleset_convert.go"]), "out.ProbeNote = in.ProbeNote"); n != 2 {
+		t.Errorf("want probeNote in Create and Update, got %d conversions", n)
+	}
+}
