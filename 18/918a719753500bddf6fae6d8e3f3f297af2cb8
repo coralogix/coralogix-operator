@@ -1,0 +1,21 @@
+internal/controller/coralogix/v1beta1/alert_identity.go
+  s_f2878e1ec8afa0::t_382c4323d70706 46-53,62-65,69-71,73-74,79-82
+internal/controller/coralogix/v1beta1/alert_identity_test.go
+  s_f2878e1ec8afa0::t_07d631922902c0 92-99,173-176,187-188,190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "18918a719753500bddf6fae6d8e3f3f297af2cb8",
+  "prompts": {},
+  "sessions": {
+    "s_f2878e1ec8afa0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59e567f1-9c8c-4346-90a3-1140d7d29f75",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "oded-dd <oded@coralogix.com>"
+    }
+  }
+}
