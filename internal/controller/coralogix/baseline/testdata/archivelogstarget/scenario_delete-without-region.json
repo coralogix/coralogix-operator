@@ -2,6 +2,7 @@
   {
     "step": "create",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-fidelity-archive",
         "region": "eu-north-1"
@@ -44,7 +45,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteSynced",
+        "retentionsActivated": true
       }
     }
   },
@@ -62,8 +64,7 @@
         "body": {
           "isActive": true,
           "s3": {
-            "bucket": "cxo-fidelity-archive",
-            "region": ""
+            "bucket": "cxo-fidelity-archive"
           }
         },
         "status": 400
@@ -86,7 +87,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteUnsynced"
+        "printableStatus": "RemoteUnsynced",
+        "retentionsActivated": true
       }
     }
   },
@@ -99,69 +101,23 @@
         "body": {
           "isActive": false,
           "s3": {
-            "bucket": "cxo-fidelity-archive",
-            "region": ""
+            "bucket": "cxo-fidelity-archive"
           }
         },
-        "status": 400
+        "status": 200
       }
     ],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "archivelogstarget.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 3,
-            "reason": "RemoteDeletionFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "id": "archiveLogsTaget",
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/logs/data-setup/v2",
-        "body": {
-          "isActive": false,
-          "s3": {
-            "bucket": "cxo-fidelity-archive",
-            "region": ""
-          }
-        },
-        "status": 400
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "archivelogstarget.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 3,
-            "reason": "RemoteDeletionFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "id": "archiveLogsTaget",
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   }
 ]

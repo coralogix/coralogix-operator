@@ -2,6 +2,7 @@
   {
     "step": "create the sample",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "\u003cyour-bucket-name\u003e",
         "region": "\u003cyour-region\u003e"

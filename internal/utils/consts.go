@@ -36,7 +36,6 @@ const (
 	AlertSchedulerKind         = "AlertScheduler"
 	PrometheusRuleKind         = "PrometheusRule"
 	ConnectorKind              = "Connector"
-	ArchiveLogsTargetKind      = "ArchiveLogsTarget"
 	ArchiveMetricsTargetKind   = "ArchiveMetricsTarget"
 	IPAccess                   = "IPAccess"
 	CustomEnrichmentKind       = "CustomEnrichment"

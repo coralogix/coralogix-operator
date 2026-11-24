@@ -2,6 +2,7 @@
   {
     "step": "create with a bucket that does not exist: the API answers 408",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-no-such-bucket",
         "region": "eu-north-1"

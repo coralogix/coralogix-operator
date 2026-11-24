@@ -82,7 +82,14 @@
     "accepted": true
   },
   "unknown field is not an error": {
-    "accepted": true
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.format",
+        "message": "Unsupported value: \"json\": supported values: \"cxDataV1\""
+      }
+    ]
   },
   "unknown s3 field is not an error": {
     "accepted": true

@@ -2,6 +2,7 @@
   {
     "step": "create: the activation answers 500",
     "spec": {
+      "isActive": true,
       "s3Target": {
         "bucketName": "cxo-fidelity-archive",
         "region": "eu-north-1"
@@ -30,16 +31,19 @@
       "error": true
     },
     "object": {
-      "finalizers": [],
+      "finalizers": [
+        "archivelogstarget.coralogix.com/finalizer"
+      ],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
         ],
+        "id": "archiveLogsTaget",
         "printableStatus": "RemoteUnsynced"
       }
     }
@@ -83,7 +87,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteSynced",
+        "retentionsActivated": true
       }
     }
   },
@@ -121,7 +126,8 @@
           }
         ],
         "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteSynced",
+        "retentionsActivated": true
       }
     }
   }

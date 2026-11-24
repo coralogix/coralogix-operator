@@ -105,6 +105,12 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-dashboardsfolder.sh before
+      # Chart 0.5 has no ArchiveLogsTarget.
+      - name: Create an ArchiveLogsTarget with the released operator
+        if: inputs.operator_version != '0.5'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-archivelogstarget.sh before
       - name: Create a View with the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -213,6 +219,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-dashboardsfolder.sh after
+      - name: Check the ArchiveLogsTarget of the released operator
+        if: inputs.operator_version != '0.5'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-archivelogstarget.sh after
       - name: Check the View of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -283,6 +294,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-dashboardsfolder.sh cleanup
+      - name: Delete the ArchiveLogsTarget of the upgrade check
+        if: always() && inputs.operator_version != '0.5'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-archivelogstarget.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |

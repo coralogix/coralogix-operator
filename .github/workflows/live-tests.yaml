@@ -332,6 +332,8 @@ jobs:
     uses: ./.github/workflows/coverage-tests.yaml
     secrets:
       api_key: ${{ secrets.OPERATOR_CI_API_KEY_8 }}
+      logs_bucket: ${{ secrets.LOGS_BUCKET }}
+      aws_region: ${{ secrets.AWS_REGION }}
 
   live-tests-result:
     # Branch protection requires this check name. Keep it stable.
