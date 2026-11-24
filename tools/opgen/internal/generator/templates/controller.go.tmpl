@@ -385,6 +385,14 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 {{- end}}
 {{- end}}
 {{- end}}
+{{- if and .Singleton (not .StatuslessSingleton)}}
+
+// DeletesWithoutStatusID makes the shared reconciler delete a CR without a status id: the team has
+// one {{.Kind}} whatever the status holds, so a Create that failed to save the status still left it.
+func (r *{{.Kind}}Reconciler) DeletesWithoutStatusID() bool {
+	return true
+}
+{{- end}}
 {{- if .Hooks.Any}}
 
 // SavesHookStatus makes the shared reconciler save the status that a hook changed.

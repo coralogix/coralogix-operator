@@ -93,59 +93,15 @@
   },
   {
     "step": "delete",
-    "requests": [
-      {
-        "method": "GET",
-        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
-        "status": 404
-      },
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/dashboards/dashboards/v1",
-        "body": {
-          "dashboard": {
-            "id": "<dashboard-id-1>",
-            "layout": {
-              "sections": []
-            },
-            "name": "Baseline dashboard renamed"
-          },
-          "requestId": "cx-operator-create-<id-3>"
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "dashboard.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 3,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
-            "type": "RemoteSynced"
-          }
-        ],
-        "id": "<dashboard-id-1>",
-        "printableStatus": "RemoteSynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "DELETE",
-        "path": "/mgmt/openapi/5/dashboards/dashboards/v1/<dashboard-id-1>",
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
       "error": false
     },

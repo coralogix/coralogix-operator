@@ -291,7 +291,8 @@ var archiveLogsTargetScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again: the API answers as it should")
 	},
 
-	// The shared reconciler creates when the status has no id, even while the CR is deleted.
+	// A deleted CR without a status id creates nothing. The team has one archive target whatever
+	// the status holds, so the delete hook still sets it inactive.
 	"delete-without-id": func(h *harness) {
 		h.Create("create", archiveMinimal)
 		setArchiveStatusID(h, nil)

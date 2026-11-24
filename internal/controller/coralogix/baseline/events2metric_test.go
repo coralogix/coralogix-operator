@@ -279,8 +279,8 @@ spec:
 		h.Delete("delete")
 	},
 
-	// The shared reconciler creates when the status has no id, even while the CR is deleted. So the
-	// controller's own "no id, nothing to delete" branch is not reached.
+	// A deleted CR without a status id names no remote resource: the shared reconciler removes the
+	// finalizer with no API call, before the controller's own deletion runs.
 	"delete-without-id": func(h *harness) {
 		h.Create("create", e2mLogsManifest)
 		clearE2MStatusID(h)

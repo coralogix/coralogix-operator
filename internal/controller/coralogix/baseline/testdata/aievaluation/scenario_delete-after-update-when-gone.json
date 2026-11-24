@@ -98,54 +98,15 @@
   },
   {
     "step": "delete",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/ai/evaluations/v3",
-        "body": {
-          "application": "cxo-baseline-app",
-          "config": {
-            "toxicity": {}
-          },
-          "isEnabled": true,
-          "subsystem": "cxo-baseline-subsystem",
-          "target": "RESPONSE",
-          "threshold": 0.4
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "ai-evaluation.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 4,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
-            "type": "RemoteSynced"
-          }
-        ],
-        "id": "<id-2>",
-        "printableStatus": "RemoteSynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "DELETE",
-        "path": "/mgmt/openapi/5/ai/evaluations/v3/<id-2>",
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
       "error": false
     },

@@ -40,49 +40,15 @@
   },
   {
     "step": "delete a CR that has a finalizer and no status id",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/dashboards/folders/v1",
-        "body": {
-          "folder": {
-            "name": "Team dashboards"
-          }
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "dashboards-folder.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 2,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
-            "type": "RemoteSynced"
-          }
-        ],
-        "id": "<id-2>",
-        "printableStatus": "RemoteSynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "DELETE",
-        "path": "/mgmt/openapi/5/dashboards/folders/v1/<id-2>",
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
       "error": false
     },

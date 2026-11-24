@@ -52,80 +52,18 @@
   },
   {
     "step": "delete a CR that has a finalizer and no status id",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/ai/evaluations/v3",
-        "body": {
-          "application": "cxo-baseline-app",
-          "config": {
-            "toxicity": {}
-          },
-          "isEnabled": true,
-          "subsystem": "cxo-baseline-subsystem",
-          "target": "RESPONSE",
-          "threshold": 0.8
-        },
-        "status": 409
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "ai-evaluation.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 3,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/ai/evaluations/v3",
-        "body": {
-          "application": "cxo-baseline-app",
-          "config": {
-            "toxicity": {}
-          },
-          "isEnabled": true,
-          "subsystem": "cxo-baseline-subsystem",
-          "target": "RESPONSE",
-          "threshold": 0.8
-        },
-        "status": 409
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "ai-evaluation.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 3,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   }
 ]

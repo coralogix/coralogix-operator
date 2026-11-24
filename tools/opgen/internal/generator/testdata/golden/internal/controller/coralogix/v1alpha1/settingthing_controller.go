@@ -102,6 +102,12 @@ func (r *SettingThingReconciler) HandleDeletion(ctx context.Context, log logr.Lo
 	return nil
 }
 
+// DeletesWithoutStatusID makes the shared reconciler delete a CR without a status id: the team has
+// one SettingThing whatever the status holds, so a Create that failed to save the status still left it.
+func (r *SettingThingReconciler) DeletesWithoutStatusID() bool {
+	return true
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *SettingThingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

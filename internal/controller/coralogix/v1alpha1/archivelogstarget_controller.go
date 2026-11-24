@@ -155,6 +155,12 @@ func (r *ArchiveLogsTargetReconciler) HandleDeletion(ctx context.Context, log lo
 	return nil
 }
 
+// DeletesWithoutStatusID makes the shared reconciler delete a CR without a status id: the team has
+// one ArchiveLogsTarget whatever the status holds, so a Create that failed to save the status still left it.
+func (r *ArchiveLogsTargetReconciler) DeletesWithoutStatusID() bool {
+	return true
+}
+
 // SavesHookStatus makes the shared reconciler save the status that a hook changed.
 func (r *ArchiveLogsTargetReconciler) SavesHookStatus() bool {
 	return true

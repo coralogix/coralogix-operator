@@ -127,6 +127,12 @@ func (r *ArchiveMetricsTargetReconciler) HandleDeletion(ctx context.Context, log
 	return nil
 }
 
+// DeletesWithoutStatusID makes the shared reconciler disable the archive of a CR without a status
+// id: the team has one metrics archive whatever the status holds.
+func (r *ArchiveMetricsTargetReconciler) DeletesWithoutStatusID() bool {
+	return true
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *ArchiveMetricsTargetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).

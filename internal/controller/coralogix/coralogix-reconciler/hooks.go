@@ -169,3 +169,17 @@ func remoteStatusFields(r CoralogixReconciler) [][]string {
 		[]string{"status", "revision"},            // SLO
 	)
 }
+
+// StatusIDFreeDeleter is a reconciler whose remote resource does not depend on status.id, such as
+// a singleton that the API has once per team. When a CR of it is deleted without a status id, the
+// shared reconciler still calls HandleDeletion, because the remote resource can exist: a Create
+// that succeeded and failed to save the status leaves it. Other kinds skip HandleDeletion then,
+// since without an id they name no remote resource.
+type StatusIDFreeDeleter interface {
+	DeletesWithoutStatusID() bool
+}
+
+func deletesWithoutStatusID(r CoralogixReconciler) bool {
+	d, ok := r.(StatusIDFreeDeleter)
+	return ok && d.DeletesWithoutStatusID()
+}
