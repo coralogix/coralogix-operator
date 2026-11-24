@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // DashboardReconciler reconciles a Dashboard object.
@@ -95,12 +94,12 @@ func (r *DashboardReconciler) HandleCreation(ctx context.Context, log logr.Logge
 		cr.Status.ID = ptr.To(adoptedID)
 		return nil
 	}
-	log.Info("Creating remote Dashboard", "Dashboard", utils.FormatJSON(body))
+	log.Info("Creating remote Dashboard")
 	resp, httpResp, err := r.Client.DashboardsServiceCreateDashboard(ctx).CreateDashboardRequestDataStructure(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote Dashboard: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Dashboard created", "response", utils.FormatJSON(resp))
+	log.Info("Remote Dashboard created")
 	if resp == nil {
 		return fmt.Errorf("the create response of Dashboard has no resource")
 	}
@@ -134,12 +133,12 @@ func (r *DashboardReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err := r.beforeUpdate(ctx, log, cr, body); err != nil {
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of Dashboard failed: %w", err))
 	}
-	log.Info("Updating remote Dashboard", "id", id, "Dashboard", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.DashboardsServiceReplaceDashboard(ctx).ReplaceDashboardRequestDataStructure(*body).Execute()
+	log.Info("Updating remote Dashboard", "id", id)
+	_, httpResp, err := r.Client.DashboardsServiceReplaceDashboard(ctx).ReplaceDashboardRequestDataStructure(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote Dashboard %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Dashboard updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote Dashboard updated", "id", id)
 	return nil
 }
 

@@ -76,20 +76,18 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errors.New("failed to read PrometheusRule")
 	}
 
 	var errs error
 	if shouldTrackRecordingRules(prometheusRule) {
 		err := r.convertPrometheusRuleRecordingRuleToCxRecordingRule(ctx, log, prometheusRule, req)
 		if err != nil {
-			log.Error(err, "Received an error while trying to convert PrometheusRule to RecordingRule CRD")
 			errs = errors.Join(errs, err)
 		}
 	} else {
 		err := r.deleteCxRecordingRule(ctx, req)
 		if err != nil {
-			log.Error(err, "Received an error while trying to delete RecordingRule CRD")
 			errs = errors.Join(errs, err)
 		}
 	}
@@ -97,19 +95,17 @@ func (r *PrometheusRuleReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if shouldTrackAlerts(prometheusRule) {
 		err := r.convertPrometheusRuleAlertToCxAlert(ctx, prometheusRule)
 		if err != nil {
-			log.Error(err, "Received an error while trying to convert PrometheusRule to Alert CRD")
 			errs = errors.Join(errs, err)
 		}
 	} else {
 		err := r.deleteCxAlerts(ctx, prometheusRule)
 		if err != nil {
-			log.Error(err, "Received an error while trying to delete Alert CRDs")
 			errs = errors.Join(errs, err)
 		}
 	}
 
 	if errs != nil {
-		return ctrl.Result{}, errs
+		return ctrl.Result{}, errors.New("PrometheusRule reconciliation failed")
 	}
 
 	return reconcile.Result{RequeueAfter: r.Interval}, nil
@@ -404,7 +400,7 @@ func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule
 		if group.Interval != nil && *group.Interval != "" {
 			duration, err := time.ParseDuration(string(*group.Interval))
 			if err != nil {
-				log.V(int(zapcore.WarnLevel)).Info("Failed to parse interval duration", "interval", group.Interval, "error", err, "using default interval")
+				log.V(int(zapcore.WarnLevel)).Info("Failed to parse interval duration; using default interval")
 			}
 
 			// Convert duration to seconds

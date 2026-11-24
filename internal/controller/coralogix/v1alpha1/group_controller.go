@@ -17,14 +17,12 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
-
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 	"github.com/go-logr/logr"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strconv"
+	"time"
 
 	oapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	groups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/team_groups_management_service"
@@ -68,7 +66,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.Info("Creating remote group", "group", utils.FormatJSON(createRequest))
+	log.Info("Creating remote group")
 	createResponse, httpResp, err := r.GroupsClient.
 		GroupsMgmtServiceCreateTeamGroup(ctx).
 		CreateTeamGroupRequest(*createRequest).
@@ -76,7 +74,7 @@ func (r *GroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on creating remote group: %w", oapicxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote group created", "group", utils.FormatJSON(createResponse))
+	log.Info("Remote group created")
 
 	group.Status = coralogixv1alpha1.GroupStatus{
 		ID: ptr.To(strconv.Itoa(int(*createResponse.Group.GroupId))),
@@ -95,20 +93,20 @@ func (r *GroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote group", "group", utils.FormatJSON(updateRequest))
+	log.Info("Updating remote group")
 	id, err := strconv.Atoi(*group.Status.ID)
 	if err != nil {
 		return fmt.Errorf("error converting group ID to int: %w", err)
 	}
 
-	updateResponse, httpResp, err := r.GroupsClient.
+	_, httpResp, err := r.GroupsClient.
 		GroupsMgmtServiceUpdateTeamGroup(ctx, int64(id)).
 		UpdateTeamGroupRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return oapicxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote group updated", "group", utils.FormatJSON(updateResponse))
+	log.Info("Remote group updated")
 
 	return nil
 }
@@ -126,7 +124,6 @@ func (r *GroupReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		Execute()
 	if err != nil {
 		if apiErr := oapicxsdk.NewAPIError(httpResp, err); !oapicxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote group", "id", *group.Status.ID)
 			return fmt.Errorf("error deleting remote group %s: %w", *group.Status.ID, apiErr)
 		}
 	}

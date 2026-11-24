@@ -726,8 +726,7 @@ func TestPrometheusRuleAlertRouterAnnotationRejectsUnknownValue(t *testing.T) {
 		time.Sleep(500 * time.Millisecond)
 	}
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey)
-	assert.Contains(t, err.Error(), `"always"`)
+	assert.EqualError(t, err, "PrometheusRule reconciliation failed")
 }
 
 func TestPrometheusRuleRoutingLabelsBecomeAlertEntityLabels(t *testing.T) {
@@ -785,7 +784,7 @@ func TestPrometheusRuleInvalidRouterAnnotationStillSyncsAlerts(t *testing.T) {
 		alert := &coralogixv1beta1.Alert{}
 		require.NoError(t, reader.Get(ctx, generatedAlertKey(rule), alert))
 		if err != nil && alert.Spec.Description == "updated" {
-			assert.Contains(t, err.Error(), utils.PrometheusRuleAlertRouterNotifyOnAnnotationKey)
+			assert.EqualError(t, err, "PrometheusRule reconciliation failed")
 			assert.Nil(t, alert.Spec.NotificationGroup)
 			return
 		}

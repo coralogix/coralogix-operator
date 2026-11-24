@@ -7,9 +7,8 @@ import (
 	"testing"
 )
 
-// hideBodiesInLogs keeps the Create and Update bodies and responses out of the logs. A kind without
-// the key logs them, as before.
-func TestHideBodiesInLogs(t *testing.T) {
+// Generated controllers never log request or response bodies.
+func TestGeneratedControllerLogs(t *testing.T) {
 	contract, err := os.ReadFile(filepath.Join("testdata", "openapi.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -58,12 +57,12 @@ func TestHideBodiesInLogs(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-	t.Run("the default", func(t *testing.T) {
+	t.Run("the default keeps bodies out of logs", func(t *testing.T) {
 		files := checkLifecycleFixture(t, "MaskThing", string(contract), nestedMaskOverride)
 		controller := string(files["internal/controller/coralogix/v1alpha1/maskthing_controller.go"])
-		for _, line := range []string{`"MaskThing", utils.FormatJSON(body)`, `"response", utils.FormatJSON(resp)`} {
-			if !strings.Contains(controller, line) {
-				t.Errorf("the controller omits %s", line)
+		for _, banned := range []string{"FormatJSON", "/internal/utils\""} {
+			if strings.Contains(controller, banned) {
+				t.Errorf("the controller has %s", banned)
 			}
 		}
 	})

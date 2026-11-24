@@ -199,7 +199,7 @@ func TestFailedCreateFollowUpKeepsStatusIDAndTheNextRunUpdates(t *testing.T) {
 		return nil
 	}
 
-	require.ErrorContains(t, test.reconcile(r), "afterCreate failed")
+	require.EqualError(t, test.reconcile(r), "reconciliation failed: HookFailed")
 	got := test.get()
 	require.Equal(t, ptr(remoteID), got.Status.ID, "the id of the created resource must stay")
 	require.Contains(t, got.Finalizers, r.FinalizerName())
@@ -348,7 +348,7 @@ func TestValidationErrorOnCreateLeavesNoIDAndNoFinalizer(t *testing.T) {
 	r.create = func(*coralogixv1alpha1.Dashboard) (func(context.Context) error, error) {
 		return nil, NewValidationError(errors.New("only one resource is allowed"))
 	}
-	require.ErrorContains(t, test.reconcile(r), "only one resource is allowed")
+	require.EqualError(t, test.reconcile(r), "reconciliation failed: ValidationFailed")
 	got := test.get()
 	require.Nil(t, got.Status.ID)
 	require.Empty(t, got.Finalizers)
@@ -365,7 +365,7 @@ func TestFailedDeleteHookKeepsTheFinalizer(t *testing.T) {
 		return NewHookError(errors.New("beforeDelete failed"))
 	}}
 
-	require.ErrorContains(t, test.reconcile(r), "beforeDelete failed")
+	require.EqualError(t, test.reconcile(r), "reconciliation failed: HookFailed")
 	got := test.get()
 	require.Contains(t, got.Finalizers, r.FinalizerName(), "the finalizer must stay")
 	require.Equal(t, utils.ReasonHookFailed, syncedReason(got))

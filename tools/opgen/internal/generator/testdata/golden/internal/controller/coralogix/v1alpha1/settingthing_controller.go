@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // SettingThingReconciler reconciles a SettingThing object.
@@ -64,12 +63,12 @@ func (r *SettingThingReconciler) HandleCreation(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on building the create request of SettingThing: %w", err)
 	}
-	log.Info("Creating remote SettingThing", "SettingThing", utils.FormatJSON(body))
+	log.Info("Creating remote SettingThing")
 	resp, httpResp, err := r.Client.SettingThingsServiceSetSettingThing(ctx).SetSettingThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote SettingThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SettingThing created", "response", utils.FormatJSON(resp))
+	log.Info("Remote SettingThing created")
 	if resp == nil {
 		return fmt.Errorf("the create response of SettingThing has no resource")
 	}
@@ -86,12 +85,12 @@ func (r *SettingThingReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the update request of SettingThing: %w", err)
 	}
-	log.Info("Updating remote SettingThing", "id", id, "SettingThing", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.SettingThingsServiceSetSettingThing(ctx).SetSettingThingRequest(*body).Execute()
+	log.Info("Updating remote SettingThing", "id", id)
+	_, httpResp, err := r.Client.SettingThingsServiceSetSettingThing(ctx).SetSettingThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote SettingThing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SettingThing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote SettingThing updated", "id", id)
 	return nil
 }
 

@@ -30,7 +30,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // RuleGroupReconciler reconciles a RuleGroup object
@@ -58,7 +57,7 @@ func (r *RuleGroupReconciler) RequeueInterval() time.Duration {
 func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	createRequest := ruleGroup.Spec.ExtractCreateRuleGroupRequest()
-	log.Info("Creating remote ruleGroup", "ruleGroup", utils.FormatJSON(createRequest))
+	log.Info("Creating remote ruleGroup")
 	createResponse, httpResp, err := r.RuleGroupClient.
 		RuleGroupsServiceCreateRuleGroup(ctx).
 		RuleGroupsServiceCreateRuleGroupRequest(*createRequest).
@@ -66,7 +65,7 @@ func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on creating remote ruleGroup: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ruleGroup created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote ruleGroup created")
 	ruleGroup.Status = coralogixv1alpha1.RuleGroupStatus{
 		ID: ptr.To(createResponse.RuleGroup.Id),
 	}
@@ -77,15 +76,15 @@ func (r *RuleGroupReconciler) HandleCreation(ctx context.Context, log logr.Logge
 func (r *RuleGroupReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj client.Object) error {
 	ruleGroup := obj.(*coralogixv1alpha1.RuleGroup)
 	updateRequest := ruleGroup.Spec.ExtractCreateRuleGroupRequest()
-	log.Info("Updating remote ruleGroup", "ruleGroup", utils.FormatJSON(updateRequest))
-	updateResponse, httpResp, err := r.RuleGroupClient.
+	log.Info("Updating remote ruleGroup")
+	_, httpResp, err := r.RuleGroupClient.
 		RuleGroupsServiceUpdateRuleGroup(ctx, *ruleGroup.Status.ID).
 		RuleGroupsServiceCreateRuleGroupRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote ruleGroup updated", "ruleGroup", utils.FormatJSON(updateResponse))
+	log.Info("Remote ruleGroup updated")
 	return nil
 }
 
@@ -98,7 +97,6 @@ func (r *RuleGroupReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote ruleGroup", "id", id)
 			return fmt.Errorf("error deleting remote ruleGroup %s: %w", id, apiErr)
 		}
 	}

@@ -30,7 +30,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // IntegrationReconciler reconciles a Integration object
@@ -61,7 +60,7 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 	if err != nil {
 		return fmt.Errorf("error on extracting create integration request: %w", err)
 	}
-	log.Info("Creating remote integration", "integration", utils.FormatJSON(createRequest))
+	log.Info("Creating remote integration")
 	createResponse, httpResp, err := r.IntegrationsClient.
 		IntegrationServiceSaveIntegration(ctx).
 		SaveIntegrationRequest(*createRequest).
@@ -69,7 +68,7 @@ func (r *IntegrationReconciler) HandleCreation(ctx context.Context, log logr.Log
 	if err != nil {
 		return fmt.Errorf("error on creating remote integration: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote integration created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote integration created")
 
 	integration.Status = coralogixv1alpha1.IntegrationStatus{
 		Id: ptr.To(createResponse.IntegrationId),
@@ -84,15 +83,15 @@ func (r *IntegrationReconciler) HandleUpdate(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on extracting update integration request: %w", err)
 	}
-	log.Info("Updating remote integration", "integration", utils.FormatJSON(updateRequest))
-	updateResponse, httpResp, err := r.IntegrationsClient.
+	log.Info("Updating remote integration")
+	_, httpResp, err := r.IntegrationsClient.
 		IntegrationServiceUpdateIntegration(ctx).
 		UpdateIntegrationRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote integration updated", "integration", utils.FormatJSON(updateResponse))
+	log.Info("Remote integration updated")
 
 	return nil
 }
@@ -103,7 +102,6 @@ func (r *IntegrationReconciler) HandleDeletion(ctx context.Context, log logr.Log
 	_, httpResp, err := r.IntegrationsClient.IntegrationServiceDeleteIntegration(ctx, *integration.Status.Id).Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote integration", "id", *integration.Status.Id)
 			return fmt.Errorf("error deleting remote integration %s: %w", *integration.Status.Id, apiErr)
 		}
 	}

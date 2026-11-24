@@ -68,6 +68,7 @@ func (r *MaskThingReconciler) HandleCreation(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on creating remote MaskThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
+	log.Info("Remote MaskThing created")
 	if resp == nil {
 		return fmt.Errorf("the create response of MaskThing has no resource")
 	}

@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // PatchThingReconciler reconciles a PatchThing object.
@@ -64,12 +63,12 @@ func (r *PatchThingReconciler) HandleCreation(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the create request of PatchThing: %w", err)
 	}
-	log.Info("Creating remote PatchThing", "PatchThing", utils.FormatJSON(body))
+	log.Info("Creating remote PatchThing")
 	resp, httpResp, err := r.Client.PatchThingsServiceCreatePatchThing(ctx).CreatePatchThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote PatchThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote PatchThing created", "response", utils.FormatJSON(resp))
+	log.Info("Remote PatchThing created")
 	if resp == nil {
 		return fmt.Errorf("the create response of PatchThing has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *PatchThingReconciler) HandleUpdate(ctx context.Context, log logr.Logger
 	if err != nil {
 		return fmt.Errorf("error on building the update request of PatchThing: %w", err)
 	}
-	log.Info("Updating remote PatchThing", "id", id, "PatchThing", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.PatchThingsServiceUpdatePatchThing(ctx, id).UpdatePatchThingRequest(*body).UpdateMask(coralogixv1alpha1.PatchThingUpdateMask).Execute()
+	log.Info("Updating remote PatchThing", "id", id)
+	_, httpResp, err := r.Client.PatchThingsServiceUpdatePatchThing(ctx, id).UpdatePatchThingRequest(*body).UpdateMask(coralogixv1alpha1.PatchThingUpdateMask).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote PatchThing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote PatchThing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote PatchThing updated", "id", id)
 	return nil
 }
 

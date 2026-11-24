@@ -72,30 +72,26 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		followUp, err := handleCreation(ctx, log, obj, r)
 		if err != nil {
 			if reason, ok := hookReason(err); ok {
-				log.Error(err, "Error handling creation")
 				return ManageErrorWithRequeue(ctx, obj, reason, err)
 			}
 			if oapisdk.IsDeserializationError(err) {
 				return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
 			}
-			log.Error(err, "Error handling creation")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteCreationFailed, err)
 		}
 
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-			log.Error(err, "Error updating status after creation")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
 		if err := AddFinalizer(ctx, log, obj, r); err != nil {
-			log.Error(err, "Error adding finalizer")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
 		if followUp != nil {
 			// status.id and the finalizer are saved. A failure here keeps status.id, so the next run
 			// takes the Update path and does not create a second remote resource.
-			if reason, err := runFollowUp(ctx, log, obj, r, followUp); err != nil {
+			if reason, err := runFollowUp(ctx, obj, r, followUp); err != nil {
 				return ManageErrorWithRequeue(ctx, obj, reason, err)
 			}
 		}
@@ -106,7 +102,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	if !obj.GetDeletionTimestamp().IsZero() {
 		log.Info("Resource is being deleted; handling deletion")
 		if err := r.HandleDeletion(ctx, log, obj); err != nil {
-			log.Error(err, "Error deleting from remote")
 			if reason, ok := hookReason(err); ok {
 				return ManageErrorWithRequeue(ctx, obj, reason, err)
 			}
@@ -117,7 +112,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		}
 
 		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
-			log.Error(err, "Error removing finalizer")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
@@ -132,17 +126,14 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	if !config.GetConfig().Selector.Matches(obj.GetLabels(), obj.GetNamespace()) {
 		log.Info("Resource doesn't match selector; handling deletion")
 		if err := r.HandleDeletion(ctx, log, obj); err != nil {
-			log.Error(err, "Error deleting from remote")
 			return ManageErrorWithRequeue(ctx, obj, reasonOrDefault(err, utils.ReasonRemoteDeletionFailed), err)
 		}
 
 		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
-			log.Error(err, "Error removing finalizer")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
 		if err := clearRemoteStatus(ctx, obj, r); err != nil {
-			log.Error(err, "Error clearing status")
 			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 		}
 
@@ -160,7 +151,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 	}
 	if err := r.HandleUpdate(ctx, log, obj); err != nil {
-		log.Error(err, "Error handling update")
 		// A hook error comes first. It is never a remote NotFound: a hook can call another API and
 		// get a 404 while the resource itself is still there.
 		if reason, ok := hookReason(err); ok {
@@ -169,7 +159,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		if cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
 			log.Info("resource not found on remote")
 			if err := removeField(ctx, obj, "status", "id"); err != nil {
-				log.Error(err, "Error removing id from status")
 				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 			}
 
@@ -180,7 +169,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
 	}
 	if err := saveStatusIfChanged(ctx, obj, watch); err != nil {
-		log.Error(err, "Error updating status after the update hooks")
 		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
 	}
 
@@ -189,17 +177,15 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 
 // runFollowUp runs the step that comes after a Create that saved status.id, and saves the status
 // that the step changed. On error it returns the reason of the RemoteSynced condition.
-func runFollowUp(ctx context.Context, log logr.Logger, obj client.Object, r CoralogixReconciler, followUp func(context.Context) error) (string, error) {
+func runFollowUp(ctx context.Context, obj client.Object, r CoralogixReconciler, followUp func(context.Context) error) (string, error) {
 	watch, err := watchStatus(obj, r)
 	if err != nil {
 		return utils.ReasonInternalK8sError, err
 	}
 	if err := followUp(ctx); err != nil {
-		log.Error(err, "Error handling creation follow-up")
 		return reasonOrDefault(err, utils.ReasonHookFailed), err
 	}
 	if err := saveStatusIfChanged(ctx, obj, watch); err != nil {
-		log.Error(err, "Error updating status after the creation follow-up")
 		return utils.ReasonInternalK8sError, err
 	}
 	return "", nil
@@ -266,6 +252,8 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 		return reconcile.Result{Requeue: true}, nil
 	}
 
+	err = SafeReconcileError(reason, err)
+
 	conditions := obj.GetConditions()
 
 	// in case of deserialization error, don't update the condition again to avoid infinite loop, and exit silently.
@@ -291,6 +279,14 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 	)
 
 	return reconcile.Result{}, err
+}
+
+// SafeReconcileError removes raw error text before it reaches conditions or logs.
+func SafeReconcileError(reason string, err error) error {
+	if code := oapisdk.Code(err); code != 0 {
+		return fmt.Errorf("%s (HTTP %d)", reason, code)
+	}
+	return fmt.Errorf("reconciliation failed: %s", reason)
 }
 
 func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interval time.Duration) (reconcile.Result, error) {

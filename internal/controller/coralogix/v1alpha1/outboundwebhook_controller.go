@@ -175,7 +175,7 @@ func (r *OutboundWebhookReconciler) webhooksForSecret(ctx context.Context, obj c
 	if err := config.GetClient().List(ctx, webhooks,
 		client.InNamespace(obj.GetNamespace()),
 		client.MatchingFields{outboundWebhookSecretIndex: obj.GetName()}); err != nil {
-		ctrl.Log.Error(err, "Failed to list outbound-webhooks for Secret", "namespace", obj.GetNamespace(), "secret", obj.GetName())
+		ctrl.Log.Info("Failed to list outbound-webhooks for Secret", "namespace", obj.GetNamespace(), "secret", obj.GetName())
 		return nil
 	}
 

@@ -26,7 +26,6 @@ import (
 	targetservice "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/target_service"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // The hooks of the generated ArchiveLogsTarget kind keep the behavior of the released kind:
@@ -98,7 +97,7 @@ func (r *ArchiveLogsTargetReconciler) delete(ctx context.Context, log logr.Logge
 		log.Info("The team has no S3 archive target to set inactive")
 		return nil
 	}
-	log.Info("Setting the remote ArchiveLogsTarget inactive", "ArchiveLogsTarget", utils.FormatJSON(body))
+	log.Info("Setting the remote ArchiveLogsTarget inactive")
 	_, httpResp, err := r.Client.S3TargetServiceSetTarget(ctx).SetTargetResponse(*body).Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {

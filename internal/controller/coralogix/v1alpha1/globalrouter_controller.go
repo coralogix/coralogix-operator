@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // GlobalRouterReconciler reconciles a GlobalRouter object.
@@ -64,12 +63,12 @@ func (r *GlobalRouterReconciler) HandleCreation(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on building the create request of GlobalRouter: %w", err)
 	}
-	log.Info("Creating remote GlobalRouter", "GlobalRouter", utils.FormatJSON(body))
+	log.Info("Creating remote GlobalRouter")
 	resp, httpResp, err := r.Client.GlobalRoutersServiceCreateGlobalRouter(ctx).CreateGlobalRouterRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote GlobalRouter: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote GlobalRouter created", "response", utils.FormatJSON(resp))
+	log.Info("Remote GlobalRouter created")
 	if resp == nil {
 		return fmt.Errorf("the create response of GlobalRouter has no resource")
 	}
@@ -91,12 +90,12 @@ func (r *GlobalRouterReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the update request of GlobalRouter: %w", err)
 	}
-	log.Info("Updating remote GlobalRouter", "id", id, "GlobalRouter", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.GlobalRoutersServiceReplaceGlobalRouter(ctx).ReplaceGlobalRouterRequest(*body).Execute()
+	log.Info("Updating remote GlobalRouter", "id", id)
+	_, httpResp, err := r.Client.GlobalRoutersServiceReplaceGlobalRouter(ctx).ReplaceGlobalRouterRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote GlobalRouter %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote GlobalRouter updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote GlobalRouter updated", "id", id)
 	return nil
 }
 

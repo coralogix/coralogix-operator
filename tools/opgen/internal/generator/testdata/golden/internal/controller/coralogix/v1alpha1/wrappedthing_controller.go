@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // WrappedThingReconciler reconciles a WrappedThing object.
@@ -64,12 +63,12 @@ func (r *WrappedThingReconciler) HandleCreation(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on building the create request of WrappedThing: %w", err)
 	}
-	log.Info("Creating remote WrappedThing", "WrappedThing", utils.FormatJSON(body))
+	log.Info("Creating remote WrappedThing")
 	resp, httpResp, err := r.Client.WrappedThingsServiceCreateWrappedThing(ctx).CreateWrappedThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote WrappedThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote WrappedThing created", "response", utils.FormatJSON(resp))
+	log.Info("Remote WrappedThing created")
 	if resp == nil {
 		return fmt.Errorf("the create response of WrappedThing has no resource")
 	}
@@ -91,12 +90,12 @@ func (r *WrappedThingReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the update request of WrappedThing: %w", err)
 	}
-	log.Info("Updating remote WrappedThing", "id", id, "WrappedThing", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.WrappedThingsServiceReplaceWrappedThing(ctx).ReplaceWrappedThingRequest(*body).Execute()
+	log.Info("Updating remote WrappedThing", "id", id)
+	_, httpResp, err := r.Client.WrappedThingsServiceReplaceWrappedThing(ctx).ReplaceWrappedThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote WrappedThing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote WrappedThing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote WrappedThing updated", "id", id)
 	return nil
 }
 

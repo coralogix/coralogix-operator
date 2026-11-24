@@ -23,9 +23,6 @@ import (
 	coralogixv1alpha1 "{{.Module}}/api/coralogix/v1alpha1"
 	"{{.Module}}/internal/config"
 	coralogixreconciler "{{.Module}}/internal/controller/coralogix/coralogix-reconciler"
-{{- if not .HideBodiesInLogs}}
-	"{{.Module}}/internal/utils"
-{{- end}}
 )
 
 // {{.Kind}}Reconciler reconciles a {{.Kind}} object.
@@ -71,20 +68,12 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err != nil {
 		return fmt.Errorf("error on building the request of {{.Kind}}: %w", err)
 	}
-{{- if .HideBodiesInLogs}}
 	log.Info("Overwriting remote {{.Kind}}")
-{{- else}}
-	log.Info("Overwriting remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
-{{- end}}
-	{{if .HideBodiesInLogs}}_{{else}}resp{{end}}, httpResp, err := r.Client.{{.UpdateMethod}}(ctx).{{.UpdateSetter}}(*body).Execute()
+	_, httpResp, err := r.Client.{{.UpdateMethod}}(ctx).{{.UpdateSetter}}(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-{{- if .HideBodiesInLogs}}
 	log.Info("Remote {{.Kind}} overwritten")
-{{- else}}
-	log.Info("Remote {{.Kind}} overwritten", "response", utils.FormatJSON(resp))
-{{- end}}
 	return coralogixreconciler.AddFinalizer(ctx, log, cr, r)
 }
 
@@ -156,18 +145,12 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return nil
 	}
 {{- end}}
-{{- if .HideBodiesInLogs}}
 	log.Info("Creating remote {{.Kind}}")
-{{- else}}
-	log.Info("Creating remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
-{{- end}}
 	resp, httpResp, err := r.Client.{{.CreateMethod}}(ctx).{{.CreateSetter}}(*body).Execute()
 	if err != nil {
 		return {{$.CreateReturn}}fmt.Errorf("error on creating remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-{{- if not .HideBodiesInLogs}}
-	log.Info("Remote {{.Kind}} created", "response", utils.FormatJSON(resp))
-{{- end}}
+	log.Info("Remote {{.Kind}} created")
 	if resp == nil {
 		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
 	}
@@ -289,24 +272,12 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
-{{- if .HideBodiesInLogs}}
 	log.Info("Updating remote {{.Kind}}"{{if not .StatuslessSingleton}}, "id", id{{end}})
-{{- else}}
-{{- if .StatuslessSingleton}}
-	log.Info("Replacing remote {{.Kind}}", "{{.Kind}}", utils.FormatJSON(body))
-{{- else}}
-	log.Info("Updating remote {{.Kind}}", "id", id, "{{.Kind}}", utils.FormatJSON(body))
-{{- end}}
-{{- end}}
-	{{if and .HideBodiesInLogs (not .Hooks.AfterUpdate)}}_{{else}}resp{{end}}, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not (or .UpdateIDInBody .Singleton)}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}({{if .MaskArms}}cr.UpdateMask(){{else}}coralogixv1alpha1.{{.Kind}}UpdateMask{{end}}){{end}}.Execute()
+	{{if .Hooks.AfterUpdate}}resp{{else}}_{{end}}, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not (or .UpdateIDInBody .Singleton)}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}({{if .MaskArms}}cr.UpdateMask(){{else}}coralogixv1alpha1.{{.Kind}}UpdateMask{{end}}){{end}}.Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote {{.Kind}}{{if not .StatuslessSingleton}} %s{{end}}: %w"{{if not .StatuslessSingleton}}, id{{end}}, cxsdk.NewAPIError(httpResp, err))
 	}
-{{- if .HideBodiesInLogs}}
 	log.Info("Remote {{.Kind}} updated"{{if not .StatuslessSingleton}}, "id", id{{end}})
-{{- else}}
-	log.Info("Remote {{.Kind}} updated", "response", utils.FormatJSON(resp))
-{{- end}}
 {{- if .StatuslessSingleton}}
 	if err := coralogixreconciler.AddFinalizer(ctx, log, cr, r); err != nil {
 		return err
