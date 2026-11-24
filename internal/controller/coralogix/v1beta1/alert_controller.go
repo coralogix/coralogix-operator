@@ -74,6 +74,20 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		return fmt.Errorf("error on extracting alert properties: %w", err)
 	}
 
+	// status.id is the only link to the remote alert. When it is lost (a failed status write
+	// after Create, a status reset, a NotFound that was not real), a blind Create leaves the old
+	// remote alert running with no owner. Adopt the remote alert that carries this Alert's UID.
+	adoptedID, err := r.findAdoptableAlert(ctx, log, alert)
+	if err != nil {
+		return err
+	}
+	if adoptedID != "" {
+		log.Info("Adopted remote alert that carries the identity of this Alert", "id", adoptedID)
+		alert.Status = coralogixv1beta1.AlertStatus{ID: &adoptedID}
+		return nil
+	}
+
+	props.EntityLabels = withIdentityLabels(props.EntityLabels, alert)
 	createRequest := &alerts.CreateAlertDefinitionRequest{
 		AlertDefProperties: props,
 		AccessPolicy:       alert.Spec.ExtractCreateAccessPolicy(),
@@ -111,6 +125,9 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		return fmt.Errorf("alert ID is missing")
 	}
 
+	// Replace overwrites every label, so send the identity labels each time. This also labels
+	// alerts that were created before the operator wrote them.
+	props.EntityLabels = withIdentityLabels(props.EntityLabels, alert)
 	updateRequest := alerts.ReplaceAlertDefinitionRequest{
 		AlertDefProperties: props,
 		Id:                 alert.Status.ID,

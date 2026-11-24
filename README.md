@@ -114,3 +114,18 @@ Please refer to [CONTRIBUTING.md](CONTRIBUTING.md).
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) which provides a reconcile function responsible for synchronizing resources until the Desired state is reached on the cluster.
+#### Remote identity labels (Alert)
+The operator links a custom resource to its remote Coralogix object through `status.id`.
+To find the remote alert again when `status.id` is lost, the operator adds these entity
+labels to every alert that it creates or updates:
+
+| Label | Value |
+|-------|-------|
+| `coralogix.operator.uid` | The UID of the `Alert` resource. This label identifies the alert. |
+| `coralogix.operator.namespace` | The namespace of the `Alert` resource, for people to read. |
+| `coralogix.operator.name` | The name of the `Alert` resource, for people to read. |
+
+When an `Alert` has no `status.id`, the operator first looks for a remote alert with its
+`coralogix.operator.uid` label. If it finds one, it adopts that alert and does not create a
+new one. These labels replace any `spec.entityLabels` with the same keys. The operator never
+deletes remote alerts that it did not link through `status.id`.

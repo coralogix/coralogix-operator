@@ -51,4 +51,12 @@ const (
 	PrometheusRuleAlertRouterNotifyOnAnnotationKey = "app.coralogix.com/alert-router-notify-on"
 
 	LogVerbosityAnnotationKey = "app.coralogix.com/log-verbosity"
+
+	// Remote identity labels: the operator writes them on each remote resource that can hold
+	// labels, so that it can find the resource again when status.id is lost. The UID label is
+	// the identity. The namespace and name labels only help people read the remote resource.
+	// The keys use dots only, like the routing labels of an alert.
+	RemoteIdentityUIDLabelKey       = "coralogix.operator.uid"
+	RemoteIdentityNamespaceLabelKey = "coralogix.operator.namespace"
+	RemoteIdentityNameLabelKey      = "coralogix.operator.name"
 )
