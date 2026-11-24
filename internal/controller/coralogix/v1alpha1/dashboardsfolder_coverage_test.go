@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -88,6 +89,7 @@ var _ = Describe("DashboardsFolder coverage specs (generated)", func() {
 // that the e2e test sets.
 func newDashboardsFolderCoverageCR(name, spec string) *coralogixv1alpha1.DashboardsFolder {
 	cr := &coralogixv1alpha1.DashboardsFolder{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
+	spec = strings.ReplaceAll(spec, "00000000-0000-4000-8000-0000000e2e01", strings.ReplaceAll(strings.ReplaceAll("@{uuid}", "@{run}", name), "@{uuid}", uuid.NewString()))
 	spec = strings.ReplaceAll(spec, "dashboards-folder-parent-sample", strings.ReplaceAll("@{run}-parent", "@{run}", name))
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()

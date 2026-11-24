@@ -36,7 +36,9 @@ type e2eFile struct {
 	Fixtures []e2eFixture `yaml:"fixtures"`
 	// Minimal adds fields that the API needs although the CRD marks them optional.
 	Minimal map[string]any `yaml:"minimal"`
-	// Substitutions replace sample values with run-specific values in generated tests.
+	// Substitutions replace sample values with run-specific values in generated tests. A value
+	// can name @{run}, the name of the CR, and @{uuid}, a new UUID for each CR, for an id that the
+	// API keeps unique across the account.
 	Substitutions map[string]string `yaml:"substitutions"`
 	// Upgrade freezes the spec accepted by a released chart.
 	Upgrade *e2eUpgrade `yaml:"upgrade"`
@@ -135,6 +137,9 @@ func readE2E(path string) (*e2eFile, error) {
 	return &f, nil
 }
 
+// uuidToken in a substitution is a new UUID for each CR that a generated test builds.
+const uuidToken = "@{uuid}"
+
 var (
 	envName = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 	envRef  = regexp.MustCompile(`@\{env\.([^}]*)\}`)
@@ -184,6 +189,8 @@ type e2eData struct {
 	Overwrite *overwriteData
 	// Env are the environment variables that the live tests read.
 	Env []string
+	// UUID is true when a substitution names @{uuid}: the tests import the uuid package.
+	UUID bool
 }
 
 // overwriteData is the e2e test of an overwrite resource. The spec holds one list; the test gives its
@@ -209,6 +216,8 @@ type fixtureData struct {
 
 type substitutionData struct {
 	From, To string
+	// UUID is true when To names @{uuid}.
+	UUID bool
 }
 
 type upgradeData struct {
@@ -317,7 +326,10 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		e2e.Fixtures = append(e2e.Fixtures, fixtureData{fixture.Kind, fixture.Suffix, fixture.StatusField, goString(string(encoded))})
 	}
 	for _, from := range sortedKeys(file.Substitutions) {
-		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, file.Substitutions[from]})
+		to := file.Substitutions[from]
+		hasUUID := strings.Contains(to, uuidToken)
+		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, to, hasUUID})
+		e2e.UUID = e2e.UUID || hasUUID
 	}
 	if file.Upgrade != nil {
 		for name := range file.Upgrade.Spec {
@@ -340,6 +352,20 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	// The values also make the sample, which must not name a variable.
 	if envRef.MatchString(e2e.FullJSON) || envRef.MatchString(e2e.MinimalJSON) {
 		return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":values", msg: "a value reaches the sample; name the variable in a substitution of the value"}
+	}
+	// A new UUID is made for each CR when a substitution is applied. The sample, the fixtures, and
+	// the upgrade check apply no substitution.
+	uuidTexts := []string{e2e.FullJSON, e2e.MinimalJSON}
+	for _, fixture := range e2e.Fixtures {
+		uuidTexts = append(uuidTexts, fixture.SpecJSON)
+	}
+	if e2e.Upgrade != nil {
+		uuidTexts = append(uuidTexts, e2e.Upgrade.SpecJSON, e2e.Upgrade.Value)
+	}
+	for _, text := range uuidTexts {
+		if strings.Contains(text, uuidToken) {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName, msg: uuidToken + " is valid only in a substitution; keep a fixed value in values and map it to " + uuidToken + " in substitutions"}
+		}
 	}
 	var texts []string
 	for _, fixture := range e2e.Fixtures {

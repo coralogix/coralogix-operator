@@ -6,6 +6,9 @@ fixtures:
       name: '@{run}-parent'
 substitutions:
   dashboards-folder-parent-sample: '@{run}-parent'
+  # The API keeps a custom id unique in the account. A fixed id would make every run after a
+  # stopped run fail with 409, so each CR gets a new one. The sample keeps the fixed id.
+  00000000-0000-4000-8000-0000000e2e01: '@{uuid}'
 values:
   customId: 00000000-0000-4000-8000-0000000e2e01
   parentFolderRef: {name: dashboards-folder-parent-sample}

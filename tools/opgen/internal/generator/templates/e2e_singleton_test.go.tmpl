@@ -14,7 +14,9 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/onsi/ginkgo/v2"
+
+{{if .E2E.UUID}}	"github.com/google/uuid"
+{{end}}	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -146,7 +148,7 @@ func remove{{.Kind}}Generated(ctx context.Context, crClient client.Client, name 
 func new{{.Kind}}Generated(name, spec string) *coralogixv1alpha1.{{.Kind}} {
 	cr := &coralogixv1alpha1.{{.Kind}}{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: testNamespace}}
 	{{- range .E2E.Substitutions}}
-	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name))
+	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, {{if .UUID}}strings.ReplaceAll({{end}}strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name){{if .UUID}}, "@{uuid}", uuid.NewString()){{end}})
 	{{- end}}
 	{{- if .E2E.Env}}
 	spec = expand{{.Kind}}Env(spec)

@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/onsi/ginkgo/v2"
+
+{{if .E2E.UUID}}	"github.com/google/uuid"
+{{end}}	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,7 +75,7 @@ var _ = Describe("{{.Kind}} coverage specs (generated)", func() {
 func new{{.Kind}}CoverageCR(name, spec string) *coralogixv1alpha1.{{.Kind}} {
 	cr := &coralogixv1alpha1.{{.Kind}}{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
 	{{- range .E2E.Substitutions}}
-	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name))
+	spec = strings.ReplaceAll(spec, {{printf "%q" .From}}, {{if .UUID}}strings.ReplaceAll({{end}}strings.ReplaceAll({{printf "%q" .To}}, "@{run}", name){{if .UUID}}, "@{uuid}", uuid.NewString()){{end}})
 	{{- end}}
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
