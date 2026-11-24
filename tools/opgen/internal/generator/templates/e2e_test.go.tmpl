@@ -126,7 +126,19 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 			g.Expect(json.Unmarshal([]byte({{.Want}}), &wantFields)).To(Succeed())
 			g.Expect(gotFields[{{printf "%q" .Check}}]).To(Equal(wantFields[{{printf "%q" .Check}}]))
 {{- else}}
+{{- if .ListGet}}
+			matched := false
+			for _, item := range {{.ListGet}} {
+				if {{.Match}} {
+					g.Expect({{.Got}}).To(Equal({{.Want}}))
+					matched = true
+					break
+				}
+			}
+			g.Expect(matched).To(BeTrue(), "the updated list item is missing")
+{{- else}}
 			g.Expect({{.Got}}).To(Equal({{.Want}}))
+{{- end}}
 {{- end}}
 		}, time.Minute, time.Second).Should(Succeed())
 {{- end}}

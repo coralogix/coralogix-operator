@@ -114,6 +114,8 @@ type SingletonID struct {
 	// Fixed is the status id that Create writes. A released kind keeps the id that its objects
 	// hold.
 	Fixed string `yaml:"fixed"`
+	// None keeps the released status of a singleton without an id.
+	None bool `yaml:"none"`
 }
 
 // InlineParent is the object of the API response that holds an inlined field.
@@ -137,6 +139,10 @@ const (
 // API cannot remove: api.operations names the POST as create and update, and delete is none.
 func (f *File) Upserts() bool {
 	return f != nil && f.API.Operations != nil && f.API.Operations.Delete == UpsertDelete
+}
+
+func (f *File) StatuslessSingleton() bool {
+	return f != nil && f.SingletonID != nil && f.SingletonID.None
 }
 
 // UpsertOperations returns the operation ids that the shared module reads for an upsert: the ids of
@@ -833,8 +839,11 @@ func (f *File) checkFinalizer() error {
 // so create and update name it. The API cannot remove it, so delete is none. The status id is fixed.
 func (f *File) checkSingleton() error {
 	if !f.Upserts() {
-		if f.SingletonID != nil {
-			return errors.New("singletonID: only a singleton that api.operations sets with delete: none has a fixed id")
+		if f.SingletonID == nil {
+			return nil
+		}
+		if !f.SingletonID.None || f.SingletonID.Fixed != "" || f.Mode != ModeExisting || f.API.Operations == nil || f.API.Operations.Delete == UpsertDelete || f.API.Overwrite != nil {
+			return errors.New("singletonID.none: an existing singleton with separate Create, Get, Update, and Delete operations is required")
 		}
 		return nil
 	}
@@ -848,7 +857,7 @@ func (f *File) checkSingleton() error {
 		return fmt.Errorf("api.operations: an operation id cannot end in %s or %s", UpsertPutSuffix, UpsertDeleteSuffix)
 	case a.Overwrite != nil || a.Delete != nil || a.RequestWrapper != "" || a.UpdateIDInBody || a.ClientSetID || a.ServerSetID || a.IDProperty != "" || a.CustomMethods || a.UpdateMaskInBody || a.CreateResponseOnlyIDProperty != "" || len(a.RequestValues) != 0:
 		return errors.New("api.operations.delete: none describes a singleton without an id or a wrapper; it cannot go with the other api keys")
-	case f.SingletonID == nil || f.SingletonID.Fixed == "":
+	case f.SingletonID == nil || f.SingletonID.Fixed == "" || f.SingletonID.None:
 		return errors.New("singletonID.fixed is required: the API has no id, so Create writes this one to status.id")
 	case f.Content != nil:
 		return errors.New("api.operations.delete: none cannot go with content")

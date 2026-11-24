@@ -110,8 +110,9 @@ type kindData struct {
 	// Singleton: the API has one resource per team and no id (api.operations with delete: none).
 	// Create and Update call the Set operation, Create writes SingletonID to status.id, and the
 	// generated Delete makes no call.
-	Singleton   bool
-	SingletonID string
+	Singleton           bool
+	SingletonID         string
+	StatuslessSingleton bool
 	// inlined is the object of the response that holds each field of an inline line on the
 	// resource.
 	inlined map[string]overrides.InlineParent
@@ -499,7 +500,7 @@ func checkLifecycle(r *model.Resource, file *overrides.File) error {
 		return checkOverwrite(r)
 	}
 	switch {
-	case r.Singleton && file.Upserts():
+	case r.Singleton && (file.Upserts() || file.StatuslessSingleton()):
 		return nil // the status id is fixed, and no call takes an id
 	case r.Singleton:
 		return unsupported("resource", "a singleton is supported only when one POST sets it: api.operations with delete: none")

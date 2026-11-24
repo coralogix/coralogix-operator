@@ -25,7 +25,7 @@ type {{.Name}} {{.GoType}}
 {{end -}}
 // {{.Kind}}Status defines the observed state of a {{.Kind}}.
 type {{.Kind}}Status struct {
-{{- if not .Overwrite}}
+{{- if not (or .Overwrite .StatuslessSingleton)}}
 	// +optional
 	ID *string `json:"id,omitempty"`
 {{end}}
@@ -57,9 +57,14 @@ func (in *{{.Kind}}) SetPrintableStatus(printableStatus string) {
 	in.Status.PrintableStatus = printableStatus
 }
 
-{{if .Overwrite -}}
+{{if or .Overwrite .StatuslessSingleton -}}
+{{if .StatuslessSingleton -}}
+// HasIDInStatus is always true: this singleton has no status id. The shared reconciler takes the
+// Update path, which writes the spec.
+{{- else -}}
 // HasIDInStatus is always true: the {{.Kind}} is the whole list of the API, which always exists. The
 // shared reconciler then takes the Update path, which writes the list.
+{{- end}}
 func (in *{{.Kind}}) HasIDInStatus() bool {
 	return true
 }
