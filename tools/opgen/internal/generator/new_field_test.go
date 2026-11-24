@@ -805,3 +805,88 @@ func withNewAIEvaluationField(t *testing.T, spec []byte) []byte {
 	}
 	return out
 }
+
+// A new optional field of the family reaches the type, both family conversions, the nested update
+// mask, the sample, and the e2e test with no new override line. The mask names it as family.probeNote.
+func TestConfigurationGroupNewFieldWithoutOverrides(t *testing.T) {
+	input, err := source.Resolve(".")
+	if err != nil {
+		if os.Getenv("CI") != "" {
+			t.Fatal(err)
+		}
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	entry := kindEntry{Kind: "ConfigurationGroup", Resource: "ConfigurationGroup"}
+	dir := filepath.Join(input.ModuleRoot, entry.dir())
+	file, err := readOverrides(filepath.Join(dir, "behavior-overrides.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	e2e, err := readE2E(filepath.Join(dir, e2eFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	render := func(spec []byte) map[string][]byte {
+		t.Helper()
+		doc, err := (&documents{raw: spec}).forKind(entry, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, input.SDKModule, input.Module, e2e, file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := renderAll([]*validated{v}, input.SDKModule, input.Module)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out.files
+	}
+	before := render(input.OpenAPI)
+	after := render(withNewFamilyField(t, input.OpenAPI))
+	for name, content := range after {
+		for _, line := range removedLines(string(before[name]), string(content)) {
+			// The mask paths are one line, so a new path changes it.
+			if !strings.HasPrefix(strings.TrimSpace(line), "paths := []string{") {
+				t.Errorf("%s: a new field changed an existing line: %s", name, line)
+			}
+		}
+	}
+	for _, want := range []struct{ file, text string }{
+		{"api/coralogix/v1alpha1/configurationgroup_types.go", "ProbeNote *string `json:\"probeNote,omitempty\"`"},
+		{"api/coralogix/v1alpha1/configurationgroup_types.go", "+kubebuilder:validation:MaxLength=20"},
+		{"api/coralogix/v1alpha1/configurationgroup_convert.go", `"family.probeNote"`},
+		{"config/samples/v1alpha1/generated/configurationgroup.yaml", "probeNote:"},
+		{"tests/e2e/configurationgroup_generated_test.go", `"probeNote":`},
+	} {
+		if !strings.Contains(normalizeSpace(string(after[want.file])), normalizeSpace(want.text)) {
+			t.Errorf("%s has no %q", want.file, want.text)
+		}
+	}
+	if n := strings.Count(string(after["api/coralogix/v1alpha1/configurationgroup_convert.go"]), "out.ProbeNote = in.ProbeNote"); n != 2 {
+		t.Errorf("want probeNote in the Create and the Update family, got %d conversions", n)
+	}
+	if string(after["scripts/upgrade-check-configurationgroup.sh"]) != string(before["scripts/upgrade-check-configurationgroup.sh"]) {
+		t.Error("a new field changed the released chart upgrade check")
+	}
+}
+
+// withNewFamilyField adds probeNote to the family of the configuration group: the Create, Update,
+// and resource components.
+func withNewFamilyField(t *testing.T, spec []byte) []byte {
+	t.Helper()
+	var doc map[string]any
+	if err := yaml.Unmarshal(spec, &doc); err != nil {
+		t.Fatal(err)
+	}
+	schemas := doc["components"].(map[string]any)["schemas"].(map[string]any)
+	for _, name := range []string{"ConfigurationFamilyCreate", "ConfigurationFamilyUpdate", "ConfigurationFamily"} {
+		props := schemas[name].(map[string]any)["properties"].(map[string]any)
+		props["probeNote"] = map[string]any{"type": "string", "x-coralogix-presence": true, "description": "A note.", "maxLength": 20}
+	}
+	out, err := yaml.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}

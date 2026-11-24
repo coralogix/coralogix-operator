@@ -5,22 +5,22 @@
   "shards": [
     {
       "name": "coverage-1",
-      "filter": "coverage && (coverage-aievaluation-1 || coverage-aievaluation-2 || coverage-events2metric-1 || coverage-globalrouter-1)",
+      "filter": "coverage && (coverage-aievaluation-1 || coverage-aievaluation-2 || coverage-configurationgroup-1 || coverage-events2metric-1)",
       "steps": 4
     },
     {
       "name": "coverage-2",
-      "filter": "coverage && (coverage-preset-1 || coverage-slo-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1)",
+      "filter": "coverage && (coverage-globalrouter-1 || coverage-preset-1 || coverage-slo-1 || coverage-tcologspolicies-1)",
       "steps": 4
     },
     {
       "name": "coverage-3",
-      "filter": "coverage && (coverage-tcotracespolicies-1 || coverage-view-1)",
-      "steps": 2
+      "filter": "coverage && (coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
+      "steps": 3
     },
     {
       "name": "coverage-rest",
-      "filter": "coverage && !(coverage-aievaluation-1 || coverage-aievaluation-2 || coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-slo-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
+      "filter": "coverage && !(coverage-aievaluation-1 || coverage-aievaluation-2 || coverage-configurationgroup-1 || coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-slo-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
       "steps": 0
     }
   ]

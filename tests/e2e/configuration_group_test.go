@@ -27,6 +27,9 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	fleetmanagerconfigurationgroups "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/fleet_manager_configuration_groups"
+
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
@@ -34,12 +37,14 @@ import (
 var _ = Describe("ConfigurationGroup", Ordered, func() {
 	var (
 		crClient             client.Client
+		apiClient            *fleetmanagerconfigurationgroups.FleetManagerConfigurationGroupsAPIService
 		configurationGroup   *coralogixv1alpha1.ConfigurationGroup
 		configurationGroupID string
 	)
 
 	BeforeAll(func() {
 		crClient = ClientsInstance.GetControllerRuntimeClient()
+		apiClient = newOpenAPIClientSet().ConfigGroups()
 	})
 
 	It("Should be created successfully", func(ctx context.Context) {
@@ -54,11 +59,11 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 				Name:        name,
 				Description: ptr.To("e2e configuration group"),
 				Tags:        []string{"e2e"},
-				Family: coralogixv1alpha1.ConfigurationFamilySpec{
+				Family: coralogixv1alpha1.ConfigurationGroupConfigurationFamily{
 					Active: ptr.To(true),
-					Raw: &coralogixv1alpha1.RawConfigurationFamilySpec{
+					Raw: &coralogixv1alpha1.ConfigurationGroupRawConfigurationFamily{
 						CollectorVersion: ptr.To("0.114.0"),
-						RemoteConfigurations: []coralogixv1alpha1.RemoteConfigurationSpec{
+						RemoteConfigurations: []coralogixv1alpha1.ConfigurationGroupRemoteConfiguration{
 							{
 								Name: ptr.To("default"),
 								RawConfiguration: `receivers:
@@ -66,7 +71,7 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
     protocols:
       grpc: {}
 `,
-								AgentSelector: &coralogixv1alpha1.AgentSelectorSpec{Attributes: map[string]string{
+								AgentSelector: &coralogixv1alpha1.ConfigurationGroupAgentSelectorResponse{Attributes: map[string]string{
 									"cx.agent.type":   "agent",
 									"service.version": "0.114.0",
 								}},
@@ -115,6 +120,40 @@ var _ = Describe("ConfigurationGroup", Ordered, func() {
 			g.Expect(*fetched.Spec.Description).To(Equal(updatedDescription))
 			g.Expect(fetched.Status.ID).ToNot(BeNil())
 			g.Expect(*fetched.Status.ID).To(Equal(configurationGroupID))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Reading the description from the API")
+		Eventually(func(g Gomega) {
+			got, httpResp, err := apiClient.ConfigurationGroupServiceGetConfigurationGroup(ctx, configurationGroupID).Execute()
+			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+			g.Expect(got.GetDescription()).To(Equal(updatedDescription))
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
+	// Update leaves an unset optional field out of the body and names it in the update mask, so
+	// the API clears the stored value.
+	It("Should clear removed optional fields", func(ctx context.Context) {
+		By("Removing the description and the tags")
+		current := &coralogixv1alpha1.ConfigurationGroup{}
+		Expect(crClient.Get(ctx, client.ObjectKeyFromObject(configurationGroup), current)).To(Succeed())
+		modified := current.DeepCopy()
+		modified.Spec.Description = nil
+		modified.Spec.Tags = nil
+		Expect(crClient.Patch(ctx, modified, client.MergeFrom(current))).To(Succeed())
+
+		By("Verifying the API cleared them")
+		Eventually(func(g Gomega) {
+			fetched := &coralogixv1alpha1.ConfigurationGroup{}
+			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(configurationGroup), fetched)).To(Succeed())
+			condition := meta.FindStatusCondition(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)
+			g.Expect(condition).ToNot(BeNil())
+			g.Expect(condition.Status).To(Equal(metav1.ConditionTrue))
+			g.Expect(condition.ObservedGeneration).To(Equal(fetched.GetGeneration()))
+
+			got, httpResp, err := apiClient.ConfigurationGroupServiceGetConfigurationGroup(ctx, configurationGroupID).Execute()
+			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
+			g.Expect(got.GetDescription()).To(BeEmpty())
+			g.Expect(got.GetTags()).To(BeEmpty())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 

@@ -65,7 +65,6 @@ rules:
       - alertsets
       - apikeys
       - archivemetricstargets
-      - configurationgroups
       - connectors
       - customenrichments
       - customroles
@@ -95,7 +94,6 @@ rules:
       - alertsets/finalizers
       - apikeys/finalizers
       - archivemetricstargets/finalizers
-      - configurationgroups/finalizers
       - connectors/finalizers
       - customenrichments/finalizers
       - customroles/finalizers
@@ -119,7 +117,6 @@ rules:
       - alertsets/status
       - apikeys/status
       - archivemetricstargets/status
-      - configurationgroups/status
       - connectors/status
       - customenrichments/status
       - customroles/status
@@ -150,6 +147,7 @@ rules:
     resources:
       - aievaluations
       - archivelogstargets
+      - configurationgroups
       - dashboards
       - dashboardsfolders
       - events2metrics
@@ -174,6 +172,7 @@ rules:
     resources:
       - aievaluations/finalizers
       - archivelogstargets/finalizers
+      - configurationgroups/finalizers
       - dashboards/finalizers
       - dashboardsfolders/finalizers
       - events2metrics/finalizers
@@ -192,6 +191,7 @@ rules:
     resources:
       - aievaluations/status
       - archivelogstargets/status
+      - configurationgroups/status
       - dashboards/status
       - dashboardsfolders/status
       - events2metrics/status

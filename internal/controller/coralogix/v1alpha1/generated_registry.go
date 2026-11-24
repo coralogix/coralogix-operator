@@ -45,6 +45,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.ArchiveLogsTargetKind, err)
 	}
+	if err := (&ConfigurationGroupReconciler{
+		Client:    clientSet.ConfigGroups(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.ConfigurationGroupKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.ConfigurationGroupKind, err)
+	}
 	if err := (&DashboardReconciler{
 		Client:    clientSet.Dashboards(),
 		ClientSet: clientSet,
