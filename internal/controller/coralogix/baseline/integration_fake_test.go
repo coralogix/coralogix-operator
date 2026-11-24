@@ -15,6 +15,7 @@
 package baseline
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -36,8 +37,13 @@ var integrationDefinitions = map[string]map[string][]string{
 		"IntegrationName", "AwsRoleArn", "AwsRegion", "ApplicationName", "SubsystemName",
 		"MetricNamespaces", "WithAggregations", "EnrichWithTags",
 	}},
-	"gcp-metrics-collector": {"1.0.0": nil},
+	"gcp-metrics-collector": {"1.0.0": {"MetricPrefixes", "ServiceAccountKey"}},
 }
+
+// integrationServiceAccountKeys are the parameters that hold a GCP service account key. The real
+// API checks that the key is JSON with a string project_id, and Get shows the parameter as
+// sensitiveData without its value.
+var integrationServiceAccountKeys = map[string]string{"gcp-metrics-collector": "ServiceAccountKey"}
 
 type integrationRecord struct {
 	key        string
@@ -134,6 +140,9 @@ func (f *integrationFake) create(body any) (int, any) {
 	if len(missing) > 0 {
 		return integrationBadRequest(strings.Join(missing, "\n"))
 	}
+	if status, answer := checkServiceAccountKey(rec, "create"); status != 0 {
+		return status, answer
+	}
 	id := newUUID()
 	f.integrations[id] = rec
 	return http.StatusOK, map[string]any{"integrationId": id}
@@ -150,6 +159,9 @@ func (f *integrationFake) update(body any) (int, any) {
 	stored, ok := f.integrations[id]
 	if !ok {
 		return integrationNotFound(id)
+	}
+	if status, answer := checkServiceAccountKey(rec, "update"); status != 0 {
+		return status, answer
 	}
 	// A parameter that the request omits keeps its stored value.
 	for key, value := range rec.parameters {
@@ -218,16 +230,39 @@ func readIntegrationMetadata(metadata map[string]any) (integrationRecord, int, a
 	return rec, 0, nil
 }
 
+// checkServiceAccountKey answers 400 when the request sends a service account key that is not JSON
+// with a string project_id. The real API does not check the key with GCP.
+func checkServiceAccountKey(rec integrationRecord, call string) (int, any) {
+	name, ok := integrationServiceAccountKeys[rec.key]
+	if !ok {
+		return 0, nil
+	}
+	value, ok := rec.parameters[name]
+	if !ok {
+		return 0, nil
+	}
+	text, _ := value["stringValue"].(string)
+	var key map[string]any
+	if err := json.Unmarshal([]byte(text), &key); err == nil {
+		if _, ok := key["project_id"].(string); ok {
+			return 0, nil
+		}
+	}
+	return integrationBadRequest("Invalid argument: Calling service " + call + " for " + rec.key +
+		" failed: code: 'Client specified an invalid argument', message: \"Service account key does not contain a string project_id\"")
+}
+
 func (r integrationRecord) answer(id string) map[string]any {
 	return map[string]any{
 		"id":                id,
 		"definitionKey":     r.key,
 		"definitionVersion": r.version,
-		"parameters":        r.parameterList(),
+		"parameters":        r.parameterList(integrationServiceAccountKeys[r.key]),
 	}
 }
 
-func (r integrationRecord) parameterList() []any {
+// parameterList returns the parameters sorted by key. The sensitive parameter has no value.
+func (r integrationRecord) parameterList(sensitive string) []any {
 	keys := make([]string, 0, len(r.parameters))
 	for key := range r.parameters {
 		keys = append(keys, key)
@@ -236,6 +271,11 @@ func (r integrationRecord) parameterList() []any {
 	out := make([]any, 0, len(keys))
 	for _, key := range keys {
 		p := map[string]any{"key": key}
+		if key == sensitive {
+			p["sensitiveData"] = map[string]any{}
+			out = append(out, p)
+			continue
+		}
 		for field, v := range r.parameters[key] {
 			p[field] = v
 		}

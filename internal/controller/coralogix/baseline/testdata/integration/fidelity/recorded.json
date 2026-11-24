@@ -333,6 +333,158 @@
           }
         }
       ]
+    },
+    {
+      "name": "GCP: a key without project_id, the released sample with its Secret, updates of the key, and a create with only a name",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Invalid argument: Calling service create for gcp-metrics-collector failed: code: 'Client specified an invalid argument', message: \"Service account key does not contain a string project_id\""
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "integrationId": "{{gcpSecret}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "integration": {
+              "definitionKey": "gcp-metrics-collector",
+              "definitionVersion": "1.0.0",
+              "id": "{{gcpSecret}}",
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-fidelity-gcp-secret-{{run}}"
+                },
+                {
+                  "key": "MetricPrefixes",
+                  "stringList": {
+                    "values": [
+                      "cloudsql.googleapis.com"
+                    ]
+                  }
+                },
+                {
+                  "key": "ServiceAccountKey",
+                  "sensitiveData": {}
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "gcp-metrics-collector"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "integration": {
+              "definitionKey": "gcp-metrics-collector",
+              "definitionVersion": "1.0.0",
+              "id": "{{gcpSecret}}",
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-fidelity-gcp-secret-{{run}}"
+                },
+                {
+                  "key": "MetricPrefixes",
+                  "stringList": {
+                    "values": [
+                      "cloudsql.googleapis.com"
+                    ]
+                  }
+                },
+                {
+                  "key": "ServiceAccountKey",
+                  "sensitiveData": {}
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "gcp-metrics-collector"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Invalid argument: Calling service update for gcp-metrics-collector failed: code: 'Client specified an invalid argument', message: \"Service account key does not contain a string project_id\""
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "integration": {
+              "definitionKey": "gcp-metrics-collector",
+              "definitionVersion": "1.0.0",
+              "id": "{{gcpSecret}}",
+              "parameters": [
+                {
+                  "key": "ApplicationName",
+                  "stringValue": "cxo"
+                },
+                {
+                  "key": "IntegrationName",
+                  "stringValue": "cxo-fidelity-gcp-secret-{{run}}"
+                },
+                {
+                  "key": "MetricPrefixes",
+                  "stringList": {
+                    "values": [
+                      "cloudsql.googleapis.com"
+                    ]
+                  }
+                },
+                {
+                  "key": "ServiceAccountKey",
+                  "sensitiveData": {}
+                },
+                {
+                  "key": "SubsystemName",
+                  "stringValue": "gcp-metrics-collector"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Required field MetricPrefixes not provided\nRequired field ServiceAccountKey not provided"
+          }
+        }
+      ]
     }
   ]
 }

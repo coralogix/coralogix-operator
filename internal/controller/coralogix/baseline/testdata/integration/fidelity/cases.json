@@ -558,6 +558,236 @@
           }
         }
       ]
+    },
+    {
+      "name": "GCP: a key without project_id, the released sample with its Secret, updates of the key, and a create with only a name",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "gcp-metrics-collector",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-gcp-nokey-{{run}}"
+                  },
+                  {
+                    "key": "MetricPrefixes",
+                    "stringList": {
+                      "values": [
+                        "cloudsql.googleapis.com"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "ServiceAccountKey",
+                    "stringValue": "{\"type\": \"service_account\"}"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "gcp-metrics-collector"
+                  }
+                ]
+              },
+              "version": "1.0.0"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "gcp-metrics-collector",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-gcp-secret-{{run}}"
+                  },
+                  {
+                    "key": "MetricPrefixes",
+                    "stringList": {
+                      "values": [
+                        "cloudsql.googleapis.com"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "ServiceAccountKey",
+                    "stringValue": "{\n  \"type\": \"service_account\",\n  \"project_id\": \"redacted\",\n  \"private_key_id\": \"redacted\",\n  \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nredacted\\n-----END PRIVATE KEY-----\",\n  \"client_email\": \"redacted@project-id.iam.gserviceaccount.com\",\n  \"client_id\": \"redacted\",\n  \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n  \"token_uri\": \"https://oauth2.googleapis.com/token\",\n  \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n  \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/redacted@project-id.iam.gserviceaccount.com\"\n}\n"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "gcp-metrics-collector"
+                  }
+                ]
+              },
+              "version": "1.0.0"
+            }
+          },
+          "capture": "gcpSecret"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{gcpSecret}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{gcpSecret}}",
+            "metadata": {
+              "integrationKey": "gcp-metrics-collector",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-gcp-secret-{{run}}"
+                  },
+                  {
+                    "key": "MetricPrefixes",
+                    "stringList": {
+                      "values": [
+                        "cloudsql.googleapis.com"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "ServiceAccountKey",
+                    "stringValue": "{\n  \"type\": \"service_account\",\n  \"project_id\": \"redacted\",\n  \"private_key_id\": \"redacted\",\n  \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nredacted\\n-----END PRIVATE KEY-----\",\n  \"client_email\": \"redacted@project-id.iam.gserviceaccount.com\",\n  \"client_id\": \"redacted\",\n  \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\n  \"token_uri\": \"https://oauth2.googleapis.com/token\",\n  \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",\n  \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/redacted@project-id.iam.gserviceaccount.com\"\n}\n"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "gcp-metrics-collector"
+                  }
+                ]
+              },
+              "version": "1.0.0"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{gcpSecret}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{gcpSecret}}",
+            "metadata": {
+              "integrationKey": "gcp-metrics-collector",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-gcp-secret-{{run}}"
+                  },
+                  {
+                    "key": "MetricPrefixes",
+                    "stringList": {
+                      "values": [
+                        "cloudsql.googleapis.com"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "ServiceAccountKey",
+                    "stringValue": "{\"type\": \"service_account\"}"
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "gcp-metrics-collector"
+                  }
+                ]
+              },
+              "version": "1.0.0"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "id": "{{gcpSecret}}",
+            "metadata": {
+              "integrationKey": "gcp-metrics-collector",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "ApplicationName",
+                    "stringValue": "cxo"
+                  },
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-gcp-secret-{{run}}"
+                  },
+                  {
+                    "key": "MetricPrefixes",
+                    "stringList": {
+                      "values": [
+                        "cloudsql.googleapis.com"
+                      ]
+                    }
+                  },
+                  {
+                    "key": "SubsystemName",
+                    "stringValue": "gcp-metrics-collector"
+                  }
+                ]
+              },
+              "version": "1.0.0"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/integrations/v1/deployed/{{gcpSecret}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/integrations/v1/instances/{{gcpSecret}}"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/metadata/v1",
+          "body": {
+            "metadata": {
+              "integrationKey": "gcp-metrics-collector",
+              "version": "1.0.0",
+              "integrationParameters": {
+                "parameters": [
+                  {
+                    "key": "IntegrationName",
+                    "stringValue": "cxo-fidelity-gcp-min-{{run}}"
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "gcpMinimal"
+        }
+      ]
     }
   ]
 }

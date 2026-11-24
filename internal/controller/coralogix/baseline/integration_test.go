@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/yaml"
 
 	openapicxsdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 
@@ -107,6 +108,25 @@ func integrationParameters() map[string]any {
 }
 
 // putSecret creates or updates a Secret in the scenario namespace.
+// gcpSampleWithSecret reads the released GCP sample: the data of its Secret, and the Integration
+// manifest.
+func gcpSampleWithSecret(h *harness) (map[string]string, string) {
+	h.t.Helper()
+	raw, err := os.ReadFile(filepath.Join(repoRoot, "config/samples/v1alpha1/integrations/gcp-metrics-collector-with-secret.yaml"))
+	if err != nil {
+		h.t.Fatal(err)
+	}
+	docs := strings.Split(string(raw), "\n---\n")
+	if len(docs) != 2 {
+		h.t.Fatalf("expected a Secret and an Integration, got %d documents", len(docs))
+	}
+	var secret corev1.Secret
+	if err := yaml.Unmarshal([]byte(docs[0]), &secret); err != nil {
+		h.t.Fatal(err)
+	}
+	return secret.StringData, docs[1]
+}
+
 func putSecret(h *harness, name string, data map[string]string) {
 	h.t.Helper()
 	secret := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: h.namespace}, StringData: data}
@@ -148,18 +168,19 @@ var integrationScenarios = map[string]func(h *harness){
 		h.CreateFromFile("create the released sample", "config/samples/v1alpha1/integrations/aws-metrics-collector.yaml")
 		h.Reconcile("resync: update sends the whole spec")
 	},
+	// The live API accepts the key of the sample Secret: it checks only that the key is JSON with a
+	// string project_id, and Get shows the key as sensitiveData.
 	"create-sample-with-secret": func(h *harness) {
-		raw, err := os.ReadFile(filepath.Join(repoRoot, "config/samples/v1alpha1/integrations/gcp-metrics-collector-with-secret.yaml"))
-		if err != nil {
-			h.t.Fatal(err)
-		}
-		docs := strings.Split(string(raw), "\n---\n")
-		if len(docs) != 2 {
-			h.t.Fatalf("expected a Secret and an Integration, got %d documents", len(docs))
-		}
-		putSecret(h, "gcp-metrics-collector-sa-key", map[string]string{"key.json": "{\"type\": \"service_account\"}"})
-		h.Create("create the released sample with a secret", docs[1])
+		secret, integration := gcpSampleWithSecret(h)
+		putSecret(h, "gcp-metrics-collector-sa-key", secret)
+		h.Create("create the released sample with its secret", integration)
 		h.Reconcile("resync")
+	},
+	"create-sample-key-without-project-id": func(h *harness) {
+		_, integration := gcpSampleWithSecret(h)
+		putSecret(h, "gcp-metrics-collector-sa-key", map[string]string{"key.json": "{\"type\": \"service_account\"}"})
+		h.Create("a service account key without project_id answers 400", integration)
+		h.Reconcile("retry with the same key")
 	},
 	"create-minimal": func(h *harness) {
 		h.Create("create", integrationManifest(integrationSpec))
@@ -220,6 +241,18 @@ var integrationScenarios = map[string]func(h *harness){
 	"secret-key-missing": func(h *harness) {
 		putSecret(h, "aws-role", map[string]string{"other": "value"})
 		h.Create("the secret has no such key", integrationManifest(integrationSecretSpec))
+	},
+	// The key leaves the Secret after Create. The reconcile fails before it sends an Update, and
+	// the integration keeps its last value. It updates once the key is back.
+	"secret-key-removed-after-create": func(h *harness) {
+		putSecret(h, "aws-role", map[string]string{"role-arn": "arn:aws:iam::123456789012:role/example-role"})
+		h.Create("create", integrationManifest(integrationSecretSpec))
+		putSecret(h, "aws-role", map[string]string{"other": "value"})
+		h.Reconcile("the key is gone from the secret")
+		h.Reconcile("retry while the key is still gone")
+		h.RecordRemote("the integration keeps the last role", integrations(h).snapshot())
+		putSecret(h, "aws-role", map[string]string{"role-arn": "arn:aws:iam::123456789012:role/restored-role"})
+		h.Reconcile("retry after the key is back")
 	},
 	"secret-optional-missing": func(h *harness) {
 		h.Create("an optional missing secret is skipped", integrationManifest(integrationSpecWithoutRoleArn+`  parametersFromSecret:
