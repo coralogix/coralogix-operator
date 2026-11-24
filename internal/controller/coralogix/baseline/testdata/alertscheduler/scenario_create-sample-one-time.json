@@ -1,0 +1,147 @@
+[
+  {
+    "step": "create the one-time sample",
+    "spec": {
+      "description": "One time alert scheduler sample",
+      "enabled": true,
+      "filter": {
+        "alerts": [
+          {
+            "resourceRef": {
+              "name": "metric-threshold"
+            }
+          }
+        ],
+        "whatExpression": "source logs | filter $d.cpodId:string == '122'"
+      },
+      "name": "one-time-scheduler-sample",
+      "schedule": {
+        "oneTime": {
+          "duration": {
+            "forOver": 7,
+            "frequency": "days"
+          },
+          "startTime": "2026-01-04T00:00:00.000",
+          "timezone": "UTC+2"
+        },
+        "operation": "activate"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "One time alert scheduler sample",
+            "enabled": true,
+            "filter": {
+              "alertUniqueIds": {
+                "value": [
+                  "<id-1>"
+                ]
+              },
+              "whatExpression": "source logs | filter $d.cpodId:string == '122'"
+            },
+            "name": "one-time-scheduler-sample",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "duration": {
+                    "forOver": 7,
+                    "frequency": "DURATION_FREQUENCY_DAY"
+                  },
+                  "startTime": "2026-01-04T00:00:00.000",
+                  "timezone": "UTC+2"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the resync sends a Replace and no Get",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "One time alert scheduler sample",
+            "enabled": true,
+            "filter": {
+              "alertUniqueIds": {
+                "value": [
+                  "<id-1>"
+                ]
+              },
+              "whatExpression": "source logs | filter $d.cpodId:string == '122'"
+            },
+            "name": "one-time-scheduler-sample",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "duration": {
+                    "forOver": 7,
+                    "frequency": "DURATION_FREQUENCY_DAY"
+                  },
+                  "startTime": "2026-01-04T00:00:00.000",
+                  "timezone": "UTC+2"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+            },
+            "uniqueIdentifier": "<id-2>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

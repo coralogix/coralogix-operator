@@ -1,0 +1,189 @@
+[
+  {
+    "step": "create the recurring sample",
+    "spec": {
+      "description": "One time alert scheduler sample",
+      "enabled": true,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "my-app"
+          },
+          {
+            "key": "env"
+          }
+        ],
+        "whatExpression": "source logs | filter $d.cpodId:string == '122'"
+      },
+      "name": "recurring-scheduler-sample",
+      "schedule": {
+        "operation": "mute",
+        "recurring": {
+          "dynamic": {
+            "frequency": {
+              "weekly": {
+                "days": [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday"
+                ]
+              }
+            },
+            "repeatEvery": 1,
+            "terminationDate": "2028-01-01T00:00:00.000",
+            "timeFrame": {
+              "endTime": "2027-06-04T23:59:59.999",
+              "startTime": "2026-01-04T00:00:00.000",
+              "timezone": "UTC+2"
+            }
+          }
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "One time alert scheduler sample",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "my-app"
+                  },
+                  {
+                    "key": "env"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter $d.cpodId:string == '122'"
+            },
+            "name": "recurring-scheduler-sample",
+            "schedule": {
+              "recurring": {
+                "schedule": {
+                  "repeatEvery": 1,
+                  "terminationDate": "2028-01-01T00:00:00.000",
+                  "timeframe": {
+                    "endTime": "2027-06-04T23:59:59.999",
+                    "startTime": "2026-01-04T00:00:00.000",
+                    "timezone": "UTC+2"
+                  },
+                  "weekly": {
+                    "daysOfWeek": [
+                      2,
+                      3,
+                      4
+                    ]
+                  }
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "One time alert scheduler sample",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "my-app"
+                  },
+                  {
+                    "key": "env"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter $d.cpodId:string == '122'"
+            },
+            "name": "recurring-scheduler-sample",
+            "schedule": {
+              "recurring": {
+                "schedule": {
+                  "repeatEvery": 1,
+                  "terminationDate": "2028-01-01T00:00:00.000",
+                  "timeframe": {
+                    "endTime": "2027-06-04T23:59:59.999",
+                    "startTime": "2026-01-04T00:00:00.000",
+                    "timezone": "UTC+2"
+                  },
+                  "weekly": {
+                    "daysOfWeek": [
+                      2,
+                      3,
+                      4
+                    ]
+                  }
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            },
+            "uniqueIdentifier": "<id-1>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

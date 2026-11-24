@@ -1,0 +1,142 @@
+[
+  {
+    "step": "create disabled: enabled false is sent",
+    "spec": {
+      "enabled": false,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "endTime": "2027-01-05T00:00:00.000",
+          "startTime": "2027-01-04T00:00:00.000",
+          "timezone": "UTC+0"
+        },
+        "operation": "mute"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": false,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: adding the finalizer dropped enabled false, the default set it to true, and the Replace enables the rule",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            },
+            "uniqueIdentifier": "<id-1>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

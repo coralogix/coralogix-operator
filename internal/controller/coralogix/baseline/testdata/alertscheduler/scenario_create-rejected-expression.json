@@ -1,0 +1,141 @@
+[
+  {
+    "step": "create with an expression that the API rejects",
+    "spec": {
+      "enabled": true,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "endTime": "2027-01-05T00:00:00.000",
+          "startTime": "2027-01-04T00:00:00.000",
+          "timezone": "UTC+0"
+        },
+        "operation": "mute"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

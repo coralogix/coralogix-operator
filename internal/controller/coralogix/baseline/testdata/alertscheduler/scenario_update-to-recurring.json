@@ -1,0 +1,188 @@
+[
+  {
+    "step": "create a one-time schedule",
+    "spec": {
+      "enabled": true,
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "endTime": "2027-01-05T00:00:00.000",
+          "startTime": "2027-01-04T00:00:00.000",
+          "timezone": "UTC+0"
+        },
+        "operation": "mute"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "switch to a monthly schedule",
+    "spec": {
+      "filter": {
+        "metaLabels": [
+          {
+            "key": "app",
+            "value": "cxo"
+          }
+        ],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "operation": "activate",
+        "recurring": {
+          "dynamic": {
+            "frequency": {
+              "monthly": {
+                "days": [
+                  1
+                ]
+              }
+            },
+            "repeatEvery": 2,
+            "timeFrame": {
+              "duration": {
+                "forOver": 1,
+                "frequency": "days"
+              },
+              "startTime": "2027-01-01T00:00:00.000",
+              "timezone": "UTC+0"
+            }
+          }
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertMetaLabels": {
+                "value": [
+                  {
+                    "key": "app",
+                    "value": "cxo"
+                  }
+                ]
+              },
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "recurring": {
+                "schedule": {
+                  "monthly": {
+                    "daysOfMonth": [
+                      1
+                    ]
+                  },
+                  "repeatEvery": 2,
+                  "timeframe": {
+                    "duration": {
+                      "forOver": 1,
+                      "frequency": "DURATION_FREQUENCY_DAY"
+                    },
+                    "startTime": "2027-01-01T00:00:00.000",
+                    "timezone": "UTC+0"
+                  }
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+            },
+            "uniqueIdentifier": "<id-1>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "alert-scheduler.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

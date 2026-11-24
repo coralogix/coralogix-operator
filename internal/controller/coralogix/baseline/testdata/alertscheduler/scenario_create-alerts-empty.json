@@ -1,0 +1,161 @@
+[
+  {
+    "step": "create with an empty alerts list: the rule is created, and adding the finalizer fails",
+    "spec": {
+      "enabled": true,
+      "filter": {
+        "alerts": [],
+        "whatExpression": "source logs | filter true"
+      },
+      "name": "Baseline scheduler",
+      "schedule": {
+        "oneTime": {
+          "endTime": "2027-01-05T00:00:00.000",
+          "startTime": "2027-01-04T00:00:00.000",
+          "timezone": "UTC+0"
+        },
+        "operation": "mute"
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertUniqueIds": {},
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "InternalK8sError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
+        "body": {
+          "alertSchedulerRule": {
+            "description": "",
+            "enabled": true,
+            "filter": {
+              "alertUniqueIds": {},
+              "whatExpression": "source logs | filter true"
+            },
+            "name": "Baseline scheduler",
+            "schedule": {
+              "oneTime": {
+                "timeframe": {
+                  "endTime": "2027-01-05T00:00:00.000",
+                  "startTime": "2027-01-04T00:00:00.000",
+                  "timezone": "UTC+0"
+                }
+              },
+              "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+            },
+            "uniqueIdentifier": "<id-1>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "the remote rule stays",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null,
+    "remote": {
+      "<id-1>": {
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "description": "",
+        "enabled": true,
+        "filter": {
+          "alertUniqueIds": {},
+          "whatExpression": "source logs | filter true"
+        },
+        "id": "<id-2>",
+        "metaLabels": [],
+        "name": "Baseline scheduler",
+        "schedule": {
+          "oneTime": {
+            "timeframe": {
+              "endTime": "2027-01-05T00:00:00.000",
+              "startTime": "2027-01-04T00:00:00.000",
+              "submittedStartTime": "2027-01-04T00:00:00.000",
+              "timezone": "UTC+0"
+            }
+          },
+          "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+        },
+        "uniqueIdentifier": "<id-1>",
+        "updatedAt": "2026-01-01T00:00:00.000Z"
+      }
+    }
+  }
+]
