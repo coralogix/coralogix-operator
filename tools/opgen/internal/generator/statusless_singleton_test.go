@@ -44,12 +44,15 @@ func TestListItemUpdateFindsTheSameItemInTheAPI(t *testing.T) {
 		"Rule.EntityType": {Name: "EntityType", Want: "string"},
 		"Rule.Enabled":    {Name: "Enabled", Want: "bool"},
 	}}
-	full := new(omap).set("rules", []any{new(omap).set("entityType", "logs").set("enabled", true)})
-	step, err := listUpdateStep(d, ix, &e2eFile{Update: &e2eUpdate{Field: "rules.enabled", Value: false}}, "RuleSet", full)
+	full := new(omap).set("rules", []any{new(omap).set("entityType", "sample-name").set("enabled", true)})
+	step, err := listUpdateStep(d, ix, &e2eFile{
+		Substitutions: map[string]string{"sample-name": "@{run}"},
+		Update:        &e2eUpdate{Field: "rules.enabled", Value: false},
+	}, "RuleSet", full)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if step.Field != "Rules[0].Enabled" || step.ListGet != "got.RuleSet.Rules" || step.Match != `item.EntityType == "logs"` || step.Got != "item.Enabled" || step.Want != "false" {
+	if step.Field != "Rules[0].Enabled" || step.ListGet != "got.RuleSet.Rules" || step.Match != "item.EntityType == updated.Spec.Rules[0].EntityType" || step.Got != "item.Enabled" || step.Want != "false" {
 		t.Fatalf("the update must identify the item and read its changed field: %+v", step)
 	}
 	list.Markers = nil

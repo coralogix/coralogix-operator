@@ -1141,8 +1141,7 @@ func listUpdateStep(d *kindData, ix *refIndex, file *e2eFile, resourceName strin
 			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "the full spec needs one list item"}
 		}
 		item := values[0]
-		keyValue, ok := objectValue(item, key.JSON).(string)
-		if !ok {
+		if _, ok := objectValue(item, key.JSON).(string); !ok {
 			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field", msg: "the list-map key needs a string value"}
 		}
 		value, err := updateValue(target, objectValue(item, target.JSON), file, false)
@@ -1180,7 +1179,7 @@ func listUpdateStep(d *kindData, ix *refIndex, file *e2eFile, resourceName strin
 		}
 		read += listRef.Name
 		return &updateData{Field: list.GoName + "[0]." + target.GoName, Set: set, Want: value, Got: got,
-			ListGet: read, Match: match + " == " + strconv.Quote(keyValue)}, nil
+			ListGet: read, Match: match + " == updated.Spec." + list.GoName + "[0]." + key.GoName}, nil
 	}
 	return nil, nil
 }
