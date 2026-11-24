@@ -28,7 +28,6 @@ const (
 	RecordingRuleGroupSetKind  = "RecordingRuleGroupSet"
 	OutboundWebhookKind        = "OutboundWebhook"
 	ApiKeyKind                 = "ApiKey"
-	CustomRoleKind             = "CustomRole"
 	ScopeKind                  = "Scope"
 	GroupKind                  = "Group"
 	QuotaAllocationRuleSetKind = "QuotaAllocationRuleSet"

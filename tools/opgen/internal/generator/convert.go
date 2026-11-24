@@ -1006,11 +1006,11 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 	}
 	switch {
 	case f.typ.Kind == model.List || f.typ.Kind == model.Set || f.typ.Kind == model.Map:
-		stmts, expr, _, err := b.value(f, rt, src, ref.Want, path)
+		stmts, expr, isPtr, err := b.value(f, rt, src, ref.Want, path)
 		if err != nil {
 			return "", err
 		}
-		code := stmts + target + " = " + expr + "\n"
+		code := stmts + b.set(target, ref.Want, expr, isPtr)
 		if f.sendNullAsEmpty {
 			// The API needs [] where the CR has none, not null.
 			return "if len(" + src + ") != 0 {\n" + code + "} else {\n" + target + " = " + qualify(ref.Want, b.alias) + "{}\n}\n", nil

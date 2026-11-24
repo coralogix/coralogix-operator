@@ -9,7 +9,6 @@ resources:
   - bases/coralogix.com_outboundwebhooks.yaml
   - bases/coralogix.com_apikeys.yaml
   - bases/coralogix.com_connectors.yaml
-  - bases/coralogix.com_customroles.yaml
   - bases/coralogix.com_scopes.yaml
   - bases/coralogix.com_groups.yaml
   - bases/coralogix.com_quotaallocationrulesets.yaml
@@ -24,6 +23,7 @@ resources:
   - bases/coralogix.com_aievaluations.yaml
   - bases/coralogix.com_archivelogstargets.yaml
   - bases/coralogix.com_configurationgroups.yaml
+  - bases/coralogix.com_customroles.yaml
   - bases/coralogix.com_dashboards.yaml
   - bases/coralogix.com_dashboardsfolders.yaml
   - bases/coralogix.com_events2metrics.yaml

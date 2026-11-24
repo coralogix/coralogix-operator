@@ -22,6 +22,7 @@ const (
 	AIEvaluationKind       = "AIEvaluation"
 	ArchiveLogsTargetKind  = "ArchiveLogsTarget"
 	ConfigurationGroupKind = "ConfigurationGroup"
+	CustomRoleKind         = "CustomRole"
 	DashboardKind          = "Dashboard"
 	DashboardsFolderKind   = "DashboardsFolder"
 	Events2MetricKind      = "Events2Metric"

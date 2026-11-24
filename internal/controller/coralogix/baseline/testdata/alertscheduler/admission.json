@@ -1,0 +1,510 @@
+{
+  "alert ref without name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filter.alerts[0].resourceRef.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "alert without resourceRef": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filter.alerts[0].resourceRef",
+        "message": "Required value"
+      }
+    ]
+  },
+  "duration forOver above int32": {
+    "accepted": true
+  },
+  "duration forOver negative": {
+    "accepted": true
+  },
+  "duration frequency API name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.schedule.oneTime.duration.frequency",
+        "message": "Unsupported value: \"DURATION_FREQUENCY_DAY\": supported values: \"minutes\", \"hours\", \"days\""
+      }
+    ]
+  },
+  "duration frequency weeks": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.schedule.oneTime.duration.frequency",
+        "message": "Unsupported value: \"weeks\": supported values: \"minutes\", \"hours\", \"days\""
+      }
+    ]
+  },
+  "duration without forOver": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.oneTime.duration.forOver",
+        "message": "Required value"
+      }
+    ]
+  },
+  "duration without frequency": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.oneTime.duration.frequency",
+        "message": "Required value"
+      }
+    ]
+  },
+  "dynamic daily": {
+    "accepted": true
+  },
+  "dynamic daily and weekly": {
+    "accepted": true
+  },
+  "dynamic empty frequency": {
+    "accepted": true
+  },
+  "dynamic repeatEvery negative": {
+    "accepted": true
+  },
+  "dynamic repeatEvery zero": {
+    "accepted": true
+  },
+  "dynamic terminationDate": {
+    "accepted": true
+  },
+  "dynamic terminationDate date only": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.recurring.dynamic.terminationDate",
+        "message": "Invalid value: \"2028-01-01\": spec.schedule.recurring.dynamic.terminationDate in body should match '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}$'"
+      }
+    ]
+  },
+  "dynamic without frequency": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.recurring.dynamic.frequency",
+        "message": "Required value"
+      }
+    ]
+  },
+  "dynamic without repeatEvery": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.recurring.dynamic.repeatEvery",
+        "message": "Required value"
+      }
+    ]
+  },
+  "dynamic without timeFrame": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.recurring.dynamic.timeFrame",
+        "message": "Required value"
+      }
+    ]
+  },
+  "empty name": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filter",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule",
+        "message": "Required value"
+      }
+    ]
+  },
+  "enabled is not a boolean": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.enabled",
+        "message": "Invalid value: \"string\": spec.enabled in body must be of type boolean: \"string\""
+      }
+    ]
+  },
+  "endTime without milliseconds": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.endTime",
+        "message": "Invalid value: \"2027-01-05T00:00:00\": spec.schedule.oneTime.endTime in body should match '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}$'"
+      }
+    ]
+  },
+  "filter with labels and alerts": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.filter",
+        "message": "Invalid value: \"object\": Exactly one of metaLabels or alerts must be set"
+      }
+    ]
+  },
+  "filter without expression": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filter.whatExpression",
+        "message": "Required value"
+      }
+    ]
+  },
+  "filter without labels or alerts": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.filter",
+        "message": "Invalid value: \"object\": Exactly one of metaLabels or alerts must be set"
+      }
+    ]
+  },
+  "meta label without key": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.metaLabels[0].key",
+        "message": "Required value"
+      }
+    ]
+  },
+  "minimal": {
+    "accepted": true
+  },
+  "monthly day 0 and 32": {
+    "accepted": true
+  },
+  "monthly days": {
+    "accepted": true
+  },
+  "monthly no days": {
+    "accepted": true
+  },
+  "monthly without days": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.recurring.dynamic.frequency.monthly.days",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no spec": {
+    "accepted": true
+  },
+  "one-time with end and duration": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime",
+        "message": "Invalid value: \"object\": Exactly one of endTime or duration must be set"
+      }
+    ]
+  },
+  "one-time without end or duration": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime",
+        "message": "Invalid value: \"object\": Exactly one of endTime or duration must be set"
+      }
+    ]
+  },
+  "one-time without startTime": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.oneTime.startTime",
+        "message": "Required value"
+      }
+    ]
+  },
+  "one-time without timezone": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.oneTime.timezone",
+        "message": "Required value"
+      }
+    ]
+  },
+  "operation API name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.schedule.operation",
+        "message": "Unsupported value: \"SCHEDULE_OPERATION_MUTE\": supported values: \"mute\", \"activate\""
+      }
+    ]
+  },
+  "operation activate": {
+    "accepted": true
+  },
+  "operation uppercase": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.schedule.operation",
+        "message": "Unsupported value: \"Mute\": supported values: \"mute\", \"activate\""
+      }
+    ]
+  },
+  "recurring always": {
+    "accepted": true
+  },
+  "recurring always and dynamic": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.recurring",
+        "message": "Invalid value: \"object\": Exactly one of always or dynamic must be set"
+      }
+    ]
+  },
+  "recurring empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.recurring",
+        "message": "Invalid value: \"object\": Exactly one of always or dynamic must be set"
+      }
+    ]
+  },
+  "schedule with oneTime and recurring": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule",
+        "message": "Invalid value: \"object\": Exactly one of oneTime or recurring must be set"
+      }
+    ]
+  },
+  "schedule without oneTime or recurring": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule",
+        "message": "Invalid value: \"object\": Exactly one of oneTime or recurring must be set"
+      }
+    ]
+  },
+  "startTime date only": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.startTime",
+        "message": "Invalid value: \"2027-01-04\": spec.schedule.oneTime.startTime in body should match '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}$'"
+      }
+    ]
+  },
+  "startTime with a zone": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.startTime",
+        "message": "Invalid value: \"2027-01-04T00:00:00.000Z\": spec.schedule.oneTime.startTime in body should match '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}$'"
+      }
+    ]
+  },
+  "startTime without milliseconds": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.startTime",
+        "message": "Invalid value: \"2027-01-04T00:00:00\": spec.schedule.oneTime.startTime in body should match '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}$'"
+      }
+    ]
+  },
+  "timezone IANA name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.timezone",
+        "message": "Invalid value: \"Europe/Berlin\": spec.schedule.oneTime.timezone in body should match '^UTC[+-]\\d{1,2}$'"
+      }
+    ]
+  },
+  "timezone UTC": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.timezone",
+        "message": "Invalid value: \"UTC\": spec.schedule.oneTime.timezone in body should match '^UTC[+-]\\d{1,2}$'"
+      }
+    ]
+  },
+  "timezone UTC+10": {
+    "accepted": true
+  },
+  "timezone UTC+100": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.timezone",
+        "message": "Invalid value: \"UTC+100\": spec.schedule.oneTime.timezone in body should match '^UTC[+-]\\d{1,2}$'"
+      }
+    ]
+  },
+  "timezone with minutes": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.schedule.oneTime.timezone",
+        "message": "Invalid value: \"UTC+05:30\": spec.schedule.oneTime.timezone in body should match '^UTC[+-]\\d{1,2}$'"
+      }
+    ]
+  },
+  "unknown field is not an error": {
+    "accepted": true
+  },
+  "weekly day number": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.schedule.recurring.dynamic.frequency.weekly.days[0]",
+        "message": "Invalid value: \"integer\": spec.schedule.recurring.dynamic.frequency.weekly.days[0] in body must be of type string: \"integer\""
+      },
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.schedule.recurring.dynamic.frequency.weekly.days[0]",
+        "message": "Unsupported value: 2: supported values: \"Sunday\", \"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\", \"Saturday\""
+      }
+    ]
+  },
+  "weekly duplicate day": {
+    "accepted": true
+  },
+  "weekly empty day": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.schedule.recurring.dynamic.frequency.weekly.days[0]",
+        "message": "Unsupported value: \"\": supported values: \"Sunday\", \"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\", \"Saturday\""
+      }
+    ]
+  },
+  "weekly every day": {
+    "accepted": true
+  },
+  "weekly lowercase day": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.schedule.recurring.dynamic.frequency.weekly.days[0]",
+        "message": "Unsupported value: \"monday\": supported values: \"Sunday\", \"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\", \"Saturday\""
+      }
+    ]
+  },
+  "weekly no days": {
+    "accepted": true
+  },
+  "weekly without days": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.recurring.dynamic.frequency.weekly.days",
+        "message": "Required value"
+      }
+    ]
+  },
+  "without filter": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filter",
+        "message": "Required value"
+      }
+    ]
+  },
+  "without name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "without operation": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule.operation",
+        "message": "Required value"
+      }
+    ]
+  },
+  "without schedule": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.schedule",
+        "message": "Required value"
+      }
+    ]
+  }
+}

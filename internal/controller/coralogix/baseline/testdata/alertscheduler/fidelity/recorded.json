@@ -1,0 +1,1103 @@
+{
+  "cases": [
+    {
+      "name": "create, read, replace, and delete a rule as the operator does",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "Baseline rule",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [
+                {
+                  "id": "\u003cid\u003e",
+                  "key": "team",
+                  "value": "cxo"
+                }
+              ],
+              "name": "cxo-fidelity-{{run}}-crud",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{rule}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "Baseline rule",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [
+                {
+                  "id": "\u003cid\u003e",
+                  "key": "team",
+                  "value": "cxo"
+                }
+              ],
+              "name": "cxo-fidelity-{{run}}-crud",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{rule}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": false,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "env"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter $d.app == 'x'"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-crud-renamed",
+              "schedule": {
+                "recurring": {
+                  "alwaysActive": {}
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+              },
+              "uniqueIdentifier": "{{rule}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": false,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "env"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter $d.app == 'x'"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-crud-renamed",
+              "schedule": {
+                "recurring": {
+                  "alwaysActive": {}
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+              },
+              "uniqueIdentifier": "{{rule}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No suppression rule found with unique identifier {{rule}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No suppression rule found with unique identifier {{rule}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "every schedule shape",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-one-time-duration",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "duration": {
+                      "forOver": 7,
+                      "frequency": "DURATION_FREQUENCY_DAY"
+                    },
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC+2"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+              },
+              "uniqueIdentifier": "{{oneTimeDuration}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-one-time-duration",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "duration": {
+                      "forOver": 7,
+                      "frequency": "DURATION_FREQUENCY_DAY"
+                    },
+                    "startTime": "\u003ctime\u003e",
+                    "timezone": "UTC+2"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+              },
+              "uniqueIdentifier": "{{oneTimeDuration}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-one-time-end",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC-4"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{oneTimeEnd}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-daily",
+              "schedule": {
+                "recurring": {
+                  "schedule": {
+                    "daily": {},
+                    "repeatEvery": 2,
+                    "terminationDate": "",
+                    "timeframe": {
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      },
+                      "startTime": "\u003ctime\u003e",
+                      "submittedStartTime": "\u003ctime\u003e",
+                      "timezone": "UTC+2"
+                    }
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{daily}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-daily",
+              "schedule": {
+                "recurring": {
+                  "schedule": {
+                    "daily": {},
+                    "repeatEvery": 2,
+                    "terminationDate": "",
+                    "timeframe": {
+                      "duration": {
+                        "forOver": 30,
+                        "frequency": "DURATION_FREQUENCY_MINUTE"
+                      },
+                      "startTime": "\u003ctime\u003e",
+                      "timezone": "UTC+2"
+                    }
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{daily}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-weekly",
+              "schedule": {
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "terminationDate": "\u003ctime\u003e",
+                    "timeframe": {
+                      "endTime": "\u003ctime\u003e",
+                      "startTime": "\u003ctime\u003e",
+                      "submittedStartTime": "\u003ctime\u003e",
+                      "timezone": "UTC+2"
+                    },
+                    "weekly": {
+                      "daysOfWeek": [
+                        2,
+                        4
+                      ]
+                    }
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{weekly}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-weekly",
+              "schedule": {
+                "recurring": {
+                  "schedule": {
+                    "repeatEvery": 1,
+                    "terminationDate": "\u003ctime\u003e",
+                    "timeframe": {
+                      "endTime": "\u003ctime\u003e",
+                      "startTime": "\u003ctime\u003e",
+                      "timezone": "UTC+2"
+                    },
+                    "weekly": {
+                      "daysOfWeek": [
+                        2,
+                        4
+                      ]
+                    }
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{weekly}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-monthly",
+              "schedule": {
+                "recurring": {
+                  "schedule": {
+                    "monthly": {
+                      "daysOfMonth": [
+                        4,
+                        15
+                      ]
+                    },
+                    "repeatEvery": 1,
+                    "terminationDate": "",
+                    "timeframe": {
+                      "duration": {
+                        "forOver": 2,
+                        "frequency": "DURATION_FREQUENCY_HOUR"
+                      },
+                      "startTime": "\u003ctime\u003e",
+                      "submittedStartTime": "\u003ctime\u003e",
+                      "timezone": "UTC+2"
+                    }
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{monthly}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-always",
+              "schedule": {
+                "recurring": {
+                  "alwaysActive": {}
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_ACTIVATE"
+              },
+              "uniqueIdentifier": "{{always}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a recurring schedule with repeatEvery 0 becomes always active",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-repeat-zero",
+              "schedule": {
+                "recurring": {
+                  "alwaysActive": {}
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{repeatZero}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-repeat-zero",
+              "schedule": {
+                "recurring": {
+                  "alwaysActive": {}
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{repeatZero}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "optional fields left out",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": false,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": []
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-bare",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{bare}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": false,
+              "filter": {
+                "alertUniqueIds": {
+                  "value": []
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-bare",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "duration": {
+                      "forOver": 0,
+                      "frequency": "DURATION_FREQUENCY_HOUR"
+                    },
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{bare}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "env"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [
+                {
+                  "id": "\u003cid\u003e",
+                  "key": "team"
+                }
+              ],
+              "name": "cxo-fidelity-{{run}}-label-without-value",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{labelWithoutValue}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "alert unique ids",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertUniqueIds": {
+                  "value": [
+                    "\u003cid\u003e"
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-alert-ids",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{alertIds}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertUniqueIds": {
+                  "value": [
+                    "\u003cid\u003e"
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-alert-ids",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{alertIds}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.filter.whichAlerts.alertUniqueIds.value ] invalid alert uniqe ids"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.filter.whichAlerts.alertUniqueIds.value ] invalid alert uniqe ids"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "rejected rules",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.name ] String must contain at least 1 character(s)"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.filter.whatExpression ] Invalid dataPrime expression : {\"syntax_error\":\"expression does not start with 'source logs | filter'\"}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.filter.whichAlerts ] Invalid input"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.schedule.scheduleOperation ] ScheduleOperation value UNSPECIFIED is not allowed"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.schedule.scheduler.recurring.condition.schedule.frequency.weekly.daysOfWeek.0 ] Invalid days in week (accept 1-7)"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.schedule.scheduler.recurring.condition.schedule.frequency.weekly.daysOfWeek.0 ] Invalid days in week (accept 1-7)"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.schedule.scheduler.recurring.condition.schedule.frequency.monthly.daysOfMonth.0 ] Invalid days in month (accept 1-31)"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.schedule.scheduler.recurring.condition.schedule.frequency.monthly.daysOfMonth.0 ] Invalid days in month (accept 1-31)"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.schedule.scheduler ] Invalid input"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown and malformed ids",
+      "steps": [
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No suppression rule found with unique identifier 00000000-0000-4000-8000-0000000000a1"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRuleId ] Invalid uuid"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No suppression rule found with unique identifier 00000000-0000-4000-8000-0000000000a1"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRuleId ] Invalid uuid"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No result found"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule ] uniqueIdentifier is required; the value provided in the id field is a version id and cannot be used to update a rule"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.uniqueIdentifier ] Invalid uuid, [ alertSchedulerRule ] uniqueIdentifier is required; the value provided in the id field is a version id and cannot be used to update a rule"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.uniqueIdentifier ] Invalid uuid"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a replace that the API rejects keeps the rule",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-keep",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "submittedStartTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{keep}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [ alertSchedulerRule.filter.whatExpression ] Invalid dataPrime expression : {\"syntax_error\":\"expression does not start with 'source logs | filter'\"}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "alertSchedulerRule": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "enabled": true,
+              "filter": {
+                "alertMetaLabels": {
+                  "value": [
+                    {
+                      "id": "\u003cid\u003e",
+                      "key": "app",
+                      "value": "cxo"
+                    }
+                  ]
+                },
+                "whatExpression": "source logs | filter true"
+              },
+              "id": "\u003cid\u003e",
+              "metaLabels": [],
+              "name": "cxo-fidelity-{{run}}-keep",
+              "schedule": {
+                "oneTime": {
+                  "timeframe": {
+                    "endTime": "\u003ctime\u003e",
+                    "startTime": "\u003ctime\u003e",
+                    "timezone": "UTC+0"
+                  }
+                },
+                "scheduleOperation": "SCHEDULE_OPERATION_MUTE"
+              },
+              "uniqueIdentifier": "{{keep}}",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    }
+  ]
+}
