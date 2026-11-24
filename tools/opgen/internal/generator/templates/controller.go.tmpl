@@ -174,7 +174,24 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 	// The API has one {{.Kind}} per team and no id, so status.id is fixed.
 	id := "{{.SingletonID}}"
 {{- else if .CreateResponseIDField}}
+	{{- if .IDBits}}
+	{{- if .CreateResponseIDValue}}
+	idValue := resp.{{.CreateResponseIDField}}
+	{{- else}}
+	if resp.{{.CreateResponseIDField}} == nil {
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no id")
+	}
+	idValue := *resp.{{.CreateResponseIDField}}
+	{{- end}}
+	{{- if not .IDZeroValid}}
+	if idValue == 0 {
+		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no id")
+	}
+	{{- end}}
+	id := strconv.FormatInt(int64(idValue), 10)
+	{{- else}}
 	id := {{if .CreateResponseIDValue}}resp.{{.CreateResponseIDField}}{{else}}ptr.Deref(resp.{{.CreateResponseIDField}}, ""){{end}}
+	{{- end}}
 {{- else}}
 {{- if and .CreateResponseField (not .CreateResponseValue)}}
 	if resp.{{.CreateResponseField}} == nil {

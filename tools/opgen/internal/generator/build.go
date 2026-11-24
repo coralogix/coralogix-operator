@@ -509,8 +509,6 @@ func checkLifecycle(r *model.Resource, file *overrides.File) error {
 		return unsupported("resource", "a numeric id must be int32 or int64")
 	case r.IDType.Kind != model.String && r.IDType.Kind != model.Integer:
 		return unsupported("resource", "the id must be a string, int32, or int64")
-	case r.Create.Response.ID != "" && r.IDType.Kind != model.String:
-		return unsupported("create.response", "a Create response that holds only the id needs a string id")
 	case !r.Create.Response.Direct && r.Create.Response.Field == "" && r.Create.Response.ID == "":
 		return unsupported("create.response", "Create must return the resource directly, in a field, or its id (api.createResponseOnlyIDProperty)")
 	}

@@ -107,10 +107,14 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		if err != nil {
 			return err
 		}
-		if strings.TrimPrefix(field.Want, "*") != "string" {
-			return unsupported("create.response", "the SDK id type %s of the Create response does not match the API string", field.Want)
+		want := "string"
+		if d.IDBits != 0 {
+			want = d.IDGoType
 		}
-		d.CreateResponseIDField, d.CreateResponseIDValue = field.Name, field.Want == "string"
+		if strings.TrimPrefix(field.Want, "*") != want {
+			return unsupported("create.response", "the SDK id type %s of the Create response does not match the API %s", field.Want, want)
+		}
+		d.CreateResponseIDField, d.CreateResponseIDValue = field.Name, field.Want == want
 	}
 	if r.Get.Response.Field != "" {
 		response, err := b.ix.typeRef("get.response")
@@ -138,7 +142,7 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 			*request.field, *request.value, *request.inner = ref.Name, !strings.HasPrefix(ref.Want, "*"), strings.TrimPrefix(ref.Want, "*")
 		}
 	}
-	if !r.Replace && !r.MaskInBody {
+	if !r.Replace && !r.MaskInBody && !b.file.OmitsUpdateMask() {
 		builderType, err := b.ix.typeRef("update")
 		if err != nil {
 			return err
@@ -326,12 +330,18 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 	}
 	bodyID := r.Policy.UpdateIDInBody
 	for _, f := range r.Fields {
-		var requestPath []string
+		var createPath, updatePath []string
 		if f.RequestPath != "" {
 			if !r.Replace {
 				return unsupported("types."+r.Name+".fields."+f.Name+".requestAs", "requestAs needs a full-replace Update: the update mask path of a renamed field is not defined")
 			}
-			requestPath = strings.Split(f.RequestPath, ".")
+			createPath = strings.Split(f.RequestPath, ".")
+		}
+		if path := f.RequestPathOf(true); path != "" {
+			if !r.Replace && !b.file.OmitsUpdateMask() {
+				return unsupported("types."+r.Name+".fields."+f.Name+".updateAs", "updateAs needs an Update without a mask")
+			}
+			updatePath = strings.Split(path, ".")
 		}
 		if folded := b.folds[f.Name]; folded != nil {
 			for _, fold := range folded.folds {
@@ -339,13 +349,16 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 				create = append(create, &model.Field{Name: fold.Field, Type: fold.Type, Create: &attrs, Attrs: attrs})
 			}
 		} else if f.Create != nil {
-			create = append(create, &model.Field{Name: f.Name, Type: f.Type.CreateType(), Create: f.Create, Attrs: *f.Create, RequestPath: requestPath})
+			create = append(create, &model.Field{Name: f.Name, Type: f.Type.CreateType(), Create: f.Create, Attrs: *f.Create, RequestPath: createPath})
 		}
 		if bodyID && f.Name == r.ID() {
 			continue // UpdateRequest copies the status id
 		}
 		if f.Update != nil {
-			update = append(update, &model.Field{Name: f.Name, Type: f.Type.UpdateType(), Update: f.Update, Attrs: *f.Update, RequestPath: requestPath})
+			update = append(update, &model.Field{Name: f.Name, Type: f.Type.UpdateType(), Update: f.Update, Attrs: *f.Update, RequestPath: updatePath})
+			if b.file.Field(r.Name, f.Name).UpdateAs != "" {
+				b.used[overrides.Line{Component: r.Name, Field: f.Name}] = true
+			}
 			if nested[f.Name] {
 				paths, arms, err := b.nestedMask(d, f)
 				if err != nil {

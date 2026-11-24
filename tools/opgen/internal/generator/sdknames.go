@@ -52,10 +52,15 @@ func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapp
 		}
 	}
 	if id := r.Create.Response.ID; id != "" {
+		want, value := "*string", "string"
+		if r.IDType != nil && r.IDType.Kind == model.Integer {
+			// A required integer id is a value in the generated SDK.
+			want, value = r.IDType.Format, ""
+		}
 		for _, ref := range refs {
 			if ref.Path == "create.response" && ref.Kind == sdkcheck.KindType {
 				refs = append(refs, sdkcheck.Ref{Path: "create.response." + id, Kind: sdkcheck.KindField,
-					Pkg: ref.Pkg, Owner: ref.Name, Name: model.GoName(id), Want: "*string", WantValue: "string", Rule: sdkcheck.RuleProperty})
+					Pkg: ref.Pkg, Owner: ref.Name, Name: model.GoName(id), Want: want, WantValue: value, Rule: sdkcheck.RuleProperty})
 				break
 			}
 		}
