@@ -1,0 +1,136 @@
+{
+  "default expression absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.defaultExpression",
+        "message": "Required value"
+      }
+    ]
+  },
+  "default expression false": {
+    "accepted": true
+  },
+  "default expression other": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.defaultExpression",
+        "message": "Unsupported value: \"\u003cv1\u003emaybe\": supported values: \"\u003cv1\u003etrue\", \"\u003cv1\u003efalse\""
+      }
+    ]
+  },
+  "default expression untagged": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.defaultExpression",
+        "message": "Unsupported value: \"true\": supported values: \"\u003cv1\u003etrue\", \"\u003cv1\u003efalse\""
+      }
+    ]
+  },
+  "description empty": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.defaultExpression",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filters",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "entity type absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filters[0].entityType",
+        "message": "Required value"
+      }
+    ]
+  },
+  "entity type spans": {
+    "accepted": true
+  },
+  "entity type unknown": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.filters[0].entityType",
+        "message": "Unsupported value: \"metrics\": supported values: \"logs\", \"spans\", \"unspecified\""
+      }
+    ]
+  },
+  "entity type unspecified": {
+    "accepted": true
+  },
+  "expression absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filters[0].expression",
+        "message": "Required value"
+      }
+    ]
+  },
+  "expression empty": {
+    "accepted": true
+  },
+  "filters absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.filters",
+        "message": "Required value"
+      }
+    ]
+  },
+  "filters empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.filters",
+        "message": "Invalid value: 0: spec.filters in body should have at least 1 items"
+      }
+    ]
+  },
+  "name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name empty": {
+    "accepted": true
+  },
+  "sample": {
+    "accepted": true
+  },
+  "without spec": {
+    "accepted": true
+  }
+}

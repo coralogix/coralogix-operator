@@ -1,0 +1,110 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "defaultExpression": "\u003cv1\u003etrue",
+      "description": "This is a sample scope",
+      "filters": [
+        {
+          "entityType": "logs",
+          "expression": "\u003cv1\u003e(subsystemName == 'purchases') || (subsystemName == 'signups')"
+        },
+        {
+          "entityType": "spans",
+          "expression": "\u003cv1\u003e(subsystemName == 'clothing') || (subsystemName == 'electronics')"
+        }
+      ],
+      "name": "scope-sample"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
+        "body": {
+          "defaultExpression": "\u003cv1\u003etrue",
+          "description": "This is a sample scope",
+          "displayName": "scope-sample",
+          "filters": [
+            {
+              "entityType": "ENTITY_TYPE_LOGS",
+              "expression": "\u003cv1\u003e(subsystemName == 'purchases') || (subsystemName == 'signups')"
+            },
+            {
+              "entityType": "ENTITY_TYPE_SPANS",
+              "expression": "\u003cv1\u003e(subsystemName == 'clothing') || (subsystemName == 'electronics')"
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "scope.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole spec",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
+        "body": {
+          "defaultExpression": "\u003cv1\u003etrue",
+          "description": "This is a sample scope",
+          "displayName": "scope-sample",
+          "filters": [
+            {
+              "entityType": "ENTITY_TYPE_LOGS",
+              "expression": "\u003cv1\u003e(subsystemName == 'purchases') || (subsystemName == 'signups')"
+            },
+            {
+              "entityType": "ENTITY_TYPE_SPANS",
+              "expression": "\u003cv1\u003e(subsystemName == 'clothing') || (subsystemName == 'electronics')"
+            }
+          ],
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "scope.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

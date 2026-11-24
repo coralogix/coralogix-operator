@@ -1,0 +1,1 @@
+scope.coralogix.com/finalizer

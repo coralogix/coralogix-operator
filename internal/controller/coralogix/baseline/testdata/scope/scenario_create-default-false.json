@@ -1,0 +1,91 @@
+[
+  {
+    "step": "create with the default \u003cv1\u003efalse",
+    "spec": {
+      "defaultExpression": "\u003cv1\u003efalse",
+      "filters": [
+        {
+          "entityType": "logs",
+          "expression": "\u003cv1\u003etrue"
+        }
+      ],
+      "name": "baseline-scope"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
+        "body": {
+          "defaultExpression": "\u003cv1\u003efalse",
+          "displayName": "baseline-scope",
+          "filters": [
+            {
+              "entityType": "ENTITY_TYPE_LOGS",
+              "expression": "\u003cv1\u003etrue"
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "scope.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote default is \u003cv1\u003efalse",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "scope.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "defaultExpression": "\u003cv1\u003efalse",
+        "displayName": "baseline-scope",
+        "filters": [
+          {
+            "entityType": "ENTITY_TYPE_LOGS",
+            "expression": "\u003cv1\u003etrue"
+          }
+        ],
+        "id": "<id-1>",
+        "teamId": 1
+      }
+    }
+  }
+]
