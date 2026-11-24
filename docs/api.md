@@ -12187,10 +12187,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-CustomRole is the Schema for the CustomRoles API.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/create-roles-and-permissions/
-
-**Added in v0.4.0**
+CustomRole is the Schema for the customroles API.
 
 <table>
     <thead>
@@ -12222,14 +12219,14 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
         <td><b><a href="#customrolespec">spec</a></b></td>
         <td>object</td>
         <td>
-          CustomRoleSpec defines the desired state of a Coralogix Custom Role.<br/>
+          CustomRoleSpec defines the desired state of a CustomRole.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#customrolestatus">status</a></b></td>
         <td>object</td>
         <td>
-          CustomRoleStatus defines the observed state of CustomRole.<br/>
+          CustomRoleStatus defines the observed state of a CustomRole.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12241,7 +12238,7 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
 
 
 
-CustomRoleSpec defines the desired state of a Coralogix Custom Role.
+CustomRoleSpec defines the desired state of a CustomRole.
 
 <table>
     <thead>
@@ -12256,28 +12253,28 @@ CustomRoleSpec defines the desired state of a Coralogix Custom Role.
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description of the custom role.<br/>
+          Human-readable description.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the custom role.<br/>
+          Display name. Unique in the team: the create and update operations answer 409 for a name that another role of the team has.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>parentRoleName</b></td>
         <td>string</td>
         <td>
-          Parent role name.<br/>
+          The parent role name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>permissions</b></td>
         <td>[]string</td>
         <td>
-          Custom role permissions.<br/>
+          List of permissions. The get operation returns the permissions that the role owns, in the case that they were written in. The list operation returns them together with the permissions of the parent role.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -12289,7 +12286,7 @@ CustomRoleSpec defines the desired state of a Coralogix Custom Role.
 
 
 
-CustomRoleStatus defines the observed state of CustomRole.
+CustomRoleStatus defines the observed state of a CustomRole.
 
 <table>
     <thead>

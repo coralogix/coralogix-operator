@@ -38,7 +38,7 @@ func init() {
 		resource: "customroles",
 		newFake:  newCustomRoleFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.CustomRoleReconciler{CustomRolesClient: cs.CustomRoles(), Interval: reconcileInterval}
+			return &v1alpha1controllers.CustomRoleReconciler{Client: cs.CustomRoles(), Interval: reconcileInterval}
 		},
 		scenarios: customRoleScenarios,
 		admission: customRoleAdmission(),

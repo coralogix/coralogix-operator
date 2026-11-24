@@ -1,0 +1,31 @@
+resource: CustomRole
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.parentRoleName:
+      remove: ['+kubebuilder:validation:XValidation:rule="self == oldSelf",message="spec.parentRoleName is immutable"']
+    spec.permissions:
+      inferred: false
+      add: ['+kubebuilder:validation:MinItems=1']
+api:
+  operations:
+    create: RoleManagementService_CreateRole
+    get: RoleManagementService_GetCustomRole
+    update: RoleManagementService_UpdateRole
+    delete: RoleManagementService_DeleteRole
+  methods: {create: PUT, update: POST}
+  idProperty: roleId
+  createResponseOnlyIDProperty: id
+updateMask: omit
+unwrap: [v2.Permissions]
+hideBodiesInLogs: true
+types:
+  CustomRole:
+    fields:
+      name: {updateAs: newName, required: true}
+      description: {updateAs: newDescription, required: true}
+      parentRoleId: {skip: true}
+      parentRoleName: {required: true}
+      permissions: {updateAs: newPermissions, required: true}
+      teamId: {skip: true}

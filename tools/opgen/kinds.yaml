@@ -30,3 +30,5 @@ kinds:
     resource: AiEvaluation
   - kind: ConfigurationGroup
     resource: ConfigurationGroup
+  - kind: CustomRole
+    resource: CustomRole
