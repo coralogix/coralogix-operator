@@ -1,0 +1,30 @@
+internal/utils/consts.go
+  s_f2878e1ec8afa0::t_856d40cba41adf 54-61
+internal/controller/coralogix/v1beta1/alert_identity_test.go
+  s_f2878e1ec8afa0::t_68a616bb7f3a0b 1-265
+internal/controller/coralogix/v1beta1/alert_controller.go
+  s_f2878e1ec8afa0::t_f77a6c90aa7729 77-90
+  s_f2878e1ec8afa0::t_7df947061064b7 128-130
+internal/controller/coralogix/v1beta1/alert_identity.go
+  s_f2878e1ec8afa0::t_95e20b42f7f9c5 1-71,75-92,98-113
+  s_f2878e1ec8afa0::t_780103f679050d 72-74
+  s_f2878e1ec8afa0::t_885ee9bc1011eb 93-97
+README.md
+  s_f2878e1ec8afa0::t_eb9b1538abd802 116-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7738c01a7f3a7c1a96e2935be566e2bfc5050d5d",
+  "prompts": {},
+  "sessions": {
+    "s_f2878e1ec8afa0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59e567f1-9c8c-4346-90a3-1140d7d29f75",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "oded-dd <oded@coralogix.com>"
+    }
+  }
+}
