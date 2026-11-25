@@ -127,6 +127,20 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		}
 		d.GetResponseField, d.GetResponseValue = field.Name, field.Want == resource.Name
 	}
+	if r.Policy.GetByIDs != "" {
+		builderType, err := b.ix.typeRef("get")
+		if err != nil {
+			return err
+		}
+		setter, err := b.ix.method("get.ids", builderType.Name)
+		if err != nil {
+			return err
+		}
+		if !r.Get.Response.Items || d.GetResponseField == "" {
+			return unsupported("api.getByIDs", "Get does not return a list of the resource")
+		}
+		d.GetByIDs = setter.Name
+	}
 	if r.Policy.RequestWrapper != "" {
 		for _, request := range []struct {
 			body  string

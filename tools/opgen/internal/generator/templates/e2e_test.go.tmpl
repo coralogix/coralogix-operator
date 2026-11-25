@@ -91,7 +91,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		By("Reading the {{.Kind}} from the API")
 		Eventually(func(g Gomega) {
-			_, httpResp, err := apiClient.{{.GetMethod}}(ctx, fullID).Execute()
+			_, httpResp, err := {{getCall .GetMethod .GetByIDs "fullID"}}.Execute()
 			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
@@ -106,11 +106,14 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		By("Reading the change from the API")
 		Eventually(func(g Gomega) {
-			got, httpResp, err := apiClient.{{$.GetMethod}}(ctx, fullID).Execute()
+			got, httpResp, err := {{getCall $.GetMethod $.GetByIDs "fullID"}}.Execute()
 			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
 {{- if $.GetResponseField}}
 			g.Expect(got).NotTo(BeNil())
-{{- if not $.GetResponseValue}}
+{{- if $.GetByIDs}}
+			g.Expect(got.{{$.GetResponseField}}).To(HaveLen(1))
+			g.Expect({{$.GetItem}}.{{$.IDField}}).To(Equal({{if not $.IDValue}}&{{end}}fullID))
+{{- else if not $.GetResponseValue}}
 			g.Expect(got.{{$.GetResponseField}}).NotTo(BeNil())
 {{- end}}
 {{- end}}
@@ -120,7 +123,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 {{- if .Check}}
 			// The CR holds the {{$.Kind}} as JSON text: compare {{.Check}} of the new text and the response.
 			var gotFields, wantFields map[string]any
-			raw, err := json.Marshal(got{{if $.GetResponseField}}.{{$.GetResponseField}}{{end}})
+			raw, err := json.Marshal({{$.GetItem}})
 			g.Expect(err).NotTo(HaveOccurred())
 			g.Expect(json.Unmarshal(raw, &gotFields)).To(Succeed())
 			g.Expect(json.Unmarshal([]byte({{.Want}}), &wantFields)).To(Succeed())
@@ -149,7 +152,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		By("Waiting until the API no longer finds the {{.Kind}}")
 		Eventually(func() bool {
-			_, httpResp, err := apiClient.{{.GetMethod}}(ctx, fullID).Execute()
+			_, httpResp, err := {{getCall .GetMethod .GetByIDs "fullID"}}.Execute()
 			return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
@@ -162,7 +165,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
-			_, httpResp, err := apiClient.{{.GetMethod}}(ctx, id).Execute()
+			_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
 			return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
@@ -174,7 +177,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 func remove{{.Kind}}Generated(ctx context.Context, apiClient *{{.SDKAlias}}.{{.Client}}, id {{if .IDBits}}{{.IDGoType}}{{else}}string{{end}}) {
 	deadline := time.Now().Add(time.Minute)
 	for time.Now().Before(deadline) {
-		_, httpResp, err := apiClient.{{.GetMethod}}(ctx, id).Execute()
+		_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
 		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
 			return
 		}
@@ -324,7 +327,7 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered{{if .E2E.Serial}}, Serial{{end}
 				id := waitFor{{.Kind}}Generated(ctx, crClient, name)
 				ids = append(ids, id)
 				Eventually(func(g Gomega) {
-					_, httpResp, err := apiClient.{{.GetMethod}}(ctx, id).Execute()
+					_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
 					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
 				}, time.Minute, time.Second).Should(Succeed())
 			}
@@ -335,7 +338,7 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered{{if .E2E.Serial}}, Serial{{end}
 			}
 			for _, id := range ids {
 				Eventually(func() bool {
-					_, httpResp, err := apiClient.{{.GetMethod}}(ctx, id).Execute()
+					_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
 					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
 				}, time.Minute, time.Second).Should(BeTrue())
 			}

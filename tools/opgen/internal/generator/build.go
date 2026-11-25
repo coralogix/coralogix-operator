@@ -78,10 +78,13 @@ type kindData struct {
 	CreateResponseValue bool
 	// CreateResponseIDField is the field of a Create response that holds only the id
 	// (api.createResponseOnlyIDProperty). CreateResponseIDValue: it is a value, not a pointer.
-	CreateResponseIDField      string
-	CreateResponseIDValue      bool
-	GetResponseField           string
-	GetResponseValue           bool
+	CreateResponseIDField string
+	CreateResponseIDValue bool
+	GetResponseField      string
+	GetResponseValue      bool
+	// GetByIDs is the setter of the Get query parameter that takes a list of ids (api.getByIDs).
+	// Get then has no id in its path, and GetResponseField is the slice of resources it returns.
+	GetByIDs                   string
 	CreateWrapperField         string // the request field that wraps the resource
 	CreateWrapperValue         bool
 	UpdateWrapperField         string

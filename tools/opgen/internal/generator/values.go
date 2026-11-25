@@ -1048,10 +1048,7 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		if err != nil {
 			return nil, err
 		}
-		base := "got."
-		if d.GetResponseField != "" {
-			base += d.GetResponseField + "."
-		}
+		base := d.GetItem() + "."
 		// The CR holds a createAs field flat. The response nests it in an object.
 		var notNil []string
 		owner, name := resource.Name, f.API

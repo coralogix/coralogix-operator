@@ -1079,7 +1079,7 @@ func (f *File) checkAPI() error {
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
 		switch key {
-		case "updateIDInBody", "operations", "methods", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask":
+		case "updateIDInBody", "operations", "methods", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask", "getByIDs":
 		default:
 			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}

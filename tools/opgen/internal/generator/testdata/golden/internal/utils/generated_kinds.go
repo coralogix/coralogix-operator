@@ -19,6 +19,7 @@ package utils
 
 // The kinds that the operator generator writes.
 const (
+	BatchThingKind      = "BatchThing"
 	BodyIDThingKind     = "BodyIDThing"
 	ContentThingKind    = "ContentThing"
 	HookDeleteThingKind = "HookDeleteThing"

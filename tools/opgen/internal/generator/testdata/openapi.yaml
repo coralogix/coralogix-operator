@@ -30,11 +30,82 @@
 # API cannot remove it (api.operations with delete: none). Get nests isActive and level in spec,
 # which the POST sends at the top level (inline on the resource). Get has an item or an otherItem,
 # and the POST sends only an item (otherItem is skipped).
+# BatchThing: a kind that users already have, as the team scopes API has it. Get takes the id in a
+# list of ids in its query and answers a list of the resource (api.getByIDs). Replace is a PUT on
+# the Create path with the id in the body, and Create and Replace wrap the resource in "thing".
 openapi: 3.1.0
 info:
   title: Synthetic things API
   version: 1.0.0
 paths:
+  /batch-things:
+    get:
+      tags: [Batch Things Service]
+      operationId: BatchThingsService_GetBatchThingsByIds
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          schema: {type: array, items: {type: string}}
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GetBatchThingsResponse'}
+    post:
+      tags: [Batch Things Service]
+      operationId: BatchThingsService_CreateBatchThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateBatchThingRequest
+              type: object
+              required: [name]
+              properties:
+                name: {type: string, minLength: 1}
+                note: {type: string, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CreateBatchThingResponse'}
+    put:
+      tags: [Batch Things Service]
+      operationId: BatchThingsService_ReplaceBatchThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ReplaceBatchThingRequest
+              type: object
+              required: [id, name]
+              properties:
+                id: {type: string, minLength: 1}
+                name: {type: string, minLength: 1}
+                note: {type: string, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ReplaceBatchThingResponse'}
+  /batch-things/{id}:
+    delete:
+      tags: [Batch Things Service]
+      operationId: BatchThingsService_DeleteBatchThing
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
   /things:
     post:
       tags: [Things Service]
@@ -707,6 +778,30 @@ paths:
               schema: {$ref: '#/components/schemas/SetSettingThingResponse'}
 components:
   schemas:
+    BatchThing:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, minLength: 1, readOnly: true}
+        name: {type: string, minLength: 1, description: The name.}
+        note: {type: string, x-coralogix-presence: true}
+    GetBatchThingsResponse:
+      type: object
+      required: [things]
+      properties:
+        things:
+          type: array
+          items: {$ref: '#/components/schemas/BatchThing'}
+    CreateBatchThingResponse:
+      type: object
+      required: [thing]
+      properties:
+        thing: {$ref: '#/components/schemas/BatchThing'}
+    ReplaceBatchThingResponse:
+      type: object
+      required: [thing]
+      properties:
+        thing: {$ref: '#/components/schemas/BatchThing'}
     GetSettingThingResponse:
       type: object
       required: [setting]
