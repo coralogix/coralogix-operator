@@ -30,7 +30,6 @@ const (
 	ApiKeyKind                 = "ApiKey"
 	ScopeKind                  = "Scope"
 	GroupKind                  = "Group"
-	QuotaAllocationRuleSetKind = "QuotaAllocationRuleSet"
 	IntegrationKind            = "Integration"
 	AlertSchedulerKind         = "AlertScheduler"
 	PrometheusRuleKind         = "PrometheusRule"

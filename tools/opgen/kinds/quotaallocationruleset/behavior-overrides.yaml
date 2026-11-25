@@ -1,0 +1,42 @@
+# Keep the released QuotaAllocationRuleSet CRD and account-level lifecycle.
+resource: QuotaAllocationEntityTypeRuleSet
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.rules[].allocationType:
+      remove: ['+kubebuilder:validation:Enum=unspecified;percentage;lockedUnits']
+      add: ['+kubebuilder:validation:Enum=percentage;lockedUnits;unspecified']
+singletonID: {none: true}
+hooks: [validate, beforeUpdate, delete]
+api:
+  operations:
+    create: QuotaAllocationRuleSetService_CreateQuotaAllocationRuleSet
+    get: QuotaAllocationRuleSetService_GetQuotaAllocationRuleSet
+    update: QuotaAllocationRuleSetService_ReplaceQuotaAllocationRuleSet
+    delete: QuotaAllocationRuleSetService_DeleteQuotaAllocationRuleSet
+  requestWrapper: ruleSet
+types:
+  QuotaAllocationEntityTypeRuleSet:
+    fields:
+      id: {skip: true}
+      rules:
+        required: true
+        collection: list
+        listMapKey: entityType
+        description: >-
+          Complete set of customer-managed quota allocation rules. The controller replaces the
+          full customer-managed set on each reconcile. An empty list clears those rules. The
+          controller preserves Coralogix-managed rules from the backend.
+  QuotaAllocationEntityTypeRule:
+    fields:
+      allocation: {required: true}
+      enabled: {required: true}
+      canOverflow: {required: true}
+enums:
+  QuotaAllocationType:
+    zero: unspecified
+    names:
+      QUOTA_ALLOCATION_TYPE_PERCENTAGE: percentage
+      QUOTA_ALLOCATION_TYPE_LOCKED_UNITS: lockedUnits
+    aliases: {unspecified: percentage}

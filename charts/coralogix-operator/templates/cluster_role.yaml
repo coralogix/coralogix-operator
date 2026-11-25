@@ -72,7 +72,6 @@ rules:
       - integrations
       - ipaccesses
       - outboundwebhooks
-      - quotaallocationrulesets
       - recordingrulegroupsets
       - rulegroups
       - scopes
@@ -100,7 +99,6 @@ rules:
       - integrations/finalizers
       - ipaccesses/finalizers
       - outboundwebhooks/finalizers
-      - quotaallocationrulesets/finalizers
       - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
       - scopes/finalizers
@@ -122,7 +120,6 @@ rules:
       - integrations/status
       - ipaccesses/status
       - outboundwebhooks/status
-      - quotaallocationrulesets/status
       - recordingrulegroupsets/status
       - rulegroups/status
       - scopes/status
@@ -151,6 +148,7 @@ rules:
       - events2metrics
       - globalrouters
       - presets
+      - quotaallocationrulesets
       - slos
       - tcologspolicies
       - tcorumpolicies
@@ -177,6 +175,7 @@ rules:
       - events2metrics/finalizers
       - globalrouters/finalizers
       - presets/finalizers
+      - quotaallocationrulesets/finalizers
       - slos/finalizers
       - tcologspolicies/finalizers
       - tcorumpolicies/finalizers
@@ -197,6 +196,7 @@ rules:
       - events2metrics/status
       - globalrouters/status
       - presets/status
+      - quotaallocationrulesets/status
       - slos/status
       - tcologspolicies/status
       - tcorumpolicies/status
