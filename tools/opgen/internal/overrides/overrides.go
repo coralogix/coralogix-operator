@@ -452,6 +452,16 @@ type Field struct {
 	// not fit the released CR, such as a deprecation that points at a field the CR does not have.
 	// Mode existing only.
 	Description string `yaml:"description"`
+	// IntegerNames shows an integer API field, or the items of a list of integers, as names, such as
+	// the days of a week. The CR accepts only these names, in this order. Create and Update send the
+	// integer of each name. Mode existing only.
+	IntegerNames []IntegerName `yaml:"integerNames"`
+}
+
+// IntegerName is one CR spelling of an integer API value.
+type IntegerName struct {
+	Name  string `yaml:"name"`
+	Value int64  `yaml:"value"`
 }
 
 // Enum records the rejected API values and the custom resource spellings of an enum. The accepted
@@ -604,10 +614,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable) {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.Immutable {
@@ -676,6 +686,14 @@ func (f *File) check() error {
 			}
 			if field.Ref != nil || field.ReadOnly || field.SendNullAsEmpty || len(field.RequestValueBy) != 0 || field.Unwrap != nil || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" {
 				return fmt.Errorf("%s.joinedBy: the line cannot set ref, readOnly, sendNullAsEmpty, requestValueBy, unwrap, collection, listMapKey, or emptyObject", line)
+			}
+		}
+		if len(field.IntegerNames) != 0 {
+			if err := checkIntegerNames(field); err != nil {
+				return fmt.Errorf("%s.integerNames: %w", line, err)
+			}
+			if f.Mode != ModeExisting {
+				return fmt.Errorf("%s.integerNames: a new kind follows the contract", line)
 			}
 		}
 		if field.SendNullAsEmpty && f.Mode != ModeExisting {
@@ -1391,3 +1409,27 @@ func (f *File) UnsupportedArms() map[string][]string {
 	}
 	return out
 }
+
+// checkIntegerNames checks the names of an integer field: each name is a plain word that an Enum
+// marker holds as it is, and no two names or values are the same.
+func checkIntegerNames(field Field) error {
+	if field.Ref != nil || field.ReadOnly || field.JoinedBy != "" || field.SendNullAsEmpty || len(field.RequestValueBy) != 0 || field.Unwrap != nil || field.Inline || len(field.CreateAs) != 0 {
+		return errors.New("the line cannot set ref, readOnly, joinedBy, sendNullAsEmpty, requestValueBy, unwrap, inline, or createAs")
+	}
+	names, values := map[string]bool{}, map[int64]bool{}
+	for _, n := range field.IntegerNames {
+		if !plainName.MatchString(n.Name) || n.Name == "true" || n.Name == "false" {
+			return fmt.Errorf("%q is not a plain name: use letters, digits, and _, starting with a letter", n.Name)
+		}
+		if names[n.Name] {
+			return fmt.Errorf("the name %q is listed twice", n.Name)
+		}
+		if values[n.Value] {
+			return fmt.Errorf("the value %d is listed twice", n.Value)
+		}
+		names[n.Name], values[n.Value] = true, true
+	}
+	return nil
+}
+
+var plainName = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*$`)

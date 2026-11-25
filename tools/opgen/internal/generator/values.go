@@ -77,8 +77,13 @@ type e2eSkipChoices struct {
 	Reason  string   `yaml:"reason"`
 }
 
+// apiVersionPattern matches a Kubernetes API version, such as v1alpha1 or v1beta1.
+var apiVersionPattern = regexp.MustCompile(`^v[0-9]+(?:(?:alpha|beta)[0-9]+)?$`)
+
 type e2eFixture struct {
-	Kind        string         `yaml:"kind"`
+	Kind string `yaml:"kind"`
+	// Version is the API version of the kind, such as v1beta1 for Alert. The default is v1alpha1.
+	Version     string         `yaml:"version"`
 	Suffix      string         `yaml:"suffix"`
 	StatusField string         `yaml:"statusField"`
 	Spec        map[string]any `yaml:"spec"`
@@ -167,9 +172,11 @@ func envIssues(env []string, texts ...string) error {
 
 // e2eData is what the e2e test template needs.
 type e2eData struct {
-	Omit                  []string
-	Serial                bool
-	Fixtures              []fixtureData
+	Omit     []string
+	Serial   bool
+	Fixtures []fixtureData
+	// FixtureVersions are the API versions of the fixtures other than v1alpha1, for the imports.
+	FixtureVersions       []string
 	Substitutions         []substitutionData
 	Upgrade               *upgradeData
 	FullJSON, MinimalJSON string // Go string literals of the spec as JSON
@@ -212,6 +219,8 @@ type coverageSpecData struct {
 
 type fixtureData struct {
 	Kind, Suffix, StatusField, SpecJSON string
+	// Alias is the import alias of the API package of the kind, such as coralogixv1beta1.
+	Alias string
 }
 
 type substitutionData struct {
@@ -325,7 +334,17 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		e2e.Fixtures = append(e2e.Fixtures, fixtureData{fixture.Kind, fixture.Suffix, fixture.StatusField, goString(string(encoded))})
+		version := fixture.Version
+		if version == "" {
+			version = "v1alpha1"
+		}
+		if !apiVersionPattern.MatchString(version) {
+			return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":fixtures", msg: fmt.Sprintf("version %q is not a Kubernetes API version", fixture.Version)}
+		}
+		if version != "v1alpha1" && !slices.Contains(e2e.FixtureVersions, version) {
+			e2e.FixtureVersions = append(e2e.FixtureVersions, version)
+		}
+		e2e.Fixtures = append(e2e.Fixtures, fixtureData{fixture.Kind, fixture.Suffix, fixture.StatusField, goString(string(encoded)), "coralogix" + version})
 	}
 	for _, from := range sortedKeys(file.Substitutions) {
 		to := file.Substitutions[from]
@@ -564,6 +583,9 @@ func (v *sampleValues) item(f *crField, t *model.Type, path string, full bool) (
 	case model.Bool:
 		return true, nil
 	case model.Integer:
+		if f.intNames != nil {
+			return f.intNames.Values[0].Name, nil
+		}
 		return integerValue(t), nil
 	case model.Number:
 		return numberValue(t), nil
@@ -700,6 +722,18 @@ func (v *sampleValues) padItem(f *crField, path string, full bool, items []any) 
 			next := fmt.Sprintf("%s-%d", s, len(items)+1)
 			if elem.MaxLength == nil || int64(len(next)) <= *elem.MaxLength {
 				return next, nil
+			}
+		}
+	case elem.Kind == model.Integer && f.intNames != nil:
+		used := map[string]bool{}
+		for _, item := range items {
+			if name, ok := item.(string); ok {
+				used[name] = true
+			}
+		}
+		for _, value := range f.intNames.Values {
+			if !used[value.Name] {
+				return value.Name, nil
 			}
 		}
 	case elem.Kind == model.Integer && len(items) > 0:
@@ -1036,7 +1070,7 @@ func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e
 		}
 		// A synthetic field, such as an ignored field or the CR arm of a split reference, has no API
 		// property for the step to read back, and no contract type.
-		if f.synthetic || f.immutable || candidate.inOneOf || f.enum != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||
+		if f.synthetic || f.immutable || candidate.inOneOf || f.enum != nil || f.intNames != nil || f.ref != "" || f.typ.Pattern != "" || f.typ.WireString ||
 			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, f.typ.Kind) {
 			if file.Update != nil {
 				return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field",
@@ -1229,7 +1263,7 @@ func overwriteStep(d *kindData, ix *refIndex, file *e2eFile, full *omap) (*overw
 		if file.Update != nil && file.Update.Field != f.JSON {
 			continue
 		}
-		if f.GoName == out.Name || f.immutable || f.enum != nil || f.ref != "" || f.joinedBy != "" || f.inlineParent != "" || f.typ.Pattern != "" ||
+		if f.GoName == out.Name || f.immutable || f.enum != nil || f.intNames != nil || f.ref != "" || f.joinedBy != "" || f.inlineParent != "" || f.typ.Pattern != "" ||
 			!slices.Contains([]model.Kind{model.String, model.Bool, model.Integer}, f.typ.Kind) {
 			if file.Update != nil {
 				return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.field",

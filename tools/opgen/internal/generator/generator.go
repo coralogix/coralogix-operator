@@ -767,7 +767,7 @@ func schemaRequiresProperty(schema *base.Schema, property string) bool {
 }
 
 // refKindIssues checks that each ref line names a kind of the operator: a generated kind, or a kind
-// whose types file exists.
+// whose types file exists in the API version of the ref (v1alpha1 when the ref has no version).
 func refKindIssues(root string, kinds []kindEntry, file *overrides.File) error {
 	for _, line := range file.Lines() {
 		ref := file.Ref(line.Component, line.Field)
@@ -776,10 +776,18 @@ func refKindIssues(root string, kinds []kindEntry, file *overrides.File) error {
 			continue
 		}
 		kind := ref.Kind
-		if slices.ContainsFunc(kinds, func(k kindEntry) bool { return k.Kind == kind }) {
+		// Generated kinds are in the API version of apiDir. A listed kind may have no types file yet,
+		// because the run writes the files only after this check.
+		generatedVersion := ref.Version == "" || ref.Version == filepath.Base(apiDir)
+		if generatedVersion && slices.ContainsFunc(kinds, func(k kindEntry) bool { return k.Kind == kind }) {
 			continue
 		}
-		if _, err := os.Stat(filepath.Join(root, apiDir, strings.ToLower(kind)+"_types.go")); err != nil {
+		dir := apiDir
+		if !generatedVersion {
+			// A kind of another API version, such as the v1beta1 Alert, is handwritten.
+			dir = filepath.Join(filepath.Dir(apiDir), ref.Version)
+		}
+		if _, err := os.Stat(filepath.Join(root, dir, strings.ToLower(kind)+"_types.go")); err != nil {
 			return &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".ref.kind",
 				msg: fmt.Sprintf("the operator has no kind %s", kind)}
 		}

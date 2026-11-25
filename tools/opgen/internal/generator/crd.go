@@ -228,7 +228,17 @@ func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path strin
 		if !matched {
 			return unsupported(path, "the API default %q is not an accepted CR enum value", value)
 		}
-	case model.Bool, model.Integer:
+	case model.Integer:
+		if field.intNames != nil {
+			// The CR holds the name of the integer (integerNames), so the default is that name.
+			name, err := integerDefaultName(field.intNames, value)
+			if err != nil {
+				return unsupported(path, "%s", err)
+			}
+			value = markerString(name)
+		}
+		// Otherwise the API default is already a scalar literal.
+	case model.Bool:
 		// The API default is already a scalar literal.
 	case model.Number:
 		// A Quantity is int-or-string in the CRD, and Kubernetes rejects a number literal as its
@@ -576,6 +586,9 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 	if change.JoinedBy != "" {
 		return b.joinedField(f, line, t, path)
 	}
+	if len(change.IntegerNames) != 0 {
+		return b.integerNamesField(f, owner, line, t, required, path)
+	}
 	if ref := b.file.Ref(component, name); ref != nil {
 		return b.refField(f, component, ref, path)
 	}
@@ -667,6 +680,79 @@ func (b *builder) joinedField(f *crField, line overrides.Line, t *model.Type, pa
 	f.GoType = "[]string"
 	f.Doc = append(f.Doc, fmt.Sprintf("The API holds the values as one string, joined by %q.", f.joinedBy))
 	return f, nil
+}
+
+// integerNamesField shows an integer field, or a list of integers, as names (integerNames). The CR
+// holds strings that an Enum marker limits to the names. Create and Update send the integer of each
+// name. The integer limits of the contract do not apply to a name: each value must be inside them.
+func (b *builder) integerNamesField(f *crField, owner string, line overrides.Line, t *model.Type, required bool, path string) (*crField, error) {
+	change := b.file.Field(line.Component, line.Field)
+	invalid := func(msg string, args ...any) error {
+		return &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".integerNames", msg: fmt.Sprintf(msg, args...)}
+	}
+	list := t.Kind == model.List || t.Kind == model.Set
+	elem := t
+	if list {
+		elem = t.Elem
+	}
+	if elem == nil || elem.Kind != model.Integer || len(elem.Wrappers) != 0 || elem.WireString || len(t.Wrappers) != 0 {
+		return nil, invalid("integerNames needs an integer field or a list of integers")
+	}
+	goType, err := scalarType(elem, path)
+	if err != nil {
+		return nil, err
+	}
+	base := lowerFirst(owner + f.GoName)
+	e := &enumMap{Func: base + "ToAPI", Var: base + "Values", SDKType: goType, Zero: "0", schema: line.String()}
+	for _, n := range change.IntegerNames {
+		if (elem.Minimum != nil && float64(n.Value) < *elem.Minimum) || (elem.Maximum != nil && float64(n.Value) > *elem.Maximum) {
+			return nil, invalid("the value %d of %s is outside the API limits", n.Value, n.Name)
+		}
+		if goType == "int32" && (n.Value < math.MinInt32 || n.Value > math.MaxInt32) {
+			return nil, invalid("the value %d of %s does not fit int32", n.Value, n.Name)
+		}
+		value := strconv.FormatInt(n.Value, 10)
+		e.Values = append(e.Values, enumValue{API: value, Name: n.Name, Const: value})
+	}
+	b.used[line] = true
+	b.enumSeq = append(b.enumSeq, e)
+	f.intNames = e
+	f.Doc = append(f.Doc, "The API holds each name as an integer: "+e.pairs()+".")
+	enumMarker := "+kubebuilder:validation:Enum=" + e.Names()
+	if !list {
+		f.GoType = "string"
+		if !required {
+			f.GoType = "*string"
+		}
+		f.Markers = append(f.Markers, enumMarker)
+		return f, nil
+	}
+	if change.Collection != "" {
+		if t.Kind != model.Set {
+			return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".collection", msg: "collection: list needs an API set"}
+		}
+	} else if t.Kind == model.Set {
+		f.Markers = append(f.Markers, "+listType=set")
+	}
+	f.GoType = "[]string"
+	f.Markers = append(f.Markers, b.limits(boundMarkers("MinItems", "MaxItems", t.MinItems, t.MaxItems), path)...)
+	f.Markers = append(f.Markers, prefixed("items:", []string{enumMarker})...)
+	return f, nil
+}
+
+// integerDefaultName returns the integerNames name of an API integer default. A default with no
+// name has no CR spelling, so the CRD could not hold it.
+func integerDefaultName(names *enumMap, value string) (string, error) {
+	n, err := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+	if err != nil {
+		return "", fmt.Errorf("the API integer default %q is not an integer", value)
+	}
+	for _, v := range names.Values {
+		if v.API == strconv.FormatInt(n, 10) {
+			return v.Name, nil
+		}
+	}
+	return "", fmt.Errorf("the API default %d has no integerNames name", n)
 }
 
 // wrapped rejects a keyed value. Wrapper objects are restored by request conversion.
