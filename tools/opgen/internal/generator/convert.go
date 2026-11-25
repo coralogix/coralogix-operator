@@ -595,6 +595,16 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 			continue
 		}
 		field, src, guard := sourceField(cr, rf.Name)
+		if field == nil && cr == b.specType {
+			if arms := b.file.Field(b.file.Resource, rf.Name).InArms; len(arms) != 0 {
+				code, err := b.armValue(cr, sdkType, rf, arms, path)
+				if err != nil {
+					return "", err
+				}
+				body.WriteString(code)
+				continue
+			}
+		}
 		if field == nil {
 			component := cr.schema
 			if component == "" && b.file != nil {
@@ -1065,6 +1075,9 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		return "", err
 	}
 	target := b.out() + "." + ref.Name
+	if f.secret != nil {
+		return b.secretValue(f, ref.Want, target, path, src)
+	}
 	if f.joinedBy != "" {
 		if strings.TrimPrefix(ref.Want, "*") != "string" {
 			return "", unsupported(path, "joinedBy needs a string in the SDK, got %s", ref.Want)
@@ -1221,7 +1234,7 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		}
 		return fmt.Sprintf("%s := make(%s, 0, len(%s))\nfor %s, %s := range %s {\n%s%s = append(%s, %s)\n}\n", v, goType, src, k, e, src, stmts, v, v, expr), v, false, nil
 	case model.Object, model.OneOf:
-		if f.object != nil && len(f.object.Fields) == 0 && len(rt.Fields) == 0 && want == "map[string]interface{}" {
+		if f.object != nil && apiFieldCount(f.object) == 0 && len(rt.Fields) == 0 && want == "map[string]interface{}" {
 			return "", "map[string]interface{}{}", false, nil
 		}
 		fields := rt.Fields

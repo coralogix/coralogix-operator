@@ -69,6 +69,12 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if field.refForm == "split" {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
+		if field.secret != nil {
+			spec.Fields = append(spec.Fields, secretSibling(field))
+		}
+	}
+	if err := b.armFields(r, spec); err != nil {
+		return nil, err
 	}
 	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
@@ -88,6 +94,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		return nil, err
 	}
 	splitReferenceRules(spec)
+	secretRules(spec)
 	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
 	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	if err := b.applyValidation(spec, "spec", map[*crType]bool{}, true); err != nil {
@@ -539,6 +546,15 @@ func (b *builder) validationPath(component, path, apiName, crName string) string
 // field builds one field of the Go type owner, which holds component. inItem is true inside a
 // list item or a map value, where kubectl cannot compare a value with its old value.
 func (b *builder) field(owner, component, name, description string, t *model.Type, required, requiredPresenceMissing bool, path string, inItem bool) (*crField, error) {
+	f, err := b.fieldShape(owner, component, name, description, t, required, requiredPresenceMissing, path, inItem)
+	if err != nil || !b.file.Field(component, name).SecretRef {
+		return f, err
+	}
+	return b.secretField(f, overrides.Line{Component: component, Field: name}, t)
+}
+
+// fieldShape builds the CR field of an API field, before a secretRef line adds its Secret source.
+func (b *builder) fieldShape(owner, component, name, description string, t *model.Type, required, requiredPresenceMissing bool, path string, inItem bool) (*crField, error) {
 	if err := wrapped(t, path); err != nil {
 		return nil, err
 	}
@@ -1143,6 +1159,9 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		if field.refForm == "split" {
 			obj.Fields = append(obj.Fields, splitReferenceField(field))
 		}
+		if field.secret != nil {
+			obj.Fields = append(obj.Fields, secretSibling(field))
+		}
 	}
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
@@ -1171,6 +1190,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		return nil, err
 	}
 	splitReferenceRules(obj)
+	secretRules(obj)
 	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
 	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	return obj, nil

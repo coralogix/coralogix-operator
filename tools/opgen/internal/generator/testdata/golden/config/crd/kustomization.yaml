@@ -1,6 +1,7 @@
 resources:
   - bases/coralogix.com_handwrittens.yaml
   # BEGIN generated kinds
+  - bases/coralogix.com_armthings.yaml
   - bases/coralogix.com_batchthings.yaml
   - bases/coralogix.com_bodyidthings.yaml
   - bases/coralogix.com_contentthings.yaml

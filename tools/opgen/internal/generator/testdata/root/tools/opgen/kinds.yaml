@@ -27,3 +27,5 @@ kinds:
     resource: ListThing
   - kind: KeyThing
     resource: KeyThing
+  - kind: ArmThing
+    resource: ArmThing
