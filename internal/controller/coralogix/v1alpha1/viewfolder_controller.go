@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ViewFolderReconciler reconciles a ViewFolder object.
@@ -64,12 +63,12 @@ func (r *ViewFolderReconciler) HandleCreation(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the create request of ViewFolder: %w", err)
 	}
-	log.Info("Creating remote ViewFolder", "ViewFolder", utils.FormatJSON(body))
+	log.Info("Creating remote ViewFolder")
 	resp, httpResp, err := r.Client.ViewsFoldersServiceCreateViewFolder(ctx).CreateViewFolderRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote ViewFolder: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ViewFolder created", "response", utils.FormatJSON(resp))
+	log.Info("Remote ViewFolder created")
 	if resp == nil {
 		return fmt.Errorf("the create response of ViewFolder has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *ViewFolderReconciler) HandleUpdate(ctx context.Context, log logr.Logger
 	if err != nil {
 		return fmt.Errorf("error on building the update request of ViewFolder: %w", err)
 	}
-	log.Info("Updating remote ViewFolder", "id", id, "ViewFolder", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.ViewsFoldersServiceReplaceViewFolder(ctx).ViewFolder1(*body).Execute()
+	log.Info("Updating remote ViewFolder", "id", id)
+	_, httpResp, err := r.Client.ViewsFoldersServiceReplaceViewFolder(ctx).ViewFolder1(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote ViewFolder %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ViewFolder updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote ViewFolder updated", "id", id)
 	return nil
 }
 

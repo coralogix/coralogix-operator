@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // AIEvaluationReconciler reconciles a AIEvaluation object.
@@ -72,12 +71,12 @@ func (r *AIEvaluationReconciler) HandleCreation(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on building the create request of AIEvaluation: %w", err)
 	}
-	log.Info("Creating remote AIEvaluation", "AIEvaluation", utils.FormatJSON(body))
+	log.Info("Creating remote AIEvaluation")
 	resp, httpResp, err := r.Client.AiEvaluationsServiceCreateAiEvaluation(ctx).AiEvaluationsServiceCreateAiEvaluationRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote AIEvaluation: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote AIEvaluation created", "response", utils.FormatJSON(resp))
+	log.Info("Remote AIEvaluation created")
 	if resp == nil {
 		return fmt.Errorf("the create response of AIEvaluation has no resource")
 	}
@@ -103,12 +102,12 @@ func (r *AIEvaluationReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the update request of AIEvaluation: %w", err)
 	}
-	log.Info("Updating remote AIEvaluation", "id", id, "AIEvaluation", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.AiEvaluationsServiceUpdateAiEvaluation(ctx, id).AiEvaluationsServiceUpdateAiEvaluationRequest(*body).Execute()
+	log.Info("Updating remote AIEvaluation", "id", id)
+	_, httpResp, err := r.Client.AiEvaluationsServiceUpdateAiEvaluation(ctx, id).AiEvaluationsServiceUpdateAiEvaluationRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote AIEvaluation %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote AIEvaluation updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote AIEvaluation updated", "id", id)
 	return nil
 }
 

@@ -69,6 +69,7 @@ func (r *ConfigurationGroupReconciler) HandleCreation(ctx context.Context, log l
 	if err != nil {
 		return fmt.Errorf("error on creating remote ConfigurationGroup: %w", cxsdk.NewAPIError(httpResp, err))
 	}
+	log.Info("Remote ConfigurationGroup created")
 	if resp == nil {
 		return fmt.Errorf("the create response of ConfigurationGroup has no resource")
 	}

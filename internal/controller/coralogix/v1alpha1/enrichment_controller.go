@@ -29,7 +29,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // EnrichmentReconciler reconciles an Enrichment object.
@@ -60,15 +59,15 @@ func (r *EnrichmentReconciler) Overwrite(ctx context.Context, log logr.Logger, e
 	if err != nil {
 		return fmt.Errorf("error on extracting enrichments creation request: %w", err)
 	}
-	log.Info("Overwriting remote enrichments", "enrichment", utils.FormatJSON(overwriteRequest))
-	overwriteResponse, httpResp, err := r.EnrichmentsClient.
+	log.Info("Overwriting remote enrichments")
+	_, httpResp, err := r.EnrichmentsClient.
 		EnrichmentServiceAtomicOverwriteAllEnrichments(ctx).
 		EnrichmentServiceAtomicOverwriteAllEnrichmentsRequest(*overwriteRequest).
 		Execute()
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote enrichments: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote enrichments overwritten", "response", utils.FormatJSON(overwriteResponse))
+	log.Info("Remote enrichments overwritten")
 	return nil
 }
 
@@ -101,7 +100,6 @@ func (r *EnrichmentReconciler) HandleDeletion(ctx context.Context, log logr.Logg
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(apiErr, "Received an error while Deleting remote enrichments")
 			return apiErr
 		}
 	}

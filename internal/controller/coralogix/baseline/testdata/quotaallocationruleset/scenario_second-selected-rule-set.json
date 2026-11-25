@@ -76,7 +76,7 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteUpdateFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
@@ -99,7 +99,7 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteUpdateFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }

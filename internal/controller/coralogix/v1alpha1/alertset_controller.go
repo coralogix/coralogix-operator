@@ -39,6 +39,7 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/coralogix/coralogix-operator/v2/internal/monitoring"
 	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
@@ -112,7 +113,7 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{}, fmt.Errorf("get AlertSet: %w", err)
+		return ctrl.Result{}, errors.New("get AlertSet failed")
 	}
 
 	reconcileLog := log.FromContext(ctx).WithValues(
@@ -136,7 +137,7 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			if k8serrors.IsConflict(err) {
 				return ctrl.Result{Requeue: true}, nil
 			}
-			return ctrl.Result{}, fmt.Errorf("add AlertSet finalizer: %w", err)
+			return ctrl.Result{}, errors.New("add AlertSet finalizer failed")
 		}
 		return ctrl.Result{Requeue: true}, nil
 	}
@@ -190,7 +191,7 @@ func (r *AlertSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		)
 		if err != nil {
 			if statusRecoveryAttempted {
-				return ctrl.Result{}, err
+				return ctrl.Result{}, errors.New("save AlertSet status failed")
 			}
 			reconcileErrs = append(reconcileErrs, err)
 			alertSet.Status.Alerts = sortedAlertSetStatuses(statusByKey)
@@ -255,7 +256,7 @@ func (r *AlertSetReconciler) reconcileDeletion(
 		if k8serrors.IsConflict(err) {
 			return ctrl.Result{Requeue: true}, nil
 		}
-		return ctrl.Result{}, fmt.Errorf("update AlertSet deletion progress: %w", err)
+		return ctrl.Result{}, errors.New("update AlertSet deletion progress failed")
 	}
 	if controllerutil.ContainsFinalizer(alertSet, alertSetFinalizer) {
 		controllerutil.RemoveFinalizer(alertSet, alertSetFinalizer)
@@ -267,7 +268,7 @@ func (r *AlertSetReconciler) reconcileDeletion(
 			if k8serrors.IsConflict(err) {
 				return ctrl.Result{Requeue: true}, nil
 			}
-			return ctrl.Result{}, fmt.Errorf("remove AlertSet finalizer: %w", err)
+			return ctrl.Result{}, errors.New("remove AlertSet finalizer failed")
 		}
 	}
 	monitoring.DeleteResourceInfoMetric(utils.AlertSetKind, alertSet.Name, alertSet.Namespace)
@@ -294,7 +295,7 @@ func (r *AlertSetReconciler) reconcileSelectorMismatch(
 		if k8serrors.IsConflict(err) {
 			return ctrl.Result{Requeue: true}, nil
 		}
-		return ctrl.Result{}, fmt.Errorf("clear AlertSet status after selector mismatch: %w", err)
+		return ctrl.Result{}, errors.New("clear AlertSet status after selector mismatch failed")
 	}
 	if controllerutil.ContainsFinalizer(alertSet, alertSetFinalizer) {
 		controllerutil.RemoveFinalizer(alertSet, alertSetFinalizer)
@@ -302,7 +303,7 @@ func (r *AlertSetReconciler) reconcileSelectorMismatch(
 			if k8serrors.IsConflict(err) {
 				return ctrl.Result{Requeue: true}, nil
 			}
-			return ctrl.Result{}, fmt.Errorf("remove AlertSet finalizer after selector mismatch: %w", err)
+			return ctrl.Result{}, errors.New("remove AlertSet finalizer after selector mismatch failed")
 		}
 	}
 	monitoring.DeleteResourceInfoMetric(utils.AlertSetKind, alertSet.Name, alertSet.Namespace)
@@ -334,7 +335,7 @@ func (r *AlertSetReconciler) createAlerts(
 		})
 		if err != nil {
 			itemErr := fmt.Errorf("convert alert %q for create: %w", key, err)
-			setAlertSetStatusFailure(statusByKey, key, itemErr.Error())
+			setAlertSetStatusFailure(statusByKey, key)
 			itemErrs = append(itemErrs, itemErr)
 			continue
 		}
@@ -431,7 +432,7 @@ func (r *AlertSetReconciler) replaceAlerts(
 		})
 		if err != nil {
 			itemErr := fmt.Errorf("convert alert %q for replace: %w", key, err)
-			setAlertSetStatusFailure(statusByKey, key, itemErr.Error())
+			setAlertSetStatusFailure(statusByKey, key)
 			itemErrs = append(itemErrs, itemErr)
 			continue
 		}
@@ -491,7 +492,7 @@ func (r *AlertSetReconciler) deleteAlerts(
 			return r.deleteAlertsIndividually(ctx, statusByKey, ids, idToKey)
 		}
 		apiErr := cxsdk.NewAPIError(httpResponse, err)
-		message := fmt.Sprintf("bulk delete remote alerts: %v", apiErr)
+		message := coralogixreconciler.SafeReconcileError("delete", utils.ReasonRemoteDeletionFailed, apiErr).Error()
 		for _, key := range keys {
 			status := statusByKey[key]
 			status.Message = message
@@ -552,7 +553,7 @@ func (r *AlertSetReconciler) deleteAlertsIndividually(
 		key := idToKey[id]
 		itemErr := fmt.Errorf("delete alert %q with ID %q: %w", key, id, apiErr)
 		status := statusByKey[key]
-		status.Message = itemErr.Error()
+		status.Message = "alert reconciliation failed"
 		statusByKey[key] = status
 		resultErrs = append(resultErrs, itemErr)
 	}
@@ -567,17 +568,24 @@ func (r *AlertSetReconciler) finish(
 	reconcileErrs []error,
 ) (ctrl.Result, error) {
 	if len(reconcileErrs) > 0 {
-		joinedErr := errors.Join(reconcileErrs...)
-		utils.SetSyncedConditionFalse(&alertSet.Status.Conditions, alertSet.Generation, reason, joinedErr.Error())
+		operation := "reconcile"
+		switch reason {
+		case utils.ReasonRemoteCreationFailed:
+			operation = "create"
+		case utils.ReasonRemoteUpdateFailed:
+			operation = "update"
+		}
+		safeErr := coralogixreconciler.SafeReconcileError(operation, reason, errors.Join(reconcileErrs...))
+		utils.SetSyncedConditionFalse(&alertSet.Status.Conditions, alertSet.Generation, reason, safeErr.Error())
 		alertSet.Status.PrintableStatus = "RemoteUnsynced"
 		if err := updateAlertSetStatusIfChanged(ctx, alertSet, originalStatus); err != nil {
 			if k8serrors.IsConflict(err) {
 				return ctrl.Result{Requeue: true}, nil
 			}
-			return ctrl.Result{}, fmt.Errorf("update failed AlertSet status: %w", err)
+			return ctrl.Result{}, errors.New("update failed AlertSet status failed")
 		}
 		monitoring.SetResourceInfoMetricUnsynced(utils.AlertSetKind, alertSet.Name, alertSet.Namespace)
-		return ctrl.Result{}, joinedErr
+		return ctrl.Result{}, safeErr
 	}
 
 	utils.SetSyncedConditionTrue(
@@ -590,7 +598,7 @@ func (r *AlertSetReconciler) finish(
 		if k8serrors.IsConflict(err) {
 			return ctrl.Result{Requeue: true}, nil
 		}
-		return ctrl.Result{}, fmt.Errorf("update synchronized AlertSet status: %w", err)
+		return ctrl.Result{}, errors.New("update synchronized AlertSet status failed")
 	}
 	monitoring.SetResourceInfoMetricSynced(utils.AlertSetKind, alertSet.Name, alertSet.Namespace)
 	return ctrl.Result{RequeueAfter: r.Interval}, nil
@@ -624,13 +632,13 @@ func applyBulkCreateResponse(
 	for requestIndex, key := range requestKeys {
 		if reason, failed := failedByIndex[requestIndex]; failed {
 			itemErr := fmt.Errorf("create alert %q: %s", key, reason)
-			setAlertSetStatusFailure(statusByKey, key, itemErr.Error())
+			setAlertSetStatusFailure(statusByKey, key)
 			resultErrs = append(resultErrs, itemErr)
 			continue
 		}
 		if successIndex >= len(response.AlertDefs) {
 			itemErr := fmt.Errorf("bulk create response omitted result for alert %q", key)
-			setAlertSetStatusFailure(statusByKey, key, itemErr.Error())
+			setAlertSetStatusFailure(statusByKey, key)
 			resultErrs = append(resultErrs, itemErr)
 			continue
 		}
@@ -638,7 +646,7 @@ func applyBulkCreateResponse(
 		successIndex++
 		if created.Id == nil || *created.Id == "" {
 			itemErr := fmt.Errorf("bulk create response returned no ID for alert %q", key)
-			setAlertSetStatusFailure(statusByKey, key, itemErr.Error())
+			setAlertSetStatusFailure(statusByKey, key)
 			resultErrs = append(resultErrs, itemErr)
 			continue
 		}
@@ -716,7 +724,7 @@ func applyBulkReplaceResponse(
 			reason = *failure.Reason
 		}
 		itemErr := fmt.Errorf("replace alert %q: %s", key, reason)
-		setAlertSetStatusFailure(statusByKey, key, itemErr.Error())
+		setAlertSetStatusFailure(statusByKey, key)
 		resultErrs = append(resultErrs, itemErr)
 	}
 	for _, id := range response.NotFoundIds {
@@ -734,7 +742,7 @@ func applyBulkReplaceResponse(
 		statusByKey[key] = coralogixv1alpha1.AlertSetItemStatus{
 			Key:     key,
 			State:   coralogixv1alpha1.AlertSetItemStatePending,
-			Message: message,
+			Message: "alert reconciliation failed",
 		}
 		resultErrs = append(resultErrs, errors.New(message))
 	}
@@ -743,7 +751,7 @@ func applyBulkReplaceResponse(
 			continue
 		}
 		itemErr := fmt.Errorf("bulk replace response omitted alert %q with ID %q", key, id)
-		setAlertSetStatusFailure(statusByKey, key, itemErr.Error())
+		setAlertSetStatusFailure(statusByKey, key)
 		resultErrs = append(resultErrs, itemErr)
 	}
 	return resultErrs
@@ -837,12 +845,11 @@ func deepCopyAlertSetStatus(alertSet *coralogixv1alpha1.AlertSet) coralogixv1alp
 func setAlertSetStatusFailure(
 	statuses map[string]coralogixv1alpha1.AlertSetItemStatus,
 	key string,
-	message string,
 ) {
 	status := statuses[key]
 	status.Key = key
 	status.State = coralogixv1alpha1.AlertSetItemStateFailed
-	status.Message = message
+	status.Message = "alert reconciliation failed"
 	statuses[key] = status
 }
 

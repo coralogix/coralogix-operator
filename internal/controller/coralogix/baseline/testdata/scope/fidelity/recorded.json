@@ -1,0 +1,245 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, clear on replace, delete, and the missing scope",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "scope": {
+              "defaultExpression": "\u003cv1\u003etrue",
+              "description": "Control scope",
+              "displayName": "cxo-fidelity-scope-{{run}}",
+              "filters": [
+                {
+                  "entityType": "ENTITY_TYPE_LOGS",
+                  "expression": "\u003cv1\u003esubsystemName == 'purchases'"
+                }
+              ],
+              "id": "{{scope}}",
+              "teamId": "\u003credacted\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "scopes": [
+              {
+                "defaultExpression": "\u003cv1\u003etrue",
+                "description": "Control scope",
+                "displayName": "cxo-fidelity-scope-{{run}}",
+                "filters": [
+                  {
+                    "entityType": "ENTITY_TYPE_LOGS",
+                    "expression": "\u003cv1\u003esubsystemName == 'purchases'"
+                  }
+                ],
+                "id": "{{scope}}",
+                "teamId": "\u003credacted\u003e"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "scope": {
+              "defaultExpression": "\u003cv1\u003etrue",
+              "description": "Updated scope",
+              "displayName": "cxo-fidelity-scope-{{run}}-updated",
+              "filters": [
+                {
+                  "entityType": "ENTITY_TYPE_SPANS",
+                  "expression": "\u003cv1\u003eserviceName == 'checkout'"
+                },
+                {
+                  "entityType": "ENTITY_TYPE_LOGS",
+                  "expression": "\u003cv1\u003etrue"
+                }
+              ],
+              "id": "{{scope}}",
+              "teamId": "\u003credacted\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "scopes": [
+              {
+                "defaultExpression": "\u003cv1\u003etrue",
+                "description": "Updated scope",
+                "displayName": "cxo-fidelity-scope-{{run}}-updated",
+                "filters": [
+                  {
+                    "entityType": "ENTITY_TYPE_SPANS",
+                    "expression": "\u003cv1\u003eserviceName == 'checkout'"
+                  },
+                  {
+                    "entityType": "ENTITY_TYPE_LOGS",
+                    "expression": "\u003cv1\u003etrue"
+                  }
+                ],
+                "id": "{{scope}}",
+                "teamId": "\u003credacted\u003e"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "scope": {
+              "defaultExpression": "\u003cv1\u003etrue",
+              "displayName": "",
+              "filters": [],
+              "id": "{{scope}}",
+              "teamId": "\u003credacted\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "scopes": [
+              {
+                "defaultExpression": "\u003cv1\u003etrue",
+                "displayName": "",
+                "filters": [],
+                "id": "{{scope}}",
+                "teamId": "\u003credacted\u003e"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No scopes found"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Scope not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No scopes found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Scope not found"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "omitted fields, an empty description, and duplicate names",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "scope": {
+              "defaultExpression": "\u003cv1\u003etrue",
+              "displayName": "cxo-fidelity-scope-{{run}}-dup",
+              "filters": [],
+              "id": "{{first}}",
+              "teamId": "\u003credacted\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "scope": {
+              "defaultExpression": "\u003cv1\u003etrue",
+              "description": "",
+              "displayName": "cxo-fidelity-scope-{{run}}-dup",
+              "filters": [],
+              "id": "{{second}}",
+              "teamId": "\u003credacted\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "scopes": [
+              {
+                "defaultExpression": "\u003cv1\u003etrue",
+                "description": "",
+                "displayName": "cxo-fidelity-scope-{{run}}-dup",
+                "filters": [],
+                "id": "{{second}}",
+                "teamId": "\u003credacted\u003e"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "rejected values",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Incoming entity type is unspecified"
+          }
+        },
+        {
+          "status": 412,
+          "response": {
+            "code": 412,
+            "message": "Failed Precondition: Failed to compile expression. Expression: [subsystemName == 'purchases'], Errors: [expected version tag. e.g. \"\u003cv1\u003e foo == 'bar'\"]"
+          }
+        },
+        {
+          "status": 412,
+          "response": {
+            "code": 412,
+            "message": "Failed Precondition: The default expression must be either 'true' or 'false"
+          }
+        },
+        {
+          "status": 412,
+          "response": {
+            "code": 412,
+            "message": "Failed Precondition: Failed to compile expression. Expression: [], Errors: [expected version tag. e.g. \"\u003cv1\u003e foo == 'bar'\"]"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // SLOReconciler reconciles a SLO object.
@@ -76,12 +75,12 @@ func (r *SLOReconciler) HandleCreationWithFollowUp(ctx context.Context, log logr
 	if err != nil {
 		return nil, fmt.Errorf("error on building the create request of SLO: %w", err)
 	}
-	log.Info("Creating remote SLO", "SLO", utils.FormatJSON(body))
+	log.Info("Creating remote SLO")
 	resp, httpResp, err := r.Client.SlosServiceCreateSlo(ctx).Slo1(*body).Execute()
 	if err != nil {
 		return nil, fmt.Errorf("error on creating remote SLO: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SLO created", "response", utils.FormatJSON(resp))
+	log.Info("Remote SLO created")
 	if resp == nil {
 		return nil, fmt.Errorf("the create response of SLO has no resource")
 	}
@@ -127,12 +126,12 @@ func (r *SLOReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj c
 	if err != nil {
 		return fmt.Errorf("error on building the update request of SLO: %w", err)
 	}
-	log.Info("Updating remote SLO", "id", id, "SLO", utils.FormatJSON(body))
+	log.Info("Updating remote SLO", "id", id)
 	resp, httpResp, err := r.Client.SlosServiceReplaceSlo(ctx).Slo1(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote SLO %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SLO updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote SLO updated", "id", id)
 	// afterUpdate runs after every successful Update, also when nothing changed, and after a
 	// failed afterCreate. A hook error is not a remote NotFound: it never removes status.id.
 	// A hook can run many times: it must be safe to repeat. Make a state true (get, then create or

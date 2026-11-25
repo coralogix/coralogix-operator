@@ -92,7 +92,7 @@
         "conditions": [
           {
             "observedGeneration": 3,
-            "reason": "RemoteDeletionFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }

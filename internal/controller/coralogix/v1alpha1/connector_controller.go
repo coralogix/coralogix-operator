@@ -115,7 +115,6 @@ func (r *ConnectorReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(apiErr, "Error deleting remote Connector", "id", *connector.Status.Id)
 			return fmt.Errorf("error deleting remote Connector %s: %w", *connector.Status.Id, apiErr)
 		}
 	}

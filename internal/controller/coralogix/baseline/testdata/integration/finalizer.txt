@@ -1,0 +1,1 @@
+integration.coralogix.com/finalizer

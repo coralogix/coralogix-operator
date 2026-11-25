@@ -34,7 +34,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ViewReconciler reconciles a View object.
@@ -65,12 +64,12 @@ func (r *ViewReconciler) HandleCreation(ctx context.Context, log logr.Logger, ob
 	if err != nil {
 		return fmt.Errorf("error on building the create request of View: %w", err)
 	}
-	log.Info("Creating remote View", "View", utils.FormatJSON(body))
+	log.Info("Creating remote View")
 	resp, httpResp, err := r.Client.ViewsServiceCreateView(ctx).ViewFolder(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote View: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote View created", "response", utils.FormatJSON(resp))
+	log.Info("Remote View created")
 	if resp == nil {
 		return fmt.Errorf("the create response of View has no resource")
 	}
@@ -95,12 +94,12 @@ func (r *ViewReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj 
 	if err != nil {
 		return fmt.Errorf("error on building the update request of View: %w", err)
 	}
-	log.Info("Updating remote View", "id", id, "View", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.ViewsServiceReplaceView(ctx, backendID).View1(*body).Execute()
+	log.Info("Updating remote View", "id", id)
+	_, httpResp, err := r.Client.ViewsServiceReplaceView(ctx, backendID).View1(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote View %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote View updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote View updated", "id", id)
 	return nil
 }
 

@@ -171,7 +171,7 @@ func TestApplyBulkCreateResponseMapsFailuresByRequestIndex(t *testing.T) {
 	require.Len(t, resultErrs, 1)
 	require.Equal(t, firstID, *statuses["alpha"].ID)
 	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["bravo"].State)
-	require.Contains(t, statuses["bravo"].Message, "invalid alert")
+	require.Equal(t, "alert reconciliation failed", statuses["bravo"].Message)
 	require.Equal(t, thirdID, *statuses["charlie"].ID)
 	require.Contains(t, createdKeys, "alpha")
 	require.NotContains(t, createdKeys, "bravo")
@@ -446,7 +446,7 @@ func TestCreateAlertsContinuesAfterLocalConversionFailure(t *testing.T) {
 	require.Contains(t, created, "valid")
 	require.Equal(t, createdID, *statuses["valid"].ID)
 	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["invalid"].State)
-	require.Contains(t, statuses["invalid"].Message, "missing-webhook")
+	require.Equal(t, "alert reconciliation failed", statuses["invalid"].Message)
 }
 
 func TestCreateAlertsUsesOneRequestForOneHundredItems(t *testing.T) {
@@ -550,7 +550,7 @@ func TestReplaceAlertsContinuesAfterLocalConversionFailure(t *testing.T) {
 	require.Equal(t, coralogixv1alpha1.AlertSetItemStateSynced, statuses["valid"].State)
 	require.Equal(t, coralogixv1alpha1.AlertSetItemStateFailed, statuses["invalid"].State)
 	require.Equal(t, invalidID, *statuses["invalid"].ID)
-	require.Contains(t, statuses["invalid"].Message, "missing-webhook")
+	require.Equal(t, "alert reconciliation failed", statuses["invalid"].Message)
 }
 
 func TestReplaceAlertsUsesOneRequestForOneHundredItems(t *testing.T) {

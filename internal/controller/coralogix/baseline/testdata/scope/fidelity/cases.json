@@ -1,0 +1,114 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, clear on replace, delete, and the missing scope",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/team-scopes/v1",
+          "body": {
+            "displayName": "cxo-fidelity-scope-{{run}}",
+            "description": "Control scope",
+            "filters": [{"entityType": "ENTITY_TYPE_LOGS", "expression": "<v1>subsystemName == 'purchases'"}],
+            "defaultExpression": "<v1>true"
+          },
+          "capture": "scope"
+        },
+        {"method": "GET", "path": "/aaa/team-scopes/v1?ids={{scope}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-scopes/v1",
+          "body": {
+            "id": "{{scope}}",
+            "displayName": "cxo-fidelity-scope-{{run}}-updated",
+            "description": "Updated scope",
+            "filters": [
+              {"entityType": "ENTITY_TYPE_SPANS", "expression": "<v1>serviceName == 'checkout'"},
+              {"entityType": "ENTITY_TYPE_LOGS", "expression": "<v1>true"}
+            ],
+            "defaultExpression": "<v1>true"
+          }
+        },
+        {"method": "GET", "path": "/aaa/team-scopes/v1?ids={{scope}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-scopes/v1",
+          "body": {"id": "{{scope}}", "defaultExpression": "<v1>true"}
+        },
+        {"method": "GET", "path": "/aaa/team-scopes/v1?ids={{scope}}"},
+        {"method": "DELETE", "path": "/aaa/team-scopes/v1/{{scope}}"},
+        {"method": "GET", "path": "/aaa/team-scopes/v1?ids={{scope}}"},
+        {"method": "DELETE", "path": "/aaa/team-scopes/v1/{{scope}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-scopes/v1",
+          "body": {"id": "{{scope}}", "displayName": "cxo-fidelity-scope-{{run}}", "defaultExpression": "<v1>true"}
+        },
+        {"method": "GET", "path": "/aaa/team-scopes/v1?ids=not-a-uuid"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-scopes/v1",
+          "body": {"id": "not-a-uuid", "displayName": "cxo-fidelity-scope-{{run}}", "defaultExpression": "<v1>true"}
+        },
+        {"method": "DELETE", "path": "/aaa/team-scopes/v1/not-a-uuid"}
+      ]
+    },
+    {
+      "name": "omitted fields, an empty description, and duplicate names",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/team-scopes/v1",
+          "body": {"displayName": "cxo-fidelity-scope-{{run}}-dup", "defaultExpression": "<v1>true"},
+          "capture": "first"
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/team-scopes/v1",
+          "body": {"displayName": "cxo-fidelity-scope-{{run}}-dup", "description": "", "defaultExpression": "<v1>true"},
+          "capture": "second"
+        },
+        {"method": "GET", "path": "/aaa/team-scopes/v1?ids={{second}}"},
+        {"method": "DELETE", "path": "/aaa/team-scopes/v1/{{first}}"},
+        {"method": "DELETE", "path": "/aaa/team-scopes/v1/{{second}}"}
+      ]
+    },
+    {
+      "name": "rejected values",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/team-scopes/v1",
+          "body": {
+            "displayName": "cxo-fidelity-scope-{{run}}-unspecified",
+            "filters": [{"entityType": "ENTITY_TYPE_UNSPECIFIED", "expression": "<v1>true"}],
+            "defaultExpression": "<v1>true"
+          },
+          "capture": "unspecified"
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/team-scopes/v1",
+          "body": {
+            "displayName": "cxo-fidelity-scope-{{run}}-untagged",
+            "filters": [{"entityType": "ENTITY_TYPE_LOGS", "expression": "subsystemName == 'purchases'"}],
+            "defaultExpression": "<v1>true"
+          },
+          "capture": "untagged"
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/team-scopes/v1",
+          "body": {"displayName": "cxo-fidelity-scope-{{run}}-maybe", "defaultExpression": "<v1>maybe"},
+          "capture": "maybe"
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/team-scopes/v1",
+          "body": {"displayName": "cxo-fidelity-scope-{{run}}-empty"},
+          "capture": "empty"
+        }
+      ]
+    }
+  ]
+}

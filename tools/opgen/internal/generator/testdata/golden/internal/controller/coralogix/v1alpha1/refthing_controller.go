@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // RefThingReconciler reconciles a RefThing object.
@@ -64,12 +63,12 @@ func (r *RefThingReconciler) HandleCreation(ctx context.Context, log logr.Logger
 	if err != nil {
 		return fmt.Errorf("error on building the create request of RefThing: %w", err)
 	}
-	log.Info("Creating remote RefThing", "RefThing", utils.FormatJSON(body))
+	log.Info("Creating remote RefThing")
 	resp, httpResp, err := r.Client.RefThingsServiceCreateRefThing(ctx).CreateRefThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote RefThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote RefThing created", "response", utils.FormatJSON(resp))
+	log.Info("Remote RefThing created")
 	if resp == nil {
 		return fmt.Errorf("the create response of RefThing has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *RefThingReconciler) HandleUpdate(ctx context.Context, log logr.Logger, 
 	if err != nil {
 		return fmt.Errorf("error on building the update request of RefThing: %w", err)
 	}
-	log.Info("Updating remote RefThing", "id", id, "RefThing", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.RefThingsServiceReplaceRefThing(ctx, id).ReplaceRefThingRequest(*body).Execute()
+	log.Info("Updating remote RefThing", "id", id)
+	_, httpResp, err := r.Client.RefThingsServiceReplaceRefThing(ctx, id).ReplaceRefThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote RefThing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote RefThing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote RefThing updated", "id", id)
 	return nil
 }
 

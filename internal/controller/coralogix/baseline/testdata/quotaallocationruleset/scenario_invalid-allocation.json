@@ -21,7 +21,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteUpdateFailed",
+            "reason": "ValidationFailed",
             "status": "False",
             "type": "RemoteSynced"
           }

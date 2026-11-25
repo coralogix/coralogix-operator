@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // DashboardsFolderReconciler reconciles a DashboardsFolder object.
@@ -64,12 +63,12 @@ func (r *DashboardsFolderReconciler) HandleCreation(ctx context.Context, log log
 	if err != nil {
 		return fmt.Errorf("error on building the create request of DashboardsFolder: %w", err)
 	}
-	log.Info("Creating remote DashboardsFolder", "DashboardsFolder", utils.FormatJSON(body))
+	log.Info("Creating remote DashboardsFolder")
 	resp, httpResp, err := r.Client.DashboardFoldersServiceCreateDashboardFolder(ctx).CreateDashboardFolderRequestDataStructure(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote DashboardsFolder: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote DashboardsFolder created", "response", utils.FormatJSON(resp))
+	log.Info("Remote DashboardsFolder created")
 	if resp == nil {
 		return fmt.Errorf("the create response of DashboardsFolder has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *DashboardsFolderReconciler) HandleUpdate(ctx context.Context, log logr.
 	if err != nil {
 		return fmt.Errorf("error on building the update request of DashboardsFolder: %w", err)
 	}
-	log.Info("Updating remote DashboardsFolder", "id", id, "DashboardsFolder", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.DashboardFoldersServiceReplaceDashboardFolder(ctx).ReplaceDashboardFolderRequestDataStructure(*body).Execute()
+	log.Info("Updating remote DashboardsFolder", "id", id)
+	_, httpResp, err := r.Client.DashboardFoldersServiceReplaceDashboardFolder(ctx).ReplaceDashboardFolderRequestDataStructure(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote DashboardsFolder %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote DashboardsFolder updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote DashboardsFolder updated", "id", id)
 	return nil
 }
 

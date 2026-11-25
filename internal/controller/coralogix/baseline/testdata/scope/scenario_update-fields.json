@@ -1,0 +1,160 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "defaultExpression": "\u003cv1\u003etrue",
+      "description": "Baseline scope",
+      "filters": [
+        {
+          "entityType": "logs",
+          "expression": "\u003cv1\u003esubsystemName == 'purchases'"
+        }
+      ],
+      "name": "baseline-scope"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
+        "body": {
+          "defaultExpression": "\u003cv1\u003etrue",
+          "description": "Baseline scope",
+          "displayName": "baseline-scope",
+          "filters": [
+            {
+              "entityType": "ENTITY_TYPE_LOGS",
+              "expression": "\u003cv1\u003esubsystemName == 'purchases'"
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "scope.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "rename, replace filters, change the default",
+    "spec": {
+      "defaultExpression": "\u003cv1\u003efalse",
+      "description": "Changed",
+      "filters": [
+        {
+          "entityType": "spans",
+          "expression": "\u003cv1\u003eserviceName == 'checkout'"
+        },
+        {
+          "entityType": "logs",
+          "expression": "\u003cv1\u003etrue"
+        }
+      ],
+      "name": "renamed-scope"
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-scopes/v1",
+        "body": {
+          "defaultExpression": "\u003cv1\u003efalse",
+          "description": "Changed",
+          "displayName": "renamed-scope",
+          "filters": [
+            {
+              "entityType": "ENTITY_TYPE_SPANS",
+              "expression": "\u003cv1\u003eserviceName == 'checkout'"
+            },
+            {
+              "entityType": "ENTITY_TYPE_LOGS",
+              "expression": "\u003cv1\u003etrue"
+            }
+          ],
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "scope.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote scope",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "scope.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "defaultExpression": "\u003cv1\u003efalse",
+        "description": "Changed",
+        "displayName": "renamed-scope",
+        "filters": [
+          {
+            "entityType": "ENTITY_TYPE_SPANS",
+            "expression": "\u003cv1\u003eserviceName == 'checkout'"
+          },
+          {
+            "entityType": "ENTITY_TYPE_LOGS",
+            "expression": "\u003cv1\u003etrue"
+          }
+        ],
+        "id": "<id-1>",
+        "teamId": 1
+      }
+    }
+  }
+]

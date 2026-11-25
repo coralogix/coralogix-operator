@@ -69,6 +69,7 @@ func (r *CustomRoleReconciler) HandleCreation(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on creating remote CustomRole: %w", cxsdk.NewAPIError(httpResp, err))
 	}
+	log.Info("Remote CustomRole created")
 	if resp == nil {
 		return fmt.Errorf("the create response of CustomRole has no resource")
 	}

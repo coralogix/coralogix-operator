@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // HookThingReconciler reconciles a HookThing object.
@@ -84,12 +83,12 @@ func (r *HookThingReconciler) HandleCreationWithFollowUp(ctx context.Context, lo
 	if err := r.beforeCreate(ctx, log, cr, body); err != nil {
 		return nil, coralogixreconciler.NewHookError(fmt.Errorf("beforeCreate hook of HookThing failed: %w", err))
 	}
-	log.Info("Creating remote HookThing", "HookThing", utils.FormatJSON(body))
+	log.Info("Creating remote HookThing")
 	resp, httpResp, err := r.Client.HookThingsServiceCreateHookThing(ctx).CreateHookThingRequest(*body).Execute()
 	if err != nil {
 		return nil, fmt.Errorf("error on creating remote HookThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote HookThing created", "response", utils.FormatJSON(resp))
+	log.Info("Remote HookThing created")
 	if resp == nil {
 		return nil, fmt.Errorf("the create response of HookThing has no resource")
 	}
@@ -143,12 +142,12 @@ func (r *HookThingReconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 	if err := r.beforeUpdate(ctx, log, cr, body); err != nil {
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of HookThing failed: %w", err))
 	}
-	log.Info("Updating remote HookThing", "id", id, "HookThing", utils.FormatJSON(body))
+	log.Info("Updating remote HookThing", "id", id)
 	resp, httpResp, err := r.Client.HookThingsServiceReplaceHookThing(ctx, id).ReplaceHookThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote HookThing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote HookThing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote HookThing updated", "id", id)
 	// afterUpdate runs after every successful Update, also when nothing changed, and after a
 	// failed afterCreate. A hook error is not a remote NotFound: it never removes status.id.
 	// A hook can run many times: it must be safe to repeat. Make a state true (get, then create or

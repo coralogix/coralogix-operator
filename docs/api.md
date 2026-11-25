@@ -7771,6 +7771,14 @@ When omitted, case settings are reset to the defaults: auto-resolve enabled, no 
           Queries that enrich the cases opened by the alert (preview).<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverrides">overrides</a></b></td>
+        <td>object</td>
+        <td>
+          Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -8085,6 +8093,214 @@ Query that enriches the cases opened by the alert (preview).
             <i>Enum</i>: dataprime<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettings)</sup></sup>
+
+
+
+Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverrideskpi">kpi</a></b></td>
+        <td>object</td>
+        <td>
+          KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverridespriorityescalation">priorityEscalation</a></b></td>
+        <td>object</td>
+        <td>
+          Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.kpi
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverrides)</sup></sup>
+
+
+
+KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverrideskpithresholdsindex">thresholds</a></b></td>
+        <td>[]object</td>
+        <td>
+          KPI thresholds. At most one entry for each type and priority.
+For each priority, the time to acknowledge must be less than or equal to the time to resolve.
+An empty or omitted list turns off all KPI timers of these cases.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.kpi.thresholds[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverrideskpi)</sup></sup>
+
+
+
+One KPI threshold for one KPI type and one case priority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Case priority to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>string</td>
+        <td>
+          Time after which the KPI is breached.
+Whole number of seconds greater than zero, for example 300s is 5 minutes.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          KPI type to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: timeToAcknowledge, timeToResolve, timeToUpdate<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          When false, this KPI timer does not run for cases of this priority. False when omitted.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.priorityEscalation
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverrides)</sup></sup>
+
+
+
+Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Enable or disable priority escalation for these cases. When false, no rule is applied.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverridespriorityescalationrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Escalation rules. Each rule applies to cases at its fromPriority.
+At most one rule for each fromPriority. P1 cannot be a fromPriority, so the list has at most 4 rules.
+An empty or omitted list means that no rule applies, also when enabled is true.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.priorityEscalation.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverridespriorityescalation)</sup></sup>
+
+
+
+A case at fromPriority that stays unacknowledged for at least period is raised to toPriority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority that the case must have for this rule to apply.
+P1 is not accepted by the API, because no priority is more severe.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>period</b></td>
+        <td>string</td>
+        <td>
+          Time that a case can stay unacknowledged at fromPriority before it is escalated.
+Whole number of seconds greater than zero, for example 36000s is 10 hours.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to which the case is raised. Must be more severe than fromPriority.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -16413,6 +16629,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Demisto notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16427,6 +16645,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Generic HTTP(s) webhook.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li><li>!has(self.headers) || !has(self.headersFromSecret) || self.headersFromSecret.all(k, !(k in self.headers)): A header can have only one source</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16434,6 +16654,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Jira issue.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.apiToken) != has(self.apiTokenSecretKeyRef): Exactly one of apiToken or apiTokenSecretKeyRef must be set</li><li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16441,6 +16663,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Teams message.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16448,6 +16672,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Opsgenie notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16455,6 +16681,8 @@ Type of webhook.
         <td>object</td>
         <td>
           PagerDuty notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.serviceKey) != has(self.serviceKeySecretKeyRef): Exactly one of serviceKey or serviceKeySecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16462,6 +16690,8 @@ Type of webhook.
         <td>object</td>
         <td>
           SendLog notification.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16469,6 +16699,8 @@ Type of webhook.
         <td>object</td>
         <td>
           Slack message.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16554,19 +16786,73 @@ Demisto notification.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>url</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>uuid</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypedemistourlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.demisto.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypedemisto)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16624,17 +16910,17 @@ Generic HTTP(s) webhook.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>url</b></td>
-        <td>string</td>
-        <td>
-          URL to call<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>headers</b></td>
         <td>map[string]string</td>
         <td>
-          Attached HTTP headers.<br/>
+          Attached HTTP headers. Use HeadersFromSecret for credential values.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhookheadersfromsecretkey">headersFromSecret</a></b></td>
+        <td>map[string]object</td>
+        <td>
+          HeadersFromSecret maps header names to Secret keys in the webhook's namespace.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -16642,6 +16928,114 @@ Generic HTTP(s) webhook.
         <td>string</td>
         <td>
           Payload of the webhook call.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          URL to call. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhookurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.genericWebhook.headersFromSecret[key]
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypegenericwebhook)</sup></sup>
+
+
+
+SecretKeySelector selects a key of a Secret.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.genericWebhook.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypegenericwebhook)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16665,13 +17059,6 @@ Jira issue.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>apiToken</b></td>
-        <td>string</td>
-        <td>
-          API token<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
@@ -16686,12 +17073,127 @@ Jira issue.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>apiToken</b></td>
+        <td>string</td>
+        <td>
+          Deprecated: use ApiTokenSecretKeyRef for the Jira API token.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypejiraapitokensecretkeyref">apiTokenSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          ApiTokenSecretKeyRef reads the API token from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Jira URL<br/>
+          Jira URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypejiraurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.jira.apiTokenSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypejira)</sup></sup>
+
+
+
+ApiTokenSecretKeyRef reads the API token from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.jira.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypejira)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16716,9 +17218,63 @@ Teams message.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Teams URL<br/>
+          Teams URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypemicrosoftteamsurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.microsoftTeams.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypemicrosoftteams)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16743,9 +17299,63 @@ Opsgenie notification.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeopsgenieurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.opsgenie.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypeopsgenie)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16770,9 +17380,63 @@ PagerDuty notification.
         <td><b>serviceKey</b></td>
         <td>string</td>
         <td>
-          PagerDuty service key.<br/>
+          Deprecated: use ServiceKeySecretKeyRef for the PagerDuty service key.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypepagerdutyservicekeysecretkeyref">serviceKeySecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          ServiceKeySecretKeyRef reads the service key from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.pagerDuty.serviceKeySecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypepagerduty)</sup></sup>
+
+
+
+ServiceKeySecretKeyRef reads the service key from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16804,9 +17468,63 @@ SendLog notification.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Sendlog URL.<br/>
+          Sendlog URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypesendlogurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.sendLog.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypesendlog)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -16828,13 +17546,6 @@ Slack message.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>url</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
         <td>[]object</td>
         <td>
@@ -16846,6 +17557,20 @@ Slack message.
         <td>[]object</td>
         <td>
           Digest configuration.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16916,6 +17641,53 @@ Digest config.
           Type of digest to send<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.slack.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypeslack)</sup></sup>
+
+
+
+UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -17463,14 +18235,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-QuotaAllocationRuleSet is the Schema for the QuotaAllocationRuleSet API.
-NOTE: This account-level singleton resource replaces all user-managed backend
-quota allocation rules. An empty rules list clears customer-managed rules.
-Delete clears customer-managed rules only. Coralogix-managed (cx_managed)
-rules returned by the backend are preserved by the controller and are never
-taken from the CR.
-
-**Added in v0.4.0**
+QuotaAllocationRuleSet is the Schema for the quotaallocationrulesets API.
 
 <table>
     <thead>
@@ -17502,14 +18267,14 @@ taken from the CR.
         <td><b><a href="#quotaallocationrulesetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          QuotaAllocationRuleSetSpec defines the desired state of Coralogix quota allocation rules.<br/>
+          QuotaAllocationRuleSetSpec defines the desired state of a QuotaAllocationRuleSet.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#quotaallocationrulesetstatus">status</a></b></td>
         <td>object</td>
         <td>
-          QuotaAllocationRuleSetStatus defines the observed state of QuotaAllocationRuleSet.<br/>
+          QuotaAllocationRuleSetStatus defines the observed state of a QuotaAllocationRuleSet.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17521,7 +18286,7 @@ taken from the CR.
 
 
 
-QuotaAllocationRuleSetSpec defines the desired state of Coralogix quota allocation rules.
+QuotaAllocationRuleSetSpec defines the desired state of a QuotaAllocationRuleSet.
 
 <table>
     <thead>
@@ -17536,12 +18301,7 @@ QuotaAllocationRuleSetSpec defines the desired state of Coralogix quota allocati
         <td><b><a href="#quotaallocationrulesetspecrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          Complete set of customer-managed quota allocation rules.
-Because the backend stores a single account-level rule set, the controller
-replaces the full customer-managed set during reconcile.
-Set rules to an empty list to clear all customer-managed rules.
-Coralogix-managed (cx_managed) rules are never taken from this list; the
-controller preserves them from the backend.<br/>
+          Complete set of customer-managed quota allocation rules. The controller replaces the full customer-managed set on each reconcile. An empty list clears those rules. The controller preserves Coralogix-managed rules from the backend.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -17553,7 +18313,7 @@ controller preserves them from the backend.<br/>
 
 
 
-QuotaAllocationRule defines quota allocation for a single entity type.
+QuotaAllocationRuleSetQuotaAllocationEntityTypeRule is the QuotaAllocationEntityTypeRule object of the API.
 
 <table>
     <thead>
@@ -17568,51 +18328,35 @@ QuotaAllocationRule defines quota allocation for a single entity type.
         <td><b>allocation</b></td>
         <td>int or string</td>
         <td>
-          Quota allocation value for this entity type.
-For percentage, this is a share of the pool left after lockedUnits (0-100).
-For lockedUnits, this is a fixed reservation from the team daily quota.
-The sum of enabled locked units plus any Coralogix bundle units must fit
-within the team daily quota.
-Fractional values must be supplied as quoted quantities, for example "12.5".<br/>
+          The allocation. A percentage allocation (the default type) is between 0 and 100, and the percentages of the enabled rules must sum to at most 100. A locked units allocation is a non-negative number of units.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>canOverflow</b></td>
         <td>boolean</td>
         <td>
-          Whether this entity type can overflow beyond its allocation.<br/>
+          The can overflow.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          Whether this quota allocation rule is enabled.<br/>
+          Whether this resource is enabled.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>entityType</b></td>
         <td>string</td>
         <td>
-          Entity type covered by the rule.
-Known values include logs, spans, metrics, cpuProfiles, memoryProfiles,
-browserLogs, browserLogs/v2, sessionRecordings, olly, auditEvents, alerts,
-quotaEvents, engineQueries, engineSchemaFields, labsLimitViolations, and
-notificationDeliveries. The list is additive; the API may accept more
-values over time.<br/>
+          The entity type.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>allocationType</b></td>
         <td>enum</td>
         <td>
-          How the allocation value is interpreted.
-Valid values are percentage (default) and lockedUnits.
-unspecified is accepted as a compatible alias of percentage and is
-normalized to percentage before the API call.
-Locked units are reserved first from the team daily quota; percentage
-rules share the remaining pool and their enabled allocations must sum to
-at most 100.<br/>
+          Determines whether allocation is interpreted as a percentage or locked units. Unspecified defaults to percentage for backwards compatibility.<br/>
           <br/>
             <i>Enum</i>: percentage, lockedUnits, unspecified<br/>
         </td>
@@ -17626,7 +18370,7 @@ at most 100.<br/>
 
 
 
-QuotaAllocationRuleSetStatus defines the observed state of QuotaAllocationRuleSet.
+QuotaAllocationRuleSetStatus defines the observed state of a QuotaAllocationRuleSet.
 
 <table>
     <thead>
@@ -29073,6 +29817,14 @@ When omitted, case settings are reset to the defaults: auto-resolve enabled, no 
           Queries that enrich the cases opened by the alert (preview).<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsoverrides">overrides</a></b></td>
+        <td>object</td>
+        <td>
+          Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -29387,6 +30139,214 @@ Query that enriches the cases opened by the alert (preview).
             <i>Enum</i>: dataprime<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides
+<sup><sup>[↩ Parent](#alertspeccasesettings)</sup></sup>
+
+
+
+Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspeccasesettingsoverrideskpi">kpi</a></b></td>
+        <td>object</td>
+        <td>
+          KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsoverridespriorityescalation">priorityEscalation</a></b></td>
+        <td>object</td>
+        <td>
+          Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.kpi
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverrides)</sup></sup>
+
+
+
+KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspeccasesettingsoverrideskpithresholdsindex">thresholds</a></b></td>
+        <td>[]object</td>
+        <td>
+          KPI thresholds. At most one entry for each type and priority.
+For each priority, the time to acknowledge must be less than or equal to the time to resolve.
+An empty or omitted list turns off all KPI timers of these cases.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.kpi.thresholds[index]
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverrideskpi)</sup></sup>
+
+
+
+One KPI threshold for one KPI type and one case priority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Case priority to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>string</td>
+        <td>
+          Time after which the KPI is breached.
+Whole number of seconds greater than zero, for example 300s is 5 minutes.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          KPI type to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: timeToAcknowledge, timeToResolve, timeToUpdate<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          When false, this KPI timer does not run for cases of this priority. False when omitted.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.priorityEscalation
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverrides)</sup></sup>
+
+
+
+Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Enable or disable priority escalation for these cases. When false, no rule is applied.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsoverridespriorityescalationrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Escalation rules. Each rule applies to cases at its fromPriority.
+At most one rule for each fromPriority. P1 cannot be a fromPriority, so the list has at most 4 rules.
+An empty or omitted list means that no rule applies, also when enabled is true.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.priorityEscalation.rules[index]
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverridespriorityescalation)</sup></sup>
+
+
+
+A case at fromPriority that stays unacknowledged for at least period is raised to toPriority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority that the case must have for this rule to apply.
+P1 is not accepted by the API, because no priority is more severe.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>period</b></td>
+        <td>string</td>
+        <td>
+          Time that a case can stay unacknowledged at fromPriority before it is escalated.
+Whole number of seconds greater than zero, for example 36000s is 10 hours.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to which the case is raised. Must be more severe than fromPriority.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 

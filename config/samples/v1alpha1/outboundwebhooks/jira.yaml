@@ -12,7 +12,9 @@ spec:
   name: jira-webhook
   outboundWebhookType:
     jira:
-      apiToken: "12345678-1234-1234-1234-123456789012"
+      apiTokenSecretKeyRef:
+        name: jira-credentials
+        key: api-token
       email: "example@coralogix.com"
       projectKey: "COR"
       url: "https://my-jira-url.com"

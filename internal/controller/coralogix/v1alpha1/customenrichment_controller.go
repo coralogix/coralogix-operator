@@ -31,7 +31,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // CustomEnrichmentReconciler reconciles a CustomEnrichment object
@@ -63,7 +62,7 @@ func (r *CustomEnrichmentReconciler) HandleCreation(ctx context.Context, log log
 		return fmt.Errorf("error on extracting create request from customEnrichment spec: %w", err)
 	}
 
-	log.Info("Creating remote customEnrichment", "customEnrichment", utils.FormatJSON(createRequest))
+	log.Info("Creating remote customEnrichment")
 	createResponse, httpResp, err := r.CustomEnrichmentsClient.
 		CustomEnrichmentServiceCreateCustomEnrichment(ctx).
 		CreateCustomEnrichmentRequest(*createRequest).
@@ -71,7 +70,7 @@ func (r *CustomEnrichmentReconciler) HandleCreation(ctx context.Context, log log
 	if err != nil {
 		return fmt.Errorf("error on creating remote customEnrichment: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote customEnrichment created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote customEnrichment created")
 
 	customEnrichment.Status = coralogixv1alpha1.CustomEnrichmentStatus{
 		Id: ptr.To(strconv.Itoa(int(*createResponse.CustomEnrichment.Id))),
@@ -87,8 +86,8 @@ func (r *CustomEnrichmentReconciler) HandleUpdate(ctx context.Context, log logr.
 		return fmt.Errorf("error on extracting update request from customEnrichment spec: %w", err)
 	}
 
-	log.Info("Updating remote customEnrichment", "customEnrichment", utils.FormatJSON(updateRequest))
-	updateResponse, httpResp, err := r.CustomEnrichmentsClient.
+	log.Info("Updating remote customEnrichment")
+	_, httpResp, err := r.CustomEnrichmentsClient.
 		CustomEnrichmentServiceUpdateCustomEnrichment(ctx).
 		UpdateCustomEnrichmentRequest(*updateRequest).
 		Execute()
@@ -96,7 +95,7 @@ func (r *CustomEnrichmentReconciler) HandleUpdate(ctx context.Context, log logr.
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote customEnrichment updated", "customEnrichment", utils.FormatJSON(updateResponse))
+	log.Info("Remote customEnrichment updated")
 
 	return nil
 }
@@ -113,7 +112,6 @@ func (r *CustomEnrichmentReconciler) HandleDeletion(ctx context.Context, log log
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote customEnrichment", "id", *customEnrichment.Status.Id)
 			return fmt.Errorf("error deleting remote customEnrichment %s: %w", *customEnrichment.Status.Id, apiErr)
 		}
 	}

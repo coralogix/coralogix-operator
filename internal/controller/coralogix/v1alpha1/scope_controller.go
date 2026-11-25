@@ -29,7 +29,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ScopeReconciler reconciles a Scope object
@@ -62,7 +61,7 @@ func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.Info("Creating remote scope", "scope", utils.FormatJSON(createRequest))
+	log.Info("Creating remote scope")
 	createResponse, httpResp, err := r.ScopesClient.
 		ScopesServiceCreateScope(ctx).
 		CreateScopeRequest(*createRequest).
@@ -70,7 +69,7 @@ func (r *ScopeReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on creating remote scope: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote scope created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote scope created")
 
 	scope.Status = coralogixv1alpha1.ScopeStatus{
 		ID: scopes.PtrString(createResponse.Scope.Id),
@@ -85,15 +84,15 @@ func (r *ScopeReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on extracting update request: %w", err)
 	}
-	log.Info("Updating remote scope", "scope", utils.FormatJSON(updateRequest))
-	updateResponse, httpResp, err := r.ScopesClient.
+	log.Info("Updating remote scope")
+	_, httpResp, err := r.ScopesClient.
 		ScopesServiceUpdateScope(ctx).
 		UpdateScopeRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote scope updated", "scope", utils.FormatJSON(updateResponse))
+	log.Info("Remote scope updated")
 
 	return nil
 }
@@ -107,7 +106,6 @@ func (r *ScopeReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote scope", "id", id)
 			return fmt.Errorf("error deleting remote scope %s: %w", id, apiErr)
 		}
 	}

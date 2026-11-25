@@ -1077,6 +1077,62 @@ var _ = Describe("Alert caseSettings", Ordered, func() {
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 
+	It("Should set, change and remove the case settings overrides", func(ctx context.Context) {
+		patchCaseSettings(ctx, &coralogixv1beta1.AlertCaseSettings{
+			Overrides: &coralogixv1beta1.CaseSettingsOverrides{
+				Kpi: &coralogixv1beta1.CaseKpis{Thresholds: []coralogixv1beta1.CaseKpiThreshold{
+					{Type: coralogixv1beta1.CaseKpiTypeTimeToAcknowledge, Priority: coralogixv1beta1.AlertPriorityP3, Threshold: "300s", Enabled: ptr.To(true)},
+					{Type: coralogixv1beta1.CaseKpiTypeTimeToResolve, Priority: coralogixv1beta1.AlertPriorityP3, Threshold: "3600s", Enabled: ptr.To(true)},
+				}},
+				PriorityEscalation: &coralogixv1beta1.CasePriorityEscalation{
+					Enabled: true,
+					Rules: []coralogixv1beta1.CasePriorityEscalationRule{
+						{FromPriority: coralogixv1beta1.AlertPriorityP3, ToPriority: coralogixv1beta1.AlertPriorityP2, Period: "36000s"},
+					},
+				},
+			},
+		})
+
+		By("Verifying the overrides in Coralogix backend")
+		Eventually(func(g Gomega) {
+			caseSettings := getCaseSettings(ctx, g)
+			g.Expect(caseSettings).ToNot(BeNil())
+			overrides := caseSettings.GetOverrides()
+			g.Expect(overrides.Kpi.GetThresholds()).To(ConsistOf(
+				HaveField("Threshold", "300s"),
+				HaveField("Threshold", "3600s"),
+			))
+			escalation := overrides.PriorityEscalation
+			g.Expect(escalation.GetEnabled()).To(BeTrue())
+			g.Expect(escalation.GetRules()).To(ConsistOf(And(
+				HaveField("FromPriority", alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P3),
+				HaveField("ToPriority", alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P2),
+				HaveField("Period", "36000s"),
+			)))
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Changing the overrides")
+		patchCaseSettings(ctx, &coralogixv1beta1.AlertCaseSettings{
+			Overrides: &coralogixv1beta1.CaseSettingsOverrides{
+				PriorityEscalation: &coralogixv1beta1.CasePriorityEscalation{Enabled: false},
+			},
+		})
+		Eventually(func(g Gomega) {
+			overrides := getCaseSettings(ctx, g).GetOverrides()
+			g.Expect(overrides.PriorityEscalation.GetEnabled()).To(BeFalse())
+			g.Expect(overrides.PriorityEscalation.GetRules()).To(BeEmpty())
+			g.Expect(overrides.Kpi.GetThresholds()).To(BeEmpty())
+		}, time.Minute, time.Second).Should(Succeed())
+
+		By("Removing the overrides")
+		patchCaseSettings(ctx, &coralogixv1beta1.AlertCaseSettings{AutoResolveMode: ptr.To(coralogixv1beta1.CaseAutoResolveModeDisabled)})
+		Eventually(func(g Gomega) {
+			caseSettings := getCaseSettings(ctx, g)
+			g.Expect(caseSettings).ToNot(BeNil())
+			g.Expect(caseSettings.Overrides).To(BeNil())
+		}, time.Minute, time.Second).Should(Succeed())
+	})
+
 	It("Should reset the case settings when they are removed", func(ctx context.Context) {
 		patchCaseSettings(ctx, nil)
 
