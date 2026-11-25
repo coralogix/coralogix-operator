@@ -128,10 +128,10 @@ func TestCheckReportsGaps(t *testing.T) {
 			code: codeShapeUnsupported,
 		},
 		{
-			name: "a made-up value that cannot match the pattern",
+			name: "a pattern that no string matches",
 			edit: func(t *testing.T, s string) string {
 				return replaceOnce(t, s, "endpoint: {type: string, minLength: 1, description: The endpoint URL.}",
-					"endpoint: {type: string, minLength: 1, pattern: '^https://.+$', description: The endpoint URL.}")
+					"endpoint: {type: string, minLength: 1, pattern: '^a\\bb$', description: The endpoint URL.}")
 			},
 			code: codeE2ERequired,
 		},

@@ -28,8 +28,12 @@ resources:
   - bases/coralogix.com_events2metrics.yaml
   - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_presets.yaml
+  - bases/coralogix.com_productanalyticssettings.yaml
   - bases/coralogix.com_quotaallocationrulesets.yaml
   - bases/coralogix.com_slos.yaml
+  - bases/coralogix.com_savedfunnels.yaml
+  - bases/coralogix.com_savedheatmaps.yaml
+  - bases/coralogix.com_savedpathways.yaml
   - bases/coralogix.com_tcologspolicies.yaml
   - bases/coralogix.com_tcorumpolicies.yaml
   - bases/coralogix.com_tcotracespolicies.yaml

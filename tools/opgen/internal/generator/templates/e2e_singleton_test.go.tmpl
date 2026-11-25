@@ -8,6 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+{{- if .Switch}}
+	"net/http"
+{{- end}}
 {{- if .E2E.Env}}
 	"os"
 {{- end}}
@@ -149,6 +152,21 @@ var _ = Describe("{{.Kind}} (generated)", Ordered, Serial, func() {
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		waitFor{{.Kind}}GoneGenerated(ctx, crClient, minimalName)
 	})
+{{- if .AlwaysExists}}
+
+	// The update step changes the one {{.Kind}} of the team, and the API keeps it after a delete.
+	// This step writes the full spec again, so that the team ends in the state that other tests
+	// of the same account expect.
+	It("leaves the {{.Kind}} in the full configuration", func(ctx context.Context) {
+		restored := new{{.Kind}}Generated(fullName+"-restored", {{lowerFirst .Kind}}FullSpec)
+		DeferCleanup(func(ctx context.Context) { remove{{.Kind}}Generated(ctx, crClient, restored.Name) })
+		Expect(crClient.Create(ctx, restored)).To(Succeed())
+		waitFor{{.Kind}}Generated(ctx, crClient, restored.Name)
+
+		Expect(crClient.Delete(ctx, restored)).To(Succeed())
+		waitFor{{.Kind}}GoneGenerated(ctx, crClient, restored.Name)
+	})
+{{- end}}
 })
 
 // remove{{.Kind}}Generated is the backstop of a test that fails. It deletes the CR and waits until
@@ -296,4 +314,37 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered, Serial, Label("coverage"), fun
 		})
 	}
 })
+{{- end}}
+{{- if .Switch}}
+
+// ensure{{.Kind}}EnabledGenerated switches the {{.Kind}} on when it is off. Other kinds need it on:
+// their API answers 412 for a team that has the feature off. The spec above ends with it on.
+//
+// A failure is not fatal. A key without the permission to change it cannot, and the specs that
+// need it fail with their own 412. Only status codes are printed.
+func ensure{{.Kind}}EnabledGenerated(ctx context.Context) {
+	api := newOpenAPIClientSet().{{.Accessor}}()
+	current, httpResp, err := api.{{.GetMethod}}(ctx).Execute()
+	if err != nil {
+		GinkgoWriter.Printf("{{.Kind}} was not read: HTTP %d\n", httpStatusGenerated(httpResp))
+		return
+	}
+	if {{if .Switch.GetValue}}current.{{.Switch.GetField}}{{else}}ptr.Deref(current.{{.Switch.GetField}}, false){{end}} {
+		return
+	}
+	body := {{.SDKAlias}}.{{.UpdateBody}}{ {{.Switch.SetField}}: {{if .Switch.SetValue}}true{{else}}ptr.To(true){{end}} }
+	_, httpResp, err = api.{{.UpdateMethod}}(ctx).{{.UpdateSetter}}(body){{if .MaskSetter}}.{{.MaskSetter}}("enabled"){{end}}.Execute()
+	if err != nil {
+		GinkgoWriter.Printf("{{.Kind}} was not enabled: HTTP %d\n", httpStatusGenerated(httpResp))
+		return
+	}
+	GinkgoWriter.Println("{{.Kind}} was off and is now enabled")
+}
+
+func httpStatusGenerated(resp *http.Response) int {
+	if resp == nil {
+		return 0
+	}
+	return resp.StatusCode
+}
 {{- end}}

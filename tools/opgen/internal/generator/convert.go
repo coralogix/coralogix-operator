@@ -36,6 +36,9 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		{"update", &d.UpdateMethod, &d.UpdateSetter, &d.UpdateBody},
 		{"delete", &d.DeleteMethod, nil, nil},
 	} {
+		if op.path == "delete" && r.AlwaysExists {
+			continue // the API cannot remove the resource, and Delete makes no call
+		}
 		m, err := b.ix.method(op.path, client.Name)
 		if err != nil {
 			return err
@@ -66,7 +69,14 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		return b.overwriteOperations(r, d)
 	}
 	if r.Singleton {
-		return b.singletonOperations(r, d)
+		if err := b.singletonOperations(r, d); err != nil {
+			return err
+		}
+		if r.AlwaysExists {
+			// Its Update is a PATCH, and the API requires the update mask.
+			return b.updateMask(r, d)
+		}
+		return nil
 	}
 	id, err := b.ix.field(resource.Name, r.ID())
 	if err != nil {
@@ -156,6 +166,12 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 			*request.field, *request.value, *request.inner = ref.Name, !strings.HasPrefix(ref.Want, "*"), strings.TrimPrefix(ref.Want, "*")
 		}
 	}
+	return b.updateMask(r, d)
+}
+
+// updateMask reads the SDK names of the update mask: its setter on the builder of Update, or its
+// field in the body of Update. A full replace has none.
+func (b *builder) updateMask(r *model.Resource, d *kindData) error {
 	if !r.Replace && !r.MaskInBody && !b.file.OmitsUpdateMask() {
 		builderType, err := b.ix.typeRef("update")
 		if err != nil {
@@ -182,7 +198,8 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 // generated Delete makes no call, so DeleteMethod is unused.
 func (b *builder) singletonOperations(r *model.Resource, d *kindData) error {
 	d.Singleton = true
-	d.StatuslessSingleton = b.file.StatuslessSingleton()
+	d.AlwaysExists = r.AlwaysExists
+	d.StatuslessSingleton = b.file.StatuslessSingleton() || r.AlwaysExists
 	if !d.StatuslessSingleton {
 		d.SingletonID = b.file.SingletonID.Fixed
 	}
@@ -399,6 +416,15 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 				mask = append(mask, paths...)
 				d.MaskArms = append(d.MaskArms, arms...)
 				used[f.Name] = true
+			} else if r.AlwaysExists && !f.Update.Required {
+				// A PATCH rejects a mask path that the body does not have, and the API keeps the
+				// value of a field that the mask leaves out. So the mask names an optional field
+				// only when the spec sets it.
+				goName, ok := specGoName(d.Spec, f.Name)
+				if !ok {
+					return unsupported("resource."+f.Name, "the spec has no field for the update mask")
+				}
+				d.MaskArms = append(d.MaskArms, maskArm{Path: f.Name, Check: "in.Spec." + goName + " != nil"})
 			} else {
 				mask = append(mask, f.Name)
 			}
@@ -1347,4 +1373,14 @@ func arg(src string) string {
 		return strings.TrimSuffix(inner, ")")
 	}
 	return src
+}
+
+// specGoName returns the Go name of the spec field of an API property.
+func specGoName(spec *crType, api string) (string, bool) {
+	for _, f := range spec.Fields {
+		if f.API == api {
+			return f.GoName, true
+		}
+	}
+	return "", false
 }

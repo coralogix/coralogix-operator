@@ -510,6 +510,8 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 		}
 	}
 	out := &omap{}
+	dateTimes := 0
+	patterned := map[string]int{}
 	for _, f := range t.Fields {
 		if f.synthetic {
 			if _, ok := v.file.Values[prefix+f.JSON]; !ok {
@@ -529,6 +531,27 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 		if err != nil {
 			return nil, err
 		}
+		if selected[f.API] && !full {
+			if value, err = v.nonEmptyArm(f, prefix+f.JSON, value); err != nil {
+				return nil, err
+			}
+		}
+		if text, ok := value.(string); ok && f.typ != nil && f.typ.Pattern != "" && !v.hasValue(prefix+f.JSON) {
+			// Two fields of one object with the same made-up text, such as the two ends of a range
+			// whose pattern the plain sample does not match, take other characters of the pattern.
+			if n := patterned[text]; n > 0 {
+				if other, ok := patternString(f.typ.Pattern, minLength(f.typ), maxLength(f.typ), n); ok {
+					value, text = other, other
+				}
+			}
+			patterned[text]++
+		}
+		if text, ok := value.(string); ok && text == sampleDateTime && f.typ != nil && f.typ.Format == "date-time" {
+			// Fields of one object that make a range, such as from and to, must not be equal: the
+			// API rejects a range that is empty or reversed. Each date-time field is one hour later.
+			value = sampleDateTimeAt(dateTimes)
+			dateTimes++
+		}
 		out.set(f.JSON, value)
 		if v.record && selected[f.API] {
 			// The arm counts only when its field is in the spec: omit and the full-versus-minimal rule can drop it.
@@ -536,6 +559,37 @@ func (v *sampleValues) object(t *crType, prefix string, full bool) (*omap, error
 		}
 	}
 	return out, nil
+}
+
+// nonEmptyArm gives a selected oneOf arm that came out as an empty object its first optional
+// field that is not a collection. Kubernetes before 1.28 does not see an empty object as present in a CEL rule such
+// as has(self.action), so an arm of {} fails admission on the oldest cluster of the live tests.
+// An arm with no field stays empty: the contract states it that way.
+func (v *sampleValues) nonEmptyArm(f *crField, path string, value any) (any, error) {
+	arm, ok := value.(*omap)
+	if !ok || len(arm.keys) != 0 || f.object == nil {
+		return value, nil
+	}
+	for _, child := range f.object.Fields {
+		if child.synthetic || child.group || !child.Optional || child.ref != "" || child.joinedBy != "" {
+			continue
+		}
+		if strings.Contains(strings.Join(child.Doc, " "), "Requires ") {
+			continue // the contract says that another field must come with it, as in "Requires event"
+		}
+		switch child.typ.Kind {
+		case model.String, model.Bool, model.Integer, model.Number, model.Enum, model.Object, model.OneOf:
+		case model.List, model.Set, model.Map:
+			continue
+		}
+		item, err := v.field(child, path+"."+child.JSON, false)
+		if err != nil {
+			return nil, err
+		}
+		arm.set(child.JSON, item)
+		break
+	}
+	return arm, nil
 }
 
 func (v *sampleValues) field(f *crField, path string, full bool) (any, error) {
@@ -1002,10 +1056,18 @@ func numberValue(t *model.Type) any {
 	return strconv.FormatFloat(n, 'f', -1, 64)
 }
 
+// sampleDateTime is the made-up value of a date-time field.
+const sampleDateTime = "2024-01-01T00:00:00Z"
+
+// sampleDateTimeAt is the made-up date-time that is n hours after sampleDateTime.
+func sampleDateTimeAt(n int) string {
+	return fmt.Sprintf("2024-01-01T%02d:00:00Z", n%24)
+}
+
 // stringValue makes up a string that meets the length limits and the pattern of the contract.
 func stringValue(name string, t *model.Type, path string) (string, error) {
 	if t.Format == "date-time" {
-		return "2024-01-01T00:00:00Z", nil
+		return sampleDateTime, nil
 	}
 	s := "sample-" + kebab(goName(name))
 	if t.MaxLength != nil && int64(len(s)) > *t.MaxLength {
@@ -1017,6 +1079,10 @@ func stringValue(name string, t *model.Type, path string) (string, error) {
 	if t.Pattern != "" {
 		re, err := regexp.Compile(t.Pattern)
 		if err != nil || !re.MatchString(s) {
+			// The plain sample does not match: take a string that the pattern builds.
+			if built, ok := patternString(t.Pattern, minLength(t), maxLength(t), 0); ok {
+				return built, nil
+			}
 			return "", &shapeError{code: codeE2ERequired, path: e2eFileName + ":values." + path,
 				msg: fmt.Sprintf("the made-up value %q does not match the pattern %s; set the value in %s", s, t.Pattern, e2eFileName)}
 		}
@@ -1581,4 +1647,29 @@ func optionalGroupFields(group *crField, value any) bool {
 		}
 	}
 	return true
+}
+
+// minLength is the lower length limit of a string type, 0 for none.
+func minLength(t *model.Type) int {
+	if t.MinLength == nil {
+		return 0
+	}
+	return int(*t.MinLength)
+}
+
+// maxLength is the upper length limit of a string type, -1 for none.
+func maxLength(t *model.Type) int64 {
+	if t.MaxLength == nil {
+		return -1
+	}
+	return *t.MaxLength
+}
+
+// hasValue reports whether e2e.yaml or a sweep layer sets the value at a path.
+func (v *sampleValues) hasValue(path string) bool {
+	if _, ok := v.layerValue(path); ok {
+		return true
+	}
+	_, ok := v.fixed(path)
+	return ok
 }

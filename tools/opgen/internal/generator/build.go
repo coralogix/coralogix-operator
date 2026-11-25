@@ -116,6 +116,16 @@ type kindData struct {
 	Singleton           bool
 	SingletonID         string
 	StatuslessSingleton bool
+	// AlwaysExists: the API has one resource per team that it cannot create or remove. It has Get
+	// and Update only. The CR has no status id, and every reconcile takes the Update path. Delete
+	// makes no call: the API keeps the last value.
+	AlwaysExists bool
+	// Requires is the kind whose enable switch turns on the feature of this kind ("" for none). The
+	// e2e test calls the helper that the test of that kind defines.
+	Requires string
+	// Switch is set when another kind requires this singleton: the e2e test defines the helper that
+	// turns the feature on.
+	Switch *switchData
 	// inlined is the object of the response that holds each field of an inline line on the
 	// resource.
 	inlined map[string]overrides.InlineParent
@@ -518,7 +528,7 @@ func checkLifecycle(r *model.Resource, file *overrides.File) error {
 		return checkOverwrite(r)
 	}
 	switch {
-	case r.Singleton && (file.Upserts() || file.StatuslessSingleton()):
+	case r.Singleton && (r.AlwaysExists || file.Upserts() || file.StatuslessSingleton()):
 		return nil // the status id is fixed, and no call takes an id
 	case r.Singleton:
 		return unsupported("resource", "a singleton is supported only when one POST sets it: api.operations with delete: none")
@@ -553,4 +563,11 @@ func isShapeError(err error) (*shapeError, bool) {
 	var s *shapeError
 	ok := errors.As(err, &s)
 	return s, ok
+}
+
+// switchData holds the SDK names of the helper that turns a feature on through the enabled field of
+// a singleton. A Value is true when the SDK field is a plain bool, false when it is a pointer.
+type switchData struct {
+	GetField, SetField string
+	GetValue, SetValue bool
 }

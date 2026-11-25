@@ -63,9 +63,13 @@ rules:
   - ipaccesses
   - outboundwebhooks
   - presets
+  - productanalyticssettings
   - quotaallocationrulesets
   - recordingrulegroupsets
   - rulegroups
+  - savedfunnels
+  - savedheatmaps
+  - savedpathways
   - scopes
   - slos
   - tcologspolicies
@@ -106,9 +110,13 @@ rules:
   - ipaccesses/finalizers
   - outboundwebhooks/finalizers
   - presets/finalizers
+  - productanalyticssettings/finalizers
   - quotaallocationrulesets/finalizers
   - recordingrulegroupsets/finalizers
   - rulegroups/finalizers
+  - savedfunnels/finalizers
+  - savedheatmaps/finalizers
+  - savedpathways/finalizers
   - scopes/finalizers
   - slos/finalizers
   - tcologspolicies/finalizers
@@ -143,9 +151,13 @@ rules:
   - ipaccesses/status
   - outboundwebhooks/status
   - presets/status
+  - productanalyticssettings/status
   - quotaallocationrulesets/status
   - recordingrulegroupsets/status
   - rulegroups/status
+  - savedfunnels/status
+  - savedheatmaps/status
+  - savedpathways/status
   - scopes/status
   - slos/status
   - tcologspolicies/status

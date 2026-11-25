@@ -51,11 +51,19 @@ Resource Types:
 
 - [Preset](#preset)
 
+- [ProductAnalyticsSettings](#productanalyticssettings)
+
 - [QuotaAllocationRuleSet](#quotaallocationruleset)
 
 - [RecordingRuleGroupSet](#recordingrulegroupset)
 
 - [RuleGroup](#rulegroup)
+
+- [SavedFunnel](#savedfunnel)
+
+- [SavedHeatmap](#savedheatmap)
+
+- [SavedPathway](#savedpathway)
 
 - [Scope](#scope)
 
@@ -18227,6 +18235,197 @@ with respect to the current state of the instance.<br/>
       </tr></tbody>
 </table>
 
+## ProductAnalyticsSettings
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+ProductAnalyticsSettings is the Schema for the productanalyticssettings API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ProductAnalyticsSettings</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#productanalyticssettingsspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ProductAnalyticsSettingsSpec defines the desired state of a ProductAnalyticsSettings.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#productanalyticssettingsstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          ProductAnalyticsSettingsStatus defines the observed state of a ProductAnalyticsSettings.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ProductAnalyticsSettings.spec
+<sup><sup>[↩ Parent](#productanalyticssettings)</sup></sup>
+
+
+
+ProductAnalyticsSettingsSpec defines the desired state of a ProductAnalyticsSettings.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Whether Product Analytics is enabled for the team.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ProductAnalyticsSettings.status
+<sup><sup>[↩ Parent](#productanalyticssettings)</sup></sup>
+
+
+
+ProductAnalyticsSettingsStatus defines the observed state of a ProductAnalyticsSettings.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#productanalyticssettingsstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ProductAnalyticsSettings.status.conditions[index]
+<sup><sup>[↩ Parent](#productanalyticssettingsstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
 ## QuotaAllocationRuleSet
 <sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
 
@@ -19503,6 +19702,2647 @@ RuleGroupStatus defines the observed state of RuleGroup
 
 ### RuleGroup.status.conditions[index]
 <sup><sup>[↩ Parent](#rulegroupstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SavedFunnel
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SavedFunnel is the Schema for the savedfunnels API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SavedFunnel</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SavedFunnelSpec defines the desired state of a SavedFunnel.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SavedFunnelStatus defines the observed state of a SavedFunnel.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec
+<sup><sup>[↩ Parent](#savedfunnel)</sup></sup>
+
+
+
+SavedFunnelSpec defines the desired state of a SavedFunnel.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>appName</b></td>
+        <td>string</td>
+        <td>
+          RUM application the funnel belongs to.<br/>
+          <br/>
+            <i>Validations</i>:<li>self == oldSelf: spec.appName is immutable</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinition">definition</a></b></td>
+        <td>object</td>
+        <td>
+          Mode, conversion window, and steps of the funnel.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Display name of the funnel. Does not have to be unique.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspectimerange">timeRange</a></b></td>
+        <td>object</td>
+        <td>
+          Time range of the funnel.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.calendar) ? 1 : 0) + (has(self.fixed) ? 1 : 0) + (has(self.relativeMinutes) ? 1 : 0) == 1: Exactly one of calendar, fixed, relativeMinutes must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecbreakdown">breakdown</a></b></td>
+        <td>object</td>
+        <td>
+          Breakdown of the funnel by a session dimension. Absent when not set.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Session filters applied to every step. Empty when not set.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition
+<sup><sup>[↩ Parent](#savedfunnelspec)</sup></sup>
+
+
+
+Mode, conversion window, and steps of the funnel.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>mode</b></td>
+        <td>enum</td>
+        <td>
+          What the funnel counts: users, sessions, or accounts. FUNNEL_MODE_UNSPECIFIED returns 400.<br/>
+          <br/>
+            <i>Enum</i>: users, sessions, accounts<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindex">steps</a></b></td>
+        <td>[]object</td>
+        <td>
+          Steps of the funnel, in funnel order. Steps must happen in this order, and other views and actions may happen in between. The same view or action may appear in two steps. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>conversionWindow</b></td>
+        <td>string</td>
+        <td>
+          Maximum time from the first step to the last step, in whole seconds, such as "3600s". A fraction of a second returns 400. Absent means no window.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index]
+<sup><sup>[↩ Parent](#savedfunnelspecdefinition)</sup></sup>
+
+
+
+SavedFunnelFunnelStep is the FunnelStep object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          Conditions of the step, combined with OR. Their order has no meaning. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>stepId</b></td>
+        <td>string</td>
+        <td>
+          ID of the step, unique within the funnel. A duplicate returns 400. Steps saved in the Coralogix UI read as s1, s2, and so on, by position.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>label</b></td>
+        <td>string</td>
+        <td>
+          Display label of the step. Empty when not set.<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index]
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindex)</sup></sup>
+
+
+
+SavedFunnelStepCondition is the StepCondition object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexaction">action</a></b></td>
+        <td>object</td>
+        <td>
+          Matches a user action on an element.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexview">view</a></b></td>
+        <td>object</td>
+        <td>
+          Matches a visit to a page.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindex)</sup></sup>
+
+
+
+Matches a user action on an element.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionelement">element</a></b></td>
+        <td>object</td>
+        <td>
+          Condition on the target element. Requires event: element without event returns 400.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionevent">event</a></b></td>
+        <td>object</td>
+        <td>
+          Condition on the event name. Absent matches any event.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Filters that narrow this action condition only. Empty when not set.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.element
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexaction)</sup></sup>
+
+
+
+Condition on the target element. Requires event: element without event returns 400.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.event
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexaction)</sup></sup>
+
+
+
+Condition on the event name. Absent matches any event.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.filters[index]
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexaction)</sup></sup>
+
+
+
+SavedFunnelActionFilter is the ActionFilter object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexboolfilter">boolFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A boolean field with the value the action must have.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexnumericfilter">numericFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A numeric field with the condition the action must match.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexstringfilter">stringFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A string field with the condition the action must match.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.filters[index].boolFilter
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindex)</sup></sup>
+
+
+
+A boolean field with the value the action must have.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Boolean field to filter on. BOOL_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: hasSessionReplay, hasScreenshot, isRageClick, isDeadClick<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>boolean</td>
+        <td>
+          Value the field must have.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.filters[index].numericFilter
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindex)</sup></sup>
+
+
+
+A numeric field with the condition the action must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexnumericfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the numeric field must match.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.max) ? 1 : 0) + (has(self.min) ? 1 : 0) + (has(self.range) ? 1 : 0) == 1: Exactly one of max, min, range must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Numeric field to filter on. ACTION_NUMERIC_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: errorCount, longTaskCount, crashCount, resourceCount, rageClickCount, deadClickCount<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.filters[index].numericFilter.condition
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexnumericfilter)</sup></sup>
+
+
+
+Condition the numeric field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>max</b></td>
+        <td>string</td>
+        <td>
+          Matches values less than or equal to max.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>min</b></td>
+        <td>string</td>
+        <td>
+          Matches values greater than or equal to min.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexnumericfilterconditionrange">range</a></b></td>
+        <td>object</td>
+        <td>
+          Matches values from lower to upper, both included.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.filters[index].numericFilter.condition.range
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexnumericfiltercondition)</sup></sup>
+
+
+
+Matches values from lower to upper, both included.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lower</b></td>
+        <td>string</td>
+        <td>
+          Lowest matching value, included. Must not be greater than upper.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>upper</b></td>
+        <td>string</td>
+        <td>
+          Highest matching value, included.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.filters[index].stringFilter
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindex)</sup></sup>
+
+
+
+A string field with the condition the action must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexstringfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          String field to filter on. STRING_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: urlSchema, urlSubdomain, urlDomain, urlHost, urlPath, urlTemplate, referrerSchema, referrerSubdomain, referrerDomain, referrerHost, referrerPath, referrerUrl, sessionId, userId, userEmail, userName, cxUserId, accountId, accountName, viewId, platform, environment, appVersion, cxSdkVersion, browserName, browserVersion, browserMajorVersion, os, osMajorVersion, osVersion, deviceType, deviceName, deviceBrand, deviceModel, deviceArchitecture, countryName, cityName, continentName, ip, userAgent, appName, clicksElementFingerprint<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].action.filters[index].stringFilter.condition
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexactionfiltersindexstringfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindex)</sup></sup>
+
+
+
+Matches a visit to a page.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Filters that narrow this page view condition only. Empty when not set.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewname">name</a></b></td>
+        <td>object</td>
+        <td>
+          Condition on the page name. Absent matches any page view.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.filters[index]
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexview)</sup></sup>
+
+
+
+SavedFunnelViewFilter is the ViewFilter object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexboolfilter">boolFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A boolean field with the value it must have.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexnumericfilter">numericFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A numeric field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexstringfilter">stringFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A string field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.filters[index].boolFilter
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindex)</sup></sup>
+
+
+
+A boolean field with the value it must have.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Boolean field to filter on. BOOL_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: hasSessionReplay, hasScreenshot, isRageClick, isDeadClick<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>boolean</td>
+        <td>
+          Value the field must have.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.filters[index].numericFilter
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindex)</sup></sup>
+
+
+
+A numeric field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexnumericfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.max) ? 1 : 0) + (has(self.min) ? 1 : 0) + (has(self.range) ? 1 : 0) == 1: Exactly one of max, min, range must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Numeric field to filter on. NUMERIC_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: errorCount, actionCount, longTaskCount, crashCount, resourceCount, scrollDepthPercentage, viewportWidth, viewportHeight, rageClickCount, deadClickCount<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.filters[index].numericFilter.condition
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexnumericfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>max</b></td>
+        <td>string</td>
+        <td>
+          Matches values less than or equal to max.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>min</b></td>
+        <td>string</td>
+        <td>
+          Matches values greater than or equal to min.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexnumericfilterconditionrange">range</a></b></td>
+        <td>object</td>
+        <td>
+          Matches values from lower to upper, both included.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.filters[index].numericFilter.condition.range
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexnumericfiltercondition)</sup></sup>
+
+
+
+Matches values from lower to upper, both included.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lower</b></td>
+        <td>string</td>
+        <td>
+          Lowest matching value, included. Must not be greater than upper.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>upper</b></td>
+        <td>string</td>
+        <td>
+          Highest matching value, included.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.filters[index].stringFilter
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindex)</sup></sup>
+
+
+
+A string field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexstringfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          String field to filter on. STRING_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: urlSchema, urlSubdomain, urlDomain, urlHost, urlPath, urlTemplate, referrerSchema, referrerSubdomain, referrerDomain, referrerHost, referrerPath, referrerUrl, sessionId, userId, userEmail, userName, cxUserId, accountId, accountName, viewId, platform, environment, appVersion, cxSdkVersion, browserName, browserVersion, browserMajorVersion, os, osMajorVersion, osVersion, deviceType, deviceName, deviceBrand, deviceModel, deviceArchitecture, countryName, cityName, continentName, ip, userAgent, appName, clicksElementFingerprint<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.filters[index].stringFilter.condition
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexviewfiltersindexstringfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.definition.steps[index].conditions[index].view.name
+<sup><sup>[↩ Parent](#savedfunnelspecdefinitionstepsindexconditionsindexview)</sup></sup>
+
+
+
+Condition on the page name. Absent matches any page view.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.timeRange
+<sup><sup>[↩ Parent](#savedfunnelspec)</sup></sup>
+
+
+
+Time range of the funnel.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>calendar</b></td>
+        <td>enum</td>
+        <td>
+          Named calendar window, resolved in the viewer's timezone. CALENDAR_WINDOW_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: today, yesterday<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspectimerangefixed">fixed</a></b></td>
+        <td>object</td>
+        <td>
+          Absolute time range between two timestamps.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>relativeMinutes</b></td>
+        <td>string</td>
+        <td>
+          Number of minutes back from now.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.timeRange.fixed
+<sup><sup>[↩ Parent](#savedfunnelspectimerange)</sup></sup>
+
+
+
+Absolute time range between two timestamps.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromTimestampMs</b></td>
+        <td>string</td>
+        <td>
+          Start of the range, in Unix milliseconds. Inclusive: events at exactly this time are in the range.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toTimestampMs</b></td>
+        <td>string</td>
+        <td>
+          End of the range, in Unix milliseconds. Exclusive: events at exactly this time are not in the range, so consecutive ranges can share a boundary.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.breakdown
+<sup><sup>[↩ Parent](#savedfunnelspec)</sup></sup>
+
+
+
+Breakdown of the funnel by a session dimension. Absent when not set.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Session dimension to split by. BREAKDOWN_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: accountId, accountName, platform, environment, appVersion, cxSdkVersion, browserName, os, osVersion, deviceType, countryName, cityName, continentName<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>limit</b></td>
+        <td>integer</td>
+        <td>
+          Maximum number of groups to return, top groups by first step count.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 1000<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.filters[index]
+<sup><sup>[↩ Parent](#savedfunnelspec)</sup></sup>
+
+
+
+SavedFunnelViewFilter is the ViewFilter object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecfiltersindexboolfilter">boolFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A boolean field with the value it must have.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecfiltersindexnumericfilter">numericFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A numeric field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecfiltersindexstringfilter">stringFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A string field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.filters[index].boolFilter
+<sup><sup>[↩ Parent](#savedfunnelspecfiltersindex)</sup></sup>
+
+
+
+A boolean field with the value it must have.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Boolean field to filter on. BOOL_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: hasSessionReplay, hasScreenshot, isRageClick, isDeadClick<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>boolean</td>
+        <td>
+          Value the field must have.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.filters[index].numericFilter
+<sup><sup>[↩ Parent](#savedfunnelspecfiltersindex)</sup></sup>
+
+
+
+A numeric field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecfiltersindexnumericfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.max) ? 1 : 0) + (has(self.min) ? 1 : 0) + (has(self.range) ? 1 : 0) == 1: Exactly one of max, min, range must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Numeric field to filter on. NUMERIC_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: errorCount, actionCount, longTaskCount, crashCount, resourceCount, scrollDepthPercentage, viewportWidth, viewportHeight, rageClickCount, deadClickCount<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.filters[index].numericFilter.condition
+<sup><sup>[↩ Parent](#savedfunnelspecfiltersindexnumericfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>max</b></td>
+        <td>string</td>
+        <td>
+          Matches values less than or equal to max.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>min</b></td>
+        <td>string</td>
+        <td>
+          Matches values greater than or equal to min.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedfunnelspecfiltersindexnumericfilterconditionrange">range</a></b></td>
+        <td>object</td>
+        <td>
+          Matches values from lower to upper, both included.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.filters[index].numericFilter.condition.range
+<sup><sup>[↩ Parent](#savedfunnelspecfiltersindexnumericfiltercondition)</sup></sup>
+
+
+
+Matches values from lower to upper, both included.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lower</b></td>
+        <td>string</td>
+        <td>
+          Lowest matching value, included. Must not be greater than upper.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>upper</b></td>
+        <td>string</td>
+        <td>
+          Highest matching value, included.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.filters[index].stringFilter
+<sup><sup>[↩ Parent](#savedfunnelspecfiltersindex)</sup></sup>
+
+
+
+A string field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelspecfiltersindexstringfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          String field to filter on. STRING_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: urlSchema, urlSubdomain, urlDomain, urlHost, urlPath, urlTemplate, referrerSchema, referrerSubdomain, referrerDomain, referrerHost, referrerPath, referrerUrl, sessionId, userId, userEmail, userName, cxUserId, accountId, accountName, viewId, platform, environment, appVersion, cxSdkVersion, browserName, browserVersion, browserMajorVersion, os, osMajorVersion, osVersion, deviceType, deviceName, deviceBrand, deviceModel, deviceArchitecture, countryName, cityName, continentName, ip, userAgent, appName, clicksElementFingerprint<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.spec.filters[index].stringFilter.condition
+<sup><sup>[↩ Parent](#savedfunnelspecfiltersindexstringfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.status
+<sup><sup>[↩ Parent](#savedfunnel)</sup></sup>
+
+
+
+SavedFunnelStatus defines the observed state of a SavedFunnel.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedfunnelstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedFunnel.status.conditions[index]
+<sup><sup>[↩ Parent](#savedfunnelstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SavedHeatmap
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SavedHeatmap is the Schema for the savedheatmaps API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SavedHeatmap</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SavedHeatmapSpec defines the desired state of a SavedHeatmap.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SavedHeatmapStatus defines the observed state of a SavedHeatmap.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec
+<sup><sup>[↩ Parent](#savedheatmap)</sup></sup>
+
+
+
+SavedHeatmapSpec defines the desired state of a SavedHeatmap.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>appName</b></td>
+        <td>string</td>
+        <td>
+          RUM application the heatmap belongs to.<br/>
+          <br/>
+            <i>Validations</i>:<li>self == oldSelf: spec.appName is immutable</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>enum</td>
+        <td>
+          Kind of heatmap visualization shown for the page view.<br/>
+          <br/>
+            <i>Enum</i>: topElements, clickMap, scrollMap<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Display name of the heatmap. Does not have to be unique.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapspectimerange">timeRange</a></b></td>
+        <td>object</td>
+        <td>
+          Time range of the heatmap.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.calendar) ? 1 : 0) + (has(self.fixed) ? 1 : 0) + (has(self.relativeMinutes) ? 1 : 0) == 1: Exactly one of calendar, fixed, relativeMinutes must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>viewName</b></td>
+        <td>string</td>
+        <td>
+          Name of the page view the heatmap covers.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>actionNameFilter</b></td>
+        <td>enum</td>
+        <td>
+          Which clicks the heatmap includes.<br/>
+          <br/>
+            <i>Enum</i>: allClicks, namedOnly, unnamedOnly<br/>
+            <i>Default</i>: allClicks<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapspecfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Session filters of the heatmap. Empty when not set.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>snapshotId</b></td>
+        <td>string</td>
+        <td>
+          ID of the page snapshot the heatmap is drawn on. Absent when the heatmap has no snapshot.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.timeRange
+<sup><sup>[↩ Parent](#savedheatmapspec)</sup></sup>
+
+
+
+Time range of the heatmap.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>calendar</b></td>
+        <td>enum</td>
+        <td>
+          Named calendar window, resolved in the viewer's timezone. CALENDAR_WINDOW_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: today, yesterday<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapspectimerangefixed">fixed</a></b></td>
+        <td>object</td>
+        <td>
+          Absolute time range between two timestamps.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>relativeMinutes</b></td>
+        <td>string</td>
+        <td>
+          Number of minutes back from now.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.timeRange.fixed
+<sup><sup>[↩ Parent](#savedheatmapspectimerange)</sup></sup>
+
+
+
+Absolute time range between two timestamps.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromTimestampMs</b></td>
+        <td>string</td>
+        <td>
+          Start of the range, in Unix milliseconds. Inclusive: events at exactly this time are in the range.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toTimestampMs</b></td>
+        <td>string</td>
+        <td>
+          End of the range, in Unix milliseconds. Exclusive: events at exactly this time are not in the range, so consecutive ranges can share a boundary.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.filters[index]
+<sup><sup>[↩ Parent](#savedheatmapspec)</sup></sup>
+
+
+
+SavedHeatmapViewFilter is the ViewFilter object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedheatmapspecfiltersindexboolfilter">boolFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A boolean field with the value it must have.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapspecfiltersindexnumericfilter">numericFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A numeric field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapspecfiltersindexstringfilter">stringFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A string field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.filters[index].boolFilter
+<sup><sup>[↩ Parent](#savedheatmapspecfiltersindex)</sup></sup>
+
+
+
+A boolean field with the value it must have.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Boolean field to filter on. BOOL_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: hasSessionReplay, hasScreenshot, isRageClick, isDeadClick<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>boolean</td>
+        <td>
+          Value the field must have.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.filters[index].numericFilter
+<sup><sup>[↩ Parent](#savedheatmapspecfiltersindex)</sup></sup>
+
+
+
+A numeric field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedheatmapspecfiltersindexnumericfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.max) ? 1 : 0) + (has(self.min) ? 1 : 0) + (has(self.range) ? 1 : 0) == 1: Exactly one of max, min, range must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Numeric field to filter on. NUMERIC_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: errorCount, actionCount, longTaskCount, crashCount, resourceCount, scrollDepthPercentage, viewportWidth, viewportHeight, rageClickCount, deadClickCount<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.filters[index].numericFilter.condition
+<sup><sup>[↩ Parent](#savedheatmapspecfiltersindexnumericfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>max</b></td>
+        <td>string</td>
+        <td>
+          Matches values less than or equal to max.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>min</b></td>
+        <td>string</td>
+        <td>
+          Matches values greater than or equal to min.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedheatmapspecfiltersindexnumericfilterconditionrange">range</a></b></td>
+        <td>object</td>
+        <td>
+          Matches values from lower to upper, both included.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.filters[index].numericFilter.condition.range
+<sup><sup>[↩ Parent](#savedheatmapspecfiltersindexnumericfiltercondition)</sup></sup>
+
+
+
+Matches values from lower to upper, both included.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lower</b></td>
+        <td>string</td>
+        <td>
+          Lowest matching value, included. Must not be greater than upper.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>upper</b></td>
+        <td>string</td>
+        <td>
+          Highest matching value, included.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.filters[index].stringFilter
+<sup><sup>[↩ Parent](#savedheatmapspecfiltersindex)</sup></sup>
+
+
+
+A string field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedheatmapspecfiltersindexstringfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          String field to filter on. STRING_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: urlSchema, urlSubdomain, urlDomain, urlHost, urlPath, urlTemplate, referrerSchema, referrerSubdomain, referrerDomain, referrerHost, referrerPath, referrerUrl, sessionId, userId, userEmail, userName, cxUserId, accountId, accountName, viewId, platform, environment, appVersion, cxSdkVersion, browserName, browserVersion, browserMajorVersion, os, osMajorVersion, osVersion, deviceType, deviceName, deviceBrand, deviceModel, deviceArchitecture, countryName, cityName, continentName, ip, userAgent, appName, clicksElementFingerprint<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.spec.filters[index].stringFilter.condition
+<sup><sup>[↩ Parent](#savedheatmapspecfiltersindexstringfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.status
+<sup><sup>[↩ Parent](#savedheatmap)</sup></sup>
+
+
+
+SavedHeatmapStatus defines the observed state of a SavedHeatmap.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedheatmapstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedHeatmap.status.conditions[index]
+<sup><sup>[↩ Parent](#savedheatmapstatus)</sup></sup>
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SavedPathway
+<sup><sup>[↩ Parent](#coralogixcomv1alpha1 )</sup></sup>
+
+
+
+
+
+
+SavedPathway is the Schema for the savedpathways API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>coralogix.com/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>SavedPathway</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwayspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SavedPathwaySpec defines the desired state of a SavedPathway.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwaystatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SavedPathwayStatus defines the observed state of a SavedPathway.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec
+<sup><sup>[↩ Parent](#savedpathway)</sup></sup>
+
+
+
+SavedPathwaySpec defines the desired state of a SavedPathway.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>appName</b></td>
+        <td>string</td>
+        <td>
+          RUM application the pathway belongs to.<br/>
+          <br/>
+            <i>Validations</i>:<li>self == oldSelf: spec.appName is immutable</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Display name of the pathway. Does not have to be unique.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwayspectimerange">timeRange</a></b></td>
+        <td>object</td>
+        <td>
+          Time range of the pathway.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.calendar) ? 1 : 0) + (has(self.fixed) ? 1 : 0) + (has(self.relativeMinutes) ? 1 : 0) == 1: Exactly one of calendar, fixed, relativeMinutes must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>view</b></td>
+        <td>string</td>
+        <td>
+          View (page) the paths are traced from.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>direction</b></td>
+        <td>enum</td>
+        <td>
+          Whether the paths show the pages after or before view.<br/>
+          <br/>
+            <i>Enum</i>: after, before<br/>
+            <i>Default</i>: after<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwayspecfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          Session filters of the pathway. Empty when not set.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>pagesCount</b></td>
+        <td>integer</td>
+        <td>
+          Number of pages after or before view in each path.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Default</i>: 5<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 2.147483647e+09<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>topN</b></td>
+        <td>integer</td>
+        <td>
+          Number of paths shown, most common first.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Default</i>: 20<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 2.147483647e+09<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.timeRange
+<sup><sup>[↩ Parent](#savedpathwayspec)</sup></sup>
+
+
+
+Time range of the pathway.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>calendar</b></td>
+        <td>enum</td>
+        <td>
+          Named calendar window, resolved in the viewer's timezone. CALENDAR_WINDOW_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: today, yesterday<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwayspectimerangefixed">fixed</a></b></td>
+        <td>object</td>
+        <td>
+          Absolute time range between two timestamps.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>relativeMinutes</b></td>
+        <td>string</td>
+        <td>
+          Number of minutes back from now.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.timeRange.fixed
+<sup><sup>[↩ Parent](#savedpathwayspectimerange)</sup></sup>
+
+
+
+Absolute time range between two timestamps.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromTimestampMs</b></td>
+        <td>string</td>
+        <td>
+          Start of the range, in Unix milliseconds. Inclusive: events at exactly this time are in the range.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toTimestampMs</b></td>
+        <td>string</td>
+        <td>
+          End of the range, in Unix milliseconds. Exclusive: events at exactly this time are not in the range, so consecutive ranges can share a boundary.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.filters[index]
+<sup><sup>[↩ Parent](#savedpathwayspec)</sup></sup>
+
+
+
+SavedPathwayViewFilter is the ViewFilter object of the API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedpathwayspecfiltersindexboolfilter">boolFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A boolean field with the value it must have.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwayspecfiltersindexnumericfilter">numericFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A numeric field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwayspecfiltersindexstringfilter">stringFilter</a></b></td>
+        <td>object</td>
+        <td>
+          A string field with the condition it must match.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.filters[index].boolFilter
+<sup><sup>[↩ Parent](#savedpathwayspecfiltersindex)</sup></sup>
+
+
+
+A boolean field with the value it must have.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Boolean field to filter on. BOOL_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: hasSessionReplay, hasScreenshot, isRageClick, isDeadClick<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>boolean</td>
+        <td>
+          Value the field must have.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.filters[index].numericFilter
+<sup><sup>[↩ Parent](#savedpathwayspecfiltersindex)</sup></sup>
+
+
+
+A numeric field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedpathwayspecfiltersindexnumericfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+          <br/>
+            <i>Validations</i>:<li>(has(self.max) ? 1 : 0) + (has(self.min) ? 1 : 0) + (has(self.range) ? 1 : 0) == 1: Exactly one of max, min, range must be set</li>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          Numeric field to filter on. NUMERIC_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: errorCount, actionCount, longTaskCount, crashCount, resourceCount, scrollDepthPercentage, viewportWidth, viewportHeight, rageClickCount, deadClickCount<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.filters[index].numericFilter.condition
+<sup><sup>[↩ Parent](#savedpathwayspecfiltersindexnumericfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>max</b></td>
+        <td>string</td>
+        <td>
+          Matches values less than or equal to max.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>min</b></td>
+        <td>string</td>
+        <td>
+          Matches values greater than or equal to min.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#savedpathwayspecfiltersindexnumericfilterconditionrange">range</a></b></td>
+        <td>object</td>
+        <td>
+          Matches values from lower to upper, both included.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.filters[index].numericFilter.condition.range
+<sup><sup>[↩ Parent](#savedpathwayspecfiltersindexnumericfiltercondition)</sup></sup>
+
+
+
+Matches values from lower to upper, both included.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lower</b></td>
+        <td>string</td>
+        <td>
+          Lowest matching value, included. Must not be greater than upper.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>upper</b></td>
+        <td>string</td>
+        <td>
+          Highest matching value, included.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.filters[index].stringFilter
+<sup><sup>[↩ Parent](#savedpathwayspecfiltersindex)</sup></sup>
+
+
+
+A string field with the condition it must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedpathwayspecfiltersindexstringfiltercondition">condition</a></b></td>
+        <td>object</td>
+        <td>
+          Condition the field must match.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>field</b></td>
+        <td>enum</td>
+        <td>
+          String field to filter on. STRING_FILTER_FIELD_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: urlSchema, urlSubdomain, urlDomain, urlHost, urlPath, urlTemplate, referrerSchema, referrerSubdomain, referrerDomain, referrerHost, referrerPath, referrerUrl, sessionId, userId, userEmail, userName, cxUserId, accountId, accountName, viewId, platform, environment, appVersion, cxSdkVersion, browserName, browserVersion, browserMajorVersion, os, osMajorVersion, osVersion, deviceType, deviceName, deviceBrand, deviceModel, deviceArchitecture, countryName, cityName, continentName, ip, userAgent, appName, clicksElementFingerprint<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.spec.filters[index].stringFilter.condition
+<sup><sup>[↩ Parent](#savedpathwayspecfiltersindexstringfilter)</sup></sup>
+
+
+
+Condition the field must match.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operator</b></td>
+        <td>enum</td>
+        <td>
+          Matching operator. STRING_CONDITION_OPERATOR_UNSPECIFIED is rejected.<br/>
+          <br/>
+            <i>Enum</i>: equal, notEqual, contains, notContains, startWith, notStartWith, endWith, notEndWith<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>values</b></td>
+        <td>[]string</td>
+        <td>
+          Values to match. At least one is required.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.status
+<sup><sup>[↩ Parent](#savedpathway)</sup></sup>
+
+
+
+SavedPathwayStatus defines the observed state of a SavedPathway.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#savedpathwaystatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>printableStatus</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SavedPathway.status.conditions[index]
+<sup><sup>[↩ Parent](#savedpathwaystatus)</sup></sup>
 
 
 

@@ -272,12 +272,27 @@ func (r *{{.Kind}}Reconciler) HandleUpdate(ctx context.Context, log logr.Logger,
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
+{{- if .AlwaysExists}}
+	// The API rejects an empty update mask and keeps the value of a field that the mask leaves out,
+	// so a spec that sets no field sends nothing.
+	if mask := cr.UpdateMask(); mask == "" {
+		log.Info("No {{.Kind}} field is set: nothing to send")
+	} else {
+		log.Info("Updating remote {{.Kind}}")
+		_, httpResp, err := r.Client.{{.UpdateMethod}}(ctx).{{.UpdateSetter}}(*body).{{.MaskSetter}}(mask).Execute()
+		if err != nil {
+			return fmt.Errorf("error on updating remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
+		}
+		log.Info("Remote {{.Kind}} updated")
+	}
+{{- else}}
 	log.Info("Updating remote {{.Kind}}"{{if not .StatuslessSingleton}}, "id", id{{end}})
 	{{if .Hooks.AfterUpdate}}resp{{else}}_{{end}}, httpResp, err := r.Client.{{.UpdateMethod}}(ctx{{if not (or .UpdateIDInBody .Singleton)}}, {{if .IDBits}}backendID{{else}}id{{end}}{{end}}).{{.UpdateSetter}}(*body){{if .MaskSetter}}.{{.MaskSetter}}({{if .MaskArms}}cr.UpdateMask(){{else}}coralogixv1alpha1.{{.Kind}}UpdateMask{{end}}){{end}}.Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote {{.Kind}}{{if not .StatuslessSingleton}} %s{{end}}: %w"{{if not .StatuslessSingleton}}, id{{end}}, cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote {{.Kind}} updated"{{if not .StatuslessSingleton}}, "id", id{{end}})
+{{- end}}
 {{- if .StatuslessSingleton}}
 	if err := coralogixreconciler.AddFinalizer(ctx, log, cr, r); err != nil {
 		return err
@@ -318,7 +333,12 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeDelete hook of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
-{{- if .StatuslessSingleton}}
+{{- if .AlwaysExists}}
+	// The API cannot remove the {{.Kind}} of the team, so it keeps its last configuration.
+	log.Info("The API keeps the remote {{.Kind}}: it has no Delete")
+	return nil
+}
+{{- else if .StatuslessSingleton}}
 	log.Info("Deleting remote {{.Kind}}")
 	_, httpResp, err := r.Client.{{.DeleteMethod}}(ctx).Execute()
 	if err != nil {

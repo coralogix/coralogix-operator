@@ -22,6 +22,11 @@ func resolveSDKNames(r *model.Resource, tag, module string, updateIDOutsideWrapp
 		return nil, err
 	}
 	refs = inlineSDKNames(upsertSDKNames(refs, file), file)
+	if r.AlwaysExists {
+		refs = slices.DeleteFunc(refs, func(ref sdkcheck.Ref) bool {
+			return ref.Path == "delete" || strings.HasPrefix(ref.Path, "delete.")
+		})
+	}
 	if updateIDOutsideWrapper {
 		for _, ref := range refs {
 			if ref.Path != "update.body" || ref.Kind != sdkcheck.KindType {

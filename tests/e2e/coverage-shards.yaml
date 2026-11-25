@@ -10,17 +10,27 @@
     },
     {
       "name": "coverage-2",
-      "filter": "coverage && (coverage-globalrouter-1 || coverage-preset-1 || coverage-quotaallocationruleset-1 || coverage-slo-1)",
+      "filter": "coverage && (coverage-globalrouter-1 || coverage-preset-1 || coverage-quotaallocationruleset-1 || coverage-savedfunnel-1)",
       "steps": 4
     },
     {
       "name": "coverage-3",
-      "filter": "coverage && (coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
+      "filter": "coverage && (coverage-savedfunnel-2 || coverage-savedheatmap-1 || coverage-savedheatmap-2 || coverage-savedpathway-1)",
       "steps": 4
     },
     {
+      "name": "coverage-4",
+      "filter": "coverage && (coverage-savedpathway-2 || coverage-slo-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1)",
+      "steps": 4
+    },
+    {
+      "name": "coverage-5",
+      "filter": "coverage && (coverage-tcotracespolicies-1 || coverage-view-1)",
+      "steps": 2
+    },
+    {
       "name": "coverage-rest",
-      "filter": "coverage && !(coverage-aievaluation-1 || coverage-aievaluation-2 || coverage-configurationgroup-1 || coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-quotaallocationruleset-1 || coverage-slo-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
+      "filter": "coverage && !(coverage-aievaluation-1 || coverage-aievaluation-2 || coverage-configurationgroup-1 || coverage-events2metric-1 || coverage-globalrouter-1 || coverage-preset-1 || coverage-quotaallocationruleset-1 || coverage-savedfunnel-1 || coverage-savedfunnel-2 || coverage-savedheatmap-1 || coverage-savedheatmap-2 || coverage-savedpathway-1 || coverage-savedpathway-2 || coverage-slo-1 || coverage-tcologspolicies-1 || coverage-tcorumpolicies-1 || coverage-tcotracespolicies-1 || coverage-view-1)",
       "steps": 0
     }
   ]
