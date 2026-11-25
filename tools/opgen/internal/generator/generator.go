@@ -240,11 +240,22 @@ func applyImmutable(r *model.Resource, file *overrides.File) error {
 // and the server replaces the whole value of each field in the body, a nested oneOf included, so
 // the mask paths that the shared module checks are never sent.
 func maskIssues(report issue.Report, file *overrides.File) issue.Report {
-	if !file.OmitsUpdateMask() {
+	if file.OmitsUpdateMask() {
+		return slices.DeleteFunc(report, func(i issue.Issue) bool {
+			return i.Code == "UPDATE_MASK_NESTED_ONEOF_UNSUPPORTED" || i.Code == "UPDATE_MASK_CONTRACT_INVALID"
+		})
+	}
+	if file != nil {
 		return report
 	}
+	// A new kind has no overrides file. A mask pattern that rejects dotted paths states that the API
+	// takes only top-level names and replaces the whole value of each listed field, the arms of a
+	// oneOf included. Update then names the top-level field, and the old arm leaves with the old
+	// value. A server that merges the new value into the old one breaks this rule: the e2e sweep,
+	// which switches arms between steps, finds that server. A released kind states its behavior in
+	// its overrides file (updateMask: omit), not by the pattern.
 	return slices.DeleteFunc(report, func(i issue.Issue) bool {
-		return i.Code == "UPDATE_MASK_NESTED_ONEOF_UNSUPPORTED" || i.Code == "UPDATE_MASK_CONTRACT_INVALID"
+		return i.Code == "UPDATE_MASK_NESTED_ONEOF_UNSUPPORTED"
 	})
 }
 

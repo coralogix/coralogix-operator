@@ -36,6 +36,9 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		{"update", &d.UpdateMethod, &d.UpdateSetter, &d.UpdateBody},
 		{"delete", &d.DeleteMethod, nil, nil},
 	} {
+		if op.path == "delete" && r.AlwaysExists {
+			continue // the API cannot remove the resource, and Delete makes no call
+		}
 		m, err := b.ix.method(op.path, client.Name)
 		if err != nil {
 			return err
@@ -182,7 +185,8 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 // generated Delete makes no call, so DeleteMethod is unused.
 func (b *builder) singletonOperations(r *model.Resource, d *kindData) error {
 	d.Singleton = true
-	d.StatuslessSingleton = b.file.StatuslessSingleton()
+	d.AlwaysExists = r.AlwaysExists
+	d.StatuslessSingleton = b.file.StatuslessSingleton() || r.AlwaysExists
 	if !d.StatuslessSingleton {
 		d.SingletonID = b.file.SingletonID.Fixed
 	}

@@ -1017,6 +1017,17 @@ func stringValue(name string, t *model.Type, path string) (string, error) {
 	if t.Pattern != "" {
 		re, err := regexp.Compile(t.Pattern)
 		if err != nil || !re.MatchString(s) {
+			// The plain sample does not match: take a string that the pattern builds.
+			minLen, maxLen := 0, int64(-1)
+			if t.MinLength != nil {
+				minLen = int(*t.MinLength)
+			}
+			if t.MaxLength != nil {
+				maxLen = *t.MaxLength
+			}
+			if built, ok := patternString(t.Pattern, minLen, maxLen); ok {
+				return built, nil
+			}
 			return "", &shapeError{code: codeE2ERequired, path: e2eFileName + ":values." + path,
 				msg: fmt.Sprintf("the made-up value %q does not match the pattern %s; set the value in %s", s, t.Pattern, e2eFileName)}
 		}

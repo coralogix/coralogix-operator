@@ -622,10 +622,9 @@ func (b *builder) field(owner, component, name, description string, t *model.Typ
 				return nil, &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".listMapKey", msg: "the key must be a required string item field"}
 			}
 			f.Markers = append(f.Markers, "+listType=map", "+listMapKey="+change.ListMapKey)
-		} else if t.Kind == model.Set && change.Collection == "" {
-			if f.object != nil {
-				return nil, unsupported(path, "a set of objects is not supported yet")
-			}
+		} else if t.Kind == model.Set && change.Collection == "" && f.object == nil {
+			// Kubernetes accepts listType=set only for scalar items. A set of objects is a plain
+			// CR list: Update keeps the order and the values of the items in the request.
 			f.Markers = append(f.Markers, "+listType=set")
 		}
 		f.Markers = append(f.Markers, b.limits(boundMarkers("MinItems", "MaxItems", t.MinItems, t.MaxItems), path)...)

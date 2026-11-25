@@ -148,8 +148,12 @@ rules:
       - events2metrics
       - globalrouters
       - presets
+      - productanalyticssettings
       - quotaallocationrulesets
       - slos
+      - savedfunnels
+      - savedheatmaps
+      - savedpathways
       - tcologspolicies
       - tcorumpolicies
       - tcotracespolicies
@@ -175,8 +179,12 @@ rules:
       - events2metrics/finalizers
       - globalrouters/finalizers
       - presets/finalizers
+      - productanalyticssettings/finalizers
       - quotaallocationrulesets/finalizers
       - slos/finalizers
+      - savedfunnels/finalizers
+      - savedheatmaps/finalizers
+      - savedpathways/finalizers
       - tcologspolicies/finalizers
       - tcorumpolicies/finalizers
       - tcotracespolicies/finalizers
@@ -196,8 +204,12 @@ rules:
       - events2metrics/status
       - globalrouters/status
       - presets/status
+      - productanalyticssettings/status
       - quotaallocationrulesets/status
       - slos/status
+      - savedfunnels/status
+      - savedheatmaps/status
+      - savedpathways/status
       - tcologspolicies/status
       - tcorumpolicies/status
       - tcotracespolicies/status

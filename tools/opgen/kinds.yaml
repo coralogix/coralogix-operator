@@ -34,3 +34,11 @@ kinds:
     resource: CustomRole
   - kind: QuotaAllocationRuleSet
     resource: QuotaAllocationEntityTypeRuleSet
+  - kind: SavedFunnel
+    resource: SavedFunnel
+  - kind: SavedPathway
+    resource: SavedPathway
+  - kind: SavedHeatmap
+    resource: SavedHeatmap
+  - kind: ProductAnalyticsSettings
+    resource: ProductAnalyticsSettings

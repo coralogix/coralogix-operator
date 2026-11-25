@@ -318,7 +318,12 @@ func (r *{{.Kind}}Reconciler) HandleDeletion(ctx context.Context, log logr.Logge
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeDelete hook of {{.Kind}} failed: %w", err))
 	}
 {{- end}}
-{{- if .StatuslessSingleton}}
+{{- if .AlwaysExists}}
+	// The API cannot remove the {{.Kind}} of the team, so it keeps its last configuration.
+	log.Info("The API keeps the remote {{.Kind}}: it has no Delete")
+	return nil
+}
+{{- else if .StatuslessSingleton}}
 	log.Info("Deleting remote {{.Kind}}")
 	_, httpResp, err := r.Client.{{.DeleteMethod}}(ctx).Execute()
 	if err != nil {

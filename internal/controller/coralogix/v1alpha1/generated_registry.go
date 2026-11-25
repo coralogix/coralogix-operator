@@ -89,6 +89,12 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.PresetKind, err)
 	}
+	if err := (&ProductAnalyticsSettingsReconciler{
+		Client:   clientSet.ProductAnalyticsSettings(),
+		Interval: intervals[utils.ProductAnalyticsSettingsKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.ProductAnalyticsSettingsKind, err)
+	}
 	if err := (&QuotaAllocationRuleSetReconciler{
 		Client:    clientSet.Quotas(),
 		ClientSet: clientSet,
@@ -102,6 +108,24 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 		Interval:  intervals[utils.SLOKind],
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.SLOKind, err)
+	}
+	if err := (&SavedFunnelReconciler{
+		Client:   clientSet.ProductAnalyticsFunnels(),
+		Interval: intervals[utils.SavedFunnelKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.SavedFunnelKind, err)
+	}
+	if err := (&SavedHeatmapReconciler{
+		Client:   clientSet.ProductAnalyticsHeatmaps(),
+		Interval: intervals[utils.SavedHeatmapKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.SavedHeatmapKind, err)
+	}
+	if err := (&SavedPathwayReconciler{
+		Client:   clientSet.ProductAnalyticsPathways(),
+		Interval: intervals[utils.SavedPathwayKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.SavedPathwayKind, err)
 	}
 	if err := (&TCOLogsPoliciesReconciler{
 		Client:    clientSet.TCOPolicies(),
