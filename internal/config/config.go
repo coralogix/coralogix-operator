@@ -102,26 +102,25 @@ func InitConfig(setupLog logr.Logger) *Config {
 		var err error
 		cfg.CoralogixOpenApiUrl, err = getCoralogixOpenApiUrl(strings.ToUpper(region), domain)
 		if err != nil {
-			setupLog.Error(err, "invalid arguments for running operator")
+			setupLog.Info("invalid arguments for running operator")
 			os.Exit(1)
 		}
 
 		if cfg.CoralogixApiKey == "" {
-			setupLog.Error(fmt.Errorf("api-key can not be empty"),
-				"invalid arguments for running operator")
+			setupLog.Info("required credential is empty")
 			os.Exit(1)
 		}
 
 		selector, err := parseSelector(labelSelector, namespaceSelector)
 		if err != nil {
-			setupLog.Error(err, "invalid arguments for running operator")
+			setupLog.Info("invalid arguments for running operator")
 			os.Exit(1)
 		}
 		cfg.Selector = *selector
 
 		cfg.ReconcileIntervals, err = parseReconcileIntervals(reconcileIntervals)
 		if err != nil {
-			setupLog.Error(err, "invalid arguments for running operator")
+			setupLog.Info("invalid arguments for running operator")
 			os.Exit(1)
 		}
 	})

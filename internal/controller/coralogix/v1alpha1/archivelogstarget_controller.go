@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ArchiveLogsTargetReconciler reconciles a ArchiveLogsTarget object.
@@ -76,12 +75,12 @@ func (r *ArchiveLogsTargetReconciler) HandleCreationWithFollowUp(ctx context.Con
 	if err != nil {
 		return nil, fmt.Errorf("error on building the create request of ArchiveLogsTarget: %w", err)
 	}
-	log.Info("Creating remote ArchiveLogsTarget", "ArchiveLogsTarget", utils.FormatJSON(body))
+	log.Info("Creating remote ArchiveLogsTarget")
 	resp, httpResp, err := r.Client.S3TargetServiceSetTarget(ctx).SetTargetResponse(*body).Execute()
 	if err != nil {
 		return nil, fmt.Errorf("error on creating remote ArchiveLogsTarget: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ArchiveLogsTarget created", "response", utils.FormatJSON(resp))
+	log.Info("Remote ArchiveLogsTarget created")
 	if resp == nil {
 		return nil, fmt.Errorf("the create response of ArchiveLogsTarget has no resource")
 	}
@@ -125,12 +124,12 @@ func (r *ArchiveLogsTargetReconciler) HandleUpdate(ctx context.Context, log logr
 	if err != nil {
 		return fmt.Errorf("error on building the update request of ArchiveLogsTarget: %w", err)
 	}
-	log.Info("Updating remote ArchiveLogsTarget", "id", id, "ArchiveLogsTarget", utils.FormatJSON(body))
+	log.Info("Updating remote ArchiveLogsTarget", "id", id)
 	resp, httpResp, err := r.Client.S3TargetServiceSetTarget(ctx).SetTargetResponse(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote ArchiveLogsTarget %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ArchiveLogsTarget updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote ArchiveLogsTarget updated", "id", id)
 	// afterUpdate runs after every successful Update, also when nothing changed, and after a
 	// failed afterCreate. A hook error is not a remote NotFound: it never removes status.id.
 	// A hook can run many times: it must be safe to repeat. Make a state true (get, then create or

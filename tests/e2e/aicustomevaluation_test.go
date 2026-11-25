@@ -286,7 +286,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		Eventually(func(g Gomega) {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
-			expectAICustomEvaluationRemoteUnsynced(g, fetched)
+			expectAICustomEvaluationRemoteUnsynced(g, fetched, utils.ReasonRemoteCreationFailed)
 		}, time.Minute, time.Second).Should(Succeed())
 
 		deleteAICustomEvaluationAndWait(ctx, crClient, resourceName)
@@ -331,7 +331,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		Eventually(func(g Gomega) {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
-			expectAICustomEvaluationRemoteUnsynced(g, fetched)
+			expectAICustomEvaluationRemoteUnsynced(g, fetched, utils.ReasonRemoteUpdateFailed)
 		}, time.Minute, time.Second).Should(Succeed())
 
 		// The remote evaluation exists. Delete it here, so a later run does not find it.
@@ -568,11 +568,17 @@ func expectRemoteAICustomEvaluationExamples(
 	g.Expect(prohibited).To(ConsistOf(expectedStrings(expectedProhibited)...))
 }
 
-func expectAICustomEvaluationRemoteUnsynced(g Gomega, aiCustomEvaluation *coralogixv1alpha1.AICustomEvaluation) {
+func expectAICustomEvaluationRemoteUnsynced(g Gomega, aiCustomEvaluation *coralogixv1alpha1.AICustomEvaluation, reason string) {
 	condition := meta.FindStatusCondition(aiCustomEvaluation.Status.Conditions, utils.ConditionTypeRemoteSynced)
 	g.Expect(condition).ToNot(BeNil())
+	g.Expect(condition.ObservedGeneration).To(Equal(aiCustomEvaluation.Generation))
 	g.Expect(condition.Status).To(Equal(metav1.ConditionFalse))
-	g.Expect(condition.Message).To(ContainSubstring("AI application not found"))
+	g.Expect(condition.Reason).To(Equal(reason))
+	operation := "create"
+	if reason == utils.ReasonRemoteUpdateFailed {
+		operation = "update"
+	}
+	g.Expect(condition.Message).To(Equal(reason + " (operation=" + operation + ", category=unknown)"))
 	g.Expect(aiCustomEvaluation.Status.PrintableStatus).To(Equal("RemoteUnsynced"))
 }
 

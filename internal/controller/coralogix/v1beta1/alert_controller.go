@@ -30,7 +30,6 @@ import (
 	coralogixv1beta1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // AlertReconciler reconciles a Alert object
@@ -79,7 +78,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 		AccessPolicy:       alert.Spec.ExtractCreateAccessPolicy(),
 	}
 
-	log.Info("Creating remote alert", "alert", utils.FormatJSON(createRequest))
+	log.Info("Creating remote alert")
 	createResponse, httpResp, err := r.ClientSet.Alerts().
 		AlertDefsServiceCreateAlertDef(ctx).
 		CreateAlertDefinitionRequest(*createRequest).
@@ -87,7 +86,7 @@ func (r *AlertReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on creating remote alert: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote alert created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote alert created")
 	alert.Status = coralogixv1beta1.AlertStatus{ID: createResponse.AlertDef.Id}
 	return nil
 }
@@ -117,15 +116,15 @@ func (r *AlertReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 		AccessPolicy:       alert.Spec.ExtractAccessPolicyAction(),
 	}
 
-	log.Info("Updating remote alert", "alert", utils.FormatJSON(updateRequest))
-	updateResponse, httpResp, err := r.ClientSet.Alerts().
+	log.Info("Updating remote alert")
+	_, httpResp, err := r.ClientSet.Alerts().
 		AlertDefsServiceReplaceAlertDef(ctx).
 		ReplaceAlertDefinitionRequest(updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote alert updated", "alert", utils.FormatJSON(updateResponse))
+	log.Info("Remote alert updated")
 	return nil
 }
 
@@ -140,7 +139,6 @@ func (r *AlertReconciler) HandleDeletion(ctx context.Context, log logr.Logger, o
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote alert", "id", *alert.Status.ID)
 			return fmt.Errorf("error deleting remote alert %s: %w", *alert.Status.ID, err)
 		}
 	}

@@ -29,7 +29,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	"github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // IPAccessReconciler reconciles a IPAccess object
@@ -60,7 +59,7 @@ func (r *IPAccessReconciler) HandleCreation(ctx context.Context, log logr.Logger
 	if err != nil {
 		return fmt.Errorf("error on extracting create request: %w", err)
 	}
-	log.Info("Creating remote ipAccess", "ipAccess", utils.FormatJSON(createReq))
+	log.Info("Creating remote ipAccess")
 	createRes, httpResp, err := r.IPAccesssClient.
 		IpAccessServiceCreateCompanyIpAccessSettings(ctx).
 		CreateCompanyIPAccessSettingsRequest(*createReq).
@@ -68,7 +67,7 @@ func (r *IPAccessReconciler) HandleCreation(ctx context.Context, log logr.Logger
 	if err != nil {
 		return fmt.Errorf("error on creating remote ipAccess: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ipAccess created", "response", utils.FormatJSON(createRes))
+	log.Info("Remote ipAccess created")
 	ipAccess.Status = coralogixv1alpha1.IPAccessStatus{
 		ID: createRes.Settings.Id,
 	}
@@ -82,15 +81,15 @@ func (r *IPAccessReconciler) HandleUpdate(ctx context.Context, log logr.Logger, 
 	if err != nil {
 		return fmt.Errorf("error on extracting replace request: %w", err)
 	}
-	log.Info("Replacing remote ipAccess", "ipAccess", utils.FormatJSON(replaceReq))
-	replaceRes, httpResp, err := r.IPAccesssClient.
+	log.Info("Replacing remote ipAccess")
+	_, httpResp, err := r.IPAccesssClient.
 		IpAccessServiceReplaceCompanyIpAccessSettings(ctx).
 		ReplaceCompanyIPAccessSettingsRequest(*replaceReq).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote ipAccess replaces", "response", utils.FormatJSON(replaceRes))
+	log.Info("Remote ipAccess replaces")
 
 	return nil
 }
@@ -110,7 +109,6 @@ func (r *IPAccessReconciler) HandleDeletion(ctx context.Context, log logr.Logger
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deleting remote IpAccess", "id", *ipAccess.Status.ID)
 			return fmt.Errorf("error deleting remote IpAccess %s: %w", *ipAccess.Status.ID, apiErr)
 		}
 	}

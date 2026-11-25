@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // PresetReconciler reconciles a Preset object.
@@ -64,12 +63,12 @@ func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, 
 	if err != nil {
 		return fmt.Errorf("error on building the create request of Preset: %w", err)
 	}
-	log.Info("Creating remote Preset", "Preset", utils.FormatJSON(body))
+	log.Info("Creating remote Preset")
 	resp, httpResp, err := r.Client.PresetsServiceCreateCustomPreset(ctx).CreateCustomPresetRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote Preset: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Preset created", "response", utils.FormatJSON(resp))
+	log.Info("Remote Preset created")
 	if resp == nil {
 		return fmt.Errorf("the create response of Preset has no resource")
 	}
@@ -91,12 +90,12 @@ func (r *PresetReconciler) HandleUpdate(ctx context.Context, log logr.Logger, ob
 	if err != nil {
 		return fmt.Errorf("error on building the update request of Preset: %w", err)
 	}
-	log.Info("Updating remote Preset", "id", id, "Preset", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.PresetsServiceReplaceCustomPreset(ctx).ReplaceCustomPresetRequest(*body).Execute()
+	log.Info("Updating remote Preset", "id", id)
+	_, httpResp, err := r.Client.PresetsServiceReplaceCustomPreset(ctx).ReplaceCustomPresetRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote Preset %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Preset updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote Preset updated", "id", id)
 	return nil
 }
 

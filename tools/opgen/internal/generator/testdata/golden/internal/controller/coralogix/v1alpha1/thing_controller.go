@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ThingReconciler reconciles a Thing object.
@@ -64,12 +63,12 @@ func (r *ThingReconciler) HandleCreation(ctx context.Context, log logr.Logger, o
 	if err != nil {
 		return fmt.Errorf("error on building the create request of Thing: %w", err)
 	}
-	log.Info("Creating remote Thing", "Thing", utils.FormatJSON(body))
+	log.Info("Creating remote Thing")
 	resp, httpResp, err := r.Client.ThingsServiceCreateThing(ctx).CreateThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote Thing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Thing created", "response", utils.FormatJSON(resp))
+	log.Info("Remote Thing created")
 	if resp == nil {
 		return fmt.Errorf("the create response of Thing has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *ThingReconciler) HandleUpdate(ctx context.Context, log logr.Logger, obj
 	if err != nil {
 		return fmt.Errorf("error on building the update request of Thing: %w", err)
 	}
-	log.Info("Updating remote Thing", "id", id, "Thing", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.ThingsServiceReplaceThing(ctx, id).ReplaceThingRequest(*body).Execute()
+	log.Info("Updating remote Thing", "id", id)
+	_, httpResp, err := r.Client.ThingsServiceReplaceThing(ctx, id).ReplaceThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote Thing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Thing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote Thing updated", "id", id)
 	return nil
 }
 

@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ContentThingReconciler reconciles a ContentThing object.
@@ -95,12 +94,12 @@ func (r *ContentThingReconciler) HandleCreation(ctx context.Context, log logr.Lo
 		cr.Status.ID = ptr.To(adoptedID)
 		return nil
 	}
-	log.Info("Creating remote ContentThing", "ContentThing", utils.FormatJSON(body))
+	log.Info("Creating remote ContentThing")
 	resp, httpResp, err := r.Client.ContentThingsServiceCreateContentThing(ctx).CreateContentThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote ContentThing: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ContentThing created", "response", utils.FormatJSON(resp))
+	log.Info("Remote ContentThing created")
 	if resp == nil {
 		return fmt.Errorf("the create response of ContentThing has no resource")
 	}
@@ -134,12 +133,12 @@ func (r *ContentThingReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 	if err := r.beforeUpdate(ctx, log, cr, body); err != nil {
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of ContentThing failed: %w", err))
 	}
-	log.Info("Updating remote ContentThing", "id", id, "ContentThing", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.ContentThingsServiceReplaceContentThing(ctx).ReplaceContentThingRequest(*body).Execute()
+	log.Info("Updating remote ContentThing", "id", id)
+	_, httpResp, err := r.Client.ContentThingsServiceReplaceContentThing(ctx).ReplaceContentThingRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote ContentThing %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote ContentThing updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote ContentThing updated", "id", id)
 	return nil
 }
 

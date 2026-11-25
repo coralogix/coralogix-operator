@@ -8,6 +8,11 @@ This is the public `coralogix/coralogix-operator` repo. Keep internal ticket IDs
 
 Use generic, public-safe names in examples and fixtures.
 
+Do not log full API requests or responses. Any resource body can contain a credential. API errors can also contain credentials in response bodies or URLs. Keep raw errors out of logs and resource conditions.
+For error diagnostics, use fixed operation and category labels and numeric status codes. Do not copy raw error text or response bodies into logs or conditions.
+
+When a custom resource reads a Secret, watch that Secret so a value change triggers reconciliation. Resolve the value on every create and update, and reject two sources for the same field.
+
 ## Architecture
 
 This is a Kubebuilder v4 operator for `coralogix.com` custom resources.
@@ -173,7 +178,7 @@ cd tools/opgen && go run ./cmd/opgen check \
   - A kind that is already plural (ends in `ies`, such as `TCOLogsPolicies`) keeps its name as the resource plural.
   - `ref: {form: namedBackendOnly}` needs no CR kind of its own: `kind` only names the API resource in messages.
   - `finalizer` keeps the released finalizer name of an existing kind. The generated name is `kebab(Kind).coralogix.com/finalizer`. A released kind with another name must set it, or deleting its existing objects hangs. It is an operator key, so the shared `iac` module does not know it.
-  - `hideBodiesInLogs: true` keeps the Create and Update bodies and responses out of the operator logs, for a kind whose spec can hold secrets, such as a collector configuration with credentials. The logs name the kind and the id only. It is an operator key, valid in both modes.
+  - Generated controllers keep Create and Update bodies and responses out of operator logs. The old `hideBodiesInLogs` key is accepted but has no effect. Do not add payload logging to a controller.
   - `hooks` lists the handwritten steps of the generated lifecycle (see "Hooks" below). `status` declares extra status fields for a hook to set: `status: {externalId: {type: string}}`, with type `string`, `int32`, `int64`, or `bool`. Each field is a pointer with `omitempty`. `keepOnCleanup: true` keeps the field when a selector mismatch clears the remote status (like Dashboard `status.imported`). A generated kind with a `status` field owns its cleanup list: the cleanup removes `id`, `conditions`, `printableStatus`, and the fields without `keepOnCleanup`. The older fixed fields of handwritten kinds (`externalId`, `revision`, `accessPolicyManaged`) are removed only for a kind without `status` fields. A name cannot be `id`, `conditions`, or `printableStatus`. `status` is valid without `hooks`. Both keys need mode `existing`.
   - `enums.<component>` sets the CR spellings of an API enum and lists the rejected values. The accepted values are the contract values, without the zero value and without the rejected values, in contract order. A new contract value is accepted with no edit, and it gets the spelling that the line's `names`, `verbatim`, and `trimPrefix` rules give, or the default spelling. The old `values` key is an error.
   - `rejected` is a list of `{value, reason}`. The reason is required. It says why the operator cannot accept the value.

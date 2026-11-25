@@ -15,8 +15,6 @@
 package utils
 
 import (
-	"encoding/json"
-	"fmt"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -53,12 +51,4 @@ func GetGVKsInVersion(version string, scheme *runtime.Scheme) []schema.GroupVers
 	}
 
 	return result
-}
-
-func FormatJSON(obj any) string {
-	formattedReq, err := json.MarshalIndent(obj, "", "   ")
-	if err != nil {
-		return fmt.Sprintf("failed to format JSON: %v", err)
-	}
-	return string(formattedReq)
 }

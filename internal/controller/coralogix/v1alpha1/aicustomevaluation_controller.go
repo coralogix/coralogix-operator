@@ -32,7 +32,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // AICustomEvaluationReconciler reconciles an AICustomEvaluation object.
@@ -81,7 +80,7 @@ func (r *AICustomEvaluationReconciler) HandleCreation(ctx context.Context, log l
 		return fmt.Errorf("error on extracting create AICustomEvaluation request: %w", err)
 	}
 
-	log.Info("Creating remote AICustomEvaluation", "AICustomEvaluation", utils.FormatJSON(createRequest))
+	log.Info("Creating remote AICustomEvaluation")
 	createResponse, httpResp, err := r.AIEvaluationsClient.
 		AiEvaluationsServiceCreateCustomEvaluation(ctx).
 		AiEvaluationsServiceCreateCustomEvaluationRequest(*createRequest).
@@ -89,7 +88,7 @@ func (r *AICustomEvaluationReconciler) HandleCreation(ctx context.Context, log l
 	if err != nil {
 		return fmt.Errorf("error on creating remote AICustomEvaluation: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote AICustomEvaluation created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote AICustomEvaluation created")
 
 	createdEvaluation := createResponse.GetItem()
 	id := (&createdEvaluation).GetId()
@@ -118,14 +117,14 @@ func (r *AICustomEvaluationReconciler) HandleUpdate(ctx context.Context, log log
 
 	id := ptr.Deref(aiCustomEvaluation.Status.Id, "")
 	log.Info("Updating remote AICustomEvaluation", "id", id)
-	updateResponse, httpResp, err := r.AIEvaluationsClient.
+	_, httpResp, err := r.AIEvaluationsClient.
 		AiEvaluationsServiceUpdateCustomEvaluation(ctx, id).
 		AiEvaluationsServiceUpdateCustomEvaluationRequest(*updateRequest).
 		Execute()
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote AICustomEvaluation updated", "response", utils.FormatJSON(updateResponse))
+	log.Info("Remote AICustomEvaluation updated")
 
 	examplesUpdateRequest, err := aiCustomEvaluation.ExtractUpdateAICustomEvaluationExamplesRequest()
 	if err != nil {
@@ -134,14 +133,14 @@ func (r *AICustomEvaluationReconciler) HandleUpdate(ctx context.Context, log log
 
 	if examplesUpdateRequest != nil {
 		log.Info("Clearing remote AICustomEvaluation examples", "id", id)
-		examplesUpdateResponse, httpResp, err := r.AIEvaluationsClient.
+		_, httpResp, err := r.AIEvaluationsClient.
 			AiEvaluationsServiceUpdateCustomEvaluation(ctx, id).
 			AiEvaluationsServiceUpdateCustomEvaluationRequest(*examplesUpdateRequest).
 			Execute()
 		if err != nil {
 			return cxsdk.NewAPIError(httpResp, err)
 		}
-		log.Info("Remote AICustomEvaluation examples cleared", "response", utils.FormatJSON(examplesUpdateResponse))
+		log.Info("Remote AICustomEvaluation examples cleared")
 	}
 
 	remoteApplicationIDs, err := r.getRemoteAICustomEvaluationApplicationIDs(ctx, id)

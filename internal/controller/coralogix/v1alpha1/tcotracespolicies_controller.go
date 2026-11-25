@@ -32,7 +32,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // TCOTracesPoliciesReconciler reconciles a TCOTracesPolicies object.
@@ -72,12 +71,12 @@ func (r *TCOTracesPoliciesReconciler) HandleUpdate(ctx context.Context, log logr
 	if err != nil {
 		return fmt.Errorf("error on building the request of TCOTracesPolicies: %w", err)
 	}
-	log.Info("Overwriting remote TCOTracesPolicies", "TCOTracesPolicies", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.PoliciesServiceAtomicOverwriteSpanPolicies(ctx).AtomicOverwriteSpanPoliciesRequest(*body).Execute()
+	log.Info("Overwriting remote TCOTracesPolicies")
+	_, httpResp, err := r.Client.PoliciesServiceAtomicOverwriteSpanPolicies(ctx).AtomicOverwriteSpanPoliciesRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on overwriting remote TCOTracesPolicies: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote TCOTracesPolicies overwritten", "response", utils.FormatJSON(resp))
+	log.Info("Remote TCOTracesPolicies overwritten")
 	return coralogixreconciler.AddFinalizer(ctx, log, cr, r)
 }
 

@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // Events2MetricReconciler reconciles a Events2Metric object.
@@ -64,12 +63,12 @@ func (r *Events2MetricReconciler) HandleCreation(ctx context.Context, log logr.L
 	if err != nil {
 		return fmt.Errorf("error on building the create request of Events2Metric: %w", err)
 	}
-	log.Info("Creating remote Events2Metric", "Events2Metric", utils.FormatJSON(body))
+	log.Info("Creating remote Events2Metric")
 	resp, httpResp, err := r.Client.Events2MetricServiceCreateE2M(ctx).E2MCreateParams(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote Events2Metric: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Events2Metric created", "response", utils.FormatJSON(resp))
+	log.Info("Remote Events2Metric created")
 	if resp == nil {
 		return fmt.Errorf("the create response of Events2Metric has no resource")
 	}
@@ -91,12 +90,12 @@ func (r *Events2MetricReconciler) HandleUpdate(ctx context.Context, log logr.Log
 	if err != nil {
 		return fmt.Errorf("error on building the update request of Events2Metric: %w", err)
 	}
-	log.Info("Updating remote Events2Metric", "id", id, "Events2Metric", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.Events2MetricServiceReplaceE2M(ctx).E2M1(*body).Execute()
+	log.Info("Updating remote Events2Metric", "id", id)
+	_, httpResp, err := r.Client.Events2MetricServiceReplaceE2M(ctx).E2M1(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote Events2Metric %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote Events2Metric updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote Events2Metric updated", "id", id)
 	return nil
 }
 

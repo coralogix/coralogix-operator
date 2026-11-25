@@ -25,7 +25,6 @@ import (
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	archivemetrics "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/metrics_data_archive_service"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
@@ -65,8 +64,8 @@ func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log
 	if err != nil {
 		return fmt.Errorf("error on extracting create archivemetricstarget request: %w", err)
 	}
-	log.Info("Creating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(configureTenantRequest))
-	createResponse, httpResp, err := r.ArchiveMetricsTargetsClient.
+	log.Info("Creating remote archivemetricstarget")
+	_, httpResp, err := r.ArchiveMetricsTargetsClient.
 		MetricsConfiguratorPublicServiceConfigureTenant(ctx).
 		ConfigureTenantRequest(*configureTenantRequest).
 		Execute()
@@ -84,7 +83,7 @@ func (r *ArchiveMetricsTargetReconciler) HandleCreation(ctx context.Context, log
 	if err != nil {
 		return cxsdk.NewAPIError(httpResp, err)
 	}
-	log.Info("Remote archivemetricstarget created", "response", utils.FormatJSON(createResponse))
+	log.Info("Remote archivemetricstarget created")
 
 	id := "archiveMetricsTarget"
 	archiveMetricsTarget.Status = coralogixv1alpha1.ArchiveMetricsTargetStatus{
@@ -100,7 +99,7 @@ func (r *ArchiveMetricsTargetReconciler) HandleUpdate(ctx context.Context, log l
 	if err != nil {
 		return fmt.Errorf("error on extracting update archivemetricstarget request: %w", err)
 	}
-	log.Info("Updating remote archivemetricstarget", "archivemetricstarget", utils.FormatJSON(updateRequest))
+	log.Info("Updating remote archivemetricstarget")
 	_, httpResp, err := r.ArchiveMetricsTargetsClient.
 		MetricsConfiguratorPublicServiceUpdate(ctx).
 		UpdateTenantRequest(*updateRequest).
@@ -119,7 +118,6 @@ func (r *ArchiveMetricsTargetReconciler) HandleDeletion(ctx context.Context, log
 		Execute()
 	if err != nil {
 		if apiErr := cxsdk.NewAPIError(httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			log.Error(err, "Error deactivating remote archivemetricstarget")
 			return fmt.Errorf("error deactivating remote archivemetricstarget: %w", err)
 		}
 	}
