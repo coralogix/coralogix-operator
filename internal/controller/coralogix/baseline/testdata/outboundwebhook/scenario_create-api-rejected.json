@@ -17,7 +17,6 @@
           "data": {
             "name": "",
             "opsgenie": {},
-            "type": "OPSGENIE",
             "url": "https://api.opsgenie.com/v1/json/coralogix"
           }
         },
@@ -52,7 +51,6 @@
           "data": {
             "name": "",
             "opsgenie": {},
-            "type": "OPSGENIE",
             "url": "https://api.opsgenie.com/v1/json/coralogix"
           }
         },

@@ -26,8 +26,7 @@
                 "first@example.com"
               ]
             },
-            "name": "baseline-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "baseline-webhook"
           }
         },
         "status": 200
@@ -94,8 +93,7 @@
             "emailGroup": {
               "emailAddresses": []
             },
-            "name": "baseline-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "baseline-webhook"
           }
         },
         "status": 200
@@ -161,7 +159,6 @@
           "data": {
             "name": "baseline-webhook",
             "opsgenie": {},
-            "type": "OPSGENIE",
             "url": "https://api.opsgenie.com/v1/json/coralogix"
           }
         },
@@ -233,7 +230,6 @@
               "uuid": "00000000-0000-4000-8000-000000000001"
             },
             "name": "baseline-webhook",
-            "type": "DEMISTO",
             "url": "https://example.com/demisto"
           }
         },
@@ -309,8 +305,7 @@
               "roleName": "coralogix-role",
               "source": "coralogix"
             },
-            "name": "baseline-webhook",
-            "type": "AWS_EVENT_BRIDGE"
+            "name": "baseline-webhook"
           }
         },
         "status": 200
@@ -380,7 +375,6 @@
               "payload": "{}",
               "uuid": "<id-6>"
             },
-            "type": "SEND_LOG",
             "url": ""
           }
         },

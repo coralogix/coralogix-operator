@@ -24,8 +24,7 @@
                 "second@example.com"
               ]
             },
-            "name": "baseline-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "baseline-webhook"
           }
         },
         "status": 200
@@ -84,8 +83,7 @@
                 "third@example.com"
               ]
             },
-            "name": "baseline-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "baseline-webhook"
           },
           "id": "<id-1>"
         },
@@ -183,8 +181,7 @@
                 "second@example.com"
               ]
             },
-            "name": "baseline-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "baseline-webhook"
           },
           "id": "<id-1>"
         },
@@ -233,8 +230,7 @@
             "emailGroup": {
               "emailAddresses": []
             },
-            "name": "baseline-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "baseline-webhook"
           },
           "id": "<id-1>"
         },

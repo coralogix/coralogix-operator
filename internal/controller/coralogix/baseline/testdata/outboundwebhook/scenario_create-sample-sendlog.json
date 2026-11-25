@@ -21,7 +21,6 @@
               "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
               "uuid": "<id-1>"
             },
-            "type": "SEND_LOG",
             "url": "https://example.com"
           }
         },
@@ -59,7 +58,6 @@
               "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
               "uuid": "<id-2>"
             },
-            "type": "SEND_LOG",
             "url": "https://example.com"
           }
         },

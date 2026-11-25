@@ -42,7 +42,6 @@
                 }
               ]
             },
-            "type": "SLACK",
             "url": "https://hooks.slack.com/services/baseline"
           }
         },
@@ -120,7 +119,6 @@
                 }
               ]
             },
-            "type": "SLACK",
             "url": "https://hooks.slack.com/services/baseline"
           },
           "id": "<id-1>"
@@ -174,7 +172,6 @@
               "attachments": [],
               "digests": []
             },
-            "type": "SLACK",
             "url": "https://hooks.slack.com/services/baseline"
           },
           "id": "<id-1>"
@@ -288,7 +285,6 @@
                 }
               ]
             },
-            "type": "SLACK",
             "url": "https://hooks.slack.com/services/baseline"
           },
           "id": "<id-1>"
@@ -340,7 +336,6 @@
               "attachments": [],
               "digests": []
             },
-            "type": "SLACK",
             "url": "https://hooks.slack.com/services/baseline"
           },
           "id": "<id-1>"

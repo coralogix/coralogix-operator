@@ -31,6 +31,7 @@ const (
 	Events2MetricKind            = "Events2Metric"
 	GlobalRouterKind             = "GlobalRouter"
 	IntegrationKind              = "Integration"
+	OutboundWebhookKind          = "OutboundWebhook"
 	PresetKind                   = "Preset"
 	ProductAnalyticsSettingsKind = "ProductAnalyticsSettings"
 	QuotaAllocationRuleSetKind   = "QuotaAllocationRuleSet"

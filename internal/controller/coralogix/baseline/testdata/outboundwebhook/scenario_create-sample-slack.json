@@ -42,7 +42,6 @@
                 }
               ]
             },
-            "type": "SLACK",
             "url": "https://example.com"
           }
         },
@@ -100,7 +99,6 @@
                 }
               ]
             },
-            "type": "SLACK",
             "url": "https://example.com"
           },
           "id": "<id-1>"

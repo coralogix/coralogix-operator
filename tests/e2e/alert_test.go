@@ -409,9 +409,9 @@ var _ = Describe("Alert", Ordered, func() {
 			},
 			Spec: coralogixv1alpha1.OutboundWebhookSpec{
 				Name: "webhook",
-				OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
-					Slack: &coralogixv1alpha1.Slack{
-						Url: "https://slack.com",
+				OutboundWebhookType: coralogixv1alpha1.OutboundWebhookSpecOutboundWebhookType{
+					Slack: &coralogixv1alpha1.OutboundWebhookSlackConfig{
+						Url: ptr.To("https://slack.com"),
 					},
 				},
 			},

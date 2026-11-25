@@ -21,7 +21,6 @@
               "uuid": "<id-1>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           }
         },
@@ -89,7 +88,6 @@
                 }
               ]
             },
-            "type": "SLACK",
             "url": "https://hooks.slack.com/services/baseline"
           }
         },
@@ -136,7 +134,6 @@
               "uuid": "<id-2>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           }
         },
@@ -193,7 +190,6 @@
               "uuid": "<id-4>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           },
           "id": "<id-3>"

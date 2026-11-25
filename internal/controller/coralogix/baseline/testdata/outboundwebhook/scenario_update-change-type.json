@@ -29,7 +29,6 @@
               "uuid": "<id-1>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           }
         },
@@ -83,8 +82,7 @@
             "name": "baseline-webhook",
             "pagerDuty": {
               "serviceKey": "fake-literal-key"
-            },
-            "type": "PAGERDUTY"
+            }
           },
           "id": "<id-2>"
         },
@@ -124,8 +122,7 @@
             "name": "baseline-webhook",
             "pagerDuty": {
               "serviceKey": "fake-literal-key"
-            },
-            "type": "PAGERDUTY"
+            }
           },
           "id": "<id-2>"
         },

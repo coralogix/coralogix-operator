@@ -74,7 +74,6 @@
                 }
               ]
             },
-            "type": "SLACK",
             "url": "https://hooks.slack.com/services/baseline"
           }
         },

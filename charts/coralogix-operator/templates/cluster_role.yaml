@@ -67,7 +67,6 @@ rules:
       - enrichments
       - groups
       - ipaccesses
-      - outboundwebhooks
       - recordingrulegroupsets
       - rulegroups
     verbs:
@@ -89,7 +88,6 @@ rules:
       - enrichments/finalizers
       - groups/finalizers
       - ipaccesses/finalizers
-      - outboundwebhooks/finalizers
       - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
     verbs:
@@ -105,7 +103,6 @@ rules:
       - enrichments/status
       - groups/status
       - ipaccesses/status
-      - outboundwebhooks/status
       - recordingrulegroupsets/status
       - rulegroups/status
     verbs:
@@ -136,6 +133,7 @@ rules:
       - events2metrics
       - globalrouters
       - integrations
+      - outboundwebhooks
       - presets
       - productanalyticssettings
       - quotaallocationrulesets
@@ -172,6 +170,7 @@ rules:
       - events2metrics/finalizers
       - globalrouters/finalizers
       - integrations/finalizers
+      - outboundwebhooks/finalizers
       - presets/finalizers
       - productanalyticssettings/finalizers
       - quotaallocationrulesets/finalizers
@@ -202,6 +201,7 @@ rules:
       - events2metrics/status
       - globalrouters/status
       - integrations/status
+      - outboundwebhooks/status
       - presets/status
       - productanalyticssettings/status
       - quotaallocationrulesets/status

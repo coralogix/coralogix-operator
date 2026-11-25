@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -100,19 +101,19 @@ var _ = Describe("OutboundWebhook", Ordered, func() {
 	})
 
 	It("should deny creation of OutboundWebhook without type", func(ctx context.Context) {
-		outBoundWebhook.Spec.OutboundWebhookType = coralogixv1alpha1.OutboundWebhookType{}
+		outBoundWebhook.Spec.OutboundWebhookType = coralogixv1alpha1.OutboundWebhookSpecOutboundWebhookType{}
 		err := crClient.Create(ctx, outBoundWebhook)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications, msTeamsWorkflow must be set"))
 	})
 
 	It("should deny creation of OutboundWebhook with two types", func(ctx context.Context) {
-		outBoundWebhook.Spec.OutboundWebhookType.SendLog = &coralogixv1alpha1.SendLog{
+		outBoundWebhook.Spec.OutboundWebhookType.SendLog = &coralogixv1alpha1.OutboundWebhookSendLogConfig{
 			Payload: `{"key1": "value1", "key2": "value2"}`,
-			Url:     "https://example.com",
+			Url:     ptr.To("https://example.com"),
 		}
 		err := crClient.Create(ctx, outBoundWebhook)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications, msTeamsWorkflow must be set"))
 	})
 })
 
@@ -124,9 +125,9 @@ func getSampleWebhook(name, namespace string) *coralogixv1alpha1.OutboundWebhook
 		},
 		Spec: coralogixv1alpha1.OutboundWebhookSpec{
 			Name: name,
-			OutboundWebhookType: coralogixv1alpha1.OutboundWebhookType{
-				PagerDuty: &coralogixv1alpha1.PagerDuty{
-					ServiceKey: "12345678-1234-1234-1234-123456789012",
+			OutboundWebhookType: coralogixv1alpha1.OutboundWebhookSpecOutboundWebhookType{
+				PagerDuty: &coralogixv1alpha1.OutboundWebhookPagerDutyConfig{
+					ServiceKey: ptr.To("12345678-1234-1234-1234-123456789012"),
 				},
 			},
 		},

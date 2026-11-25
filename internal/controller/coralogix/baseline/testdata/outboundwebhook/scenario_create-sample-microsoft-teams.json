@@ -17,7 +17,6 @@
           "data": {
             "microsoftTeams": {},
             "name": "microsoft-teams-webhook",
-            "type": "MICROSOFT_TEAMS",
             "url": "https://outlook.office.com/webhook/<id-1>/IncomingWebhook/<id-1>"
           }
         },
@@ -52,7 +51,6 @@
           "data": {
             "microsoftTeams": {},
             "name": "microsoft-teams-webhook",
-            "type": "MICROSOFT_TEAMS",
             "url": "https://outlook.office.com/webhook/<id-1>/IncomingWebhook/<id-1>"
           }
         },

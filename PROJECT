@@ -33,15 +33,6 @@ resources:
   controller: true
   domain: coralogix.com
   group: coralogix
-  kind: OutboundWebhook
-  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: coralogix.com
-  group: coralogix
   kind: Alert
   path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1beta1
   version: v1beta1
@@ -206,6 +197,15 @@ resources:
   domain: coralogix.com
   group: coralogix
   kind: Integration
+  path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: coralogix.com
+  group: coralogix
+  kind: OutboundWebhook
   path: github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1
   version: v1alpha1
 - api:

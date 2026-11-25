@@ -26,8 +26,7 @@
               "roleName": "arn:aws:iam::123456789012:role/my-role",
               "source": "mySource"
             },
-            "name": "aws-event-bridge-webhook",
-            "type": "AWS_EVENT_BRIDGE"
+            "name": "aws-event-bridge-webhook"
           }
         },
         "status": 200
@@ -76,8 +75,7 @@
               "roleName": "arn:aws:iam::123456789012:role/my-role",
               "source": "mySource"
             },
-            "name": "aws-event-bridge-webhook",
-            "type": "AWS_EVENT_BRIDGE"
+            "name": "aws-event-bridge-webhook"
           },
           "id": "<id-1>"
         },

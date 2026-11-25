@@ -22,8 +22,7 @@
                 "example@coralogix.com example2@coralogix.com"
               ]
             },
-            "name": "email-group-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "email-group-webhook"
           }
         },
         "status": 400
@@ -60,8 +59,7 @@
                 "example@coralogix.com example2@coralogix.com"
               ]
             },
-            "name": "email-group-webhook",
-            "type": "EMAIL_GROUP"
+            "name": "email-group-webhook"
           }
         },
         "status": 400

@@ -1,0 +1,91 @@
+# Where OutboundWebhook differs from the API contract, because users already have it.
+#
+# A field with a line here keeps its released behavior. A field without a line follows the API
+# contract.
+resource: OutgoingWebhook
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD accepts an empty name; the API rejects it.
+    spec.name:
+      inferred: false
+      add: ['+kubebuilder:validation:MinLength=0']
+    # The released CRD has none of the contract limits on these fields.
+    spec.outboundWebhookType.genericWebhook.payload: {inferred: false}
+    spec.outboundWebhookType.pagerDuty.serviceKey: {inferred: false}
+    spec.outboundWebhookType.sendLog.payload: {inferred: false}
+    spec.outboundWebhookType.jira.apiToken: {inferred: false}
+    spec.outboundWebhookType.jira.email: {inferred: false}
+    spec.outboundWebhookType.jira.projectKey: {inferred: false}
+    spec.outboundWebhookType.demisto.payload: {inferred: false}
+    spec.outboundWebhookType.awsEventBridge.eventBusArn: {inferred: false}
+    spec.outboundWebhookType.awsEventBridge.detail: {inferred: false}
+    spec.outboundWebhookType.awsEventBridge.detailType: {inferred: false}
+    spec.outboundWebhookType.awsEventBridge.source: {inferred: false}
+    spec.outboundWebhookType.awsEventBridge.roleName: {inferred: false}
+    # The released CRD takes any string as a Slack type; the conversion rejects an unknown one.
+    spec.outboundWebhookType.slack.digests[].type:
+      remove: ['+kubebuilder:validation:Enum=Unknown;ErrorAndCriticalLogs;FlowAnomalies;SpikeAnomalies;DataUsage']
+    spec.outboundWebhookType.slack.attachments[].type:
+      remove: ['+kubebuilder:validation:Enum=Empty;MetricSnapshot;Logs']
+api:
+  # Create and Update wrap the webhook in data. Update has the id beside it.
+  requestWrapper: data
+  updateIDInBody: true
+  # Create answers only the id.
+  createResponseOnlyIDProperty: id
+# The released CR holds the type of the webhook in outboundWebhookType.
+groups:
+  outboundWebhookType:
+    fields: [genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications, msTeamsWorkflow]
+# beforeCreate and beforeUpdate give Generic and Send Log a new UUID when the CR has none, as the
+# released kind did. afterCreate reads the external id that alerts use; afterUpdate reads it again
+# when the status has none.
+hooks: [beforeCreate, beforeUpdate, afterCreate, afterUpdate]
+status:
+  externalId: {type: string}
+types:
+  OutgoingWebhook:
+    fields:
+      # The released CR holds the URL in each type that has one, as a literal or from a Secret.
+      url:
+        required: true
+        secretRef: true
+        inArms: [genericWebhook, slack, sendLog, microsoftTeams, jira, opsgenie, demisto, msTeamsWorkflow]
+  GenericWebhookConfig:
+    fields:
+      headers: {secretRef: true}
+  PagerDutyConfig:
+    fields:
+      serviceKey:
+        secretRef: true
+        description: 'Deprecated: use serviceKeySecretKeyRef for the PagerDuty service key.'
+  JiraConfig:
+    fields:
+      apiToken:
+        secretRef: true
+        description: 'Deprecated: use apiTokenSecretKeyRef for the Jira API token.'
+  SlackConfig:
+    fields:
+      # The released requests send [] for these lists when the CR has none.
+      digests: {sendNullAsEmpty: true}
+      attachments: {sendNullAsEmpty: true}
+  EmailGroupConfig:
+    fields:
+      emailAddresses: {required: true}
+  DemistoConfig:
+    fields:
+      uuid: {required: true}
+  Digest:
+    fields:
+      isActive: {required: true}
+  Attachment:
+    fields:
+      isActive: {required: true}
+enums:
+  MethodType: {names: {UNKNOWN: Unknown, GET: Get, POST: Post, PUT: Put}}
+  DigestType: {names: {UNKNOWN: Unknown, ERROR_AND_CRITICAL_LOGS: ErrorAndCriticalLogs, FLOW_ANOMALIES: FlowAnomalies, SPIKE_ANOMALIES: SpikeAnomalies, DATA_USAGE: DataUsage}}
+  AttachmentType: {names: {EMPTY: Empty, METRIC_SNAPSHOT: MetricSnapshot, LOGS: Logs}}
+  EndpointType: {names: {ENDPOINT_TYPE_DEFAULT_OR_PUBLIC: DefaultOrPublic, ENDPOINT_TYPE_PRIVATE: Private}}
+  WebhookType: {names: {UNKNOWN: Unknown}}
