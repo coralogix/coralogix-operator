@@ -120,7 +120,14 @@ var savedFunnelCoverageSpecs = []savedFunnelCoverageSpec{
       {
         "conditions": [
           {
-            "action": {}
+            "action": {
+              "event": {
+                "operator": "equal",
+                "values": [
+                  "sample-values"
+                ]
+              }
+            }
           }
         ],
         "stepId": "sample-step-id"
@@ -433,7 +440,7 @@ var savedFunnelCoverageSpecs = []savedFunnelCoverageSpec{
   "timeRange": {
     "fixed": {
       "fromTimestampMs": "1",
-      "toTimestampMs": "1"
+      "toTimestampMs": "2"
     }
   }
 }`,
@@ -943,7 +950,7 @@ var savedFunnelCoverageSpecs = []savedFunnelCoverageSpec{
                     "condition": {
                       "range": {
                         "lower": "0",
-                        "upper": "0"
+                        "upper": "1"
                       }
                     },
                     "field": "longTaskCount"

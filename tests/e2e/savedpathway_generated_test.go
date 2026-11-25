@@ -334,7 +334,7 @@ var savedPathwayCoverageSteps = [][]string{
   "timeRange": {
     "fixed": {
       "fromTimestampMs": "1",
-      "toTimestampMs": "1"
+      "toTimestampMs": "2"
     }
   },
   "topN": 1,
@@ -718,7 +718,7 @@ var savedPathwayCoverageSteps = [][]string{
         "condition": {
           "range": {
             "lower": "0",
-            "upper": "0"
+            "upper": "1"
           }
         },
         "field": "longTaskCount"

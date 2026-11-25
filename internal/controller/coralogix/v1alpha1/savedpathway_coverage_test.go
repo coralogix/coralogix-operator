@@ -222,7 +222,7 @@ var savedPathwayCoverageSpecs = []savedPathwayCoverageSpec{
   "timeRange": {
     "fixed": {
       "fromTimestampMs": "1",
-      "toTimestampMs": "1"
+      "toTimestampMs": "2"
     }
   },
   "topN": 1,
@@ -741,7 +741,7 @@ var savedPathwayCoverageSpecs = []savedPathwayCoverageSpec{
         "condition": {
           "range": {
             "lower": "0",
-            "upper": "0"
+            "upper": "1"
           }
         },
         "field": "longTaskCount"

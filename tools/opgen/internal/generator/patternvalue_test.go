@@ -18,7 +18,7 @@ func TestPatternString(t *testing.T) {
 		{`^[^/]+$`, 3, -1},
 		{`^[A-Za-z_][A-Za-z0-9_]*(,[A-Za-z_][A-Za-z0-9_]*)*$`, 0, -1},
 	} {
-		got, ok := patternString(tc.pattern, tc.minLen, tc.maxLen)
+		got, ok := patternString(tc.pattern, tc.minLen, tc.maxLen, 0)
 		if !ok {
 			t.Errorf("%s: no string", tc.pattern)
 			continue
@@ -27,7 +27,15 @@ func TestPatternString(t *testing.T) {
 			t.Errorf("%s: %q does not fit", tc.pattern, got)
 		}
 	}
-	if _, ok := patternString(`^(?=a)b$`, 0, -1); ok {
+	if _, ok := patternString(`^(?=a)b$`, 0, -1, 0); ok {
 		t.Error("a pattern that the walk cannot build must give no string")
+	}
+}
+
+func TestPatternStringVariantsDiffer(t *testing.T) {
+	first, ok := patternString(`^-?[0-9]+$`, 0, -1, 0)
+	second, ok2 := patternString(`^-?[0-9]+$`, 0, -1, 1)
+	if !ok || !ok2 || first >= second {
+		t.Errorf("variant 1 must be a larger digit than variant 0: %q %q", first, second)
 	}
 }

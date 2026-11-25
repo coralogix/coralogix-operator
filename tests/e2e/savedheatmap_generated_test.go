@@ -336,7 +336,7 @@ var savedHeatmapCoverageSteps = [][]string{
   "timeRange": {
     "fixed": {
       "fromTimestampMs": "1",
-      "toTimestampMs": "1"
+      "toTimestampMs": "2"
     }
   },
   "viewName": "sample-view-name"
@@ -719,7 +719,7 @@ var savedHeatmapCoverageSteps = [][]string{
         "condition": {
           "range": {
             "lower": "0",
-            "upper": "0"
+            "upper": "1"
           }
         },
         "field": "longTaskCount"

@@ -99,7 +99,7 @@ func TestAlwaysExistsSingletonSendsItsUpdateMask(t *testing.T) {
 		t.Fatal(err)
 	}
 	controller := string(files["internal/controller/coralogix/v1alpha1/productanalyticssettings_controller.go"])
-	if want := ".UpdateMask(coralogixv1alpha1.ProductAnalyticsSettingsUpdateMask)"; !strings.Contains(controller, want) {
+	if want := ".UpdateMask(mask)"; !strings.Contains(controller, want) {
 		t.Errorf("the controller must send the update mask: it misses %q", want)
 	}
 }

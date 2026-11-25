@@ -19,13 +19,21 @@ package v1alpha1
 
 import (
 	"context"
+	"strings"
 
 	productanalyticssettingsservice "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/product_analytics_settings_service"
 )
 
-// ProductAnalyticsSettingsUpdateMask lists every field that Update sends. The operator keeps no prior spec, so
-// Update sets every field, and a field that the spec leaves out is cleared.
-const ProductAnalyticsSettingsUpdateMask = "enabled"
+// UpdateMask returns every field that Update sends. The operator keeps no prior spec, so Update
+// sets every field, and a field that the spec leaves out is cleared. Of a oneOf, the mask names
+// only the arm that the spec sets: the API rejects a mask with an arm that the body does not have.
+func (in *ProductAnalyticsSettings) UpdateMask() string {
+	paths := []string{}
+	if in.Spec.Enabled != nil {
+		paths = append(paths, "enabled")
+	}
+	return strings.Join(paths, ",")
+}
 
 // CreateRequest returns the body of the Create request of the ProductAnalyticsSettings.
 func (in *ProductAnalyticsSettings) CreateRequest(ctx context.Context) (*productanalyticssettingsservice.SettingsServiceUpdateSettingsRequest, error) {

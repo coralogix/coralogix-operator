@@ -416,6 +416,15 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 				mask = append(mask, paths...)
 				d.MaskArms = append(d.MaskArms, arms...)
 				used[f.Name] = true
+			} else if r.AlwaysExists && !f.Update.Required {
+				// A PATCH rejects a mask path that the body does not have, and the API keeps the
+				// value of a field that the mask leaves out. So the mask names an optional field
+				// only when the spec sets it.
+				goName, ok := specGoName(d.Spec, f.Name)
+				if !ok {
+					return unsupported("resource."+f.Name, "the spec has no field for the update mask")
+				}
+				d.MaskArms = append(d.MaskArms, maskArm{Path: f.Name, Check: "in.Spec." + goName + " != nil"})
 			} else {
 				mask = append(mask, f.Name)
 			}
@@ -1364,4 +1373,14 @@ func arg(src string) string {
 		return strings.TrimSuffix(inner, ")")
 	}
 	return src
+}
+
+// specGoName returns the Go name of the spec field of an API property.
+func specGoName(spec *crType, api string) (string, bool) {
+	for _, f := range spec.Fields {
+		if f.API == api {
+			return f.GoName, true
+		}
+	}
+	return "", false
 }

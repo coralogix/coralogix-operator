@@ -103,7 +103,14 @@ const (
       {
         "conditions": [
           {
-            "action": {}
+            "action": {
+              "event": {
+                "operator": "equal",
+                "values": [
+                  "sample-values"
+                ]
+              }
+            }
           }
         ],
         "stepId": "sample-step-id"
@@ -541,7 +548,7 @@ var savedFunnelCoverageSteps = [][]string{
   "timeRange": {
     "fixed": {
       "fromTimestampMs": "1",
-      "toTimestampMs": "1"
+      "toTimestampMs": "2"
     }
   }
 }`,
@@ -922,7 +929,7 @@ var savedFunnelCoverageSteps = [][]string{
                     "condition": {
                       "range": {
                         "lower": "0",
-                        "upper": "0"
+                        "upper": "1"
                       }
                     },
                     "field": "longTaskCount"

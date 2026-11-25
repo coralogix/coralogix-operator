@@ -68,12 +68,18 @@ func (r *ProductAnalyticsSettingsReconciler) HandleUpdate(ctx context.Context, l
 	if err != nil {
 		return fmt.Errorf("error on building the update request of ProductAnalyticsSettings: %w", err)
 	}
-	log.Info("Replacing remote ProductAnalyticsSettings", "ProductAnalyticsSettings", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.SettingsServiceUpdateSettings(ctx).SettingsServiceUpdateSettingsRequest(*body).UpdateMask(coralogixv1alpha1.ProductAnalyticsSettingsUpdateMask).Execute()
-	if err != nil {
-		return fmt.Errorf("error on updating remote ProductAnalyticsSettings: %w", cxsdk.NewAPIError(httpResp, err))
+	// The API rejects an empty update mask and keeps the value of a field that the mask leaves out,
+	// so a spec that sets no field sends nothing.
+	if mask := cr.UpdateMask(); mask == "" {
+		log.Info("No ProductAnalyticsSettings field is set: nothing to send")
+	} else {
+		log.Info("Updating remote ProductAnalyticsSettings", "ProductAnalyticsSettings", utils.FormatJSON(body))
+		resp, httpResp, err := r.Client.SettingsServiceUpdateSettings(ctx).SettingsServiceUpdateSettingsRequest(*body).UpdateMask(mask).Execute()
+		if err != nil {
+			return fmt.Errorf("error on updating remote ProductAnalyticsSettings: %w", cxsdk.NewAPIError(httpResp, err))
+		}
+		log.Info("Remote ProductAnalyticsSettings updated", "response", utils.FormatJSON(resp))
 	}
-	log.Info("Remote ProductAnalyticsSettings updated", "response", utils.FormatJSON(resp))
 	if err := coralogixreconciler.AddFinalizer(ctx, log, cr, r); err != nil {
 		return err
 	}

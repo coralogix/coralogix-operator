@@ -149,6 +149,21 @@ var _ = Describe("{{.Kind}} (generated)", Ordered, Serial, func() {
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		waitFor{{.Kind}}GoneGenerated(ctx, crClient, minimalName)
 	})
+{{- if .AlwaysExists}}
+
+	// The update step changes the one {{.Kind}} of the team, and the API keeps it after a delete.
+	// This step writes the full spec again, so that the team ends in the state that other tests
+	// of the same account expect.
+	It("leaves the {{.Kind}} in the full configuration", func(ctx context.Context) {
+		restored := new{{.Kind}}Generated(fullName+"-restored", {{lowerFirst .Kind}}FullSpec)
+		DeferCleanup(func(ctx context.Context) { remove{{.Kind}}Generated(ctx, crClient, restored.Name) })
+		Expect(crClient.Create(ctx, restored)).To(Succeed())
+		waitFor{{.Kind}}Generated(ctx, crClient, restored.Name)
+
+		Expect(crClient.Delete(ctx, restored)).To(Succeed())
+		waitFor{{.Kind}}GoneGenerated(ctx, crClient, restored.Name)
+	})
+{{- end}}
 })
 
 // remove{{.Kind}}Generated is the backstop of a test that fails. It deletes the CR and waits until

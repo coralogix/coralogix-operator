@@ -111,6 +111,19 @@ var _ = Describe("ProductAnalyticsSettings (generated)", Ordered, Serial, func()
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		waitForProductAnalyticsSettingsGoneGenerated(ctx, crClient, minimalName)
 	})
+
+	// The update step changes the one ProductAnalyticsSettings of the team, and the API keeps it after a delete.
+	// This step writes the full spec again, so that the team ends in the state that other tests
+	// of the same account expect.
+	It("leaves the ProductAnalyticsSettings in the full configuration", func(ctx context.Context) {
+		restored := newProductAnalyticsSettingsGenerated(fullName+"-restored", productAnalyticsSettingsFullSpec)
+		DeferCleanup(func(ctx context.Context) { removeProductAnalyticsSettingsGenerated(ctx, crClient, restored.Name) })
+		Expect(crClient.Create(ctx, restored)).To(Succeed())
+		waitForProductAnalyticsSettingsGenerated(ctx, crClient, restored.Name)
+
+		Expect(crClient.Delete(ctx, restored)).To(Succeed())
+		waitForProductAnalyticsSettingsGoneGenerated(ctx, crClient, restored.Name)
+	})
 })
 
 // removeProductAnalyticsSettingsGenerated is the backstop of a test that fails. It deletes the CR and waits until
