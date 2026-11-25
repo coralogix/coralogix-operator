@@ -51,6 +51,9 @@ type CoralogixReconciler interface {
 	RequeueInterval() time.Duration
 }
 
+// ErrRemoteResourceNotFound marks a remote 404 after its response body was discarded.
+var ErrRemoteResourceNotFound = stderrors.New("remote resource not found")
+
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 
 func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Object, r CoralogixReconciler) (ctrl.Result, error) {
@@ -157,7 +160,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		if reason, ok := hookReason(err); ok {
 			return ManageErrorWithRequeue(ctx, obj, "update", reason, fmt.Errorf("error on updating %s: %w", gvk, err))
 		}
-		if cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
+		if stderrors.Is(err, ErrRemoteResourceNotFound) || cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
 			log.Info("resource not found on remote")
 			if err := removeField(ctx, obj, "status", "id"); err != nil {
 				return ManageErrorWithRequeue(ctx, obj, "clear-status", utils.ReasonInternalK8sError, err)

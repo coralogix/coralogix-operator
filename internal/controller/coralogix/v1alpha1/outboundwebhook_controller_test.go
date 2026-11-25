@@ -27,6 +27,7 @@ import (
 	webhooks "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/outgoing_webhooks_service"
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
+	coralogixreconcile "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -167,6 +168,27 @@ func TestWebhookAPIErrorDoesNotExposeResponseBody(t *testing.T) {
 	transport := safeWebhookAPIError("create", nil, errors.New("fake-sensitive-value"))
 	if strings.Contains(transport.Error(), "fake-sensitive-value") {
 		t.Fatalf("unsafe transport error: %v", transport)
+	}
+}
+
+func TestWebhookUpdateErrorPreservesSafeNotFoundClassification(t *testing.T) {
+	for _, test := range []struct {
+		name         string
+		body         string
+		wantNotFound bool
+	}{
+		{name: "resource missing", body: "Not Found: No webhook with the given id", wantNotFound: true},
+		{name: "endpoint missing", body: "Not Found: Not Found"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			err := safeWebhookUpdateError(&http.Response{StatusCode: http.StatusNotFound}, webhookTestAPIError{body: test.body})
+			if errors.Is(err, coralogixreconcile.ErrRemoteResourceNotFound) != test.wantNotFound {
+				t.Fatalf("resource-not-found classification = %t, want %t", errors.Is(err, coralogixreconcile.ErrRemoteResourceNotFound), test.wantNotFound)
+			}
+			if cxsdk.Code(err) != http.StatusNotFound || len(cxsdk.Body(err)) != 0 || strings.Contains(err.Error(), test.body) {
+				t.Fatalf("unsafe update error: %v", err)
+			}
+		})
 	}
 }
 

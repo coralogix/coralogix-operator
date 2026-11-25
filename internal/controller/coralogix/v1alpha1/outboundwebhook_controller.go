@@ -108,10 +108,18 @@ func (r *OutboundWebhookReconciler) HandleUpdate(ctx context.Context, log logr.L
 		UpdateOutgoingWebhookRequest(*updateRequest).
 		Execute()
 	if err != nil {
-		return safeWebhookAPIError("update", httpResp, err)
+		return safeWebhookUpdateError(httpResp, err)
 	}
 	log.Info("Remote outbound-webhook updated")
 	return nil
+}
+
+func safeWebhookUpdateError(resp *http.Response, err error) error {
+	safeErr := safeWebhookAPIError("update", resp, err)
+	if cxsdk.IsNotFound(cxsdk.NewAPIError(resp, err)) {
+		return fmt.Errorf("%w: %w", coralogixreconcile.ErrRemoteResourceNotFound, safeErr)
+	}
+	return safeErr
 }
 
 func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr.Logger, obj client.Object) error {
