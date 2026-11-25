@@ -116,7 +116,7 @@ types:
     fields:
       daysOfMonth: {name: days, collection: list}
 unwrap: [OneTime, MetaLabels, AlertUniqueIds]
-hooks: [validate]
+hooks: [validate, beforeCreate, beforeUpdate]
 enums:
   DurationFrequency:
     zero: unspecified

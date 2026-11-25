@@ -71,6 +71,14 @@ func (r *AlertSchedulerReconciler) HandleCreation(ctx context.Context, log logr.
 	if err != nil {
 		return fmt.Errorf("error on building the create request of AlertScheduler: %w", err)
 	}
+	// beforeCreate changes the Create body that the generated code built. It runs on every Create
+	// attempt.
+	// A hook can run many times: it must be safe to repeat. Make a state true (get, then create or
+	// update); do not add or create blindly. Do not append to a field that the generated code
+	// filled. See AGENTS.md "Hooks".
+	if err := r.beforeCreate(ctx, log, cr, body); err != nil {
+		return coralogixreconciler.NewHookError(fmt.Errorf("beforeCreate hook of AlertScheduler failed: %w", err))
+	}
 	log.Info("Creating remote AlertScheduler")
 	resp, httpResp, err := r.Client.AlertSchedulerRuleServiceCreateAlertSchedulerRule(ctx).CreateAlertSchedulerRuleRequestDataStructure(*body).Execute()
 	if err != nil {
@@ -101,6 +109,14 @@ func (r *AlertSchedulerReconciler) HandleUpdate(ctx context.Context, log logr.Lo
 	body, err := cr.UpdateRequest(ctx)
 	if err != nil {
 		return fmt.Errorf("error on building the update request of AlertScheduler: %w", err)
+	}
+	// beforeUpdate changes the Update body that the generated code built. It runs on every
+	// reconcile interval, also when nothing changed.
+	// A hook can run many times: it must be safe to repeat. Make a state true (get, then create or
+	// update); do not add or create blindly. Do not append to a field that the generated code
+	// filled. See AGENTS.md "Hooks".
+	if err := r.beforeUpdate(ctx, log, cr, body); err != nil {
+		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of AlertScheduler failed: %w", err))
 	}
 	log.Info("Updating remote AlertScheduler", "id", id)
 	_, httpResp, err := r.Client.AlertSchedulerRuleServiceUpdateAlertSchedulerRule(ctx).UpdateAlertSchedulerRuleRequestDataStructure(*body).Execute()
