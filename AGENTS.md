@@ -9,6 +9,7 @@ This is the public `coralogix/coralogix-operator` repo. Keep internal ticket IDs
 Use generic, public-safe names in examples and fixtures.
 
 Do not log full API requests or responses. Any resource body can contain a credential. API errors can also contain credentials in response bodies or URLs. Keep raw errors out of logs and resource conditions.
+For error diagnostics, use fixed operation and category labels and numeric status codes. Do not copy raw error text or response bodies into logs or conditions.
 
 When a custom resource reads a Secret, watch that Secret so a value change triggers reconciliation. Resolve the value on every create and update, and reject two sources for the same field.
 

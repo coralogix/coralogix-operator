@@ -21,20 +21,29 @@ import (
 	"testing"
 
 	oapisdk "github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 func TestSafeReconcileErrorOmitsRawError(t *testing.T) {
 	const fakeValue = "fake-sensitive-value"
 	for _, test := range []struct {
-		name string
-		err  error
-		want string
+		name      string
+		operation string
+		reason    string
+		err       error
+		want      string
 	}{
-		{name: "API error", err: &oapisdk.APIError{Err: errors.New(fakeValue), StatusCode: http.StatusBadRequest, Body: []byte(fakeValue)}, want: "RemoteCreationFailed (HTTP 400)"},
-		{name: "other error", err: errors.New(fakeValue), want: "reconciliation failed: RemoteCreationFailed"},
+		{name: "API error", operation: "create", reason: utils.ReasonRemoteCreationFailed, err: &oapisdk.APIError{Err: errors.New(fakeValue), StatusCode: http.StatusBadRequest, Body: []byte(fakeValue)}, want: "RemoteCreationFailed (operation=create, category=remote-api, HTTP 400)"},
+		{name: "transport error", operation: "delete", reason: utils.ReasonRemoteDeletionFailed, err: &oapisdk.APIError{Err: errors.New(fakeValue)}, want: "RemoteDeletionFailed (operation=delete, category=transport)"},
+		{name: "Kubernetes error", operation: "update-status", reason: utils.ReasonInternalK8sError, err: apierrors.NewNotFound(schema.GroupResource{Resource: "widgets"}, fakeValue), want: "InternalK8sError (operation=update-status, category=kubernetes)"},
+		{name: "validation error", operation: "create", reason: utils.ReasonValidationFailed, err: NewValidationError(errors.New(fakeValue)), want: "ValidationFailed (operation=create, category=validation)"},
+		{name: "other error", operation: "update", reason: utils.ReasonRemoteUpdateFailed, err: errors.New(fakeValue), want: "RemoteUpdateFailed (operation=update, category=unknown)"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got := SafeReconcileError("RemoteCreationFailed", test.err).Error()
+			got := SafeReconcileError(test.operation, test.reason, test.err).Error()
 			if got != test.want || strings.Contains(got, fakeValue) {
 				t.Fatalf("safe error = %q, want %q", got, test.want)
 			}

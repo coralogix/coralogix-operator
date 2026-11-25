@@ -157,8 +157,8 @@ func TestWebhookAPIErrorDoesNotExposeResponseBody(t *testing.T) {
 	}
 
 	notFound := safeWebhookAPIError("update", &http.Response{StatusCode: http.StatusNotFound}, webhookTestAPIError{body: "Not Found: No webhook with the given id"})
-	if !cxsdk.IsNotFound(notFound) {
-		t.Fatal("resource not found classification was lost")
+	if len(cxsdk.Body(notFound)) != 0 {
+		t.Fatal("safe error contains a response body")
 	}
 	if strings.Contains(notFound.Error(), "given id") {
 		t.Fatalf("unsafe error: %v", notFound)
@@ -167,5 +167,39 @@ func TestWebhookAPIErrorDoesNotExposeResponseBody(t *testing.T) {
 	transport := safeWebhookAPIError("create", nil, errors.New("fake-sensitive-value"))
 	if strings.Contains(transport.Error(), "fake-sensitive-value") {
 		t.Fatalf("unsafe transport error: %v", transport)
+	}
+}
+
+func TestOutboundWebhookDeletionDistinguishesResourceAndEndpointNotFound(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		body        string
+		wantSuccess bool
+	}{
+		{name: "resource missing", body: "Not Found: No webhook with the given id", wantSuccess: true},
+		{name: "endpoint missing", body: "Not Found: Not Found"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(test.body))
+			}))
+			t.Cleanup(server.Close)
+			sdkConfig := webhooks.NewConfiguration()
+			sdkConfig.Servers = webhooks.ServerConfigurations{{URL: server.URL}}
+			reconciler := &OutboundWebhookReconciler{OutboundWebhooksClient: webhooks.NewAPIClient(sdkConfig).OutgoingWebhooksServiceAPI}
+			webhook := &coralogixv1alpha1.OutboundWebhook{Status: coralogixv1alpha1.OutboundWebhookStatus{ID: ptr.To("remote-id")}}
+
+			err := reconciler.HandleDeletion(context.Background(), logr.Discard(), webhook)
+			if test.wantSuccess {
+				if err != nil {
+					t.Fatalf("delete missing resource: %v", err)
+				}
+				return
+			}
+			if err == nil || cxsdk.Code(err) != http.StatusNotFound || len(cxsdk.Body(err)) != 0 || strings.Contains(err.Error(), test.body) {
+				t.Fatalf("unsafe endpoint error: %v", err)
+			}
+		})
 	}
 }

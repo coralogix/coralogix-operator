@@ -16,6 +16,7 @@ package coralogixreconciler
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -57,7 +58,7 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
-		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		return ManageErrorWithRequeue(ctx, obj, "get", utils.ReasonInternalK8sError, err)
 	}
 
 	gvk := objToGVK(obj)
@@ -72,27 +73,27 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		followUp, err := handleCreation(ctx, log, obj, r)
 		if err != nil {
 			if reason, ok := hookReason(err); ok {
-				return ManageErrorWithRequeue(ctx, obj, reason, err)
+				return ManageErrorWithRequeue(ctx, obj, "create", reason, err)
 			}
 			if oapisdk.IsDeserializationError(err) {
-				return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
+				return ManageErrorWithRequeue(ctx, obj, "create", utils.ReasonDeserializationError, err)
 			}
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteCreationFailed, err)
+			return ManageErrorWithRequeue(ctx, obj, "create", utils.ReasonRemoteCreationFailed, err)
 		}
 
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, "update-status", utils.ReasonInternalK8sError, err)
 		}
 
 		if err := AddFinalizer(ctx, log, obj, r); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, "add-finalizer", utils.ReasonInternalK8sError, err)
 		}
 
 		if followUp != nil {
 			// status.id and the finalizer are saved. A failure here keeps status.id, so the next run
 			// takes the Update path and does not create a second remote resource.
 			if reason, err := runFollowUp(ctx, obj, r, followUp); err != nil {
-				return ManageErrorWithRequeue(ctx, obj, reason, err)
+				return ManageErrorWithRequeue(ctx, obj, "create-follow-up", reason, err)
 			}
 		}
 
@@ -103,16 +104,16 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		log.Info("Resource is being deleted; handling deletion")
 		if err := r.HandleDeletion(ctx, log, obj); err != nil {
 			if reason, ok := hookReason(err); ok {
-				return ManageErrorWithRequeue(ctx, obj, reason, err)
+				return ManageErrorWithRequeue(ctx, obj, "delete", reason, err)
 			}
 			if oapisdk.IsDeserializationError(err) {
-				return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
+				return ManageErrorWithRequeue(ctx, obj, "delete", utils.ReasonDeserializationError, err)
 			}
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteDeletionFailed, err)
+			return ManageErrorWithRequeue(ctx, obj, "delete", utils.ReasonRemoteDeletionFailed, err)
 		}
 
 		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, "remove-finalizer", utils.ReasonInternalK8sError, err)
 		}
 
 		monitoring.DeleteResourceInfoMetric(
@@ -126,15 +127,15 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	if !config.GetConfig().Selector.Matches(obj.GetLabels(), obj.GetNamespace()) {
 		log.Info("Resource doesn't match selector; handling deletion")
 		if err := r.HandleDeletion(ctx, log, obj); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, reasonOrDefault(err, utils.ReasonRemoteDeletionFailed), err)
+			return ManageErrorWithRequeue(ctx, obj, "delete", reasonOrDefault(err, utils.ReasonRemoteDeletionFailed), err)
 		}
 
 		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, "remove-finalizer", utils.ReasonInternalK8sError, err)
 		}
 
 		if err := clearRemoteStatus(ctx, obj, r); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, "clear-status", utils.ReasonInternalK8sError, err)
 		}
 
 		monitoring.DeleteResourceInfoMetric(
@@ -148,28 +149,28 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 	log.Info("Handling update")
 	watch, err := watchStatus(obj, r)
 	if err != nil {
-		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		return ManageErrorWithRequeue(ctx, obj, "watch-status", utils.ReasonInternalK8sError, err)
 	}
 	if err := r.HandleUpdate(ctx, log, obj); err != nil {
 		// A hook error comes first. It is never a remote NotFound: a hook can call another API and
 		// get a 404 while the resource itself is still there.
 		if reason, ok := hookReason(err); ok {
-			return ManageErrorWithRequeue(ctx, obj, reason, fmt.Errorf("error on updating %s: %w", gvk, err))
+			return ManageErrorWithRequeue(ctx, obj, "update", reason, fmt.Errorf("error on updating %s: %w", gvk, err))
 		}
 		if cxsdk.Code(err) == codes.NotFound || oapisdk.IsNotFound(err) {
 			log.Info("resource not found on remote")
 			if err := removeField(ctx, obj, "status", "id"); err != nil {
-				return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+				return ManageErrorWithRequeue(ctx, obj, "clear-status", utils.ReasonInternalK8sError, err)
 			}
 
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
+			return ManageErrorWithRequeue(ctx, obj, "update", utils.ReasonRemoteResourceNotFound, fmt.Errorf("%s not found on remote: %w", gvk, err))
 		} else if oapisdk.IsDeserializationError(err) {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonDeserializationError, err)
+			return ManageErrorWithRequeue(ctx, obj, "update", utils.ReasonDeserializationError, err)
 		}
-		return ManageErrorWithRequeue(ctx, obj, utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
+		return ManageErrorWithRequeue(ctx, obj, "update", utils.ReasonRemoteUpdateFailed, fmt.Errorf("error on updating %s: %w", gvk, err))
 	}
 	if err := saveStatusIfChanged(ctx, obj, watch); err != nil {
-		return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+		return ManageErrorWithRequeue(ctx, obj, "update-status", utils.ReasonInternalK8sError, err)
 	}
 
 	return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval())
@@ -245,14 +246,14 @@ func RemoveFinalizer(ctx context.Context, log logr.Logger, obj client.Object, r 
 	return config.GetClient().Update(ctx, obj)
 }
 
-func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason string, err error) (reconcile.Result, error) {
+func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, operation, reason string, err error) (reconcile.Result, error) {
 	// in case of update conflict, don't try to update conditions, as it will fail with the same error.
 	// instead, requeue the request and without flooding with error logs.
 	if errors.IsConflict(err) {
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	err = SafeReconcileError(reason, err)
+	err = SafeReconcileError(operation, reason, err)
 
 	conditions := obj.GetConditions()
 
@@ -281,12 +282,31 @@ func ManageErrorWithRequeue(ctx context.Context, obj coralogix.Object, reason st
 	return reconcile.Result{}, err
 }
 
-// SafeReconcileError removes raw error text before it reaches conditions or logs.
-func SafeReconcileError(reason string, err error) error {
-	if code := oapisdk.Code(err); code != 0 {
-		return fmt.Errorf("%s (HTTP %d)", reason, code)
+// SafeReconcileError keeps fixed diagnostic labels and drops raw error text.
+func SafeReconcileError(operation, reason string, err error) error {
+	code := oapisdk.Code(err)
+	category := "unknown"
+	var k8sErr errors.APIStatus
+	var apiErr *oapisdk.APIError
+	switch {
+	case reason == utils.ReasonValidationFailed:
+		category = "validation"
+	case reason == utils.ReasonDeserializationError:
+		category = "deserialization"
+	case reason == utils.ReasonHookFailed:
+		category = "hook"
+	case reason == utils.ReasonInternalK8sError || stderrors.As(err, &k8sErr):
+		category = "kubernetes"
+	case code != 0:
+		category = "remote-api"
+	case stderrors.As(err, &apiErr):
+		category = "transport"
 	}
-	return fmt.Errorf("reconciliation failed: %s", reason)
+
+	if code != 0 {
+		return fmt.Errorf("%s (operation=%s, category=%s, HTTP %d)", reason, operation, category, code)
+	}
+	return fmt.Errorf("%s (operation=%s, category=%s)", reason, operation, category)
 }
 
 func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interval time.Duration) (reconcile.Result, error) {
@@ -295,7 +315,7 @@ func ManageSuccessWithRequeue(ctx context.Context, obj coralogix.Object, interva
 		obj.SetConditions(conditions)
 		obj.SetPrintableStatus("RemoteSynced")
 		if err := config.GetClient().Status().Update(ctx, obj); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, utils.ReasonInternalK8sError, err)
+			return ManageErrorWithRequeue(ctx, obj, "update-status", utils.ReasonInternalK8sError, err)
 		}
 	}
 

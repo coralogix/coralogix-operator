@@ -492,7 +492,7 @@ func (r *AlertSetReconciler) deleteAlerts(
 			return r.deleteAlertsIndividually(ctx, statusByKey, ids, idToKey)
 		}
 		apiErr := cxsdk.NewAPIError(httpResponse, err)
-		message := coralogixreconciler.SafeReconcileError(utils.ReasonRemoteDeletionFailed, apiErr).Error()
+		message := coralogixreconciler.SafeReconcileError("delete", utils.ReasonRemoteDeletionFailed, apiErr).Error()
 		for _, key := range keys {
 			status := statusByKey[key]
 			status.Message = message
@@ -568,7 +568,14 @@ func (r *AlertSetReconciler) finish(
 	reconcileErrs []error,
 ) (ctrl.Result, error) {
 	if len(reconcileErrs) > 0 {
-		safeErr := coralogixreconciler.SafeReconcileError(reason, errors.Join(reconcileErrs...))
+		operation := "reconcile"
+		switch reason {
+		case utils.ReasonRemoteCreationFailed:
+			operation = "create"
+		case utils.ReasonRemoteUpdateFailed:
+			operation = "update"
+		}
+		safeErr := coralogixreconciler.SafeReconcileError(operation, reason, errors.Join(reconcileErrs...))
 		utils.SetSyncedConditionFalse(&alertSet.Status.Conditions, alertSet.Generation, reason, safeErr.Error())
 		alertSet.Status.PrintableStatus = "RemoteUnsynced"
 		if err := updateAlertSetStatusIfChanged(ctx, alertSet, originalStatus); err != nil {

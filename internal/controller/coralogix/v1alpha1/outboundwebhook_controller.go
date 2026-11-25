@@ -120,26 +120,21 @@ func (r *OutboundWebhookReconciler) HandleDeletion(ctx context.Context, log logr
 	_, httpResp, err := r.OutboundWebhooksClient.OutgoingWebhooksServiceDeleteOutgoingWebhook(ctx, *outboundWebhook.Status.ID).
 		Execute()
 	if err != nil {
-		if apiErr := safeWebhookAPIError("delete", httpResp, err); !cxsdk.IsNotFound(apiErr) {
-			return apiErr
+		if !cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
+			return safeWebhookAPIError("delete", httpResp, err)
 		}
 	}
 	log.Info("outbound-webhook deleted from remote system", "id", *outboundWebhook.Status.ID)
 	return nil
 }
 
-// The shared reconciler writes errors to logs and status. Keep API response bodies out of both.
+// Keep API response bodies out of errors returned to the shared reconciler.
 func safeWebhookAPIError(operation string, resp *http.Response, err error) error {
 	apiErr := cxsdk.NewAPIError(resp, err)
 	code := cxsdk.Code(apiErr)
-	var body []byte
-	if cxsdk.IsNotFound(apiErr) {
-		body = []byte("Not Found: outbound webhook")
-	}
 	return &cxsdk.APIError{
 		Err:        fmt.Errorf("%s outbound-webhook failed (HTTP %d)", operation, code),
 		StatusCode: code,
-		Body:       body,
 	}
 }
 

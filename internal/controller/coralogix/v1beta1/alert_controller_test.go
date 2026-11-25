@@ -291,7 +291,7 @@ func TestReconcileKeepsIDWhenAccessPolicyDeniesOperator(t *testing.T) {
 	fakeClient := initAlertClient(t, alert)
 
 	err := reconcileAlert(t, server, alert)
-	require.EqualError(t, err, "RemoteUpdateFailed (HTTP 403)")
+	require.EqualError(t, err, "RemoteUpdateFailed (operation=update, category=remote-api, HTTP 403)")
 	stored := &coralogixv1beta1.Alert{}
 	require.NoError(t, fakeClient.Get(context.Background(), client.ObjectKeyFromObject(alert), stored))
 	require.NotNil(t, stored.Status.ID, "a denied replace must not clear status.id")

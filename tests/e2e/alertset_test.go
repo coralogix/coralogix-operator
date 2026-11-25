@@ -445,7 +445,7 @@ var _ = Describe("AlertSet access policy", Ordered, func() {
 			g.Expect(cond.ObservedGeneration).To(Equal(invalidGeneration))
 			g.Expect(cond.Status).To(Equal(metav1.ConditionFalse))
 			g.Expect(cond.Reason).To(Equal(utils.ReasonRemoteUpdateFailed))
-			g.Expect(cond.Message).To(Equal("RemoteUpdateFailed (HTTP 400)"))
+			g.Expect(cond.Message).To(Equal("RemoteUpdateFailed (operation=update, category=remote-api, HTTP 400)"))
 		}, time.Minute, time.Second).Should(Succeed())
 
 		By("Adding an item with an invalid policy (create path)")

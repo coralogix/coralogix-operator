@@ -574,7 +574,11 @@ func expectAICustomEvaluationRemoteUnsynced(g Gomega, aiCustomEvaluation *coralo
 	g.Expect(condition.ObservedGeneration).To(Equal(aiCustomEvaluation.Generation))
 	g.Expect(condition.Status).To(Equal(metav1.ConditionFalse))
 	g.Expect(condition.Reason).To(Equal(reason))
-	g.Expect(condition.Message).To(Equal("reconciliation failed: " + reason))
+	operation := "create"
+	if reason == utils.ReasonRemoteUpdateFailed {
+		operation = "update"
+	}
+	g.Expect(condition.Message).To(Equal(reason + " (operation=" + operation + ", category=unknown)"))
 	g.Expect(aiCustomEvaluation.Status.PrintableStatus).To(Equal("RemoteUnsynced"))
 }
 
