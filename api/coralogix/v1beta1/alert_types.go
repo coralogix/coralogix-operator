@@ -278,6 +278,19 @@ var (
 	CaseEnrichmentQueryTypeToOpenAPI = map[CaseEnrichmentQueryType]alerts.AlertDefCaseEnrichmentQueryType{
 		CaseEnrichmentQueryTypeDataprime: alerts.ALERTDEFCASEENRICHMENTQUERYTYPE_ALERT_DEF_CASE_ENRICHMENT_QUERY_TYPE_DATAPRIME,
 	}
+	CaseKpiTypeToOpenAPI = map[CaseKpiType]alerts.AlertDefCaseKpiType{
+		CaseKpiTypeTimeToAcknowledge: alerts.ALERTDEFCASEKPITYPE_ALERT_DEF_CASE_KPI_TYPE_TIME_TO_ACKNOWLEDGE,
+		CaseKpiTypeTimeToResolve:     alerts.ALERTDEFCASEKPITYPE_ALERT_DEF_CASE_KPI_TYPE_TIME_TO_RESOLVE,
+		CaseKpiTypeTimeToUpdate:      alerts.ALERTDEFCASEKPITYPE_ALERT_DEF_CASE_KPI_TYPE_TIME_TO_UPDATE,
+	}
+	// Case priorities are a separate API enum from alert priorities: P5 is an explicit value here.
+	AlertPriorityToOpenAPICasePriority = map[AlertPriority]alerts.AlertDefCasePriority{
+		AlertPriorityP1: alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P1,
+		AlertPriorityP2: alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P2,
+		AlertPriorityP3: alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P3,
+		AlertPriorityP4: alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P4,
+		AlertPriorityP5: alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P5,
+	}
 )
 
 // AlertSpec defines the desired state of a Coralogix Alert. For more info check - https://coralogix.com/docs/getting-started-with-coralogix-alerts/.
@@ -524,6 +537,92 @@ type AlertCaseSettings struct {
 	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	Destinations []CaseDestination `json:"destinations,omitempty"`
+
+	// Case settings that replace the company case settings for the cases opened by the alert (preview).
+	// Each omitted part keeps the company settings for that part.
+	// +optional
+	Overrides *CaseSettingsOverrides `json:"overrides,omitempty"`
+}
+
+// Case settings that replace the company case settings (preview).
+type CaseSettingsOverrides struct {
+	// KPI thresholds for the cases opened by the alert.
+	// When omitted, the company KPI settings apply.
+	// When set, the value replaces the company KPI settings as a whole.
+	// +optional
+	Kpi *CaseKpis `json:"kpi,omitempty"`
+
+	// Priority escalation settings for the cases opened by the alert.
+	// When omitted, the company priority escalation settings apply.
+	// When set, the value replaces the company settings as a whole.
+	// +optional
+	PriorityEscalation *CasePriorityEscalation `json:"priorityEscalation,omitempty"`
+}
+
+// KPI thresholds for the cases opened by the alert (preview).
+type CaseKpis struct {
+	// KPI thresholds. At most one entry for each type and priority.
+	// For each priority, the time to acknowledge must be less than or equal to the time to resolve.
+	// An empty or omitted list turns off all KPI timers of these cases.
+	// +kubebuilder:validation:MaxItems=15
+	// +optional
+	Thresholds []CaseKpiThreshold `json:"thresholds,omitempty"`
+}
+
+// One KPI threshold for one KPI type and one case priority (preview).
+type CaseKpiThreshold struct {
+	// KPI type to which this threshold applies.
+	Type CaseKpiType `json:"type"`
+
+	// Case priority to which this threshold applies.
+	Priority AlertPriority `json:"priority"`
+
+	// Time after which the KPI is breached.
+	// Whole number of seconds greater than zero, for example 300s is 5 minutes.
+	// +kubebuilder:validation:Pattern=`^[1-9][0-9]{0,10}s$`
+	Threshold string `json:"threshold"`
+
+	// When false, this KPI timer does not run for cases of this priority. False when omitted.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=timeToAcknowledge;timeToResolve;timeToUpdate
+// Case KPI type (preview).
+type CaseKpiType string
+
+const (
+	CaseKpiTypeTimeToAcknowledge CaseKpiType = "timeToAcknowledge"
+	CaseKpiTypeTimeToResolve     CaseKpiType = "timeToResolve"
+	CaseKpiTypeTimeToUpdate      CaseKpiType = "timeToUpdate"
+)
+
+// Rules that raise the priority of unacknowledged cases opened by the alert (preview).
+type CasePriorityEscalation struct {
+	// Enable or disable priority escalation for these cases. When false, no rule is applied.
+	Enabled bool `json:"enabled"`
+
+	// Escalation rules. Each rule applies to cases at its fromPriority.
+	// At most one rule for each fromPriority. P1 cannot be a fromPriority, so the list has at most 4 rules.
+	// An empty or omitted list means that no rule applies, also when enabled is true.
+	// +kubebuilder:validation:MaxItems=4
+	// +optional
+	Rules []CasePriorityEscalationRule `json:"rules,omitempty"`
+}
+
+// A case at fromPriority that stays unacknowledged for at least period is raised to toPriority (preview).
+type CasePriorityEscalationRule struct {
+	// Priority that the case must have for this rule to apply.
+	// P1 is not accepted by the API, because no priority is more severe.
+	FromPriority AlertPriority `json:"fromPriority"`
+
+	// Priority to which the case is raised. Must be more severe than fromPriority.
+	ToPriority AlertPriority `json:"toPriority"`
+
+	// Time that a case can stay unacknowledged at fromPriority before it is escalated.
+	// Whole number of seconds greater than zero, for example 36000s is 10 hours.
+	// +kubebuilder:validation:Pattern=`^[1-9][0-9]{0,10}s$`
+	Period string `json:"period"`
 }
 
 // +kubebuilder:validation:Enum=enabled;disabled
@@ -2595,7 +2694,57 @@ func expandCaseSettings(caseSettings *AlertCaseSettings, properties *GetResource
 		AutoResolveMode:   autoResolveMode,
 		EnrichmentQueries: enrichmentQueries,
 		Destinations:      destinations,
+		Overrides:         expandCaseSettingsOverrides(caseSettings.Overrides),
 	}, nil
+}
+
+func expandCaseSettingsOverrides(overrides *CaseSettingsOverrides) *alerts.AlertDefCaseSettingsOverrides {
+	if overrides == nil {
+		return nil
+	}
+
+	return &alerts.AlertDefCaseSettingsOverrides{
+		Kpi:                expandCaseKpis(overrides.Kpi),
+		PriorityEscalation: expandCasePriorityEscalation(overrides.PriorityEscalation),
+	}
+}
+
+func expandCaseKpis(kpis *CaseKpis) *alerts.AlertDefCaseKpis {
+	if kpis == nil {
+		return nil
+	}
+
+	var thresholds []alerts.AlertDefCaseKpiThreshold
+	for _, threshold := range kpis.Thresholds {
+		thresholds = append(thresholds, alerts.AlertDefCaseKpiThreshold{
+			Type:      CaseKpiTypeToOpenAPI[threshold.Type],
+			Priority:  AlertPriorityToOpenAPICasePriority[threshold.Priority],
+			Threshold: threshold.Threshold,
+			Enabled:   threshold.Enabled,
+		})
+	}
+
+	return &alerts.AlertDefCaseKpis{Thresholds: thresholds}
+}
+
+func expandCasePriorityEscalation(escalation *CasePriorityEscalation) *alerts.AlertDefCasePriorityEscalation {
+	if escalation == nil {
+		return nil
+	}
+
+	var rules []alerts.AlertDefCasePriorityEscalationRule
+	for _, rule := range escalation.Rules {
+		rules = append(rules, alerts.AlertDefCasePriorityEscalationRule{
+			FromPriority: AlertPriorityToOpenAPICasePriority[rule.FromPriority],
+			ToPriority:   AlertPriorityToOpenAPICasePriority[rule.ToPriority],
+			Period:       rule.Period,
+		})
+	}
+
+	return &alerts.AlertDefCasePriorityEscalation{
+		Enabled: escalation.Enabled,
+		Rules:   rules,
+	}
 }
 
 func expandRoutingOverrides(overrides NotificationRouting) *alerts.V3SourceOverrides {

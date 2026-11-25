@@ -7771,6 +7771,14 @@ When omitted, case settings are reset to the defaults: auto-resolve enabled, no 
           Queries that enrich the cases opened by the alert (preview).<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverrides">overrides</a></b></td>
+        <td>object</td>
+        <td>
+          Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -8085,6 +8093,214 @@ Query that enriches the cases opened by the alert (preview).
             <i>Enum</i>: dataprime<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettings)</sup></sup>
+
+
+
+Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverrideskpi">kpi</a></b></td>
+        <td>object</td>
+        <td>
+          KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverridespriorityescalation">priorityEscalation</a></b></td>
+        <td>object</td>
+        <td>
+          Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.kpi
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverrides)</sup></sup>
+
+
+
+KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverrideskpithresholdsindex">thresholds</a></b></td>
+        <td>[]object</td>
+        <td>
+          KPI thresholds. At most one entry for each type and priority.
+For each priority, the time to acknowledge must be less than or equal to the time to resolve.
+An empty or omitted list turns off all KPI timers of these cases.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.kpi.thresholds[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverrideskpi)</sup></sup>
+
+
+
+One KPI threshold for one KPI type and one case priority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Case priority to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>string</td>
+        <td>
+          Time after which the KPI is breached.
+Whole number of seconds greater than zero, for example 300s is 5 minutes.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          KPI type to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: timeToAcknowledge, timeToResolve, timeToUpdate<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          When false, this KPI timer does not run for cases of this priority. False when omitted.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.priorityEscalation
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverrides)</sup></sup>
+
+
+
+Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Enable or disable priority escalation for these cases. When false, no rule is applied.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertsetspecalertsindexspeccasesettingsoverridespriorityescalationrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Escalation rules. Each rule applies to cases at its fromPriority.
+At most one rule for each fromPriority. P1 cannot be a fromPriority, so the list has at most 4 rules.
+An empty or omitted list means that no rule applies, also when enabled is true.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### AlertSet.spec.alerts[index].spec.caseSettings.overrides.priorityEscalation.rules[index]
+<sup><sup>[↩ Parent](#alertsetspecalertsindexspeccasesettingsoverridespriorityescalation)</sup></sup>
+
+
+
+A case at fromPriority that stays unacknowledged for at least period is raised to toPriority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority that the case must have for this rule to apply.
+P1 is not accepted by the API, because no priority is more severe.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>period</b></td>
+        <td>string</td>
+        <td>
+          Time that a case can stay unacknowledged at fromPriority before it is escalated.
+Whole number of seconds greater than zero, for example 36000s is 10 hours.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to which the case is raised. Must be more severe than fromPriority.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -29045,6 +29261,14 @@ When omitted, case settings are reset to the defaults: auto-resolve enabled, no 
           Queries that enrich the cases opened by the alert (preview).<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsoverrides">overrides</a></b></td>
+        <td>object</td>
+        <td>
+          Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -29359,6 +29583,214 @@ Query that enriches the cases opened by the alert (preview).
             <i>Enum</i>: dataprime<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides
+<sup><sup>[↩ Parent](#alertspeccasesettings)</sup></sup>
+
+
+
+Case settings that replace the company case settings for the cases opened by the alert (preview).
+Each omitted part keeps the company settings for that part.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspeccasesettingsoverrideskpi">kpi</a></b></td>
+        <td>object</td>
+        <td>
+          KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsoverridespriorityescalation">priorityEscalation</a></b></td>
+        <td>object</td>
+        <td>
+          Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.kpi
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverrides)</sup></sup>
+
+
+
+KPI thresholds for the cases opened by the alert.
+When omitted, the company KPI settings apply.
+When set, the value replaces the company KPI settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#alertspeccasesettingsoverrideskpithresholdsindex">thresholds</a></b></td>
+        <td>[]object</td>
+        <td>
+          KPI thresholds. At most one entry for each type and priority.
+For each priority, the time to acknowledge must be less than or equal to the time to resolve.
+An empty or omitted list turns off all KPI timers of these cases.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.kpi.thresholds[index]
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverrideskpi)</sup></sup>
+
+
+
+One KPI threshold for one KPI type and one case priority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>priority</b></td>
+        <td>enum</td>
+        <td>
+          Case priority to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>threshold</b></td>
+        <td>string</td>
+        <td>
+          Time after which the KPI is breached.
+Whole number of seconds greater than zero, for example 300s is 5 minutes.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          KPI type to which this threshold applies.<br/>
+          <br/>
+            <i>Enum</i>: timeToAcknowledge, timeToResolve, timeToUpdate<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          When false, this KPI timer does not run for cases of this priority. False when omitted.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.priorityEscalation
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverrides)</sup></sup>
+
+
+
+Priority escalation settings for the cases opened by the alert.
+When omitted, the company priority escalation settings apply.
+When set, the value replaces the company settings as a whole.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Enable or disable priority escalation for these cases. When false, no rule is applied.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#alertspeccasesettingsoverridespriorityescalationrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Escalation rules. Each rule applies to cases at its fromPriority.
+At most one rule for each fromPriority. P1 cannot be a fromPriority, so the list has at most 4 rules.
+An empty or omitted list means that no rule applies, also when enabled is true.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Alert.spec.caseSettings.overrides.priorityEscalation.rules[index]
+<sup><sup>[↩ Parent](#alertspeccasesettingsoverridespriorityescalation)</sup></sup>
+
+
+
+A case at fromPriority that stays unacknowledged for at least period is raised to toPriority (preview).
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>fromPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority that the case must have for this rule to apply.
+P1 is not accepted by the API, because no priority is more severe.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>period</b></td>
+        <td>string</td>
+        <td>
+          Time that a case can stay unacknowledged at fromPriority before it is escalated.
+Whole number of seconds greater than zero, for example 36000s is 10 hours.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>toPriority</b></td>
+        <td>enum</td>
+        <td>
+          Priority to which the case is raised. Must be more severe than fromPriority.<br/>
+          <br/>
+            <i>Enum</i>: p1, p2, p3, p4, p5<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
