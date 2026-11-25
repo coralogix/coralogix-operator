@@ -28,7 +28,6 @@
         "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
         "body": {
           "alertSchedulerRule": {
-            "description": "",
             "enabled": true,
             "filter": {
               "alertMetaLabels": {
@@ -122,7 +121,6 @@
         "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
         "body": {
           "alertSchedulerRule": {
-            "description": "",
             "enabled": true,
             "filter": {
               "alertMetaLabels": {

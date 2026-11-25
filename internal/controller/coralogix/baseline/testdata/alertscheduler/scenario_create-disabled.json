@@ -28,7 +28,6 @@
         "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
         "body": {
           "alertSchedulerRule": {
-            "description": "",
             "enabled": false,
             "filter": {
               "alertMetaLabels": {
@@ -68,7 +67,7 @@
       "status": {
         "conditions": [
           {
-            "observedGeneration": 2,
+            "observedGeneration": 1,
             "reason": "RemoteSyncedSuccessfully",
             "status": "True",
             "type": "RemoteSynced"
@@ -87,8 +86,7 @@
         "path": "/mgmt/openapi/5/alerts/suppression-rules/v1",
         "body": {
           "alertSchedulerRule": {
-            "description": "",
-            "enabled": true,
+            "enabled": false,
             "filter": {
               "alertMetaLabels": {
                 "value": [
@@ -128,7 +126,7 @@
       "status": {
         "conditions": [
           {
-            "observedGeneration": 2,
+            "observedGeneration": 1,
             "reason": "RemoteSyncedSuccessfully",
             "status": "True",
             "type": "RemoteSynced"

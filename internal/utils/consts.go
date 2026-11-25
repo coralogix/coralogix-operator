@@ -31,7 +31,6 @@ const (
 	ScopeKind                  = "Scope"
 	GroupKind                  = "Group"
 	IntegrationKind            = "Integration"
-	AlertSchedulerKind         = "AlertScheduler"
 	PrometheusRuleKind         = "PrometheusRule"
 	ConnectorKind              = "Connector"
 	ArchiveMetricsTargetKind   = "ArchiveMetricsTarget"

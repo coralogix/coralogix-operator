@@ -38,6 +38,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.AIEvaluationKind, err)
 	}
+	if err := (&AlertSchedulerReconciler{
+		Client:    clientSet.AlertScheduler(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.AlertSchedulerKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.AlertSchedulerKind, err)
+	}
 	if err := (&ArchiveLogsTargetReconciler{
 		Client:    clientSet.ArchiveLogs(),
 		ClientSet: clientSet,

@@ -1049,11 +1049,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-AlertScheduler is the Schema for the AlertSchedulers API.
-It is used to suppress or activate alerts based on a schedule.
-See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules/
-
-**Added in v0.4.0**
+AlertScheduler is the Schema for the alertschedulers API.
 
 <table>
     <thead>
@@ -1085,14 +1081,14 @@ See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules
         <td><b><a href="#alertschedulerspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.<br/>
+          AlertSchedulerSpec defines the desired state of a AlertScheduler.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertschedulerstatus">status</a></b></td>
         <td>object</td>
         <td>
-          AlertSchedulerStatus defines the observed state of AlertScheduler.<br/>
+          AlertSchedulerStatus defines the observed state of a AlertScheduler.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1104,7 +1100,7 @@ See also https://coralogix.com/docs/user-guides/alerting/alert-suppression-rules
 
 
 
-AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
+AlertSchedulerSpec defines the desired state of a AlertScheduler.
 
 <table>
     <thead>
@@ -1119,8 +1115,7 @@ AlertSchedulerSpec defines the desired state Coralogix AlertScheduler.
         <td><b><a href="#alertschedulerspecfilter">filter</a></b></td>
         <td>object</td>
         <td>
-          Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-If none of them set, all alerts will be affected.<br/>
+          Alert scheduler rule protobuf.v1.filter.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.metaLabels) != has(self.alerts): Exactly one of metaLabels or alerts must be set</li>
         </td>
@@ -1129,14 +1124,14 @@ If none of them set, all alerts will be affected.<br/>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Alert Scheduler name.<br/>
+          Display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecschedule">schedule</a></b></td>
         <td>object</td>
         <td>
-          Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.<br/>
+          Schedule.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.oneTime) != has(self.recurring): Exactly one of oneTime or recurring must be set</li>
         </td>
@@ -1145,14 +1140,14 @@ If none of them set, all alerts will be affected.<br/>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Alert Scheduler description.<br/>
+          Human-readable description.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          Alert Scheduler enabled. If set to `false`, the alert scheduler will be disabled. True by default.<br/>
+          Whether this resource is enabled.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -1161,7 +1156,7 @@ If none of them set, all alerts will be affected.<br/>
         <td><b><a href="#alertschedulerspecmetalabelsindex">metaLabels</a></b></td>
         <td>[]object</td>
         <td>
-          Alert Scheduler meta labels.<br/>
+          Metadata labels.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1173,8 +1168,7 @@ If none of them set, all alerts will be affected.<br/>
 
 
 
-Alert Scheduler filter. Exactly one of `metaLabels` or `alerts` can be set.
-If none of them set, all alerts will be affected.
+Alert scheduler rule protobuf.v1.filter.
 
 <table>
     <thead>
@@ -1189,21 +1183,22 @@ If none of them set, all alerts will be affected.
         <td><b>whatExpression</b></td>
         <td>string</td>
         <td>
-          DataPrime query expression - https://coralogix.com/docs/dataprime-query-language.<br/>
+          Dataprime expression that filters the alerts by group-by values.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecfilteralertsindex">alerts</a></b></td>
         <td>[]object</td>
         <td>
-          Alert references. Conflicts with `metaLabels`.<br/>
+          Alert unique ids.
+It refers to a Alert custom resource through resourceRef.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecfiltermetalabelsindex">metaLabels</a></b></td>
         <td>[]object</td>
         <td>
-          Alert Scheduler meta labels. Conflicts with `alerts`.<br/>
+          Meta labels.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1215,7 +1210,7 @@ If none of them set, all alerts will be affected.
 
 
 
-
+ResourceOnlyRef names a custom resource without a direct backend id option.
 
 <table>
     <thead>
@@ -1230,7 +1225,7 @@ If none of them set, all alerts will be affected.
         <td><b><a href="#alertschedulerspecfilteralertsindexresourceref">resourceRef</a></b></td>
         <td>object</td>
         <td>
-          Alert custom resource name and namespace. If namespace is not set, the AlertScheduler namespace will be used.<br/>
+          Reference to a Coralogix resource within the cluster.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -1242,7 +1237,7 @@ If none of them set, all alerts will be affected.
 
 
 
-Alert custom resource name and namespace. If namespace is not set, the AlertScheduler namespace will be used.
+Reference to a Coralogix resource within the cluster.
 
 <table>
     <thead>
@@ -1276,7 +1271,7 @@ Alert custom resource name and namespace. If namespace is not set, the AlertSche
 
 
 
-
+AlertSchedulerMetaLabelsProtobufV1MetaLabel is the meta_labels_protobuf.v1.MetaLabel object of the API.
 
 <table>
     <thead>
@@ -1291,14 +1286,14 @@ Alert custom resource name and namespace. If namespace is not set, the AlertSche
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The key.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1310,7 +1305,7 @@ Alert custom resource name and namespace. If namespace is not set, the AlertSche
 
 
 
-Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
+Schedule.
 
 <table>
     <thead>
@@ -1325,7 +1320,7 @@ Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
         <td><b>operation</b></td>
         <td>enum</td>
         <td>
-          The operation to perform. Can be `mute` or `activate`.<br/>
+          Schedule operation.<br/>
           <br/>
             <i>Enum</i>: mute, activate<br/>
         </td>
@@ -1334,7 +1329,7 @@ Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
         <td><b><a href="#alertschedulerspecscheduleonetime">oneTime</a></b></td>
         <td>object</td>
         <td>
-          One-time schedule. Conflicts with `recurring`.<br/>
+          One time.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.endTime) != has(self.duration): Exactly one of endTime or duration must be set</li>
         </td>
@@ -1343,9 +1338,7 @@ Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
         <td><b><a href="#alertschedulerspecschedulerecurring">recurring</a></b></td>
         <td>object</td>
         <td>
-          Recurring schedule. Conflicts with `oneTime`.<br/>
-          <br/>
-            <i>Validations</i>:<li>has(self.always) != has(self.dynamic): Exactly one of always or dynamic must be set</li>
+          Recurring schedule that activates the alert scheduler rule on a repeating cadence.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1357,7 +1350,7 @@ Alert Scheduler schedule. Exactly one of `oneTime` or `recurring` must be set.
 
 
 
-One-time schedule. Conflicts with `recurring`.
+One time.
 
 <table>
     <thead>
@@ -1372,30 +1365,28 @@ One-time schedule. Conflicts with `recurring`.
         <td><b>startTime</b></td>
         <td>string</td>
         <td>
-          The start time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.<br/>
+          Start time.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>timezone</b></td>
         <td>string</td>
         <td>
-          The timezone of the time frame. For example, `UTC-4` or `UTC+10`.<br/>
+          Timezone.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecscheduleonetimeduration">duration</a></b></td>
         <td>object</td>
         <td>
-          The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.<br/>
+          Duration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>endTime</b></td>
         <td>string</td>
         <td>
-          The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
-Conflicts with `duration`.<br/>
+          End time.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1407,8 +1398,7 @@ Conflicts with `duration`.<br/>
 
 
 
-The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.
+Duration.
 
 <table>
     <thead>
@@ -1423,8 +1413,7 @@ Conflicts with `endTime`.
         <td><b>forOver</b></td>
         <td>integer</td>
         <td>
-          The number of time units to wait before the alert is triggered. For example,
-if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.<br/>
+          The for over.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -1433,7 +1422,7 @@ if the frequency is set to `hours` and the value is set to `2`, the alert will b
         <td><b>frequency</b></td>
         <td>enum</td>
         <td>
-          The time unit to wait before the alert is triggered. Can be `minutes`, `hours` or `days`.<br/>
+          Duration frequency.<br/>
           <br/>
             <i>Enum</i>: minutes, hours, days<br/>
         </td>
@@ -1447,7 +1436,7 @@ if the frequency is set to `hours` and the value is set to `2`, the alert will b
 
 
 
-Recurring schedule. Conflicts with `oneTime`.
+Recurring schedule that activates the alert scheduler rule on a repeating cadence.
 
 <table>
     <thead>
@@ -1462,14 +1451,14 @@ Recurring schedule. Conflicts with `oneTime`.
         <td><b>always</b></td>
         <td>object</td>
         <td>
-          Recurring always.<br/>
+          Always.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecschedulerecurringdynamic">dynamic</a></b></td>
         <td>object</td>
         <td>
-          Dynamic schedule.<br/>
+          Dynamic.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1481,7 +1470,7 @@ Recurring schedule. Conflicts with `oneTime`.
 
 
 
-Dynamic schedule.
+Dynamic.
 
 <table>
     <thead>
@@ -1496,14 +1485,14 @@ Dynamic schedule.
         <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequency">frequency</a></b></td>
         <td>object</td>
         <td>
-          The rule will be activated in a recurring mode (daily, weekly or monthly).<br/>
+          AlertSchedulerRecurringDynamicFrequency holds the frequency fields of the released CR.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>repeatEvery</b></td>
         <td>integer</td>
         <td>
-          The rule will be activated in a recurring mode according to the interval.<br/>
+          Interval multiplier controlling how often the rule recurs (e.g., every N days, weeks, or months).<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -1512,7 +1501,7 @@ Dynamic schedule.
         <td><b><a href="#alertschedulerspecschedulerecurringdynamictimeframe">timeFrame</a></b></td>
         <td>object</td>
         <td>
-          The time frame of the rule.<br/>
+          Timeframe.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.endTime) != has(self.duration): Exactly one of endTime or duration must be set</li>
         </td>
@@ -1521,7 +1510,7 @@ Dynamic schedule.
         <td><b>terminationDate</b></td>
         <td>string</td>
         <td>
-          The termination date of the rule.<br/>
+          ISO 8601 date after which the recurring rule stops being applied.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1533,7 +1522,7 @@ Dynamic schedule.
 
 
 
-The rule will be activated in a recurring mode (daily, weekly or monthly).
+AlertSchedulerRecurringDynamicFrequency holds the frequency fields of the released CR.
 
 <table>
     <thead>
@@ -1548,21 +1537,21 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
         <td><b>daily</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Daily.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequencymonthly">monthly</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Monthly.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecschedulerecurringdynamicfrequencyweekly">weekly</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Weekly.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1574,7 +1563,7 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
 
 
 
-
+Monthly.
 
 <table>
     <thead>
@@ -1589,7 +1578,7 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
         <td><b>days</b></td>
         <td>[]integer</td>
         <td>
-          The days of the month to activate the rule.<br/>
+          The days of month.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -1601,7 +1590,7 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
 
 
 
-
+Weekly.
 
 <table>
     <thead>
@@ -1616,7 +1605,8 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
         <td><b>days</b></td>
         <td>[]enum</td>
         <td>
-          The days of the week to activate the rule.<br/>
+          The days of week.
+The API holds each name as an integer: Sunday=1, Monday=2, Tuesday=3, Wednesday=4, Thursday=5, Friday=6, Saturday=7.<br/>
           <br/>
             <i>Enum</i>: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday<br/>
         </td>
@@ -1630,7 +1620,7 @@ The rule will be activated in a recurring mode (daily, weekly or monthly).
 
 
 
-The time frame of the rule.
+Timeframe.
 
 <table>
     <thead>
@@ -1645,30 +1635,28 @@ The time frame of the rule.
         <td><b>startTime</b></td>
         <td>string</td>
         <td>
-          The start time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.<br/>
+          Start time.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>timezone</b></td>
         <td>string</td>
         <td>
-          The timezone of the time frame. For example, `UTC-4` or `UTC+10`.<br/>
+          Timezone.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#alertschedulerspecschedulerecurringdynamictimeframeduration">duration</a></b></td>
         <td>object</td>
         <td>
-          The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.<br/>
+          Duration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>endTime</b></td>
         <td>string</td>
         <td>
-          The end time of the time frame. In isodate format. For example, `2021-01-01T00:00:00.000`.
-Conflicts with `duration`.<br/>
+          End time.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1680,8 +1668,7 @@ Conflicts with `duration`.<br/>
 
 
 
-The duration from the start time to wait before the operation is performed.
-Conflicts with `endTime`.
+Duration.
 
 <table>
     <thead>
@@ -1696,8 +1683,7 @@ Conflicts with `endTime`.
         <td><b>forOver</b></td>
         <td>integer</td>
         <td>
-          The number of time units to wait before the alert is triggered. For example,
-if the frequency is set to `hours` and the value is set to `2`, the alert will be triggered after 2 hours.<br/>
+          The for over.<br/>
           <br/>
             <i>Format</i>: int32<br/>
         </td>
@@ -1706,7 +1692,7 @@ if the frequency is set to `hours` and the value is set to `2`, the alert will b
         <td><b>frequency</b></td>
         <td>enum</td>
         <td>
-          The time unit to wait before the alert is triggered. Can be `minutes`, `hours` or `days`.<br/>
+          Duration frequency.<br/>
           <br/>
             <i>Enum</i>: minutes, hours, days<br/>
         </td>
@@ -1720,7 +1706,7 @@ if the frequency is set to `hours` and the value is set to `2`, the alert will b
 
 
 
-
+AlertSchedulerMetaLabelsProtobufV1MetaLabel is the meta_labels_protobuf.v1.MetaLabel object of the API.
 
 <table>
     <thead>
@@ -1735,14 +1721,14 @@ if the frequency is set to `hours` and the value is set to `2`, the alert will b
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The key.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The value.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1754,7 +1740,7 @@ if the frequency is set to `hours` and the value is set to `2`, the alert will b
 
 
 
-AlertSchedulerStatus defines the observed state of AlertScheduler.
+AlertSchedulerStatus defines the observed state of a AlertScheduler.
 
 <table>
     <thead>

@@ -42,3 +42,5 @@ kinds:
     resource: SavedHeatmap
   - kind: ProductAnalyticsSettings
     resource: ProductAnalyticsSettings
+  - kind: AlertScheduler
+    resource: AlertSchedulerRule

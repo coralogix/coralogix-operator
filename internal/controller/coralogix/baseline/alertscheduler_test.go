@@ -52,7 +52,7 @@ func init() {
 		resource: "alertschedulers",
 		newFake:  newAlertSchedulerFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.AlertSchedulerReconciler{AlertSchedulerClient: cs.AlertScheduler(), Interval: reconcileInterval}
+			return &v1alpha1controllers.AlertSchedulerReconciler{Client: cs.AlertScheduler(), Interval: reconcileInterval}
 		},
 		scenarios: alertSchedulerScenarios,
 		admission: alertSchedulerAdmission(),
@@ -368,6 +368,14 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 	"create-for-over-above-int32": func(h *harness) {
 		h.Create("create with forOver 3000000000: the CR cannot be decoded", alertSchedulerManifest(asSpec(
 			"    operation: mute\n    oneTime:\n      startTime: 2027-01-04T00:00:00.000\n      timezone: UTC+0\n      duration:\n        forOver: 3000000000\n        frequency: days\n")))
+		h.Delete("delete")
+	},
+
+	// The CRD has no rule on the arms of recurring: always is an empty object, which a CEL rule cannot
+	// read on Kubernetes 1.28 and earlier. The validate hook rejects a schedule with neither arm.
+	"create-recurring-without-arm": func(h *harness) {
+		h.Create("create a recurring schedule without always or dynamic: no request", alertSchedulerManifest(asSpec(
+			"    operation: mute\n    recurring: {}\n")))
 		h.Delete("delete")
 	},
 

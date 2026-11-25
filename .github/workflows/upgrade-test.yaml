@@ -117,6 +117,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-archivelogstarget.sh before
+      - name: Create an AlertScheduler with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-alertscheduler.sh before
       - name: Create a View with the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -238,6 +242,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-archivelogstarget.sh after
+      - name: Check the AlertScheduler of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-alertscheduler.sh after
       - name: Check the View of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -318,6 +326,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-archivelogstarget.sh cleanup
+      - name: Delete the AlertScheduler of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-alertscheduler.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |
