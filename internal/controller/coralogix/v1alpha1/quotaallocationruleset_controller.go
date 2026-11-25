@@ -32,7 +32,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // QuotaAllocationRuleSetReconciler reconciles a QuotaAllocationRuleSet object.
@@ -84,12 +83,12 @@ func (r *QuotaAllocationRuleSetReconciler) HandleUpdate(ctx context.Context, log
 	if err := r.beforeUpdate(ctx, log, cr, body); err != nil {
 		return coralogixreconciler.NewHookError(fmt.Errorf("beforeUpdate hook of QuotaAllocationRuleSet failed: %w", err))
 	}
-	log.Info("Replacing remote QuotaAllocationRuleSet", "QuotaAllocationRuleSet", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.QuotaAllocationRuleSetServiceReplaceQuotaAllocationRuleSet(ctx).ReplaceQuotaAllocationRuleSetRequest(*body).Execute()
+	log.Info("Updating remote QuotaAllocationRuleSet")
+	_, httpResp, err := r.Client.QuotaAllocationRuleSetServiceReplaceQuotaAllocationRuleSet(ctx).ReplaceQuotaAllocationRuleSetRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote QuotaAllocationRuleSet: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote QuotaAllocationRuleSet updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote QuotaAllocationRuleSet updated")
 	if err := coralogixreconciler.AddFinalizer(ctx, log, cr, r); err != nil {
 		return err
 	}
