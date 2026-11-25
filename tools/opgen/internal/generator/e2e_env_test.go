@@ -68,3 +68,30 @@ func TestE2EEnvRejectsWrongNames(t *testing.T) {
 		})
 	}
 }
+
+// The upgrade check writes a variable into a string. A value that is exactly one variable and that
+// an integer field holds becomes a number, since the CRD rejects a string there. A Quantity takes a
+// string, and a string field keeps it.
+func TestE2EEnvValueOfAnIntegerField(t *testing.T) {
+	root, input := syntheticRoot(t)
+	writeThingE2E(t, root, "env: [THING_NUMBER]\nvalues:\n  destinations: [https://example.com]\n"+
+		"upgrade:\n  from: '1.0'\n  spec:\n    name: '@{run}'\n    quota: '@{env.THING_NUMBER}'\n    ratio: '@{env.THING_NUMBER}'\n"+
+		"    description: 'n-@{env.THING_NUMBER}'\n    settings: {mode: fast, retries: '@{env.THING_NUMBER}'}\n  field: description\n  value: updated\n")
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	script := readGenerated(t, root, "scripts/upgrade-check-thing.sh")
+	var paths []string
+	for _, line := range strings.Split(script, "\n") {
+		if _, rest, ok := strings.Cut(line, "--argjson path '"); ok {
+			path, _, _ := strings.Cut(rest, "'")
+			paths = append(paths, path)
+		}
+	}
+	if want := []string{`["quota"]`, `["settings","retries"]`}; strings.Join(paths, " ") != strings.Join(want, " ") {
+		t.Fatalf("number paths = %v, want %v", paths, want)
+	}
+	if !strings.Contains(script, `'setpath($path; getpath($path) | tonumber)'`) {
+		t.Error("the upgrade check does not turn the values into numbers")
+	}
+}

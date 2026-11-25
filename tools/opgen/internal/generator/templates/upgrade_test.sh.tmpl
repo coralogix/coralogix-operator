@@ -55,6 +55,10 @@ JSON
     # jq writes the value of {{.}} into each decoded string, so any character stays as it is.
     spec="$(jq --arg value "${ {{- .}}}" 'walk(if type == "string" then gsub("@\\{env\\.{{.}}\\}"; $value) else . end)' <<<"$spec")"
 {{- end}}
+{{- range .E2E.Upgrade.NumberPaths}}
+    # An integer field holds this variable: the CRD rejects it as a string.
+    spec="$(jq --argjson path '{{.}}' 'setpath($path; getpath($path) | tonumber)' <<<"$spec")"
+{{- end}}
     jq -n --arg name "$cr" --arg namespace "$namespace" --argjson spec "$spec" \
         '{apiVersion:"coralogix.com/v1alpha1", kind:"{{.Kind}}", metadata:{name:$name,namespace:$namespace}, spec:$spec}' \
         | kubectl apply -f -
