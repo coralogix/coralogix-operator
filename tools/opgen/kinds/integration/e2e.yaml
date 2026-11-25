@@ -1,0 +1,37 @@
+# aws-metrics-collector 0.1.0 deploys without a real AWS account: the integration reports a
+# failing connection, which the operator does not read. Its parameters are those of the released
+# e2e test.
+values:
+  integrationKey: aws-metrics-collector
+  version: 0.1.0
+  parameters: &parameters
+    ApplicationName: cxo
+    SubsystemName: aws-metrics-collector
+    MetricNamespaces: [AWS/S3]
+    AwsRoleArn: arn:aws:iam::123456789012:role/example-role
+    IntegrationName: cxo-generated-e2e
+    AwsRegion: eu-north-1
+    WithAggregations: false
+    EnrichWithTags: true
+minimal:
+  parameters: *parameters
+update:
+  skip: >-
+    the key and the version are the only scalar fields, and another version needs other
+    parameters. The handwritten e2e test updates a parameter and reads it back.
+upgrade:
+  from: '0.5'
+  spec:
+    integrationKey: aws-metrics-collector
+    version: 0.1.0
+    parameters:
+      ApplicationName: cxo
+      SubsystemName: aws-metrics-collector
+      MetricNamespaces: [AWS/S3]
+      AwsRoleArn: arn:aws:iam::123456789012:role/example-role
+      IntegrationName: cxo-upgrade-check
+      AwsRegion: eu-north-1
+      WithAggregations: false
+      EnrichWithTags: true
+  field: parameters.IntegrationName
+  value: cxo-upgrade-check-updated

@@ -197,13 +197,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.IntegrationReconciler{
-		IntegrationsClient: oapiClientSet.Integrations(),
-		Interval:           cfg.ReconcileIntervals[utils.IntegrationKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Integration")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.ConnectorReconciler{
 		ConnectorsClient: oapiClientSet.Connectors(),
 		Interval:         cfg.ReconcileIntervals[utils.ConnectorKind],

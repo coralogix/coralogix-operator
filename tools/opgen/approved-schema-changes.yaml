@@ -1,13 +1,4 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes:
-  - kind: AlertScheduler
-    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.schedule.properties.recurring
-    before: f93cda9ed942ab9c
-    after: a2c799262a3ce3c1
-    reason: >-
-      The rule "has(self.always) != has(self.dynamic)" is removed. always is an empty object, and
-      Kubernetes 1.28 and earlier reject every CR with always when they evaluate a rule that reads
-      it. The change only loosens admission: the validate hook now rejects a recurring schedule
-      that sets both or neither, before any API call.
+changes: []

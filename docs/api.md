@@ -15976,12 +15976,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-Integration is the Schema for the Integrations API.
-See also https://coralogix.com/docs/user-guides/getting-started/packages-and-extensions/integration-packages/
-
-For available integrations see https://coralogix.com/docs/developer-portal/infrastructure-as-code/terraform-provider/integrations/aws-metrics-collector/ or at https://github.com/coralogix/coralogix-operator/tree/main/config/samples/v1alpha1/integrations.
-
-**Added in v0.4.0**
+Integration is the Schema for the integrations API.
 
 <table>
     <thead>
@@ -16013,14 +16008,14 @@ For available integrations see https://coralogix.com/docs/developer-portal/infra
         <td><b><a href="#integrationspec">spec</a></b></td>
         <td>object</td>
         <td>
-          IntegrationSpec defines the desired state of a Coralogix (managed) integration.<br/>
+          IntegrationSpec defines the desired state of a Integration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#integrationstatus">status</a></b></td>
         <td>object</td>
         <td>
-          IntegrationStatus defines the observed state of Integration.<br/>
+          IntegrationStatus defines the observed state of a Integration.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16032,7 +16027,7 @@ For available integrations see https://coralogix.com/docs/developer-portal/infra
 
 
 
-IntegrationSpec defines the desired state of a Coralogix (managed) integration.
+IntegrationSpec defines the desired state of a Integration.
 
 <table>
     <thead>
@@ -16047,29 +16042,28 @@ IntegrationSpec defines the desired state of a Coralogix (managed) integration.
         <td><b>integrationKey</b></td>
         <td>string</td>
         <td>
-          Unique name of the integration.<br/>
+          The definition key.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>version</b></td>
         <td>string</td>
         <td>
-          Desired version of the integration<br/>
+          The definition version.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>parameters</b></td>
         <td>object</td>
         <td>
-          Inline parameters for the integration. May be omitted entirely when all
-parameters come from ParametersFromSecret.<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#integrationspecparametersfromsecretkey">parametersFromSecret</a></b></td>
         <td>map[string]object</td>
         <td>
-          ParametersFromSecret is a map of parameter names to references of Kubernetes
+          IntegrationParametersFromSecret is a map of parameter names to references of Kubernetes
 Secret keys whose values should be used as the parameter value at reconcile time.
 Use this for sensitive parameters (API keys, service account keys, tokens, etc.)
 so that secret material does not need to live in the manifest.
@@ -16140,7 +16134,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-IntegrationStatus defines the observed state of Integration.
+IntegrationStatus defines the observed state of a Integration.
 
 <table>
     <thead>

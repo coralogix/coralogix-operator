@@ -41,7 +41,7 @@ var _ = Describe("Integration", Ordered, func() {
 			Spec: coralogixv1alpha1.IntegrationSpec{
 				IntegrationKey: "aws-metrics-collector",
 				Version:        "0.1.0",
-				Parameters: runtime.RawExtension{
+				Parameters: coralogixv1alpha1.IntegrationParameters{RawExtension: runtime.RawExtension{
 					Raw: []byte(`{
 						"ApplicationName": "cxo",
 						"SubsystemName": "aws-metrics-collector",
@@ -54,7 +54,7 @@ var _ = Describe("Integration", Ordered, func() {
 						"WithAggregations": false,
 						"EnrichWithTags": true
 					}`),
-				},
+				}},
 			},
 		}
 	})
@@ -69,8 +69,8 @@ var _ = Describe("Integration", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: integrationName, Namespace: testNamespace}, fetchedIntegration)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedIntegration.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedIntegration.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetchedIntegration.Status.Id != nil {
-				integrationID = *fetchedIntegration.Status.Id
+			if fetchedIntegration.Status.ID != nil {
+				integrationID = *fetchedIntegration.Status.ID
 				return nil
 			}
 			return fmt.Errorf("integration ID is not set")
@@ -88,7 +88,7 @@ var _ = Describe("Integration", Ordered, func() {
 	It("Should be updated successfully", func(ctx context.Context) {
 		By("Patching the Integration")
 		modifiedIntegration := integration.DeepCopy()
-		modifiedIntegration.Spec.Parameters = runtime.RawExtension{
+		modifiedIntegration.Spec.Parameters = coralogixv1alpha1.IntegrationParameters{RawExtension: runtime.RawExtension{
 			Raw: []byte(`{
 						"ApplicationName": "cxo-updated",
 						"SubsystemName": "aws-metrics-collector",
@@ -101,7 +101,7 @@ var _ = Describe("Integration", Ordered, func() {
 						"WithAggregations": false,
 						"EnrichWithTags": true
 					}`),
-		}
+		}}
 		Expect(crClient.Patch(ctx, modifiedIntegration, client.MergeFrom(integration))).To(Succeed())
 
 		By("Verifying Integration is updated in Coralogix backend")
@@ -166,7 +166,7 @@ var _ = Describe("Integration with ParametersFromSecret", Ordered, func() {
 			Spec: coralogixv1alpha1.IntegrationSpec{
 				IntegrationKey: "aws-metrics-collector",
 				Version:        "0.1.0",
-				Parameters: runtime.RawExtension{
+				Parameters: coralogixv1alpha1.IntegrationParameters{RawExtension: runtime.RawExtension{
 					Raw: []byte(`{
 						"ApplicationName": "cxo",
 						"SubsystemName": "aws-metrics-collector",
@@ -176,7 +176,7 @@ var _ = Describe("Integration with ParametersFromSecret", Ordered, func() {
 						"WithAggregations": false,
 						"EnrichWithTags": true
 					}`),
-				},
+				}},
 				ParametersFromSecret: map[string]corev1.SecretKeySelector{
 					"AwsRoleArn": {
 						LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
@@ -193,8 +193,8 @@ var _ = Describe("Integration with ParametersFromSecret", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: integrationName, Namespace: testNamespace}, fetchedIntegration)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedIntegration.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedIntegration.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetchedIntegration.Status.Id != nil {
-				integrationID = *fetchedIntegration.Status.Id
+			if fetchedIntegration.Status.ID != nil {
+				integrationID = *fetchedIntegration.Status.ID
 				return nil
 			}
 			return fmt.Errorf("integration ID is not set")
