@@ -62,7 +62,6 @@ rules:
       - aicustomevaluations
       - alerts
       - alertsets
-      - apikeys
       - archivemetricstargets
       - connectors
       - customenrichments
@@ -86,7 +85,6 @@ rules:
       - aicustomevaluations/finalizers
       - alerts/finalizers
       - alertsets/finalizers
-      - apikeys/finalizers
       - archivemetricstargets/finalizers
       - connectors/finalizers
       - customenrichments/finalizers
@@ -104,7 +102,6 @@ rules:
       - aicustomevaluations/status
       - alerts/status
       - alertsets/status
-      - apikeys/status
       - archivemetricstargets/status
       - connectors/status
       - customenrichments/status
@@ -132,6 +129,7 @@ rules:
     resources:
       - aievaluations
       - alertschedulers
+      - apikeys
       - archivelogstargets
       - configurationgroups
       - customroles
@@ -166,6 +164,7 @@ rules:
     resources:
       - aievaluations/finalizers
       - alertschedulers/finalizers
+      - apikeys/finalizers
       - archivelogstargets/finalizers
       - configurationgroups/finalizers
       - customroles/finalizers
@@ -194,6 +193,7 @@ rules:
     resources:
       - aievaluations/status
       - alertschedulers/status
+      - apikeys/status
       - archivelogstargets/status
       - configurationgroups/status
       - customroles/status

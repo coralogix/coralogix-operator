@@ -48,3 +48,5 @@ kinds:
     resource: DeployedIntegrationInformation
   - kind: Scope
     resource: v1.Scope
+  - kind: ApiKey
+    resource: KeyInfo

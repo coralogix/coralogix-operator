@@ -45,6 +45,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.AlertSchedulerKind, err)
 	}
+	if err := (&ApiKeyReconciler{
+		Client:    clientSet.APIKeys(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.ApiKeyKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.ApiKeyKind, err)
+	}
 	if err := (&ArchiveLogsTargetReconciler{
 		Client:    clientSet.ArchiveLogs(),
 		ClientSet: clientSet,

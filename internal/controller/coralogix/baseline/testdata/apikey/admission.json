@@ -65,7 +65,7 @@
       {
         "type": "FieldValueInvalid",
         "field": "spec.owner",
-        "message": "Invalid value: \"object\": Exactly one of userId or teamId must be set"
+        "message": "Invalid value: \"object\": Exactly one of teamId, userId must be set"
       }
     ]
   },
@@ -75,7 +75,7 @@
       {
         "type": "FieldValueInvalid",
         "field": "spec.owner",
-        "message": "Invalid value: \"object\": Exactly one of userId or teamId must be set"
+        "message": "Invalid value: \"object\": Exactly one of teamId, userId must be set"
       }
     ]
   },
@@ -85,7 +85,7 @@
       {
         "type": "FieldValueInvalid",
         "field": "spec.owner",
-        "message": "Invalid value: \"object\": Exactly one of userId or teamId must be set"
+        "message": "Invalid value: \"object\": Exactly one of teamId, userId must be set"
       }
     ]
   },
@@ -124,7 +124,14 @@
     ]
   },
   "team id negative": {
-    "accepted": true
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.owner.teamId",
+        "message": "Invalid value: -1: spec.owner.teamId in body should be greater than or equal to 0"
+      }
+    ]
   },
   "team id zero": {
     "accepted": true

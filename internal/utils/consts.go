@@ -27,7 +27,6 @@ const (
 	AlertSetKind              = "AlertSet"
 	RecordingRuleGroupSetKind = "RecordingRuleGroupSet"
 	OutboundWebhookKind       = "OutboundWebhook"
-	ApiKeyKind                = "ApiKey"
 	GroupKind                 = "Group"
 	PrometheusRuleKind        = "PrometheusRule"
 	ConnectorKind             = "Connector"

@@ -42,13 +42,17 @@ spec:
                 properties:
                   teamId:
                     format: int32
+                    minimum: 0
                     type: integer
                   userId:
                     type: string
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of userId or teamId must be set
-                  rule: has(self.userId) != has(self.teamId)
+                - message: spec.owner is immutable
+                  rule: self == oldSelf
+                - message: Exactly one of teamId, userId must be set
+                  rule: '(has(self.teamId) ? 1 : 0) + (has(self.userId) ? 1 : 0) ==
+                    1'
               permissions:
                 items:
                   type: string

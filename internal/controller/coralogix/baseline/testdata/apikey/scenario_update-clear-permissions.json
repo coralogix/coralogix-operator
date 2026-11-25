@@ -76,7 +76,9 @@
         "body": {
           "isActive": true,
           "newName": "baseline-key",
-          "permissions": {},
+          "permissions": {
+            "permissions": []
+          },
           "presets": {
             "presets": [
               "APM"

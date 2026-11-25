@@ -81,7 +81,9 @@
               "livetail:Read"
             ]
           },
-          "presets": {}
+          "presets": {
+            "presets": []
+          }
         },
         "status": 200
       },
