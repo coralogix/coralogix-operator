@@ -1,0 +1,1 @@
+outbound-webhook.coralogix.com/finalizer

@@ -1,0 +1,134 @@
+[
+  {
+    "step": "the released operator made the webhook: reconcile the CR",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "genericWebhook": {
+          "headers": {
+            "X-Team": "platform"
+          },
+          "method": "Post",
+          "payload": "{\"alert\": \"$ALERT_NAME\"}",
+          "url": "https://example.com/hook"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "headers": {
+                "X-Team": "platform"
+              },
+              "method": "POST",
+              "payload": "{\"alert\": \"$ALERT_NAME\"}",
+              "uuid": "<id-1>"
+            },
+            "name": "baseline-webhook",
+            "type": "GENERIC",
+            "url": "https://example.com/hook"
+          },
+          "id": "<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "headers": {
+                "X-Team": "platform"
+              },
+              "method": "POST",
+              "payload": "{\"alert\": \"$ALERT_NAME\"}",
+              "uuid": "<id-3>"
+            },
+            "name": "baseline-webhook",
+            "type": "GENERIC",
+            "url": "https://example.com/hook"
+          },
+          "id": "<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the webhook is deleted by its released id",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "no webhook remains",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null,
+    "remote": {}
+  }
+]

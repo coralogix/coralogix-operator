@@ -1,0 +1,110 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "name": "jira-webhook",
+      "outboundWebhookType": {
+        "jira": {
+          "apiTokenSecretKeyRef": {
+            "key": "api-token",
+            "name": "jira-credentials"
+          },
+          "email": "example@coralogix.com",
+          "projectKey": "COR",
+          "url": "https://my-jira-url.com"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "jira": {
+              "apiToken": "fake-jira-token",
+              "email": "example@coralogix.com",
+              "projectKey": "COR"
+            },
+            "name": "jira-webhook",
+            "type": "JIRA",
+            "url": "https://my-jira-url.com"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole spec",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "jira": {
+              "apiToken": "fake-jira-token",
+              "email": "example@coralogix.com",
+              "projectKey": "COR"
+            },
+            "name": "jira-webhook",
+            "type": "JIRA",
+            "url": "https://my-jira-url.com"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

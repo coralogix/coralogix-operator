@@ -1,0 +1,227 @@
+[
+  {
+    "step": "a method Unknown",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "genericWebhook": {
+          "method": "Unknown",
+          "url": "https://example.com/hook"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "method": "UNKNOWN",
+              "uuid": "<id-1>"
+            },
+            "name": "baseline-webhook",
+            "type": "GENERIC",
+            "url": "https://example.com/hook"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "a digest Unknown and an attachment Empty",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "slack": {
+          "attachments": [
+            {
+              "isActive": true,
+              "type": "Empty"
+            }
+          ],
+          "digests": [
+            {
+              "isActive": true,
+              "type": "Unknown"
+            }
+          ],
+          "url": "https://hooks.slack.com/services/baseline"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "slack": {
+              "attachments": [
+                {
+                  "isActive": true,
+                  "type": "EMPTY"
+                }
+              ],
+              "digests": [
+                {
+                  "isActive": true,
+                  "type": "UNKNOWN"
+                }
+              ]
+            },
+            "type": "SLACK",
+            "url": "https://hooks.slack.com/services/baseline"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "each method",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "genericWebhook": {
+          "method": "Get",
+          "url": "https://example.com/hook"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "method": "GET",
+              "uuid": "<id-2>"
+            },
+            "name": "baseline-webhook",
+            "type": "GENERIC",
+            "url": "https://example.com/hook"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-3>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-3>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "put",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "genericWebhook": {
+          "method": "Put",
+          "url": "https://example.com/hook"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "method": "PUT",
+              "uuid": "<id-4>"
+            },
+            "name": "baseline-webhook",
+            "type": "GENERIC",
+            "url": "https://example.com/hook"
+          },
+          "id": "<id-3>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-3>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

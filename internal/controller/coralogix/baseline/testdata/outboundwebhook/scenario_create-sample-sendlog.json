@@ -1,0 +1,87 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "name": "sendlog-webhook",
+      "outboundWebhookType": {
+        "sendLog": {
+          "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
+          "url": "https://example.com"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "sendlog-webhook",
+            "sendLog": {
+              "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
+              "uuid": "<id-1>"
+            },
+            "type": "SEND_LOG",
+            "url": "https://example.com"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole spec",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "sendlog-webhook",
+            "sendLog": {
+              "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
+              "uuid": "<id-2>"
+            },
+            "type": "SEND_LOG",
+            "url": "https://example.com"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -71,6 +71,9 @@ type kind struct {
 	crdFile string
 	// resource is the plural resource name in the RBAC rules.
 	resource string
+	// rbacExtra names other resources whose rules the RBAC golden records, such as the Secrets
+	// that a kind reads and watches.
+	rbacExtra []string
 	// newFake returns an empty fake of the API that the kind calls.
 	newFake func() apiFake
 	// newReconciler returns the kind's reconciler, with SDK clients built from the client set.

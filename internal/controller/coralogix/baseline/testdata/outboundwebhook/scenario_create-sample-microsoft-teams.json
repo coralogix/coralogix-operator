@@ -1,0 +1,80 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "name": "microsoft-teams-webhook",
+      "outboundWebhookType": {
+        "microsoftTeams": {
+          "url": "https://outlook.office.com/webhook/<id-1>/IncomingWebhook/<id-1>"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "microsoftTeams": {},
+            "name": "microsoft-teams-webhook",
+            "type": "MICROSOFT_TEAMS",
+            "url": "https://outlook.office.com/webhook/<id-1>/IncomingWebhook/<id-1>"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole spec",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "microsoftTeams": {},
+            "name": "microsoft-teams-webhook",
+            "type": "MICROSOFT_TEAMS",
+            "url": "https://outlook.office.com/webhook/<id-1>/IncomingWebhook/<id-1>"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]
