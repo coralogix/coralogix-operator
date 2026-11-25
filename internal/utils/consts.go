@@ -34,7 +34,6 @@ const (
 	IPAccess                  = "IPAccess"
 	CustomEnrichmentKind      = "CustomEnrichment"
 	EnrichmentKind            = "Enrichment"
-	AICustomEvaluationKind    = "AICustomEvaluation"
 
 	TrackPrometheusRuleAlertsLabelKey         = "app.coralogix.com/track-alerting-rules"
 	TrackPrometheusRuleRecordingRulesLabelKey = "app.coralogix.com/track-recording-rules"

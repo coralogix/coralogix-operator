@@ -19,6 +19,7 @@ package utils
 
 // The kinds that the operator generator writes.
 const (
+	AICustomEvaluationKind       = "AICustomEvaluation"
 	AIEvaluationKind             = "AIEvaluation"
 	AlertSchedulerKind           = "AlertScheduler"
 	ApiKeyKind                   = "ApiKey"

@@ -62,11 +62,7 @@ func init() {
 		resource: "aicustomevaluations",
 		newFake:  func() apiFake { return newAICustomEvaluationFake() },
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.AICustomEvaluationReconciler{
-				AIApplicationsClient: cs.AIApplications(),
-				AIEvaluationsClient:  cs.AIEvaluations(),
-				Interval:             reconcileInterval,
-			}
+			return &v1alpha1controllers.AICustomEvaluationReconciler{Client: cs.AIEvaluations(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: aiCustomEvaluationScenarios(),
 		admission: aiCustomEvaluationAdmission(),
@@ -372,8 +368,8 @@ func aiCustomEvaluationScenarios() map[string]func(h *harness) {
 		"unlink-rejected": func(h *harness) {
 			h.Create("create", withApp)
 			aiCustomEvaluations(h).answerNextError("unlink", http.StatusNotFound, "Custom evaluation is not linked to this application")
-			h.SetSpec("remove the application: the unlink answers 404, and the operator reads it as a missing custom evaluation and clears the status id", aiCustomEvalSpecMap())
-			h.Reconcile("reconcile again: with no status id the operator creates again, and the name is taken (409)")
+			h.SetSpec("remove the application: the unlink answers 404, a hook error, so the status id stays", aiCustomEvalSpecMap())
+			h.Reconcile("reconcile again: the unlink is sent again")
 		},
 
 		"delete": func(h *harness) {

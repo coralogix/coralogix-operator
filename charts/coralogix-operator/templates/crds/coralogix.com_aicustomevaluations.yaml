@@ -25,9 +25,8 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          AICustomEvaluation is the Schema for the AI custom evaluations API.
-          See also https://coralogix.com/docs/user-guides/ai/
+        description: AICustomEvaluation is the Schema for the aicustomevaluations
+          API.
         properties:
           apiVersion:
             description: |-
@@ -47,7 +46,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: AICustomEvaluationSpec defines the desired state of AICustomEvaluation.
+            description: AICustomEvaluationSpec defines the desired state of a AICustomEvaluation.
             properties:
               applications:
                 description: AI applications to link this custom evaluation to, selected
@@ -152,7 +151,8 @@ spec:
             - policyType
             type: object
           status:
-            description: AICustomEvaluationStatus defines the observed state of AICustomEvaluation.
+            description: AICustomEvaluationStatus defines the observed state of a
+              AICustomEvaluation.
             properties:
               conditions:
                 items:

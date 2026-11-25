@@ -50,3 +50,5 @@ kinds:
     resource: v1.Scope
   - kind: ApiKey
     resource: KeyInfo
+  - kind: AICustomEvaluation
+    resource: CustomEvaluation

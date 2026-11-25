@@ -69,7 +69,7 @@
     }
   },
   {
-    "step": "remove the application: the unlink answers 404, and the operator reads it as a missing custom evaluation and clears the status id",
+    "step": "remove the application: the unlink answers 404, a hook error, so the status id stays",
     "spec": {
       "instructions": "Check whether {response} names a competitor.",
       "name": "Competitor policy",
@@ -112,46 +112,6 @@
       }
     ],
     "result": {
-      "error": false,
-      "requeue": true
-    },
-    "object": {
-      "finalizers": [
-        "ai-custom-evaluation.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteSynced"
-      }
-    }
-  },
-  {
-    "step": "reconcile again: with no status id the operator creates again, and the name is taken (409)",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
-        "body": {
-          "description": "",
-          "examples": [],
-          "instructions": "Check whether {response} names a competitor.",
-          "name": "Competitor policy",
-          "policyType": "quality",
-          "safe": "",
-          "shouldIncludeSystemPrompt": false,
-          "violates": ""
-        },
-        "status": 409
-      }
-    ],
-    "result": {
       "error": true
     },
     "object": {
@@ -162,12 +122,73 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteCreationFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
         ],
+        "id": "<id-2>",
         "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again: the unlink is sent again",
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-2>",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-2>",
+        "body": {
+          "examples": [],
+          "updateMask": "examples"
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "status": 200
+      },
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-2>/applications/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
       }
     }
   }

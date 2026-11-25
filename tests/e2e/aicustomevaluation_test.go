@@ -82,8 +82,8 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiCustomEvaluationName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiCustomEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiCustomEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI custom evaluation ID is not set")
@@ -221,8 +221,8 @@ var _ = Describe("AICustomEvaluation minimal", Ordered, func() {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-			if fetched.Status.Id != nil {
-				aiCustomEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiCustomEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI custom evaluation ID is not set")
@@ -309,7 +309,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-			if fetched.Status.Id != nil {
+			if fetched.Status.ID != nil {
 				return nil
 			}
 			return fmt.Errorf("AI custom evaluation ID is not set")
@@ -521,13 +521,13 @@ func expectRemoteAICustomEvaluation(
 	expectedApplicationIDs []string,
 ) {
 	g.Expect(customEvaluation.GetName()).To(Equal(spec.Name))
-	g.Expect(customEvaluation.GetDescription()).To(Equal(spec.DescriptionValue()))
+	g.Expect(customEvaluation.GetDescription()).To(Equal(ptr.Deref(spec.Description, "")))
 	g.Expect(customEvaluation.GetApplicationIds()).To(ConsistOf(expectedStrings(expectedApplicationIDs)...))
 
 	config := customEvaluation.GetConfig()
 	g.Expect(config.GetPolicyType()).To(Equal(spec.PolicyType))
 	g.Expect(config.GetInstructions()).To(Equal(spec.Instructions))
-	g.Expect(config.GetShouldIncludeSystemPrompt()).To(Equal(spec.ShouldIncludeSystemPromptValue()))
+	g.Expect(config.GetShouldIncludeSystemPrompt()).To(Equal(ptr.Deref(spec.ShouldIncludeSystemPrompt, false)))
 
 	acceptable := coralogixv1alpha1.AICustomEvaluationCriterion{}
 	prohibited := coralogixv1alpha1.AICustomEvaluationCriterion{}
@@ -540,8 +540,8 @@ func expectRemoteAICustomEvaluation(
 		}
 	}
 
-	g.Expect(config.GetSafe()).To(Equal(acceptable.FlagsValue()))
-	g.Expect(config.GetViolates()).To(Equal(prohibited.FlagsValue()))
+	g.Expect(config.GetSafe()).To(Equal(ptr.Deref(acceptable.Flags, "")))
+	g.Expect(config.GetViolates()).To(Equal(ptr.Deref(prohibited.Flags, "")))
 	expectRemoteAICustomEvaluationExamples(g, config.GetExamples(), acceptable.Examples, prohibited.Examples)
 }
 
