@@ -8,6 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+{{- if .Switch}}
+	"net/http"
+{{- end}}
 {{- if .E2E.Env}}
 	"os"
 {{- end}}
@@ -311,4 +314,37 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered, Serial, Label("coverage"), fun
 		})
 	}
 })
+{{- end}}
+{{- if .Switch}}
+
+// ensure{{.Kind}}EnabledGenerated switches the {{.Kind}} on when it is off. Other kinds need it on:
+// their API answers 412 for a team that has the feature off. The spec above ends with it on.
+//
+// A failure is not fatal. A key without the permission to change it cannot, and the specs that
+// need it fail with their own 412. Only status codes are printed.
+func ensure{{.Kind}}EnabledGenerated(ctx context.Context) {
+	api := newOpenAPIClientSet().{{.Accessor}}()
+	current, httpResp, err := api.{{.GetMethod}}(ctx).Execute()
+	if err != nil {
+		GinkgoWriter.Printf("{{.Kind}} was not read: HTTP %d\n", httpStatusGenerated(httpResp))
+		return
+	}
+	if {{if .Switch.GetValue}}current.{{.Switch.GetField}}{{else}}ptr.Deref(current.{{.Switch.GetField}}, false){{end}} {
+		return
+	}
+	body := {{.SDKAlias}}.{{.UpdateBody}}{ {{.Switch.SetField}}: {{if .Switch.SetValue}}true{{else}}ptr.To(true){{end}} }
+	_, httpResp, err = api.{{.UpdateMethod}}(ctx).{{.UpdateSetter}}(body){{if .MaskSetter}}.{{.MaskSetter}}("enabled"){{end}}.Execute()
+	if err != nil {
+		GinkgoWriter.Printf("{{.Kind}} was not enabled: HTTP %d\n", httpStatusGenerated(httpResp))
+		return
+	}
+	GinkgoWriter.Println("{{.Kind}} was off and is now enabled")
+}
+
+func httpStatusGenerated(resp *http.Response) int {
+	if resp == nil {
+		return 0
+	}
+	return resp.StatusCode
+}
 {{- end}}

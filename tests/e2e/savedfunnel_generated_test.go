@@ -136,7 +136,8 @@ var _ = Describe("SavedFunnel (generated)", Ordered, func() {
 		createdIDs []string
 	)
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
+		ensureProductAnalyticsSettingsEnabledGenerated(ctx)
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().ProductAnalyticsFunnels()
 		fullName = uniqueName("e2e-savedfunnel")
@@ -1398,7 +1399,8 @@ var _ = Describe("SavedFunnel (coverage)", Ordered, Label("coverage"), func() {
 		base      string
 	)
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
+		ensureProductAnalyticsSettingsEnabledGenerated(ctx)
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().ProductAnalyticsFunnels()
 		base = uniqueName("e2e-savedfunnel-cov")

@@ -81,7 +81,8 @@ var _ = Describe("SavedPathway (generated)", Ordered, func() {
 		createdIDs []string
 	)
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
+		ensureProductAnalyticsSettingsEnabledGenerated(ctx)
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().ProductAnalyticsPathways()
 		fullName = uniqueName("e2e-savedpathway")
@@ -968,7 +969,8 @@ var _ = Describe("SavedPathway (coverage)", Ordered, Label("coverage"), func() {
 		base      string
 	)
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
+		ensureProductAnalyticsSettingsEnabledGenerated(ctx)
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().ProductAnalyticsPathways()
 		base = uniqueName("e2e-savedpathway-cov")

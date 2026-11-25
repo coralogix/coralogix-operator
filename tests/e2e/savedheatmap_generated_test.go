@@ -82,7 +82,8 @@ var _ = Describe("SavedHeatmap (generated)", Ordered, func() {
 		createdIDs []string
 	)
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
+		ensureProductAnalyticsSettingsEnabledGenerated(ctx)
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().ProductAnalyticsHeatmaps()
 		fullName = uniqueName("e2e-savedheatmap")
@@ -969,7 +970,8 @@ var _ = Describe("SavedHeatmap (coverage)", Ordered, Label("coverage"), func() {
 		base      string
 	)
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx context.Context) {
+		ensureProductAnalyticsSettingsEnabledGenerated(ctx)
 		crClient = ClientsInstance.GetControllerRuntimeClient()
 		apiClient = newOpenAPIClientSet().ProductAnalyticsHeatmaps()
 		base = uniqueName("e2e-savedheatmap-cov")

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -52,6 +53,17 @@ type validated struct {
 	file                   *overrides.File // nil for a kind without a behavior-overrides file
 	updateIDOutsideWrapper bool
 	wrapperFields          []wrapperField
+
+	// feature is the feature that the 412 response of Create says is off, "" for none: the
+	// description "Product Analytics is not enabled for this team" gives "Product Analytics".
+	feature string
+	// switchText is the description of the enabled field of a singleton that has one: the switch
+	// that turns a feature on.
+	switchText string
+	// requires is the kind whose switch turns the feature of this kind on. switchRequired is set on
+	// that kind. Both come from linkPrerequisites.
+	requires       *validated
+	switchRequired bool
 }
 
 // Generate resolves the SDK that the operator pins and publishes every kind of the kinds file.
@@ -202,7 +214,8 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err != nil {
 		return nil, asEligibility(entry, &shapeError{code: "SDK_SHAPE_UNSUPPORTED", path: "resource", msg: err.Error()})
 	}
-	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e, file: file, updateIDOutsideWrapper: outside, wrapperFields: fields}
+	v := &validated{entry: entry, resource: r, refs: refs, e2e: e2e, file: file, updateIDOutsideWrapper: outside, wrapperFields: fields,
+		feature: disabledFeature(doc, r), switchText: enableSwitchText(r)}
 	if _, err := renderAll([]*validated{v}, sdkModule, module); err != nil {
 		return nil, err
 	}
@@ -553,6 +566,7 @@ func sdkIssues(refs []sdkcheck.Ref, loaded map[string]*packages.Package, input s
 
 // renderAll renders every kind and the files that list them.
 func renderAll(all []*validated, sdkModule, module string) (output, error) {
+	linkPrerequisites(all)
 	out := output{files: map[string][]byte{}}
 	var kinds []*kindData
 	var report issue.Report
@@ -596,6 +610,14 @@ func renderOne(v *validated, module string) (map[string][]byte, *kindData, error
 		return nil, nil, err
 	}
 	d.E2E = e2e
+	if v.requires != nil {
+		d.Requires = v.requires.entry.Kind
+	}
+	if v.switchRequired {
+		if d.Switch, err = switchOf(d, ix); err != nil {
+			return nil, nil, err
+		}
+	}
 	files, err := renderKind(d, full)
 	if err != nil {
 		return nil, nil, &shapeError{code: "RENDERER_OUTPUT_INVALID", path: "renderer.output", msg: err.Error()}
@@ -892,4 +914,89 @@ func located(entry kindEntry, report issue.Report) issue.Report {
 		out[i] = is
 	}
 	return out.Normalize()
+}
+
+// notEnabled reads the feature from "<feature> is not enabled ...".
+var notEnabled = regexp.MustCompile(`^(.+?) is not enabled`)
+
+// disabledFeature returns the feature that the 412 response of the Create operation says is off,
+// or "". The contract states such a precondition in the description of the response, for example
+// "Product Analytics is not enabled for this team".
+func disabledFeature(doc docType, r *model.Resource) string {
+	if doc.Paths == nil || doc.Paths.PathItems == nil || r.Create.Path == "" {
+		return ""
+	}
+	item, ok := doc.Paths.PathItems.Get(r.Create.Path)
+	if !ok || item == nil {
+		return ""
+	}
+	op, ok := item.GetOperations().Get(strings.ToLower(r.Create.Method))
+	if !ok || op == nil || op.Responses == nil || op.Responses.Codes == nil {
+		return ""
+	}
+	response := op.Responses.Codes.GetOrZero("412")
+	if response == nil {
+		return ""
+	}
+	match := notEnabled.FindStringSubmatch(response.Description)
+	if match == nil {
+		return ""
+	}
+	return match[1]
+}
+
+// enableSwitchText returns the description of the enabled field of a singleton that the API cannot
+// remove, or "". Such a resource is the switch of a feature: its enabled field turns the feature on
+// or off for the team.
+func enableSwitchText(r *model.Resource) string {
+	if !r.AlwaysExists {
+		return ""
+	}
+	for _, f := range r.Fields {
+		if f.Name == "enabled" && f.Type != nil && f.Type.Kind == model.Bool {
+			return f.Description
+		}
+	}
+	return ""
+}
+
+// linkPrerequisites connects a kind whose API answers 412 "<feature> is not enabled" to the
+// singleton whose enabled field describes the same feature. The e2e test of the first kind then
+// calls a helper that the e2e test of the second kind defines. Without it, a test account that has
+// the feature off fails every spec of the first kind.
+func linkPrerequisites(all []*validated) {
+	for _, v := range all {
+		v.requires, v.switchRequired = nil, false
+	}
+	for _, v := range all {
+		if v.feature == "" {
+			continue
+		}
+		for _, other := range all {
+			if other != v && other.switchText != "" && strings.Contains(strings.ToLower(other.switchText), strings.ToLower(v.feature)) {
+				v.requires, other.switchRequired = other, true
+				break
+			}
+		}
+	}
+}
+
+// switchOf reads the SDK names that the helper of an enable switch uses.
+func switchOf(d *kindData, ix *refIndex) (*switchData, error) {
+	if d.GetResponseField != "" {
+		return nil, unsupported("get.response", "an enable switch needs a Get that returns the resource directly")
+	}
+	resource, err := ix.typeRef("fields")
+	if err != nil {
+		return nil, err
+	}
+	get, err := ix.field(resource.Name, "enabled")
+	if err != nil {
+		return nil, err
+	}
+	set, err := ix.field(d.UpdateBody, "enabled")
+	if err != nil {
+		return nil, err
+	}
+	return &switchData{GetField: get.Name, GetValue: !strings.HasPrefix(get.Want, "*"), SetField: set.Name, SetValue: !strings.HasPrefix(set.Want, "*")}, nil
 }

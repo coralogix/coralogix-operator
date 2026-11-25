@@ -103,3 +103,50 @@ func TestAlwaysExistsSingletonSendsItsUpdateMask(t *testing.T) {
 		t.Errorf("the controller must send the update mask: it misses %q", want)
 	}
 }
+
+// The API of a saved view answers 412 "Product Analytics is not enabled for this team", and the
+// settings singleton has the enabled field of that feature. The e2e tests of the saved views must
+// turn it on first, and the test of the settings defines the helper. Nothing in a kind file says so.
+func TestFeatureSwitchIsLinkedFromTheContract(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", "..", "..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pinned, err := source.Resolve(root)
+	if err != nil {
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	var all []*validated
+	for _, resource := range []string{"SavedFunnel", "ProductAnalyticsSettings"} {
+		entry := kindEntry{Kind: resource, Resource: resource}
+		doc, err := (&documents{raw: pinned.OpenAPI}).forKind(entry, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		v, err := validate(doc, entry, source.SDKModule, operatorModule, &e2eFile{}, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		all = append(all, v)
+	}
+	out, err := renderAll(all, source.SDKModule, operatorModule)
+	if err != nil {
+		t.Fatal(err)
+	}
+	funnel := string(out.files["tests/e2e/savedfunnel_generated_test.go"])
+	settings := string(out.files["tests/e2e/productanalyticssettings_generated_test.go"])
+	if !strings.Contains(funnel, "ensureProductAnalyticsSettingsEnabledGenerated(ctx)") {
+		t.Error("the saved funnel test must turn Product Analytics on before its specs")
+	}
+	if !strings.Contains(settings, "func ensureProductAnalyticsSettingsEnabledGenerated(") {
+		t.Error("the settings test must define the helper")
+	}
+	// A kind that nothing requires has no helper, or the unused linter fails the generated file.
+	alone, err := renderAll(all[1:], source.SDKModule, operatorModule)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(alone.files["tests/e2e/productanalyticssettings_generated_test.go"]), "EnabledGenerated(") {
+		t.Error("the settings test must not define a helper that no kind calls")
+	}
+}

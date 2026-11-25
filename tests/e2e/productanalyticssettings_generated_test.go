@@ -20,6 +20,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"strings"
 	"time"
 
@@ -162,4 +163,35 @@ func waitForProductAnalyticsSettingsGoneGenerated(ctx context.Context, crClient 
 		err := crClient.Get(ctx, types.NamespacedName{Name: name, Namespace: testNamespace}, &coralogixv1alpha1.ProductAnalyticsSettings{})
 		return apierrors.IsNotFound(err)
 	}, time.Minute, time.Second).Should(BeTrue())
+}
+
+// ensureProductAnalyticsSettingsEnabledGenerated switches the ProductAnalyticsSettings on when it is off. Other kinds need it on:
+// their API answers 412 for a team that has the feature off. The spec above ends with it on.
+//
+// A failure is not fatal. A key without the permission to change it cannot, and the specs that
+// need it fail with their own 412. Only status codes are printed.
+func ensureProductAnalyticsSettingsEnabledGenerated(ctx context.Context) {
+	api := newOpenAPIClientSet().ProductAnalyticsSettings()
+	current, httpResp, err := api.SettingsServiceGetSettings(ctx).Execute()
+	if err != nil {
+		GinkgoWriter.Printf("ProductAnalyticsSettings was not read: HTTP %d\n", httpStatusGenerated(httpResp))
+		return
+	}
+	if current.Enabled {
+		return
+	}
+	body := productanalyticssettingsservice.SettingsServiceUpdateSettingsRequest{Enabled: ptr.To(true)}
+	_, httpResp, err = api.SettingsServiceUpdateSettings(ctx).SettingsServiceUpdateSettingsRequest(body).UpdateMask("enabled").Execute()
+	if err != nil {
+		GinkgoWriter.Printf("ProductAnalyticsSettings was not enabled: HTTP %d\n", httpStatusGenerated(httpResp))
+		return
+	}
+	GinkgoWriter.Println("ProductAnalyticsSettings was off and is now enabled")
+}
+
+func httpStatusGenerated(resp *http.Response) int {
+	if resp == nil {
+		return 0
+	}
+	return resp.StatusCode
 }
