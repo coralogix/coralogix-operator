@@ -1,0 +1,456 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update as the operator sends it, partial updates, clear lists, delete, and the missing key",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "presets": [
+                "APM"
+              ],
+              "permissions": [
+                "livetail:Read"
+              ]
+            }
+          },
+          "capture": "key"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{key}}",
+          "body": {
+            "newName": "cxo-fidelity-key-{{run}}-updated",
+            "isActive": true,
+            "presets": {
+              "presets": [
+                "APM"
+              ]
+            },
+            "permissions": {
+              "permissions": [
+                "livetail:Read",
+                "serverless:Read"
+              ]
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{key}}",
+          "body": {}
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{key}}",
+          "body": {
+            "isActive": false
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{key}}",
+          "body": {
+            "isActive": true,
+            "presets": {}
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{key}}",
+          "body": {
+            "permissions": {
+              "permissions": []
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{key}}",
+          "body": {
+            "newName": ""
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{key}}",
+          "body": {
+            "newName": "cxo-fidelity-key-{{run}}-gone"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/{{key}}"
+        }
+      ]
+    },
+    {
+      "name": "create validation: empty name, no permissions, owners, preset case, repeated permission",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "presets": [
+                "APM"
+              ]
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-empty",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "presets": [],
+              "permissions": []
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-other-team",
+            "owner": {
+              "teamId": "1"
+            },
+            "keyPermissions": {
+              "presets": [
+                "APM"
+              ]
+            }
+          },
+          "allowForbidden": true
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-user",
+            "owner": {
+              "userId": "00000000-0000-4000-8000-000000000001"
+            },
+            "keyPermissions": {
+              "presets": [
+                "APM"
+              ]
+            }
+          },
+          "allowForbidden": true
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-no-owner",
+            "owner": {},
+            "keyPermissions": {
+              "presets": [
+                "APM"
+              ]
+            }
+          },
+          "allowForbidden": true
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-lower",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "presets": [
+                "apm"
+              ]
+            }
+          },
+          "capture": "lower"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{lower}}"
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-upper",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "permissions": [
+                "ALERTS-MAP:READ"
+              ]
+            }
+          },
+          "capture": "upper"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{upper}}"
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-unknown",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "presets": [
+                "NoSuchPreset"
+              ]
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-unknown-permission",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "permissions": [
+                "no-such:Permission"
+              ]
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-repeated",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "permissions": [
+                "livetail:Read",
+                "livetail:Read"
+              ]
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/{{lower}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/{{upper}}"
+        }
+      ]
+    },
+    {
+      "name": "access policy: complete, kept on omit, cleared by empty string, incomplete, wrong permissions",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-policy",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "presets": [
+                "APM"
+              ]
+            },
+            "accessPolicy": "{\"version\":\"2025-01-01\",\"default\":{\"permissions\":{\"team-custom-api-keys:ReadAccessPolicy\":\"grant\",\"team-custom-api-keys:Manage\":\"deny\",\"team-custom-api-keys:UpdateAccessPolicy\":\"deny\",\"team-custom-api-keys:ReadConfig\":\"grant\"}},\"rules\":[]}"
+          },
+          "capture": "policy"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{policy}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{policy}}",
+          "body": {
+            "newName": "cxo-fidelity-key-{{run}}-policy",
+            "isActive": true
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{policy}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{policy}}",
+          "body": {
+            "accessPolicy": ""
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{policy}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{policy}}",
+          "body": {
+            "accessPolicy": "{\"version\":\"2025-01-01\",\"default\":{\"permissions\":{\"team-custom-api-keys:ReadConfig\":\"grant\"}},\"rules\":[]}"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{policy}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{policy}}",
+          "body": {
+            "accessPolicy": "{ \"version\": \"v2025-01-01\", \"rules\": [], \"default\": { \"permissions\": { \"team-custom-api-keys:ReadConfig\": \"grant\", \"team-custom-api-keys:Manage\": \"grant\", \"team-custom-api-keys:ReadAccessPolicy\": \"grant\", \"team-custom-api-keys:UpdateAccessPolicy\": \"grant\" }, \"additionalInfo\": null } }"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{policy}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{policy}}",
+          "body": {
+            "accessPolicy": "{\"version\":\"2025-01-01\",\"default\":{\"permissions\":{\"data-ingest-api-keys:ReadConfig\":\"grant\"}},\"rules\":[]}"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{policy}}",
+          "body": {
+            "accessPolicy": "not json"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/{{policy}}"
+        }
+      ]
+    },
+    {
+      "name": "a hashed key, and ids that do not exist",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/api-keys/v3",
+          "body": {
+            "name": "cxo-fidelity-key-{{run}}-hashed",
+            "owner": {
+              "teamId": "{{teamId}}"
+            },
+            "keyPermissions": {
+              "presets": [
+                "APM"
+              ]
+            },
+            "hashed": true
+          },
+          "capture": "hashed"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/{{hashed}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/{{hashed}}",
+          "body": {
+            "isActive": true
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/{{hashed}}"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/00000000-0000-4000-8000-000000000002"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/00000000-0000-4000-8000-000000000002",
+          "body": {
+            "isActive": true
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/00000000-0000-4000-8000-000000000002"
+        },
+        {
+          "method": "GET",
+          "path": "/aaa/api-keys/v3/not-a-uuid"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/api-keys/v3/not-a-uuid",
+          "body": {
+            "isActive": true
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/aaa/api-keys/v3/not-a-uuid"
+        }
+      ]
+    }
+  ]
+}

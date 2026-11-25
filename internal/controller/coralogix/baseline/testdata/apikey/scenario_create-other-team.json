@@ -1,0 +1,96 @@
+[
+  {
+    "step": "create the released send-data sample: another team",
+    "spec": {
+      "active": true,
+      "name": "send-your-data-key-sample",
+      "owner": {
+        "teamId": 1234567
+      },
+      "presets": [
+        "SendData"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "presets": [
+              "SendData"
+            ]
+          },
+          "name": "send-your-data-key-sample",
+          "owner": {
+            "teamId": 1234567
+          }
+        },
+        "status": 403
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "presets": [
+              "SendData"
+            ]
+          },
+          "name": "send-your-data-key-sample",
+          "owner": {
+            "teamId": 1234567
+          }
+        },
+        "status": 403
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

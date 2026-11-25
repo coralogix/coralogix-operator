@@ -1,0 +1,265 @@
+[
+  {
+    "step": "create the released team sample",
+    "spec": {
+      "accessPolicy": "{ \"version\": \"v2025-01-01\", \"rules\": [], \"default\": { \"permissions\": { \"team-custom-api-keys:ReadConfig\": \"grant\", \"team-custom-api-keys:Manage\": \"grant\", \"team-custom-api-keys:ReadAccessPolicy\": \"grant\", \"team-custom-api-keys:UpdateAccessPolicy\": \"grant\" }, \"additionalInfo\": null } }",
+      "active": true,
+      "name": "team-key-sample",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "ALERTS-MAP:READ"
+      ],
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "accessPolicy": "{ \"version\": \"v2025-01-01\", \"rules\": [], \"default\": { \"permissions\": { \"team-custom-api-keys:ReadConfig\": \"grant\", \"team-custom-api-keys:Manage\": \"grant\", \"team-custom-api-keys:ReadAccessPolicy\": \"grant\", \"team-custom-api-keys:UpdateAccessPolicy\": \"grant\" }, \"additionalInfo\": null } }",
+          "keyPermissions": {
+            "permissions": [
+              "ALERTS-MAP:READ"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "team-key-sample",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the key and its secret",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "keys": {
+        "<id-1>": {
+          "accessPolicy": "{\"default\":{\"permissions\":{\"team-custom-api-keys:Manage\":\"grant\",\"team-custom-api-keys:ReadAccessPolicy\":\"grant\",\"team-custom-api-keys:ReadConfig\":\"grant\",\"team-custom-api-keys:UpdateAccessPolicy\":\"grant\"}},\"rules\":[],\"version\":\"2025-01-01\"}",
+          "active": true,
+          "hashed": false,
+          "id": "<id-1>",
+          "keyPermissions": {
+            "permissions": [
+              "alerts:MapRead"
+            ],
+            "presets": [
+              {
+                "name": "APM",
+                "permissions": [
+                  "apm-views-folders:ReadAccessPolicy",
+                  "apm-views-folders:UpdateAccessPolicy",
+                  "serverless:Read",
+                  "service-catalog:Read",
+                  "service-catalog:ReadApdexConfig",
+                  "service-catalog:ReadDimensionsConfig",
+                  "service-catalog:ReadSLIConfig",
+                  "service-catalog:Update",
+                  "service-catalog:UpdateApdexConfig",
+                  "service-catalog:UpdateDimensionsConfig",
+                  "service-catalog:UpdateSLIConfig",
+                  "service-map:Read"
+                ]
+              }
+            ]
+          },
+          "name": "team-key-sample",
+          "owner": {
+            "teamId": 4013254
+          },
+          "value": "cxo-fake-key-value-1"
+        }
+      },
+      "secret": {
+        "data": {
+          "key-value": "cxo-fake-key-value-1"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "coralogix.com/v1alpha1",
+            "controller": true,
+            "kind": "ApiKey",
+            "name": "team-key-sample"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "step": "resync: update sends every field, then get reads the value",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "body": {
+          "accessPolicy": "{ \"version\": \"v2025-01-01\", \"rules\": [], \"default\": { \"permissions\": { \"team-custom-api-keys:ReadConfig\": \"grant\", \"team-custom-api-keys:Manage\": \"grant\", \"team-custom-api-keys:ReadAccessPolicy\": \"grant\", \"team-custom-api-keys:UpdateAccessPolicy\": \"grant\" }, \"additionalInfo\": null } }",
+          "isActive": true,
+          "newName": "team-key-sample",
+          "permissions": {
+            "permissions": [
+              "ALERTS-MAP:READ"
+            ]
+          },
+          "presets": {
+            "presets": [
+              "APM"
+            ]
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote policy is normalized, the secret is unchanged",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "keys": {
+        "<id-1>": {
+          "accessPolicy": "{\"default\":{\"permissions\":{\"team-custom-api-keys:Manage\":\"grant\",\"team-custom-api-keys:ReadAccessPolicy\":\"grant\",\"team-custom-api-keys:ReadConfig\":\"grant\",\"team-custom-api-keys:UpdateAccessPolicy\":\"grant\"}},\"rules\":[],\"version\":\"2025-01-01\"}",
+          "active": true,
+          "hashed": false,
+          "id": "<id-1>",
+          "keyPermissions": {
+            "permissions": [
+              "alerts:MapRead"
+            ],
+            "presets": [
+              {
+                "name": "APM",
+                "permissions": [
+                  "apm-views-folders:ReadAccessPolicy",
+                  "apm-views-folders:UpdateAccessPolicy",
+                  "serverless:Read",
+                  "service-catalog:Read",
+                  "service-catalog:ReadApdexConfig",
+                  "service-catalog:ReadDimensionsConfig",
+                  "service-catalog:ReadSLIConfig",
+                  "service-catalog:Update",
+                  "service-catalog:UpdateApdexConfig",
+                  "service-catalog:UpdateDimensionsConfig",
+                  "service-catalog:UpdateSLIConfig",
+                  "service-map:Read"
+                ]
+              }
+            ]
+          },
+          "name": "team-key-sample",
+          "owner": {
+            "teamId": 4013254
+          },
+          "value": "cxo-fake-key-value-1"
+        }
+      },
+      "secret": {
+        "data": {
+          "key-value": "cxo-fake-key-value-1"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "coralogix.com/v1alpha1",
+            "controller": true,
+            "kind": "ApiKey",
+            "name": "team-key-sample"
+          }
+        ]
+      }
+    }
+  }
+]
