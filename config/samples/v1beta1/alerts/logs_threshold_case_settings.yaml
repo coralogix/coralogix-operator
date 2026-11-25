@@ -66,3 +66,22 @@ spec:
           backendRef:
             id: preset_system_generic_https_cases_empty
         condition: "true"
+    # Overrides replace the company case settings as a whole, for each part that is set.
+    overrides:
+      kpi:
+        # Times use whole seconds. For each priority, acknowledge must not exceed resolve.
+        thresholds:
+          - type: timeToAcknowledge
+            priority: p3
+            threshold: 300s
+            enabled: true
+          - type: timeToResolve
+            priority: p3
+            threshold: 3600s
+            enabled: true
+      priorityEscalation:
+        enabled: true
+        rules:
+          - fromPriority: p3
+            toPriority: p2
+            period: 36000s

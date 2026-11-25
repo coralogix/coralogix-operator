@@ -377,6 +377,80 @@ func TestExtractAlertDefPropertiesCaseSettings(t *testing.T) {
 	}
 }
 
+func TestExtractAlertDefPropertiesCaseSettingsOverrides(t *testing.T) {
+	const (
+		p2 = alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P2
+		p3 = alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P3
+		p5 = alerts.ALERTDEFCASEPRIORITY_ALERT_DEF_CASE_PRIORITY_P5
+	)
+
+	for _, tc := range []struct {
+		name      string
+		overrides *CaseSettingsOverrides
+		want      *alerts.AlertDefCaseSettingsOverrides
+	}{
+		{
+			name: "omitted keeps the company settings",
+		},
+		{
+			name:      "empty overrides are sent as an empty object",
+			overrides: &CaseSettingsOverrides{},
+			want:      &alerts.AlertDefCaseSettingsOverrides{},
+		},
+		{
+			name:      "kpi without thresholds is sent so that all KPI timers are off",
+			overrides: &CaseSettingsOverrides{Kpi: &CaseKpis{}},
+			want:      &alerts.AlertDefCaseSettingsOverrides{Kpi: &alerts.AlertDefCaseKpis{}},
+		},
+		{
+			name: "kpi thresholds",
+			overrides: &CaseSettingsOverrides{Kpi: &CaseKpis{Thresholds: []CaseKpiThreshold{
+				{Type: CaseKpiTypeTimeToAcknowledge, Priority: AlertPriorityP2, Threshold: "300s", Enabled: ptr.To(true)},
+				{Type: CaseKpiTypeTimeToResolve, Priority: AlertPriorityP5, Threshold: "3600s"},
+				{Type: CaseKpiTypeTimeToUpdate, Priority: AlertPriorityP3, Threshold: "60s", Enabled: ptr.To(false)},
+			}}},
+			want: &alerts.AlertDefCaseSettingsOverrides{Kpi: &alerts.AlertDefCaseKpis{Thresholds: []alerts.AlertDefCaseKpiThreshold{
+				{Type: alerts.ALERTDEFCASEKPITYPE_ALERT_DEF_CASE_KPI_TYPE_TIME_TO_ACKNOWLEDGE, Priority: p2, Threshold: "300s", Enabled: ptr.To(true)},
+				{Type: alerts.ALERTDEFCASEKPITYPE_ALERT_DEF_CASE_KPI_TYPE_TIME_TO_RESOLVE, Priority: p5, Threshold: "3600s"},
+				{Type: alerts.ALERTDEFCASEKPITYPE_ALERT_DEF_CASE_KPI_TYPE_TIME_TO_UPDATE, Priority: p3, Threshold: "60s", Enabled: ptr.To(false)},
+			}}},
+		},
+		{
+			name:      "disabled priority escalation without rules",
+			overrides: &CaseSettingsOverrides{PriorityEscalation: &CasePriorityEscalation{Enabled: false}},
+			want: &alerts.AlertDefCaseSettingsOverrides{
+				PriorityEscalation: &alerts.AlertDefCasePriorityEscalation{Enabled: false},
+			},
+		},
+		{
+			name: "priority escalation rules",
+			overrides: &CaseSettingsOverrides{PriorityEscalation: &CasePriorityEscalation{
+				Enabled: true,
+				Rules: []CasePriorityEscalationRule{
+					{FromPriority: AlertPriorityP3, ToPriority: AlertPriorityP2, Period: "36000s"},
+					{FromPriority: AlertPriorityP5, ToPriority: AlertPriorityP3, Period: "60s"},
+				},
+			}},
+			want: &alerts.AlertDefCaseSettingsOverrides{PriorityEscalation: &alerts.AlertDefCasePriorityEscalation{
+				Enabled: true,
+				Rules: []alerts.AlertDefCasePriorityEscalationRule{
+					{FromPriority: p3, ToPriority: p2, Period: "36000s"},
+					{FromPriority: p5, ToPriority: p3, Period: "60s"},
+				},
+			}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			spec := analyticsAlertSpec(AlertTypeDefinition{LogsImmediate: &LogsImmediate{}})
+			spec.GroupByKeys = nil
+			spec.CaseSettings = &AlertCaseSettings{Overrides: tc.overrides}
+			props, err := spec.ExtractAlertDefProperties(&GetResourceRefProperties{Ctx: context.Background(), Namespace: "default"})
+			require.NoError(t, err)
+			require.Equal(t, tc.want, props.CaseSettings.Overrides)
+		})
+	}
+}
+
 func TestExtractAlertDefPropertiesCaseSettingsForEveryAlertType(t *testing.T) {
 	want := &alerts.AlertDefCaseSettings{
 		AutoResolveMode: alerts.ALERTDEFCASEAUTORESOLVEMODE_ALERT_DEF_CASE_AUTO_RESOLVE_MODE_DISABLED.Ptr(),

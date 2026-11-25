@@ -261,6 +261,36 @@ var _ = Describe("Alert validation", func() {
 		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
 	})
 
+	It("should accept an alert with full case settings overrides", func(ctx context.Context) {
+		alert := caseSettingsAlert("case-settings-overrides-full", &coralogixv1beta1.AlertCaseSettings{
+			Overrides: &coralogixv1beta1.CaseSettingsOverrides{
+				Kpi: &coralogixv1beta1.CaseKpis{Thresholds: []coralogixv1beta1.CaseKpiThreshold{
+					{Type: coralogixv1beta1.CaseKpiTypeTimeToAcknowledge, Priority: coralogixv1beta1.AlertPriorityP1, Threshold: "300s", Enabled: ptr.To(true)},
+					{Type: coralogixv1beta1.CaseKpiTypeTimeToResolve, Priority: coralogixv1beta1.AlertPriorityP1, Threshold: "99999999999s"},
+				}},
+				PriorityEscalation: &coralogixv1beta1.CasePriorityEscalation{
+					Enabled: true,
+					Rules: []coralogixv1beta1.CasePriorityEscalationRule{
+						{FromPriority: coralogixv1beta1.AlertPriorityP3, ToPriority: coralogixv1beta1.AlertPriorityP2, Period: "36000s"},
+					},
+				},
+			},
+		})
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
+	It("should accept case settings overrides with empty parts", func(ctx context.Context) {
+		alert := caseSettingsAlert("case-settings-overrides-empty", &coralogixv1beta1.AlertCaseSettings{
+			Overrides: &coralogixv1beta1.CaseSettingsOverrides{
+				Kpi:                &coralogixv1beta1.CaseKpis{},
+				PriorityEscalation: &coralogixv1beta1.CasePriorityEscalation{},
+			},
+		})
+		Expect(k8sClient.Create(ctx, alert)).To(Succeed())
+		Expect(k8sClient.Delete(ctx, alert)).To(Succeed())
+	})
+
 	It("should accept an alert with empty case settings", func(ctx context.Context) {
 		alert := caseSettingsAlert("case-settings-empty", &coralogixv1beta1.AlertCaseSettings{})
 
@@ -326,6 +356,33 @@ var _ = Describe("Alert validation", func() {
 		Entry("more than 100 destinations",
 			&coralogixv1beta1.AlertCaseSettings{Destinations: make([]coralogixv1beta1.CaseDestination, 101)},
 			"spec.caseSettings.destinations: Too many: 101: must have at most 100 items"),
+		Entry("unknown kpi type",
+			kpiOverrides(coralogixv1beta1.CaseKpiThreshold{Type: "unspecified", Priority: coralogixv1beta1.AlertPriorityP1, Threshold: "300s"}),
+			"spec.caseSettings.overrides.kpi.thresholds[0].type: Unsupported value"),
+		Entry("unknown kpi priority",
+			kpiOverrides(coralogixv1beta1.CaseKpiThreshold{Type: coralogixv1beta1.CaseKpiTypeTimeToResolve, Priority: "p6", Threshold: "300s"}),
+			"spec.caseSettings.overrides.kpi.thresholds[0].priority: Unsupported value"),
+		Entry("kpi threshold without a unit",
+			kpiOverrides(coralogixv1beta1.CaseKpiThreshold{Type: coralogixv1beta1.CaseKpiTypeTimeToResolve, Priority: coralogixv1beta1.AlertPriorityP1, Threshold: "300"}),
+			"spec.caseSettings.overrides.kpi.thresholds[0].threshold: Invalid value"),
+		Entry("kpi threshold in minutes",
+			kpiOverrides(coralogixv1beta1.CaseKpiThreshold{Type: coralogixv1beta1.CaseKpiTypeTimeToResolve, Priority: coralogixv1beta1.AlertPriorityP1, Threshold: "5m"}),
+			"spec.caseSettings.overrides.kpi.thresholds[0].threshold: Invalid value"),
+		Entry("kpi threshold of zero seconds",
+			kpiOverrides(coralogixv1beta1.CaseKpiThreshold{Type: coralogixv1beta1.CaseKpiTypeTimeToResolve, Priority: coralogixv1beta1.AlertPriorityP1, Threshold: "0s"}),
+			"spec.caseSettings.overrides.kpi.thresholds[0].threshold: Invalid value"),
+		Entry("more than 15 kpi thresholds",
+			kpiOverrides(make([]coralogixv1beta1.CaseKpiThreshold, 16)...),
+			"spec.caseSettings.overrides.kpi.thresholds: Too many: 16: must have at most 15 items"),
+		Entry("unknown escalation priority",
+			escalationOverrides(coralogixv1beta1.CasePriorityEscalationRule{FromPriority: "p6", ToPriority: coralogixv1beta1.AlertPriorityP1, Period: "60s"}),
+			"spec.caseSettings.overrides.priorityEscalation.rules[0].fromPriority: Unsupported value"),
+		Entry("escalation period of zero seconds",
+			escalationOverrides(coralogixv1beta1.CasePriorityEscalationRule{FromPriority: coralogixv1beta1.AlertPriorityP2, ToPriority: coralogixv1beta1.AlertPriorityP1, Period: "0s"}),
+			"spec.caseSettings.overrides.priorityEscalation.rules[0].period: Invalid value"),
+		Entry("more than 4 escalation rules",
+			escalationOverrides(make([]coralogixv1beta1.CasePriorityEscalationRule, 5)...),
+			"spec.caseSettings.overrides.priorityEscalation.rules: Too many: 5: must have at most 4 items"),
 	)
 })
 
@@ -334,6 +391,18 @@ func caseDestination(condition string) coralogixv1beta1.CaseDestination {
 		Connector: coralogixv1beta1.NCRef{BackendRef: &coralogixv1beta1.NCBackendRef{ID: "connector-id"}},
 		Condition: condition,
 	}
+}
+
+func kpiOverrides(thresholds ...coralogixv1beta1.CaseKpiThreshold) *coralogixv1beta1.AlertCaseSettings {
+	return &coralogixv1beta1.AlertCaseSettings{Overrides: &coralogixv1beta1.CaseSettingsOverrides{
+		Kpi: &coralogixv1beta1.CaseKpis{Thresholds: thresholds},
+	}}
+}
+
+func escalationOverrides(rules ...coralogixv1beta1.CasePriorityEscalationRule) *coralogixv1beta1.AlertCaseSettings {
+	return &coralogixv1beta1.AlertCaseSettings{Overrides: &coralogixv1beta1.CaseSettingsOverrides{
+		PriorityEscalation: &coralogixv1beta1.CasePriorityEscalation{Enabled: true, Rules: rules},
+	}}
 }
 
 func caseSettingsAlert(name string, caseSettings *coralogixv1beta1.AlertCaseSettings) *coralogixv1beta1.Alert {
