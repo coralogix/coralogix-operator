@@ -90,15 +90,20 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # The lint cache is keyed only by go.mod, so every branch restores one shared entry. A restored
+      # entry has dropped staticcheck facts about dependencies (deprecated fields, t.Fatal never
+      # returning) and caused false SA5011 and nolintlint reports. Lint without it.
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.12.2
+          skip-cache: true
           args: --timeout=5m
 
       - name: Run golangci-lint on the operator generator
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.12.2
+          skip-cache: true
           working-directory: tools/opgen
           args: --timeout=5m --config=../../.golangci.yaml
