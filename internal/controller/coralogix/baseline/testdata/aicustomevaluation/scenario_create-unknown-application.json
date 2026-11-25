@@ -1,0 +1,92 @@
+[
+  {
+    "step": "create for an application that the team does not have",
+    "spec": {
+      "applications": [
+        {
+          "application": "unknown-app",
+          "subsystem": "cxo-baseline-subsystem"
+        }
+      ],
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality",
+      "shouldIncludeSystemPrompt": false
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/applications/v3",
+        "query": {
+          "page_offset": [
+            "0"
+          ],
+          "page_size": [
+            "200"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/applications/v3",
+        "query": {
+          "page_offset": [
+            "0"
+          ],
+          "page_size": [
+            "200"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

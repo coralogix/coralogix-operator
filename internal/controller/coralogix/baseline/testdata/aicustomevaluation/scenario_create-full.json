@@ -1,0 +1,177 @@
+[
+  {
+    "step": "create with every field",
+    "spec": {
+      "applications": [
+        {
+          "application": "cxo-baseline-other-app",
+          "subsystem": "cxo-baseline-subsystem"
+        },
+        {
+          "application": "cxo-baseline-app",
+          "subsystem": "cxo-baseline-subsystem"
+        }
+      ],
+      "criteria": {
+        "acceptable": {
+          "examples": [
+            "good one",
+            "good two"
+          ],
+          "flags": "Stays on our product."
+        },
+        "prohibited": {
+          "examples": [
+            "bad one"
+          ],
+          "flags": "Names a competitor."
+        }
+      },
+      "description": "Flags competitors.",
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality",
+      "shouldIncludeSystemPrompt": true
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/applications/v3",
+        "query": {
+          "page_offset": [
+            "0"
+          ],
+          "page_size": [
+            "200"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "body": {
+          "applicationIds": [
+            "00000000-0000-4000-8000-0000000000a2",
+            "<id-1>"
+          ],
+          "description": "Flags competitors.",
+          "examples": [
+            {
+              "conversation": "good one",
+              "score": "1"
+            },
+            {
+              "conversation": "good two",
+              "score": "1"
+            },
+            {
+              "conversation": "bad one",
+              "score": "0"
+            }
+          ],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "Stays on our product.",
+          "shouldIncludeSystemPrompt": true,
+          "violates": "Names a competitor."
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again with no change",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/applications/v3",
+        "query": {
+          "page_offset": [
+            "0"
+          ],
+          "page_size": [
+            "200"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-2>",
+        "body": {
+          "description": "Flags competitors.",
+          "examples": [
+            {
+              "conversation": "good one",
+              "score": "1"
+            },
+            {
+              "conversation": "good two",
+              "score": "1"
+            },
+            {
+              "conversation": "bad one",
+              "score": "0"
+            }
+          ],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "Stays on our product.",
+          "shouldIncludeSystemPrompt": true,
+          "violates": "Names a competitor."
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
