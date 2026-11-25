@@ -3,6 +3,7 @@ package generator
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/coralogix/coralogix-management-sdk/iac/issue"
@@ -70,5 +71,35 @@ func TestPluralKeepsAPluralNoun(t *testing.T) {
 		if got := plural(kind); got != want {
 			t.Errorf("plural(%s) = %s, want %s", kind, got, want)
 		}
+	}
+}
+
+// The Update of the settings singleton is a PATCH, and the API requires update_mask. The generated
+// controller must send it, or every reconcile fails with 400.
+func TestAlwaysExistsSingletonSendsItsUpdateMask(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", "..", "..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pinned, err := source.Resolve(root)
+	if err != nil {
+		t.Skipf("the pinned SDK is not in the module cache: %v", err)
+	}
+	entry := kindEntry{Kind: "ProductAnalyticsSettings", Resource: "ProductAnalyticsSettings"}
+	doc, err := (&documents{raw: pinned.OpenAPI}).forKind(entry, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, err := validate(doc, entry, source.SDKModule, operatorModule, &e2eFile{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, _, err := renderOne(v, operatorModule)
+	if err != nil {
+		t.Fatal(err)
+	}
+	controller := string(files["internal/controller/coralogix/v1alpha1/productanalyticssettings_controller.go"])
+	if want := ".UpdateMask(coralogixv1alpha1.ProductAnalyticsSettingsUpdateMask)"; !strings.Contains(controller, want) {
+		t.Errorf("the controller must send the update mask: it misses %q", want)
 	}
 }

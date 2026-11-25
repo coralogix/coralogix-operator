@@ -69,7 +69,14 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		return b.overwriteOperations(r, d)
 	}
 	if r.Singleton {
-		return b.singletonOperations(r, d)
+		if err := b.singletonOperations(r, d); err != nil {
+			return err
+		}
+		if r.AlwaysExists {
+			// Its Update is a PATCH, and the API requires the update mask.
+			return b.updateMask(r, d)
+		}
+		return nil
 	}
 	id, err := b.ix.field(resource.Name, r.ID())
 	if err != nil {
@@ -159,6 +166,12 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 			*request.field, *request.value, *request.inner = ref.Name, !strings.HasPrefix(ref.Want, "*"), strings.TrimPrefix(ref.Want, "*")
 		}
 	}
+	return b.updateMask(r, d)
+}
+
+// updateMask reads the SDK names of the update mask: its setter on the builder of Update, or its
+// field in the body of Update. A full replace has none.
+func (b *builder) updateMask(r *model.Resource, d *kindData) error {
 	if !r.Replace && !r.MaskInBody && !b.file.OmitsUpdateMask() {
 		builderType, err := b.ix.typeRef("update")
 		if err != nil {

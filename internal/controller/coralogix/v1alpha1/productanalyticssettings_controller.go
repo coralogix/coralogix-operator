@@ -69,7 +69,7 @@ func (r *ProductAnalyticsSettingsReconciler) HandleUpdate(ctx context.Context, l
 		return fmt.Errorf("error on building the update request of ProductAnalyticsSettings: %w", err)
 	}
 	log.Info("Replacing remote ProductAnalyticsSettings", "ProductAnalyticsSettings", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.SettingsServiceUpdateSettings(ctx).SettingsServiceUpdateSettingsRequest(*body).Execute()
+	resp, httpResp, err := r.Client.SettingsServiceUpdateSettings(ctx).SettingsServiceUpdateSettingsRequest(*body).UpdateMask(coralogixv1alpha1.ProductAnalyticsSettingsUpdateMask).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote ProductAnalyticsSettings: %w", cxsdk.NewAPIError(httpResp, err))
 	}
