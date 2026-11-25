@@ -32,7 +32,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // ProductAnalyticsSettingsReconciler reconciles a ProductAnalyticsSettings object.
@@ -73,12 +72,12 @@ func (r *ProductAnalyticsSettingsReconciler) HandleUpdate(ctx context.Context, l
 	if mask := cr.UpdateMask(); mask == "" {
 		log.Info("No ProductAnalyticsSettings field is set: nothing to send")
 	} else {
-		log.Info("Updating remote ProductAnalyticsSettings", "ProductAnalyticsSettings", utils.FormatJSON(body))
-		resp, httpResp, err := r.Client.SettingsServiceUpdateSettings(ctx).SettingsServiceUpdateSettingsRequest(*body).UpdateMask(mask).Execute()
+		log.Info("Updating remote ProductAnalyticsSettings")
+		_, httpResp, err := r.Client.SettingsServiceUpdateSettings(ctx).SettingsServiceUpdateSettingsRequest(*body).UpdateMask(mask).Execute()
 		if err != nil {
 			return fmt.Errorf("error on updating remote ProductAnalyticsSettings: %w", cxsdk.NewAPIError(httpResp, err))
 		}
-		log.Info("Remote ProductAnalyticsSettings updated", "response", utils.FormatJSON(resp))
+		log.Info("Remote ProductAnalyticsSettings updated")
 	}
 	if err := coralogixreconciler.AddFinalizer(ctx, log, cr, r); err != nil {
 		return err

@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // SavedHeatmapReconciler reconciles a SavedHeatmap object.
@@ -64,12 +63,12 @@ func (r *SavedHeatmapReconciler) HandleCreation(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on building the create request of SavedHeatmap: %w", err)
 	}
-	log.Info("Creating remote SavedHeatmap", "SavedHeatmap", utils.FormatJSON(body))
+	log.Info("Creating remote SavedHeatmap")
 	resp, httpResp, err := r.Client.HeatmapsServiceCreateSavedHeatmap(ctx).HeatmapsServiceCreateSavedHeatmapRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote SavedHeatmap: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SavedHeatmap created", "response", utils.FormatJSON(resp))
+	log.Info("Remote SavedHeatmap created")
 	if resp == nil {
 		return fmt.Errorf("the create response of SavedHeatmap has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *SavedHeatmapReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the update request of SavedHeatmap: %w", err)
 	}
-	log.Info("Updating remote SavedHeatmap", "id", id, "SavedHeatmap", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.HeatmapsServiceUpdateSavedHeatmap(ctx, id).HeatmapsServiceUpdateSavedHeatmapRequest(*body).UpdateMask(coralogixv1alpha1.SavedHeatmapUpdateMask).Execute()
+	log.Info("Updating remote SavedHeatmap", "id", id)
+	_, httpResp, err := r.Client.HeatmapsServiceUpdateSavedHeatmap(ctx, id).HeatmapsServiceUpdateSavedHeatmapRequest(*body).UpdateMask(coralogixv1alpha1.SavedHeatmapUpdateMask).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote SavedHeatmap %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SavedHeatmap updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote SavedHeatmap updated", "id", id)
 	return nil
 }
 

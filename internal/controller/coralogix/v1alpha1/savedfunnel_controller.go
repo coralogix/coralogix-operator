@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // SavedFunnelReconciler reconciles a SavedFunnel object.
@@ -64,12 +63,12 @@ func (r *SavedFunnelReconciler) HandleCreation(ctx context.Context, log logr.Log
 	if err != nil {
 		return fmt.Errorf("error on building the create request of SavedFunnel: %w", err)
 	}
-	log.Info("Creating remote SavedFunnel", "SavedFunnel", utils.FormatJSON(body))
+	log.Info("Creating remote SavedFunnel")
 	resp, httpResp, err := r.Client.FunnelsServiceCreateSavedFunnel(ctx).FunnelsServiceCreateSavedFunnelRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote SavedFunnel: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SavedFunnel created", "response", utils.FormatJSON(resp))
+	log.Info("Remote SavedFunnel created")
 	if resp == nil {
 		return fmt.Errorf("the create response of SavedFunnel has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *SavedFunnelReconciler) HandleUpdate(ctx context.Context, log logr.Logge
 	if err != nil {
 		return fmt.Errorf("error on building the update request of SavedFunnel: %w", err)
 	}
-	log.Info("Updating remote SavedFunnel", "id", id, "SavedFunnel", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.FunnelsServiceUpdateSavedFunnel(ctx, id).FunnelsServiceUpdateSavedFunnelRequest(*body).UpdateMask(coralogixv1alpha1.SavedFunnelUpdateMask).Execute()
+	log.Info("Updating remote SavedFunnel", "id", id)
+	_, httpResp, err := r.Client.FunnelsServiceUpdateSavedFunnel(ctx, id).FunnelsServiceUpdateSavedFunnelRequest(*body).UpdateMask(coralogixv1alpha1.SavedFunnelUpdateMask).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote SavedFunnel %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SavedFunnel updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote SavedFunnel updated", "id", id)
 	return nil
 }
 

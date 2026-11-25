@@ -33,7 +33,6 @@ import (
 	coralogixv1alpha1 "github.com/coralogix/coralogix-operator/v2/api/coralogix/v1alpha1"
 	"github.com/coralogix/coralogix-operator/v2/internal/config"
 	coralogixreconciler "github.com/coralogix/coralogix-operator/v2/internal/controller/coralogix/coralogix-reconciler"
-	"github.com/coralogix/coralogix-operator/v2/internal/utils"
 )
 
 // SavedPathwayReconciler reconciles a SavedPathway object.
@@ -64,12 +63,12 @@ func (r *SavedPathwayReconciler) HandleCreation(ctx context.Context, log logr.Lo
 	if err != nil {
 		return fmt.Errorf("error on building the create request of SavedPathway: %w", err)
 	}
-	log.Info("Creating remote SavedPathway", "SavedPathway", utils.FormatJSON(body))
+	log.Info("Creating remote SavedPathway")
 	resp, httpResp, err := r.Client.PathwaysServiceCreateSavedPathway(ctx).PathwaysServiceCreateSavedPathwayRequest(*body).Execute()
 	if err != nil {
 		return fmt.Errorf("error on creating remote SavedPathway: %w", cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SavedPathway created", "response", utils.FormatJSON(resp))
+	log.Info("Remote SavedPathway created")
 	if resp == nil {
 		return fmt.Errorf("the create response of SavedPathway has no resource")
 	}
@@ -88,12 +87,12 @@ func (r *SavedPathwayReconciler) HandleUpdate(ctx context.Context, log logr.Logg
 	if err != nil {
 		return fmt.Errorf("error on building the update request of SavedPathway: %w", err)
 	}
-	log.Info("Updating remote SavedPathway", "id", id, "SavedPathway", utils.FormatJSON(body))
-	resp, httpResp, err := r.Client.PathwaysServiceUpdateSavedPathway(ctx, id).PathwaysServiceUpdateSavedPathwayRequest(*body).UpdateMask(coralogixv1alpha1.SavedPathwayUpdateMask).Execute()
+	log.Info("Updating remote SavedPathway", "id", id)
+	_, httpResp, err := r.Client.PathwaysServiceUpdateSavedPathway(ctx, id).PathwaysServiceUpdateSavedPathwayRequest(*body).UpdateMask(coralogixv1alpha1.SavedPathwayUpdateMask).Execute()
 	if err != nil {
 		return fmt.Errorf("error on updating remote SavedPathway %s: %w", id, cxsdk.NewAPIError(httpResp, err))
 	}
-	log.Info("Remote SavedPathway updated", "response", utils.FormatJSON(resp))
+	log.Info("Remote SavedPathway updated", "id", id)
 	return nil
 }
 
