@@ -57,6 +57,8 @@ type hookReconciler struct {
 	saves bool
 	// statusFields are the status fields of the reconciler that a selector mismatch removes.
 	statusFields [][]string
+	// singleton makes the reconciler a StatusIDFreeDeleter.
+	singleton bool
 
 	creations, followUps, updates, deletions int
 }
@@ -97,6 +99,7 @@ func (h *hookReconciler) FinalizerName() string          { return "dashboard.cor
 func (h *hookReconciler) RequeueInterval() time.Duration { return time.Minute }
 func (h *hookReconciler) SavesHookStatus() bool          { return h.saves }
 func (h *hookReconciler) RemoteStatusFields() [][]string { return h.statusFields }
+func (h *hookReconciler) DeletesWithoutStatusID() bool   { return h.singleton }
 
 // createWithID is a Create that sets status.id and has the given follow-up step.
 func createWithID(followUp func(*coralogixv1alpha1.Dashboard) error) func(*coralogixv1alpha1.Dashboard) (func(context.Context) error, error) {
@@ -378,6 +381,64 @@ func TestFailedDeleteHookKeepsTheFinalizer(t *testing.T) {
 	require.Equal(t, 2, r.deletions, "the hook runs again after a failure")
 	var gone coralogixv1alpha1.Dashboard
 	require.True(t, client.IgnoreNotFound(test.client.Get(context.Background(), test.req.NamespacedName, &gone)) == nil)
+}
+
+// A CR that is being deleted and has no status id names no remote resource, for example after an
+// update 404 removed the id. The run removes the finalizer and calls no Create and no Delete, so
+// no remote resource is made only to be deleted again.
+func TestDeleteWithoutStatusIDCreatesNothingAndRemovesTheFinalizer(t *testing.T) {
+	dashboard := newDashboard(false)
+	controllerutil.AddFinalizer(dashboard, (&hookReconciler{}).FinalizerName())
+	now := metav1.Now()
+	dashboard.DeletionTimestamp = &now
+	test := newHookTest(t, dashboard)
+	r := &hookReconciler{saves: true, create: createWithID(nil)}
+
+	require.NoError(t, test.reconcile(r))
+	require.Zero(t, r.creations, "no remote resource is created")
+	require.Zero(t, r.deletions, "there is no id to delete")
+	var gone coralogixv1alpha1.Dashboard
+	require.True(t, client.IgnoreNotFound(test.client.Get(context.Background(), test.req.NamespacedName, &gone)) == nil, "the CR is gone")
+
+	// A second run of the same request finds nothing and does nothing.
+	require.NoError(t, test.reconcile(r))
+	require.Zero(t, r.creations)
+	require.Zero(t, r.deletions)
+}
+
+// A CR that only another controller holds, with no status id, is not created on its way out, and
+// the finalizer of the other controller stays.
+func TestDeleteWithoutStatusIDKeepsTheFinalizersOfOthers(t *testing.T) {
+	dashboard := newDashboard(false)
+	controllerutil.AddFinalizer(dashboard, "example.com/other")
+	now := metav1.Now()
+	dashboard.DeletionTimestamp = &now
+	test := newHookTest(t, dashboard)
+	r := &hookReconciler{saves: true, create: createWithID(nil)}
+
+	require.NoError(t, test.reconcile(r))
+	require.Zero(t, r.creations)
+	require.Zero(t, r.deletions)
+	got := test.get()
+	require.Equal(t, []string{"example.com/other"}, got.Finalizers)
+	require.Nil(t, got.Status.ID)
+}
+
+// A singleton's remote resource does not depend on status.id, so a CR of it that is deleted
+// without an id still runs HandleDeletion, and still creates nothing.
+func TestDeleteWithoutStatusIDOfASingletonRunsTheDelete(t *testing.T) {
+	dashboard := newDashboard(false)
+	controllerutil.AddFinalizer(dashboard, (&hookReconciler{}).FinalizerName())
+	now := metav1.Now()
+	dashboard.DeletionTimestamp = &now
+	test := newHookTest(t, dashboard)
+	r := &hookReconciler{saves: true, singleton: true, create: createWithID(nil)}
+
+	require.NoError(t, test.reconcile(r))
+	require.Zero(t, r.creations, "no remote resource is created")
+	require.Equal(t, 1, r.deletions, "the singleton is deleted without an id")
+	var gone coralogixv1alpha1.Dashboard
+	require.True(t, client.IgnoreNotFound(test.client.Get(context.Background(), test.req.NamespacedName, &gone)) == nil, "the CR is gone")
 }
 
 // A selector mismatch removes the status fields that the reconciler lists, and the fixed fields.

@@ -75,47 +75,15 @@
   },
   {
     "step": "delete",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/data-exploration/views/v1/folders",
-        "body": {
-          "name": "Team views renamed"
-        },
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "view-folder.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 3,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
-            "type": "RemoteSynced"
-          }
-        ],
-        "id": "<id-2>",
-        "printableStatus": "RemoteSynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "DELETE",
-        "path": "/mgmt/openapi/5/data-exploration/views/v1/folders/<id-2>",
-        "status": 200
-      }
-    ],
+    "requests": [],
     "result": {
       "error": false
     },

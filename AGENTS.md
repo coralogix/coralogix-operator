@@ -264,6 +264,8 @@ Generated kinds with hooks use two more `RemoteSynced` reasons: `ValidationFaile
 
 When a remote resource is missing during update, the shared reconciler removes `status.id` so the next reconciliation can recreate it.
 
+A CR that is being deleted and has no `status.id` names no remote resource. The shared reconciler removes its finalizer with no API call and never creates on the way out. A reconciler whose remote resource does not depend on the id, such as a singleton, implements `DeletesWithoutStatusID() bool`: its `HandleDeletion` still runs. Opgen writes the method for a singleton with a status id.
+
 An optional reference that is not set must leave its field out of the request. Do not send the zero id: the API reads it as a real id and rejects it.
 
 During a Helm upgrade, the old operator pod can stay leader for about 20–30 seconds after the new CRDs are applied. It writes objects back with its own Go types, so it drops spec fields it does not know. The new operator must handle the result: a resource with a status id and without those fields.

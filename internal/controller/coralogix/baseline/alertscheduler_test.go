@@ -614,7 +614,8 @@ var alertSchedulerScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again: the API answers as it should")
 	},
 
-	// The shared reconciler creates when the status has no id, even while the CR is deleted.
+	// A deleted CR without a status id names no remote resource: the shared reconciler removes the
+	// finalizer with no API call.
 	"delete-without-id": func(h *harness) {
 		h.Create("create", asMinimal)
 		setAlertSchedulerStatusID(h, nil)

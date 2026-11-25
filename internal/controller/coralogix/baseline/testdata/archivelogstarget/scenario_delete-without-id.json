@@ -57,50 +57,6 @@
         "method": "POST",
         "path": "/mgmt/openapi/5/logs/data-setup/v2",
         "body": {
-          "isActive": true,
-          "s3": {
-            "bucket": "cxo-fidelity-archive",
-            "region": "eu-north-1"
-          }
-        },
-        "status": 200
-      },
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/dataengine/retention-tags/v1/activate",
-        "status": 200
-      }
-    ],
-    "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
-    },
-    "object": {
-      "finalizers": [
-        "archivelogstarget.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 2,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
-            "type": "RemoteSynced"
-          }
-        ],
-        "id": "archiveLogsTaget",
-        "printableStatus": "RemoteSynced",
-        "retentionsActivated": true
-      }
-    }
-  },
-  {
-    "step": "reconcile again",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/logs/data-setup/v2",
-        "body": {
           "isActive": false,
           "s3": {
             "bucket": "cxo-fidelity-archive",
@@ -110,6 +66,14 @@
         "status": 200
       }
     ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "reconcile again",
+    "requests": [],
     "result": {
       "error": false
     },

@@ -71,6 +71,50 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		"namespace", req.Namespace)
 	log = log.V(logVerbosity(obj))
 
+	// Deletion comes before creation. A CR that is being deleted and has no status id names no
+	// remote resource: a create failed, or an update found the resource gone and removed the id.
+	// Creating one now would only make a resource for the next reconcile to delete, or fail forever
+	// on a name conflict and keep the finalizer. Only a kind whose remote resource does not depend on
+	// the id, such as a singleton, still deletes it.
+	if !obj.GetDeletionTimestamp().IsZero() {
+		if !obj.HasIDInStatus() && !deletesWithoutStatusID(r) {
+			log.Info("Resource is being deleted and has no ID; removing finalizer without remote deletion")
+			if controllerutil.ContainsFinalizer(obj, r.FinalizerName()) {
+				if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
+					return ManageErrorWithRequeue(ctx, obj, "remove-finalizer", utils.ReasonInternalK8sError, err)
+				}
+			}
+			monitoring.DeleteResourceInfoMetric(
+				obj.GetObjectKind().GroupVersionKind().Kind,
+				obj.GetName(),
+				obj.GetNamespace(),
+			)
+			return ctrl.Result{}, nil
+		}
+
+		log.Info("Resource is being deleted; handling deletion")
+		if err := r.HandleDeletion(ctx, log, obj); err != nil {
+			if reason, ok := hookReason(err); ok {
+				return ManageErrorWithRequeue(ctx, obj, "delete", reason, err)
+			}
+			if oapisdk.IsDeserializationError(err) {
+				return ManageErrorWithRequeue(ctx, obj, "delete", utils.ReasonDeserializationError, err)
+			}
+			return ManageErrorWithRequeue(ctx, obj, "delete", utils.ReasonRemoteDeletionFailed, err)
+		}
+
+		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
+			return ManageErrorWithRequeue(ctx, obj, "remove-finalizer", utils.ReasonInternalK8sError, err)
+		}
+
+		monitoring.DeleteResourceInfoMetric(
+			obj.GetObjectKind().GroupVersionKind().Kind,
+			obj.GetName(),
+			obj.GetNamespace(),
+		)
+		return ctrl.Result{}, nil
+	}
+
 	if !obj.HasIDInStatus() {
 		log.Info("Resource ID is missing; handling creation for resource")
 		followUp, err := handleCreation(ctx, log, obj, r)
@@ -101,30 +145,6 @@ func ReconcileResource(ctx context.Context, req ctrl.Request, obj coralogix.Obje
 		}
 
 		return ManageSuccessWithRequeue(ctx, obj, r.RequeueInterval())
-	}
-
-	if !obj.GetDeletionTimestamp().IsZero() {
-		log.Info("Resource is being deleted; handling deletion")
-		if err := r.HandleDeletion(ctx, log, obj); err != nil {
-			if reason, ok := hookReason(err); ok {
-				return ManageErrorWithRequeue(ctx, obj, "delete", reason, err)
-			}
-			if oapisdk.IsDeserializationError(err) {
-				return ManageErrorWithRequeue(ctx, obj, "delete", utils.ReasonDeserializationError, err)
-			}
-			return ManageErrorWithRequeue(ctx, obj, "delete", utils.ReasonRemoteDeletionFailed, err)
-		}
-
-		if err := RemoveFinalizer(ctx, log, obj, r); err != nil {
-			return ManageErrorWithRequeue(ctx, obj, "remove-finalizer", utils.ReasonInternalK8sError, err)
-		}
-
-		monitoring.DeleteResourceInfoMetric(
-			obj.GetObjectKind().GroupVersionKind().Kind,
-			obj.GetName(),
-			obj.GetNamespace(),
-		)
-		return ctrl.Result{}, nil
 	}
 
 	if !config.GetConfig().Selector.Matches(obj.GetLabels(), obj.GetNamespace()) {

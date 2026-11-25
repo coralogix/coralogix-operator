@@ -46,76 +46,18 @@
   },
   {
     "step": "delete a CR that has a finalizer and no status id",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
-        "body": {
-          "description": "",
-          "logsQuery": {},
-          "metricFields": [],
-          "metricLabels": [],
-          "name": "baseline-e2m",
-          "type": "E2M_TYPE_LOGS2METRICS"
-        },
-        "status": 400
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "events2metric.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 2,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/events2metrics/events2metrics/v2",
-        "body": {
-          "description": "",
-          "logsQuery": {},
-          "metricFields": [],
-          "metricLabels": [],
-          "name": "baseline-e2m",
-          "type": "E2M_TYPE_LOGS2METRICS"
-        },
-        "status": 400
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "events2metric.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 2,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   }
 ]

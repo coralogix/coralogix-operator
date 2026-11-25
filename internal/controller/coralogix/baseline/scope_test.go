@@ -199,17 +199,15 @@ var scopeScenarios = map[string]func(h *harness){
 		h.Reconcile("recreate")
 	},
 	// The update 404 removes status.id. A delete before the retry finds a CR with a finalizer
-	// and no status id. The controller takes the create path before it looks at the deletion
-	// timestamp: it creates a new scope and keeps the finalizer. The next reconcile deletes it.
+	// and no status id. It names no remote resource: the shared reconciler removes the finalizer
+	// with no API call, and no new scope is created.
 	"delete-after-update-gone": func(h *harness) {
 		h.Create("create", scopeManifest(scopeSpec))
 		scopes(h).forget(h.StatusID())
 		h.SetSpec("update after remote deletion: the 404 removes status.id", scopeSpecMap("renamed-scope", ptr.To("Changed"), "<v1>true",
 			[2]string{"logs", "<v1>true"}))
-		h.Delete("delete a CR that has a finalizer and no status id: a new scope is created")
-		h.RecordRemote("the new scope exists", scopes(h).snapshot())
-		h.Reconcile("retry: the CR has a status id again")
-		h.RecordRemote("the remote scopes after the retry", scopes(h).snapshot())
+		h.Delete("delete a CR that has a finalizer and no status id: no scope is created")
+		h.RecordRemote("no remote scope exists", scopes(h).snapshot())
 	},
 	"bad-status-id": func(h *harness) {
 		h.Create("create", scopeManifest(scopeSpec))
