@@ -8,6 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+{{- if .GetFromList}}
+	"net/http"
+{{- end}}
 {{- if .E2E.Env}}
 	"os"
 {{- end}}
@@ -97,7 +100,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		By("Reading the {{.Kind}} from the API")
 		Eventually(func(g Gomega) {
-			_, httpResp, err := {{getCall .GetMethod .GetByIDs "fullID"}}.Execute()
+			_, httpResp, err := {{$.GetCall "fullID"}}.Execute()
 			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
@@ -116,7 +119,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		By("Reading the change from the API")
 		Eventually(func(g Gomega) {
-			got, httpResp, err := {{getCall $.GetMethod $.GetByIDs "fullID"}}.Execute()
+			got, httpResp, err := {{$.GetCall "fullID"}}.Execute()
 			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
 {{- if $.GetResponseField}}
 			g.Expect(got).NotTo(BeNil())
@@ -163,7 +166,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		By("Waiting until the API no longer finds the {{.Kind}}")
 		Eventually(func() bool {
-			_, httpResp, err := {{getCall .GetMethod .GetByIDs "fullID"}}.Execute()
+			_, httpResp, err := {{$.GetCall "fullID"}}.Execute()
 			return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
@@ -176,7 +179,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 
 		Expect(crClient.Delete(ctx, minimal)).To(Succeed())
 		Eventually(func() bool {
-			_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
+			_, httpResp, err := {{$.GetCall "id"}}.Execute()
 			return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
 		}, time.Minute, time.Second).Should(BeTrue())
 	})
@@ -188,7 +191,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 func remove{{.Kind}}Generated(ctx context.Context, apiClient *{{.SDKAlias}}.{{.Client}}, id {{if .IDBits}}{{.IDGoType}}{{else}}string{{end}}) {
 	deadline := time.Now().Add(time.Minute)
 	for time.Now().Before(deadline) {
-		_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
+		_, httpResp, err := {{$.GetCall "id"}}.Execute()
 		if cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err)) {
 			return
 		}
@@ -199,6 +202,42 @@ func remove{{.Kind}}Generated(ctx context.Context, apiClient *{{.SDKAlias}}.{{.C
 		Expect(apiErr).To(Succeed())
 	}
 }
+{{- if .GetFromList}}
+
+// {{lowerFirst .Kind}}GetFromList reads the {{.Kind}} with the id from the List: no call of the API
+// reads one {{.Kind}} by its id. A {{.Kind}} that the List does not hold is a 404, as a Get would
+// answer.
+type {{lowerFirst .Kind}}GetFromList struct {
+	ctx       context.Context
+	apiClient *{{.SDKAlias}}.{{.Client}}
+	id        {{if .IDBits}}{{.IDGoType}}{{else}}string{{end}}
+}
+
+func (g {{lowerFirst .Kind}}GetFromList) Execute() (*{{.SDKAlias}}.{{.GetItemType}}, *http.Response, error) {
+	list, httpResp, err := g.apiClient.{{.GetMethod}}(g.ctx).Execute()
+	if err != nil {
+		return nil, httpResp, err
+	}
+	for i := range list.{{.GetListField}} {
+		if {{if .IDValue}}list.{{.GetListField}}[i].{{.IDField}}{{else}}ptr.Deref(list.{{.GetListField}}[i].{{.IDField}}, {{if .IDBits}}0{{else}}""{{end}}){{end}} == g.id {
+			return &list.{{.GetListField}}[i], httpResp, nil
+		}
+	}
+	return nil, &http.Response{StatusCode: http.StatusNotFound}, {{lowerFirst .Kind}}NotInList{}
+}
+
+// {{lowerFirst .Kind}}NotInList is the error of a {{.Kind}} that the List does not hold. Its body is
+// the one of a 404 of the API, so cxsdk.IsNotFound reads it as a missing {{.Kind}}.
+type {{lowerFirst .Kind}}NotInList struct{}
+
+func ({{lowerFirst .Kind}}NotInList) Error() string { return "the {{.Kind}} is not in the List" }
+
+func ({{lowerFirst .Kind}}NotInList) Body() []byte {
+	return []byte(`{"code":404,"message":"Not Found: the {{.Kind}} is not in the List"}`)
+}
+
+func ({{lowerFirst .Kind}}NotInList) Model() interface{} { return nil }
+{{- end}}
 
 // new{{.Kind}}Generated returns a {{.Kind}} with the spec that the JSON holds.
 func new{{.Kind}}Generated(name, spec string) *coralogixv1alpha1.{{.Kind}} {
@@ -341,7 +380,7 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered{{if .E2E.Serial}}, Serial{{end}
 				id := waitFor{{.Kind}}Generated(ctx, crClient, name)
 				ids = append(ids, id)
 				Eventually(func(g Gomega) {
-					_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
+					_, httpResp, err := {{$.GetCall "id"}}.Execute()
 					g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
 				}, time.Minute, time.Second).Should(Succeed())
 			}
@@ -352,7 +391,7 @@ var _ = Describe("{{.Kind}} (coverage)", Ordered{{if .E2E.Serial}}, Serial{{end}
 			}
 			for _, id := range ids {
 				Eventually(func() bool {
-					_, httpResp, err := {{getCall .GetMethod .GetByIDs "id"}}.Execute()
+					_, httpResp, err := {{$.GetCall "id"}}.Execute()
 					return cxsdk.IsNotFound(cxsdk.NewAPIError(httpResp, err))
 				}, time.Minute, time.Second).Should(BeTrue())
 			}

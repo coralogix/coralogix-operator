@@ -84,7 +84,13 @@ type kindData struct {
 	GetResponseValue      bool
 	// GetByIDs is the setter of the Get query parameter that takes a list of ids (api.getByIDs).
 	// Get then has no id in its path, and GetResponseField is the slice of resources it returns.
-	GetByIDs                   string
+	GetByIDs string
+	// GetFromList: no operation reads one resource by its id, and Get is the List (api.getFromList).
+	// The e2e test reads the List and selects the item whose id is the status id. GetListField is
+	// the slice of the List response, and GetItemType the SDK type of an item.
+	GetFromList                bool
+	GetListField               string
+	GetItemType                string
 	CreateWrapperField         string // the request field that wraps the resource
 	CreateWrapperValue         bool
 	UpdateWrapperField         string

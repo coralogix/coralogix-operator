@@ -21,7 +21,7 @@ import (
 //go:embed templates/*.tmpl
 var templateFS embed.FS
 
-var templates = template.Must(template.New("").Funcs(template.FuncMap{"lowerFirst": lowerFirst, "maskPaths": maskPaths, "getCall": getCall}).ParseFS(templateFS, "templates/*.tmpl"))
+var templates = template.Must(template.New("").Funcs(template.FuncMap{"lowerFirst": lowerFirst, "maskPaths": maskPaths}).ParseFS(templateFS, "templates/*.tmpl"))
 
 // Paths of the generated files, relative to the operator root.
 const (
@@ -259,13 +259,17 @@ func maskPaths(mask string) []string {
 	return strings.Split(mask, ",")
 }
 
-// getCall is the Go expression that builds the Get request of the resource with the id. A batch
-// Get (api.getByIDs) has no id in its path: it sends the id as the one item of its id list.
-func getCall(method, byIDs, id string) string {
-	if byIDs != "" {
-		return fmt.Sprintf("apiClient.%s(ctx).%s([]string{%s})", method, byIDs, id)
+// GetCall is the Go expression that builds the Get request of the resource with the id. A batch
+// Get (api.getByIDs) has no id in its path: it sends the id as the one item of its id list. A Get
+// that is the List (api.getFromList) is the helper of the e2e test that selects the item.
+func (d *kindData) GetCall(id string) string {
+	switch {
+	case d.GetFromList:
+		return fmt.Sprintf("%sGetFromList{ctx: ctx, apiClient: apiClient, id: %s}", lowerFirst(d.Kind), id)
+	case d.GetByIDs != "":
+		return fmt.Sprintf("apiClient.%s(ctx).%s([]string{%s})", d.GetMethod, d.GetByIDs, id)
 	}
-	return fmt.Sprintf("apiClient.%s(ctx, %s)", method, id)
+	return fmt.Sprintf("apiClient.%s(ctx, %s)", d.GetMethod, id)
 }
 
 // GetItem is the Go expression of the resource in a Get response named got: the field that wraps
