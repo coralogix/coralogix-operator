@@ -190,6 +190,9 @@ type SpecField struct {
 	// Type is a Go type of the API package that a handwritten file defines. The field is a
 	// pointer to it, optional.
 	Type string `yaml:"type"`
+	// Value makes the field the type itself with omitempty, not a pointer, as a released field of
+	// a map type or of a type that marshals its own empty value, such as runtime.RawExtension.
+	Value bool `yaml:"value"`
 }
 
 // Hook names. The generated controller calls each one in a fixed place of the lifecycle.
@@ -441,6 +444,11 @@ type Field struct {
 	RequestAs string `yaml:"requestAs"`
 	// UpdateAs names the Update-body field when it differs from Create and Get.
 	UpdateAs string `yaml:"updateAs"`
+	// SetByHook leaves the field out of the CR and the generated requests: the beforeCreate and
+	// beforeUpdate hooks set it in the body, from spec fields that the spec key adds. Create and
+	// Update always build the objects of its requestAs path, so the hook finds them. It applies
+	// to a field of the resource in an existing kind, and the line can set only requestAs.
+	SetByHook bool `yaml:"setByHook"`
 	// Inline shows the fields of an optional object beside the other fields of its component, as the
 	// released CR does. Create and Update rebuild the object when the CR sets one of them. Mode
 	// existing only.
@@ -614,11 +622,23 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 && !field.SetByHook {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0) {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
+		}
+		if field.SetByHook {
+			switch {
+			case f.Mode != ModeExisting:
+				return fmt.Errorf("%s.setByHook: a new kind follows the contract", line)
+			case line.Component != f.Resource:
+				return fmt.Errorf("%s.setByHook: only a top-level field of the resource can be set by a hook", line)
+			case !f.HasHook(HookBeforeCreate) || !f.HasHook(HookBeforeUpdate):
+				return fmt.Errorf("%s.setByHook: declare the beforeCreate and beforeUpdate hooks that set the field", line)
+			case field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.UpdateAs != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0:
+				return fmt.Errorf("%s.setByHook: the line can set only requestAs", line)
+			}
 		}
 		if field.Immutable {
 			switch {

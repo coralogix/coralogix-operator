@@ -98,6 +98,10 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 			g.Expect(cxsdk.NewAPIError(httpResp, err)).To(Succeed())
 		}, time.Minute, time.Second).Should(Succeed())
 	})
+{{- if and .E2E.Update .E2E.Update.Skip}}
+
+	// No update step: {{.E2E.Update.Skip}}
+{{- else}}
 
 	It("updates the {{.Kind}}", func(ctx context.Context) {
 		current := &coralogixv1alpha1.{{.Kind}}{}
@@ -149,6 +153,7 @@ var _ = Describe("{{.Kind}} (generated)", Ordered{{if .E2E.Serial}}, Serial{{end
 		}, time.Minute, time.Second).Should(Succeed())
 {{- end}}
 	})
+{{- end}}
 
 	It("deletes the {{.Kind}}", func(ctx context.Context) {
 		Expect(crClient.Delete(ctx, full)).To(Succeed())

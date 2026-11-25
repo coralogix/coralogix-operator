@@ -560,6 +560,9 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 			body.WriteString(code)
 			continue
 		}
+		if cr == b.specType && b.setByHook(rf.Name) {
+			continue
+		}
 		field, src, guard := sourceField(cr, rf.Name)
 		if field == nil {
 			component := cr.schema
@@ -642,10 +645,32 @@ func (o *requestObject) conditions() (tests []string, ok bool) {
 	return out, true
 }
 
+// setByHook reports whether a hook sets the resource field in the requests (setByHook), and
+// marks the line used. The generated conversion leaves the field out.
+func (b *builder) setByHook(field string) bool {
+	if b.file == nil || !b.file.Field(b.file.Resource, field).SetByHook {
+		return false
+	}
+	b.used[overrides.Line{Component: b.file.Resource, Field: field}] = true
+	return true
+}
+
 // movedField writes the code of a field that the request holds at another path than the field has
 // in Get (requestAs). A path of one segment sets a field of the body. A longer path adds the field
 // to the object tree, which requestObjects writes after the last field.
 func (b *builder) movedField(cr *crType, sdkType string, rf *model.Field, path string, root *requestObject, body *strings.Builder) error {
+	if cr == b.specType && b.setByHook(rf.Name) {
+		// The hook sets the field. Its objects are always built, so the hook finds them present.
+		if len(rf.RequestPath) < 2 {
+			return nil
+		}
+		node, _, err := b.requestNode(root, sdkType, rf.RequestPath[:len(rf.RequestPath)-1])
+		if err != nil {
+			return err
+		}
+		node.leaves = append(node.leaves, requestLeaf{})
+		return nil
+	}
 	field, src, guard := sourceField(cr, rf.Name)
 	if field == nil {
 		if rf.Attrs.Required {
@@ -664,23 +689,9 @@ func (b *builder) movedField(cr *crType, sdkType string, rf *model.Field, path s
 		b.used[overrides.Line{Component: component, Field: rf.Name}] = true
 	}
 	segments := rf.RequestPath
-	node, owner := root, sdkType
-	for _, segment := range segments[:len(segments)-1] {
-		ref, err := b.ix.field(owner, segment)
-		if err != nil {
-			return err
-		}
-		var next *requestObject
-		for _, c := range node.children {
-			if c.ref.Name == ref.Name {
-				next = c
-			}
-		}
-		if next == nil {
-			next = &requestObject{ref: ref, typeName: strings.TrimPrefix(ref.Want, "*"), varName: b.temp("obj")}
-			node.children = append(node.children, next)
-		}
-		node, owner = next, next.typeName
+	node, owner, err := b.requestNode(root, sdkType, segments[:len(segments)-1])
+	if err != nil {
+		return err
 	}
 	leaf := *field
 	leaf.API = segments[len(segments)-1]
@@ -699,6 +710,30 @@ func (b *builder) movedField(cr *crType, sdkType string, rf *model.Field, path s
 	}
 	node.leaves = append(node.leaves, requestLeaf{code: code, condition: sentCondition(field, src)})
 	return nil
+}
+
+// requestNode returns the object of the tree at the request path below root, and its SDK type.
+// It adds the objects of the path that the tree does not have yet.
+func (b *builder) requestNode(root *requestObject, sdkType string, segments []string) (*requestObject, string, error) {
+	node, owner := root, sdkType
+	for _, segment := range segments {
+		ref, err := b.ix.field(owner, segment)
+		if err != nil {
+			return nil, "", err
+		}
+		var next *requestObject
+		for _, c := range node.children {
+			if c.ref.Name == ref.Name {
+				next = c
+			}
+		}
+		if next == nil {
+			next = &requestObject{ref: ref, typeName: strings.TrimPrefix(ref.Want, "*"), varName: b.temp("obj")}
+			node.children = append(node.children, next)
+		}
+		node, owner = next, next.typeName
+	}
+	return node, owner, nil
 }
 
 // inlineChildren returns the CR fields of cr that an inline line moved out of the API object field

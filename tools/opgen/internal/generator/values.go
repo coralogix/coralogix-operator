@@ -103,6 +103,9 @@ type e2eUpdate struct {
 	// Check is the property of the resource that the update step compares, for a kind with the
 	// content key: the step sets json to Value and reads Check from the JSON of the Get response.
 	Check string `yaml:"check"`
+	// Skip leaves out the update step, with the reason: the API accepts no other value of any
+	// field that the step can change, such as a key whose versions need different parameters.
+	Skip string `yaml:"skip"`
 }
 
 func readE2E(path string) (*e2eFile, error) {
@@ -231,6 +234,8 @@ type substitutionData struct {
 
 type upgradeData struct {
 	From, SpecJSON, Field, Value string
+	// Nested is true for a dotted field: the patch sets the path below a spec field.
+	Nested bool
 }
 
 // updateData is the update step as Go code: the field that it changes, the value that it sets,
@@ -244,6 +249,8 @@ type updateData struct {
 	Check string
 	// NotNil lists values that the check reads through: the nested object of a createAs field.
 	NotNil []string
+	// Skip is the reason of an update step that e2e.yaml leaves out.
+	Skip string
 }
 
 type updateCandidate struct {
@@ -368,7 +375,14 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		e2e.Upgrade = &upgradeData{file.Upgrade.From, string(encoded), file.Upgrade.Field, file.Upgrade.Value}
+		nested := !d.Overwrite && strings.Contains(file.Upgrade.Field, ".")
+		if nested {
+			top, _, _ := strings.Cut(file.Upgrade.Field, ".")
+			if _, ok := file.Upgrade.Spec[top]; !ok {
+				return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade.field", msg: "a dotted field must start with a field of upgrade.spec"}
+			}
+		}
+		e2e.Upgrade = &upgradeData{From: file.Upgrade.From, SpecJSON: string(encoded), Field: file.Upgrade.Field, Value: file.Upgrade.Value, Nested: nested}
 	}
 	// The values also make the sample, which must not name a variable.
 	if envRef.MatchString(e2e.FullJSON) || envRef.MatchString(e2e.MinimalJSON) {
@@ -1053,6 +1067,15 @@ func objectValue(object any, field string) any {
 // updateStep picks the change of the update step: the update line of e2e.yaml, or the first
 // mutable scalar outside a oneOf. A top-level field takes precedence over a grouped field.
 func updateStep(d *kindData, ix *refIndex, candidates []updateCandidate, file *e2eFile, nameField string, full *omap) (*updateData, error) {
+	if file.Update != nil && file.Update.Skip != "" {
+		if file.Update.Field != "" || file.Update.Value != nil || file.Update.Check != "" {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.skip", msg: "a skipped update step sets no field, value, or check"}
+		}
+		if strings.TrimSpace(file.Update.Skip) == "" {
+			return nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":update.skip", msg: "the reason is blank"}
+		}
+		return &updateData{Skip: file.Update.Skip}, nil
+	}
 	if d.Content != nil {
 		return contentUpdateStep(file)
 	}

@@ -108,8 +108,12 @@ func (b *builder) extraSpec(r *model.Resource, d *kindData, fields []wrapperFiel
 		)
 	}
 	for _, name := range sortedKeys(b.file.Spec) {
+		goType := "*" + b.file.Spec[name].Type
+		if b.file.Spec[name].Value {
+			goType = b.file.Spec[name].Type
+		}
 		d.Spec.Fields = append(d.Spec.Fields, &crField{
-			API: name, JSON: name, GoName: goName(name), GoType: "*" + b.file.Spec[name].Type, Optional: true, synthetic: true,
+			API: name, JSON: name, GoName: goName(name), GoType: goType, Optional: true, synthetic: true,
 			Markers: []string{"+optional"},
 		})
 	}

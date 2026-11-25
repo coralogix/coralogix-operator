@@ -169,7 +169,10 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err := overrideIssues(doc, entry, file); err != nil {
 		return nil, asEligibility(entry, err)
 	}
-	policy := withFoldKept(doc, entry, file, file.Policy())
+	policy := withUpdateIDPlacement(doc, entry, withFoldKept(doc, entry, file, file.Policy()))
+	if err := getOnlySkipIssues(doc, entry, file, policy); err != nil {
+		return nil, asEligibility(entry, err)
+	}
 	if report := maskIssues(model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy), file); len(report) != 0 {
 		return nil, &EligibilityError{Report: located(entry, report)}
 	}
@@ -360,6 +363,53 @@ func componentFields(r *model.Resource, component, name string) []*model.Field {
 		walk(f.Type)
 	}
 	return out
+}
+
+// getOnlySkipIssues checks each skip of a resource field that only Get has. Create and Update
+// already omit such a field, so the skip changes no request. It is used only when the contract
+// checks fail under the field without it, such as for a response enum that has no zero value.
+func getOnlySkipIssues(doc docType, entry kindEntry, file *overrides.File, policy model.Policy) error {
+	for _, line := range file.Lines() {
+		if line.Component != entry.Resource || !file.Field(line.Component, line.Field).Skip ||
+			slices.Contains(file.PrunedArms, line.Field) || requestHasField(doc, entry.Resource, file, line.Field) {
+			continue
+		}
+		name := entry.Resource + "." + line.Field
+		without := policy
+		without.Skip = slices.DeleteFunc(slices.Clone(policy.Skip), func(s string) bool { return s == name })
+		used := false
+		for _, i := range model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, without) {
+			if strings.HasPrefix(i.Location, name+".") || i.Location == name || strings.Contains(i.Message, entry.Resource+": "+line.Field+".") {
+				used = true
+			}
+		}
+		if !used {
+			return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip",
+				msg: "Create and Update already omit this field, and the contract checks pass without the skip"}
+		}
+	}
+	return nil
+}
+
+// withUpdateIDPlacement tells the shared model that Update sends the id beside its request
+// wrapper, when the contract says so: the Update body has the id property, and the wrapper does
+// not. The shared model reads this only from its own api key; opgen reads it from the contract.
+func withUpdateIDPlacement(doc docType, entry kindEntry, policy model.Policy) model.Policy {
+	if policy.RequestWrapper == "" || !policy.UpdateIDInBody || policy.UpdateIDOutsideWrapper {
+		return policy
+	}
+	probe := policy
+	probe.UpdateIDOutsideWrapper = true
+	r, err := model.BuildWithPolicy(doc, entry.Resource, model.OperationIDs{}, probe)
+	if err != nil {
+		return policy // validation reports the problem with the policy as it is
+	}
+	body := requestBodySchema(doc, r.Update)
+	wrapper := requestProperties(body)[policy.RequestWrapper]
+	if wrapper == nil || hasRequestProperty(wrapper.Schema(), r.ID()) || !hasRequestProperty(body, r.ID()) {
+		return policy
+	}
+	return probe
 }
 
 // updateIDOutsideWrapper checks whether Update has the id beside its resource wrapper.
@@ -587,10 +637,8 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "the contract already marks this field read-only"}
 				}
 				// A skipped arm of a oneOf group of the response is used even when the requests omit it: the
-				// skip removes the arm, so the groups of Get and the requests agree.
-				if found && change.Skip && line.Component == entry.Resource && !requestHasField(doc, entry.Resource, file, line.Field) && !slices.Contains(file.PrunedArms, line.Field) {
-					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".skip", msg: "Create and Update already omit this field"}
-				}
+				// skip removes the arm, so the groups of Get and the requests agree. A skip of another field
+				// that only Get has is checked against the contract in getOnlySkipIssues.
 				if found && change.ReadOnly && property.Schema() != nil && property.Schema().ReadOnly != nil && *property.Schema().ReadOnly {
 					return &shapeError{code: codeOverrideUnused, path: overrides.FileName + ":" + line.String() + ".readOnly", msg: "the contract already marks this field read-only"}
 				}

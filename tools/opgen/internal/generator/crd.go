@@ -32,7 +32,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if f.Behavior == model.Computed || f.Create == nil {
 			continue
 		}
-		if len(b.file.Field(r.Name, f.Name).RequestValueBy) != 0 {
+		if len(b.file.Field(r.Name, f.Name).RequestValueBy) != 0 || b.file.Field(r.Name, f.Name).SetByHook {
 			continue
 		}
 		if inGroup[f.Name] && b.file.Field(r.Name, f.Name).Required {

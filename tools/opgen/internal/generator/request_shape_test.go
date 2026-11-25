@@ -233,6 +233,16 @@ func TestRequestAsIsRejectedOnAPatchResource(t *testing.T) {
 // It returns the generated conversions, or the error of the run.
 func wrappedShape(t *testing.T, updateHasExtra, requireNote bool, lines string) (string, error) {
 	t.Helper()
+	files, err := renderWrapped(t, wrappedContract(t, updateHasExtra, requireNote), wrappedFile(lines))
+	if err != nil {
+		return "", err
+	}
+	return string(files["api/coralogix/v1alpha1/wrappedthing_convert.go"]), nil
+}
+
+// wrappedContract returns the contract of wrappedShape.
+func wrappedContract(t *testing.T, updateHasExtra, requireNote bool) string {
+	t.Helper()
 	contract, err := os.ReadFile(filepath.Join("testdata", "wrapped.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -258,8 +268,17 @@ func wrappedShape(t *testing.T, updateHasExtra, requireNote bool, lines string) 
 		"    WrappedThingCreate:\n      type: object\n      required: "+required+"\n      properties:\n        id: {type: string}\n        name: {type: string, minLength: 1, x-coralogix-presence: true}\n        heading: {type: string, x-coralogix-presence: true}\n        extra: {$ref: '#/components/schemas/WrappedExtra'}\n"+
 		"    WrappedThingUpdate:\n      type: object\n      required: "+required+"\n      properties:\n        id: {type: string}\n        name: {type: string, minLength: 1, x-coralogix-presence: true}\n        heading: {type: string, x-coralogix-presence: true}\n"+update+
 		"    WrappedThing:\n")
-	spec = strings.TrimRight(spec, "\n") + "\n        title: {type: string, x-coralogix-presence: true}\n        note: {type: string, x-coralogix-presence: true}\n        tag: {type: array, items: {type: string}}\n"
-	file := "resource: WrappedThing\nmode: existing\nvalidators:\n  inferred: true\napi:\n  requestWrapper: item\n  serverSetID: true\n  idProperty: id\n  updateIDInBody: true\n" + wrappedRequestValues + "types:\n  WrappedThing:\n    fields:\n      id:\n        readOnly: true\n" + lines
+	return strings.TrimRight(spec, "\n") + "\n        title: {type: string, x-coralogix-presence: true}\n        note: {type: string, x-coralogix-presence: true}\n        tag: {type: array, items: {type: string}}\n"
+}
+
+// wrappedFile returns the overrides of wrappedShape with the field lines.
+func wrappedFile(lines string) string {
+	return "resource: WrappedThing\nmode: existing\nvalidators:\n  inferred: true\napi:\n  requestWrapper: item\n  serverSetID: true\n  idProperty: id\n  updateIDInBody: true\n" + wrappedRequestValues + "types:\n  WrappedThing:\n    fields:\n      id:\n        readOnly: true\n" + lines
+}
+
+// renderWrapped validates and renders the WrappedThing kind.
+func renderWrapped(t *testing.T, spec, file string) (map[string][]byte, error) {
+	t.Helper()
 	doc, err := model.Load([]byte(spec))
 	if err != nil {
 		t.Fatal(err)
@@ -270,13 +289,10 @@ func wrappedShape(t *testing.T, updateHasExtra, requireNote bool, lines string) 
 	}
 	v, err := validate(doc, kindEntry{Kind: "WrappedThing", Resource: "WrappedThing"}, source.SDKModule, operatorModule, &e2eFile{}, override)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	files, _, err := renderOne(v, operatorModule)
-	if err != nil {
-		return "", err
-	}
-	return string(files["api/coralogix/v1alpha1/wrappedthing_convert.go"]), nil
+	return files, err
 }
 
 const wrappedRenames = "      title: {requestAs: heading}\n      note: {requestAs: extra.note}\n      tag: {requestAs: extra.tag}\n"
