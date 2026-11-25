@@ -412,8 +412,8 @@ var _ = Describe("AIEvaluation coverage specs (generated)", func() {
 // that the e2e test sets.
 func newAIEvaluationCoverageCR(name, spec string) *coralogixv1alpha1.AIEvaluation {
 	cr := &coralogixv1alpha1.AIEvaluation{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
-	spec = strings.ReplaceAll(spec, "e2e-ai-application", strings.ReplaceAll("@{env.AI_EVALUATION_APPLICATION}", "@{run}", name))
-	spec = strings.ReplaceAll(spec, "e2e-ai-subsystem", strings.ReplaceAll("@{env.AI_EVALUATION_SUBSYSTEM}", "@{run}", name))
+	// "e2e-ai-application" keeps the sample value: the test reads no environment.
+	// "e2e-ai-subsystem" keeps the sample value: the test reads no environment.
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())

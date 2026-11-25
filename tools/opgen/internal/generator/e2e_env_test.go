@@ -51,6 +51,12 @@ func TestE2EEnvValues(t *testing.T) {
 	if strings.Contains(readGenerated(t, root, "config/samples/v1alpha1/generated/thing.yaml"), "@{env") {
 		t.Error("the sample names an environment variable")
 	}
+	// The offline coverage test reads no environment: the value keeps the sample, which stays
+	// valid JSON also where the variable would hold a number.
+	coverage := readGenerated(t, root, "internal/controller/coralogix/v1alpha1/thing_coverage_test.go")
+	if strings.Contains(coverage, "@{env.") || !strings.Contains(coverage, `// "e2e-description" keeps the sample value: the test reads no environment.`) {
+		t.Errorf("the coverage test applies the variable:\n%s", coverage)
+	}
 }
 
 func TestE2EEnvRejectsWrongNames(t *testing.T) {

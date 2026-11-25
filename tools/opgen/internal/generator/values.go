@@ -230,6 +230,8 @@ type substitutionData struct {
 	From, To string
 	// UUID is true when To names @{uuid}.
 	UUID bool
+	// Env is true when To names a variable of the environment.
+	Env bool
 }
 
 type upgradeData struct {
@@ -360,7 +362,7 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	for _, from := range sortedKeys(file.Substitutions) {
 		to := file.Substitutions[from]
 		hasUUID := strings.Contains(to, uuidToken)
-		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, to, hasUUID})
+		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, to, hasUUID, envRef.MatchString(to)})
 		e2e.UUID = e2e.UUID || hasUUID
 	}
 	if file.Upgrade != nil {
