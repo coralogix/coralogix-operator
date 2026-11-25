@@ -1,0 +1,24 @@
+# KeyThing: Update names and shapes its values differently from Create and Get, as the API keys
+# service does. Create cannot set enabled (updateDefault), Create and Get nest the lists in
+# keyPermissions (inline, requestAs), and Get holds each preset as an object (itemName).
+resource: KeyThing
+mode: existing
+validators:
+  inferred: true
+api:
+  operations:
+    create: KeyThingsService_CreateKeyThing
+    get: KeyThingsService_GetKeyThing
+    update: KeyThingsService_UpdateKeyThing
+    delete: KeyThingsService_DeleteKeyThing
+  idProperty: id
+  createResponseOnlyIDProperty: keyId
+unwrap: [KeyThingPresets, KeyThingPermissions]
+types:
+  KeyThing:
+    fields:
+      name: {updateAs: newName}
+      enabled: {updateAs: isEnabled, updateDefault: 'true'}
+      keyPermissions: {inline: true}
+      presets: {requestAs: keyPermissions.presets, updateAs: presets, itemName: name, sendNullAsEmpty: true}
+      permissions: {requestAs: keyPermissions.permissions, updateAs: permissions, sendNullAsEmpty: true}

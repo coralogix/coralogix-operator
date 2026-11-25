@@ -25,12 +25,20 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		}
 	}
 	for _, f := range r.Fields {
-		if f.Behavior != model.Computed && f.Create == nil && f.Update != nil {
+		// A field that only Update can set is in the CR when an updateDefault line gives the value
+		// that Create stores: Create leaves it out, and Update sends it.
+		updateOnly := f.Behavior != model.Computed && f.Create == nil && f.Update != nil
+		if updateOnly && (f.Update.Default == nil || b.file.Field(r.Name, f.Name).UpdateDefault == "") {
 			return nil, &shapeError{code: codeUpdateOnlyField, path: "types." + r.Name + ".fields." + f.Name,
 				msg: "the Update request has the field " + f.Name + ", but the Create request does not; the renderer cannot send a field in only one of them"}
 		}
-		if f.Behavior == model.Computed || f.Create == nil {
+		if f.Behavior == model.Computed || (f.Create == nil && !updateOnly) {
 			continue
+		}
+		attrs := f.Create
+		if updateOnly {
+			attrs = f.Update
+			b.used[overrides.Line{Component: r.Name, Field: f.Name}] = true
 		}
 		if len(b.file.Field(r.Name, f.Name).RequestValueBy) != 0 || b.file.Field(r.Name, f.Name).SetByHook {
 			continue
@@ -46,12 +54,12 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 			spec.Fields = append(spec.Fields, fields...)
 			continue
 		}
-		required := f.Create.Required && !inGroup[f.Name]
-		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, requiredScalarWithoutPresence(f.Create, f.Type), "spec."+f.Name, false)
+		required := attrs.Required && !inGroup[f.Name]
+		field, err := b.field(b.kind, r.Name, f.Name, f.Description, f.Type, required, requiredScalarWithoutPresence(attrs, f.Type), "spec."+f.Name, false)
 		if err != nil {
 			return nil, err
 		}
-		if err := b.contractDefault(field, f.Create, field.validationPath); err != nil {
+		if err := b.contractDefault(field, attrs, field.validationPath); err != nil {
 			return nil, err
 		}
 		if f.Behavior == model.Immutable {

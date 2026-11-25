@@ -24,6 +24,7 @@ const (
 	ContentThingKind    = "ContentThing"
 	HookDeleteThingKind = "HookDeleteThing"
 	HookThingKind       = "HookThing"
+	KeyThingKind        = "KeyThing"
 	ListThingKind       = "ListThing"
 	MaskThingKind       = "MaskThing"
 	PatchThingKind      = "PatchThing"

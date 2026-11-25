@@ -25,3 +25,5 @@ kinds:
     resource: BatchThing
   - kind: ListThing
     resource: ListThing
+  - kind: KeyThing
+    resource: KeyThing
