@@ -299,11 +299,66 @@
       ]
     },
     {
-      "name": "the List of AI applications",
+      "name": "an update mask that names every field in camelCase: the listed fields change, and a listed field that the body leaves out is cleared",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/ai/custom-evaluations/v3",
+          "body": {
+            "name": "cxo-fidelity-{{run}}-mask",
+            "description": "Flags competitors.",
+            "instructions": "Check whether {response} names a competitor.",
+            "policyType": "quality",
+            "safe": "Stays on our product.",
+            "violates": "Names a competitor.",
+            "examples": [
+              {
+                "conversation": "good one",
+                "score": "1"
+              },
+              {
+                "conversation": "bad one",
+                "score": "0"
+              }
+            ],
+            "shouldIncludeSystemPrompt": true
+          },
+          "capture": "id"
+        },
+        {
+          "method": "PATCH",
+          "path": "/ai/custom-evaluations/v3/{{id}}",
+          "body": {
+            "updateMask": "name,description,instructions,policyType,safe,violates,examples,shouldIncludeSystemPrompt",
+            "name": "cxo-fidelity-{{run}}-mask-renamed",
+            "instructions": "Check {prompt}.",
+            "policyType": "security"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/ai/custom-evaluations/v3"
+        },
+        {
+          "method": "DELETE",
+          "path": "/ai/custom-evaluations/v3/{{id}}"
+        }
+      ]
+    },
+    {
+      "name": "the List of AI applications: page_offset counts applications, not pages. The team has 2 to 200 applications, so offset 1 of a 200 page has applications, and offset 1000 has none",
       "steps": [
         {
           "method": "GET",
           "path": "/ai/applications/v3?page_size=200&page_offset=0"
+        },
+        {
+          "method": "GET",
+          "path": "/ai/applications/v3?page_size=200&page_offset=1"
+        },
+        {
+          "method": "GET",
+          "path": "/ai/applications/v3?page_size=200&page_offset=1000"
         }
       ]
     }

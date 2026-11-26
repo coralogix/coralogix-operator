@@ -107,9 +107,10 @@ func aiCustomEvaluationRecordVars(t *testing.T, base, apiKey string) map[string]
 	return nil
 }
 
-// aiCustomEvaluationNormalize keeps the items of a List that a case made, and the application of
-// the cases in the List of AI applications. The List of the API holds every custom evaluation of
-// the team, and the team can have other ones.
+// aiCustomEvaluationNormalize keeps the items of a List that a case made: the List of the API holds
+// every custom evaluation of the team, and the team can have other ones. It writes each AI
+// application as its field names and value types, once: the team has its own applications, and
+// the List returns them in a new order on each call, so only the shape of a page compares.
 func aiCustomEvaluationNormalize(resp any) any {
 	m, ok := resp.(map[string]any)
 	if !ok {
@@ -132,7 +133,25 @@ func aiCustomEvaluationNormalize(resp any) any {
 		name, _ := v["name"].(string)
 		return strings.Contains(name, "{{run}}")
 	})
-	keep("aiApplications", func(v map[string]any) bool { return v["application"] == "{{application}}" })
+	if apps, ok := m["aiApplications"].([]any); ok {
+		shapes, seen := []any{}, map[string]bool{}
+		for _, app := range apps {
+			v, ok := app.(map[string]any)
+			if !ok {
+				continue
+			}
+			shape := map[string]any{}
+			for field, value := range v {
+				shape[field] = fmt.Sprintf("<%T>", value)
+			}
+			key := fmt.Sprint(shape) // fmt prints map keys sorted
+			if !seen[key] {
+				seen[key] = true
+				shapes = append(shapes, shape)
+			}
+		}
+		m["aiApplications"] = shapes
+	}
 	return m
 }
 
@@ -340,11 +359,21 @@ func aiCustomEvaluationScenarios() map[string]func(h *harness) {
 			h.Reconcile("reconcile again: the API answers as it should")
 		},
 
+		"link-partly-rejected": func(h *harness) {
+			h.Create("create", aiCustomEvalMinimalManifest)
+			aiCustomEvaluations(h).answerErrorAfter("link", 1, http.StatusInternalServerError, "the API fails")
+			h.SetSpec("add two applications: the first link is stored, and the API fails the second", aiCustomEvalSpecMap("applications", []any{
+				aiCustomEvalSelector(aiCustomEvalApplication, aiCustomEvalSubsystem), aiCustomEvalSelector(aiCustomEvalOtherApp, aiCustomEvalSubsystem)}))
+			aiCustomEvaluations(h).expectLinks(h, aiCustomEvalOtherAppID)
+			h.Reconcile("reconcile again: the List has the first link, so only the second is sent")
+			aiCustomEvaluations(h).expectLinks(h, aiCustomEvalOtherAppID, aiCustomEvalApplicationID)
+		},
+
 		"unlink-rejected": func(h *harness) {
 			h.Create("create", withApp)
 			aiCustomEvaluations(h).answerNextError("unlink", http.StatusNotFound, "Custom evaluation is not linked to this application")
-			h.SetSpec("remove the application: the API rejects the unlink", aiCustomEvalSpecMap())
-			h.Reconcile("reconcile again: the API answers as it should")
+			h.SetSpec("remove the application: the unlink answers 404, and the operator reads it as a missing custom evaluation and clears the status id", aiCustomEvalSpecMap())
+			h.Reconcile("reconcile again: with no status id the operator creates again, and the name is taken (409)")
 		},
 
 		"delete": func(h *harness) {
@@ -541,6 +570,8 @@ type aiCustomEvaluationFake struct {
 	// next holds one forced answer per route: create, list, update, delete, link, unlink, or
 	// applications. The next request of the route gets it, and the fake does not run the request.
 	next map[string]forcedAnswer
+	// pass holds, per route, how many requests run before the forced answer of next applies.
+	pass map[string]int
 	// loseNextCreatedID makes the next Create store the custom evaluation and answer with an
 	// empty id.
 	loseNextCreatedID bool
@@ -560,6 +591,7 @@ func newAICustomEvaluationFake() *aiCustomEvaluationFake {
 			app(aiCustomEvalSampleAppID, "ai-center-demo", "demo-runner"), // the sample
 		},
 		next: map[string]forcedAnswer{},
+		pass: map[string]int{},
 	}
 }
 
@@ -594,6 +626,22 @@ func (f *aiCustomEvaluationFake) setLinks(id string, applicationIDs ...string) {
 	f.evaluations[id]["applicationIds"] = ids
 }
 
+// expectLinks fails the test unless the custom evaluation of the CR is linked to exactly the
+// applications given, in that order.
+func (f *aiCustomEvaluationFake) expectLinks(h *harness, applicationIDs ...string) {
+	h.t.Helper()
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	want := make([]any, len(applicationIDs))
+	for i, a := range applicationIDs {
+		want[i] = a
+	}
+	got, _ := f.evaluations[h.StatusID()]["applicationIds"].([]any)
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		h.t.Errorf("links: got %v, want %v", got, want)
+	}
+}
+
 // forget deletes a custom evaluation without a request, as if it was deleted outside the operator.
 func (f *aiCustomEvaluationFake) forget(id string) {
 	f.mu.Lock()
@@ -618,6 +666,15 @@ func (f *aiCustomEvaluationFake) answerNextError(route string, status int, reaso
 	defer f.mu.Unlock()
 	st, body := aiCustomEvalError(status, reason)
 	f.next[route] = forcedAnswer{status: st, body: body}
+}
+
+// answerErrorAfter lets n requests of the route run, then answers the next one with the error.
+func (f *aiCustomEvaluationFake) answerErrorAfter(route string, n, status int, reason string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	st, body := aiCustomEvalError(status, reason)
+	f.next[route] = forcedAnswer{status: st, body: body}
+	f.pass[route] = n
 }
 
 // aiCustomEvalError is an error answer of the API. A 409 starts with "Already Exists", as the
@@ -670,7 +727,9 @@ func (f *aiCustomEvaluationFake) handle(method, path string, query url.Values, b
 	if route == "" {
 		return routeNotFound()
 	}
-	if forced, ok := f.next[route]; ok {
+	if forced, ok := f.next[route]; ok && f.pass[route] > 0 {
+		f.pass[route]--
+	} else if ok {
 		delete(f.next, route)
 		return forced.status, forced.body
 	}
