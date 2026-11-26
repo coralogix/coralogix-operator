@@ -144,14 +144,7 @@
     ]
   },
   "override field without a template": {
-    "accepted": false,
-    "causes": [
-      {
-        "type": "FieldValueInvalid",
-        "field": "spec.configOverrides[0].fields[0]",
-        "message": "Invalid value: \"object\": Exactly one of template or templateSecretKeyRef must be set"
-      }
-    ]
+    "accepted": true
   },
   "override for alerts": {
     "accepted": true

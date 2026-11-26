@@ -12006,6 +12006,8 @@ Use TemplateSecretKeyRef when the template holds a credential.<br/>
         <td>
           TemplateSecretKeyRef is a reference to a secret key containing the template.
 The secret must be in the same namespace as the Connector.
+The Optional flag of the selector is ignored. A missing secret or key is an error,
+as for the SecretKeyRef of a config field.
 Conflicts with Template.<br/>
         </td>
         <td>false</td>
@@ -12020,6 +12022,8 @@ Conflicts with Template.<br/>
 
 TemplateSecretKeyRef is a reference to a secret key containing the template.
 The secret must be in the same namespace as the Connector.
+The Optional flag of the selector is ignored. A missing secret or key is an error,
+as for the SecretKeyRef of a config field.
 Conflicts with Template.
 
 <table>

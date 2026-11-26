@@ -62,10 +62,9 @@ spec:
                         - fieldName
                         type: object
                         x-kubernetes-validations:
-                        - message: Exactly one of template or templateSecretKeyRef
-                            must be set
-                          rule: '(has(self.template) ? 1 : 0) + (has(self.templateSecretKeyRef)
-                            ? 1 : 0) == 1'
+                        - message: Only one of template or templateSecretKeyRef can
+                            be set
+                          rule: '!(has(self.template) && has(self.templateSecretKeyRef))'
                       type: array
                   required:
                   - entityType

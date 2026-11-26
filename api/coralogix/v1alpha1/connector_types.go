@@ -80,7 +80,7 @@ type EntityTypeConfigOverrides struct {
 }
 
 // TemplatedConnectorConfigField defines a templated field in a config override.
-// +kubebuilder:validation:XValidation:rule="(has(self.template) ? 1 : 0) + (has(self.templateSecretKeyRef) ? 1 : 0) == 1",message="Exactly one of template or templateSecretKeyRef must be set"
+// +kubebuilder:validation:XValidation:rule="!(has(self.template) && has(self.templateSecretKeyRef))",message="Only one of template or templateSecretKeyRef can be set"
 type TemplatedConnectorConfigField struct {
 	// FieldName is the name of the field. e.g. "channel" for slack.
 	FieldName string `json:"fieldName"`
@@ -92,6 +92,8 @@ type TemplatedConnectorConfigField struct {
 
 	// TemplateSecretKeyRef is a reference to a secret key containing the template.
 	// The secret must be in the same namespace as the Connector.
+	// The Optional flag of the selector is ignored. A missing secret or key is an error,
+	// as for the SecretKeyRef of a config field.
 	// Conflicts with Template.
 	// +optional
 	TemplateSecretKeyRef *corev1.SecretKeySelector `json:"templateSecretKeyRef,omitempty"`
@@ -228,6 +230,8 @@ func ExtractConfigOverridesFields(ctx context.Context, fields []TemplatedConnect
 	for _, field := range fields {
 		template := field.Template
 		if field.TemplateSecretKeyRef != nil {
+			// The CRD rule rejects two sources. This check is a backstop for objects that skip admission.
+			// A typed round trip drops an empty template, so only a non-empty template counts here.
 			if template != "" {
 				return nil, fmt.Errorf("field '%s' sets both template and templateSecretKeyRef; only one source is allowed", field.FieldName)
 			}
