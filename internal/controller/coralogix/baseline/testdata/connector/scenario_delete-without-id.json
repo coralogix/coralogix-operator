@@ -60,90 +60,18 @@
   },
   {
     "step": "delete a CR that has a finalizer and no status id",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
-        "body": {
-          "connector": {
-            "connectorConfig": {
-              "fields": [
-                {
-                  "fieldName": "channel",
-                  "value": "team-alerts"
-                }
-              ]
-            },
-            "description": "Baseline description",
-            "name": "baseline-connector",
-            "type": "SLACK"
-          }
-        },
-        "status": 400
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "connector.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 2,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   },
   {
     "step": "reconcile again",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
-        "body": {
-          "connector": {
-            "connectorConfig": {
-              "fields": [
-                {
-                  "fieldName": "channel",
-                  "value": "team-alerts"
-                }
-              ]
-            },
-            "description": "Baseline description",
-            "name": "baseline-connector",
-            "type": "SLACK"
-          }
-        },
-        "status": 400
-      }
-    ],
+    "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [
-        "connector.coralogix.com/finalizer"
-      ],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 2,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   }
 ]
