@@ -1,0 +1,112 @@
+[
+  {
+    "step": "create with each digest and attachment type",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "slack": {
+          "attachments": [
+            {
+              "isActive": true,
+              "type": "MetricSnapshot"
+            },
+            {
+              "isActive": false,
+              "type": "Logs"
+            }
+          ],
+          "digests": [
+            {
+              "isActive": true,
+              "type": "ErrorAndCriticalLogs"
+            },
+            {
+              "isActive": false,
+              "type": "FlowAnomalies"
+            },
+            {
+              "isActive": true,
+              "type": "SpikeAnomalies"
+            },
+            {
+              "isActive": true,
+              "type": "DataUsage"
+            }
+          ],
+          "url": "https://hooks.slack.com/services/baseline"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "slack": {
+              "attachments": [
+                {
+                  "isActive": true,
+                  "type": "METRIC_SNAPSHOT"
+                },
+                {
+                  "isActive": false,
+                  "type": "LOGS"
+                }
+              ],
+              "digests": [
+                {
+                  "isActive": true,
+                  "type": "ERROR_AND_CRITICAL_LOGS"
+                },
+                {
+                  "isActive": false,
+                  "type": "FLOW_ANOMALIES"
+                },
+                {
+                  "isActive": true,
+                  "type": "SPIKE_ANOMALIES"
+                },
+                {
+                  "isActive": true,
+                  "type": "DATA_USAGE"
+                }
+              ]
+            },
+            "type": "SLACK",
+            "url": "https://hooks.slack.com/services/baseline"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

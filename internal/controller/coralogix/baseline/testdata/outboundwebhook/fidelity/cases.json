@@ -1,0 +1,821 @@
+{
+  "cases": [
+    {
+      "name": "generic: create, get, replace, clear on replace, delete, and the missing webhook",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-generic",
+              "type": "GENERIC",
+              "url": "https://example.com/hook",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "method": "POST",
+                "headers": {
+                  "X-Team": "platform"
+                },
+                "payload": "{\"alert\":\"$ALERT_NAME\"}"
+              }
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "id": "{{webhook}}",
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-generic-updated",
+              "type": "GENERIC",
+              "url": "https://example.com/hook-updated",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000002",
+                "method": "PUT"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "id": "{{webhook}}",
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-generic",
+              "type": "PAGERDUTY",
+              "pagerDuty": {
+                "serviceKey": "fidelity-service-key"
+              }
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "id": "{{webhook}}",
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-generic",
+              "type": "SLACK",
+              "url": "https://example.com/hook",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000003",
+                "method": "GET"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "id": "{{webhook}}",
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-generic-updated",
+              "type": "GENERIC",
+              "url": "https://example.com/hook-updated",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000002",
+                "method": "PUT"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/not-a-uuid"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "id": "not-a-uuid",
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-generic-updated",
+              "type": "GENERIC",
+              "url": "https://example.com/hook-updated",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000002",
+                "method": "PUT"
+              }
+            }
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/not-a-uuid"
+        }
+      ]
+    },
+    {
+      "name": "slack: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "SLACK",
+              "url": "https://hooks.slack.com/services/fidelity",
+              "slack": {
+                "digests": [
+                  {
+                    "type": "ERROR_AND_CRITICAL_LOGS",
+                    "isActive": true
+                  }
+                ],
+                "attachments": [
+                  {
+                    "type": "LOGS",
+                    "isActive": true
+                  }
+                ]
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-slack"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "pagerduty: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "PAGERDUTY",
+              "pagerDuty": {
+                "serviceKey": "fidelity-service-key"
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-pagerduty"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "sendlog: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "SEND_LOG",
+              "sendLog": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "payload": "{\"key\":\"value\"}"
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-sendlog"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "emailgroup: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "EMAIL_GROUP",
+              "emailGroup": {
+                "emailAddresses": [
+                  "first@example.com",
+                  "second@example.com",
+                  "first@example.com"
+                ]
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-emailgroup"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "jira: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "JIRA",
+              "url": "https://example.atlassian.net",
+              "jira": {
+                "apiToken": "fidelity-token",
+                "email": "user@example.com",
+                "projectKey": "OPS"
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-jira"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "opsgenie: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "OPSGENIE",
+              "url": "https://api.opsgenie.com/v1/json/coralogix",
+              "opsgenie": {},
+              "name": "cxo-fidelity-webhook-{{run}}-opsgenie"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "demisto: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "DEMISTO",
+              "url": "https://example.com/demisto",
+              "demisto": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "payload": "{\"key\":\"value\"}"
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-demisto"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "aws: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "type": "AWS_EVENT_BRIDGE",
+              "awsEventBridge": {
+                "eventBusArn": "arn:aws:events:us-east-1:000000000000:event-bus/default",
+                "detail": "{}",
+                "detailType": "alert",
+                "source": "coralogix",
+                "roleName": "coralogix-role"
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-aws"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "msteamsworkflow: create, get, delete",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "url": "https://example.webhook.office.com/workflows/fidelity",
+              "msTeamsWorkflow": {},
+              "name": "cxo-fidelity-webhook-{{run}}-msteamsworkflow"
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "slack: one item per type, and lists cleared on replace",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-slack-lists",
+              "type": "SLACK",
+              "url": "https://hooks.slack.com/services/fidelity",
+              "slack": {
+                "digests": [
+                  {
+                    "type": "ERROR_AND_CRITICAL_LOGS",
+                    "isActive": true
+                  },
+                  {
+                    "type": "ERROR_AND_CRITICAL_LOGS",
+                    "isActive": false
+                  }
+                ],
+                "attachments": [
+                  {
+                    "type": "LOGS",
+                    "isActive": false
+                  },
+                  {
+                    "type": "LOGS",
+                    "isActive": true
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "webhook"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "id": "{{webhook}}",
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-slack-lists",
+              "type": "SLACK",
+              "url": "https://hooks.slack.com/services/fidelity",
+              "slack": {
+                "digests": [],
+                "attachments": []
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{webhook}}"
+        }
+      ]
+    },
+    {
+      "name": "no type and duplicate names",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-dup",
+              "url": "https://example.com/hook",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "method": "GET"
+              }
+            }
+          },
+          "capture": "first"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-dup",
+              "url": "https://example.com/hook",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "method": "GET"
+              }
+            }
+          },
+          "capture": "second"
+        },
+        {
+          "method": "GET",
+          "path": "/integrations/webhooks/v1/{{second}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{first}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/integrations/webhooks/v1/{{second}}"
+        }
+      ]
+    },
+    {
+      "name": "rejected values",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "GENERIC",
+              "url": "https://example.com/hook",
+              "genericWebhook": {
+                "method": "POST"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "GENERIC",
+              "url": "https://example.com/hook",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "method": "UNKNOWN"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "GENERIC",
+              "url": "",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "method": "POST"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "GENERIC",
+              "url": "not a url",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "method": "POST"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "GENERIC",
+              "url": "https://example.com/hook",
+              "genericWebhook": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "method": "POST",
+                "payload": ""
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "",
+              "type": "PAGERDUTY",
+              "pagerDuty": {
+                "serviceKey": "fidelity-service-key"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "PAGERDUTY",
+              "pagerDuty": {
+                "serviceKey": ""
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "SLACK",
+              "url": "https://hooks.slack.com/services/fidelity",
+              "slack": {
+                "digests": [
+                  {
+                    "type": "UNKNOWN",
+                    "isActive": true
+                  }
+                ],
+                "attachments": [
+                  {
+                    "type": "EMPTY",
+                    "isActive": true
+                  }
+                ]
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "SLACK",
+              "slack": {}
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "SEND_LOG",
+              "url": "https://example.com",
+              "sendLog": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "payload": "{}"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "SEND_LOG",
+              "url": "",
+              "sendLog": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "payload": "{}"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "SEND_LOG",
+              "sendLog": {
+                "uuid": "00000000-0000-4000-8000-000000000001",
+                "payload": ""
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "MICROSOFT_TEAMS",
+              "url": "https://example.webhook.office.com/teams",
+              "microsoftTeams": {}
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "JIRA",
+              "url": "https://example.atlassian.net",
+              "jira": {
+                "apiToken": "fidelity-token",
+                "email": "",
+                "projectKey": ""
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "DEMISTO",
+              "url": "https://example.com/demisto",
+              "demisto": {
+                "uuid": "",
+                "payload": "{}"
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "AWS_EVENT_BRIDGE",
+              "awsEventBridge": {
+                "eventBusArn": "",
+                "detail": "",
+                "detailType": "",
+                "source": "",
+                "roleName": ""
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "EMAIL_GROUP",
+              "emailGroup": {
+                "emailAddresses": []
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected",
+              "type": "EMAIL_GROUP",
+              "emailGroup": {
+                "emailAddresses": [
+                  "not-an-address"
+                ]
+              }
+            }
+          },
+          "capture": "rejected"
+        },
+        {
+          "method": "POST",
+          "path": "/integrations/webhooks/v1",
+          "body": {
+            "data": {
+              "name": "cxo-fidelity-webhook-{{run}}-rejected"
+            }
+          },
+          "capture": "rejected"
+        }
+      ]
+    }
+  ]
+}

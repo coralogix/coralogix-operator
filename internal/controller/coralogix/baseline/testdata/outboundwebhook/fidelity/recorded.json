@@ -1,0 +1,683 @@
+{
+  "cases": [
+    {
+      "name": "generic: create, get, replace, clear on replace, delete, and the missing webhook",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "genericWebhook": {
+                "headers": {
+                  "X-Team": "platform"
+                },
+                "method": "POST",
+                "payload": "{\"alert\":\"$ALERT_NAME\"}",
+                "uuid": "00000000-0000-4000-8000-000000000001"
+              },
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-generic",
+              "type": "GENERIC",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://example.com/hook"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "genericWebhook": {
+                "headers": {},
+                "method": "PUT",
+                "uuid": "00000000-0000-4000-8000-000000000002"
+              },
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-generic-updated",
+              "type": "GENERIC",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://example.com/hook-updated"
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Webhook type mismatch: expected WebHook, got PagerDuty"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "genericWebhook": {
+                "headers": {},
+                "method": "GET",
+                "uuid": "00000000-0000-4000-8000-000000000003"
+              },
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-generic",
+              "type": "GENERIC",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://example.com/hook"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Outgoing webhook not found: {{webhook}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Outgoing webhook not found: {{webhook}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Outgoing webhook not found: {{webhook}}"
+          }
+        },
+        {
+          "status": 503,
+          "response": {
+            "code": 503,
+            "message": "Service Unavailable: Upstream service error"
+          }
+        },
+        {
+          "status": 503,
+          "response": {
+            "code": 503,
+            "message": "Service Unavailable: Upstream service error"
+          }
+        },
+        {
+          "status": 503,
+          "response": {
+            "code": 503,
+            "message": "Service Unavailable: Upstream service error"
+          }
+        }
+      ]
+    },
+    {
+      "name": "slack: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-slack",
+              "slack": {
+                "attachments": [
+                  {
+                    "isActive": true,
+                    "type": "LOGS"
+                  }
+                ],
+                "digests": [
+                  {
+                    "isActive": true,
+                    "type": "ERROR_AND_CRITICAL_LOGS"
+                  }
+                ]
+              },
+              "type": "SLACK",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://hooks.slack.com/services/fidelity"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "pagerduty: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-pagerduty",
+              "pagerDuty": {
+                "serviceKey": "fidelity-service-key"
+              },
+              "type": "PAGERDUTY",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "sendlog: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-sendlog",
+              "sendLog": {
+                "payload": "{\"key\":\"value\"}",
+                "uuid": "00000000-0000-4000-8000-000000000001"
+              },
+              "type": "SEND_LOG",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "emailgroup: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "emailGroup": {
+                "emailAddresses": [
+                  "\u003cemail\u003e",
+                  "\u003cemail\u003e"
+                ]
+              },
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-emailgroup",
+              "type": "EMAIL_GROUP",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "jira: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "jira": {
+                "apiToken": "fidelity-token",
+                "email": "\u003credacted\u003e",
+                "projectKey": "OPS"
+              },
+              "name": "cxo-fidelity-webhook-{{run}}-jira",
+              "type": "JIRA",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://example.atlassian.net"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "opsgenie: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-opsgenie",
+              "opsgenie": {},
+              "type": "OPSGENIE",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://api.opsgenie.com/v1/json/coralogix"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "demisto: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "demisto": {
+                "payload": "{\"key\":\"value\"}",
+                "uuid": "00000000-0000-4000-8000-000000000001"
+              },
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-demisto",
+              "type": "DEMISTO",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://example.com/demisto"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "aws: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "awsEventBridge": {
+                "detail": "{}",
+                "detailType": "alert",
+                "eventBusArn": "arn:aws:events:us-east-1:\u003cnumber\u003e:event-bus/default",
+                "roleName": "coralogix-role",
+                "source": "coralogix"
+              },
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-aws",
+              "type": "AWS_EVENT_BRIDGE",
+              "updatedAt": "\u003ctime\u003e"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "msteamsworkflow: create, get, delete",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "msTeamsWorkflow": {},
+              "name": "cxo-fidelity-webhook-{{run}}-msteamsworkflow",
+              "type": "MS_TEAMS_WORKFLOW",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://example.webhook.office.com/workflows/fidelity"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "slack: one item per type, and lists cleared on replace",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{webhook}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-slack-lists",
+              "slack": {
+                "attachments": [
+                  {
+                    "isActive": true,
+                    "type": "LOGS"
+                  }
+                ],
+                "digests": [
+                  {
+                    "type": "ERROR_AND_CRITICAL_LOGS"
+                  }
+                ]
+              },
+              "type": "SLACK",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://hooks.slack.com/services/fidelity"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "id": "{{webhook}}",
+              "name": "cxo-fidelity-webhook-{{run}}-slack-lists",
+              "slack": {
+                "attachments": [],
+                "digests": []
+              },
+              "type": "SLACK",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://hooks.slack.com/services/fidelity"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "no type and duplicate names",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{first}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{second}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "webhook": {
+              "createdAt": "\u003ctime\u003e",
+              "externalId": "\u003credacted\u003e",
+              "genericWebhook": {
+                "headers": {},
+                "method": "GET",
+                "uuid": "00000000-0000-4000-8000-000000000001"
+              },
+              "id": "{{second}}",
+              "name": "cxo-fidelity-webhook-{{run}}-dup",
+              "type": "GENERIC",
+              "updatedAt": "\u003ctime\u003e",
+              "url": "https://example.com/hook"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "rejected values",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must be a valid UUID, was: "
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: Unknown method type: UNKNOWN"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must be a valid uri"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to parse provided URL: relative URL without a base"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: payload must not be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* data must not be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must not be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: Unknown digest type: UNKNOWN\n* Failed to validate webhook config: Unknown attachment type: EMPTY"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: Missing URL"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* URL not allowed: Configuration of URL not supported for SendLog webhook type"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must be a valid uri"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must not be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Webhook type MICROSOFT_TEAMS is deprecated due to Office 365 connectors deprecation within Microsoft Teams. Please create the webhook of type MS_TEAMS_WORKFLOW type instead. Refer to this guide for details: https://coralogix.com/docs/workflow-based-microsoft-teams-outbound-webhooks/."
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must be email address\n* Failed to validate webhook config: data must not be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must be a valid UUID, was: "
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must not be empty\n* Failed to validate webhook config: data must not be empty\n* Failed to validate webhook config: data must not be empty\n* Failed to validate webhook config: data must not be empty\n* Failed to validate webhook config: data must not be empty"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{rejected}}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: data must be email address"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Failed to validate webhook config: Unknown config for webhook type: UNKNOWN}"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "name": "email-group-webhook",
+      "outboundWebhookType": {
+        "emailGroup": {
+          "emailAddresses": [
+            "example@coralogix.com example2@coralogix.com"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": [
+                "example@coralogix.com example2@coralogix.com"
+              ]
+            },
+            "name": "email-group-webhook",
+            "type": "EMAIL_GROUP"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole spec",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": [
+                "example@coralogix.com example2@coralogix.com"
+              ]
+            },
+            "name": "email-group-webhook",
+            "type": "EMAIL_GROUP"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

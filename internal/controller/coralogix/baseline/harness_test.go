@@ -45,11 +45,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+	ctrlconfig "sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/yaml"
 
@@ -71,6 +75,9 @@ type kind struct {
 	crdFile string
 	// resource is the plural resource name in the RBAC rules.
 	resource string
+	// rbacExtra names other resources whose rules the RBAC golden records, such as the Secrets
+	// that a kind reads and watches.
+	rbacExtra []string
 	// newFake returns an empty fake of the API that the kind calls.
 	newFake func() apiFake
 	// newReconciler returns the kind's reconciler, with SDK clients built from the client set.
@@ -562,4 +569,56 @@ func firstDifference(want, got string) string {
 		}
 	}
 	return ""
+}
+
+// startManager runs the reconciler of the scenario in a controller-runtime manager, as the
+// operator does, until the test ends. Its watches then start each reconcile, so a test can check
+// that an event reaches the reconciler. The cache holds only the scenario namespace. The shared
+// reconciler reads the client from the config package, so the manager client replaces it.
+func (h *harness) startManager() {
+	h.t.Helper()
+	setup, ok := h.reconciler.(interface{ SetupWithManager(ctrl.Manager) error })
+	if !ok {
+		h.t.Fatalf("%T has no SetupWithManager", h.reconciler)
+	}
+	mgr, err := ctrl.NewManager(testEnv.Config, ctrl.Options{
+		Scheme:                 config.GetScheme(),
+		Metrics:                metricsserver.Options{BindAddress: "0"},
+		HealthProbeBindAddress: "0",
+		Cache:                  cache.Options{DefaultNamespaces: map[string]cache.Config{h.namespace: {}}},
+		Controller:             ctrlconfig.Controller{SkipNameValidation: ptr.To(true)},
+	})
+	if err != nil {
+		h.t.Fatalf("new manager: %v", err)
+	}
+	if err := setup.SetupWithManager(mgr); err != nil {
+		h.t.Fatalf("set up the controller: %v", err)
+	}
+	previous := config.GetClient()
+	config.InitClient(mgr.GetClient())
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- mgr.Start(ctx) }()
+	h.t.Cleanup(func() {
+		cancel()
+		if err := <-done; err != nil {
+			h.t.Errorf("manager: %v", err)
+		}
+		config.InitClient(previous)
+	})
+	if !mgr.GetCache().WaitForCacheSync(ctx) {
+		h.t.Fatal("the manager cache did not sync")
+	}
+}
+
+// eventually waits until cond holds, or fails the test with msg.
+func (h *harness) eventually(msg string, cond func() bool) {
+	h.t.Helper()
+	deadline := time.Now().Add(30 * time.Second)
+	for !cond() {
+		if time.Now().After(deadline) {
+			h.t.Fatalf("timed out: %s", msg)
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }

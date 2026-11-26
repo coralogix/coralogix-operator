@@ -1,0 +1,428 @@
+[
+  {
+    "step": "create with a digest and an attachment",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "slack": {
+          "attachments": [
+            {
+              "isActive": true,
+              "type": "MetricSnapshot"
+            }
+          ],
+          "digests": [
+            {
+              "isActive": true,
+              "type": "ErrorAndCriticalLogs"
+            }
+          ],
+          "url": "https://hooks.slack.com/services/baseline"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "slack": {
+              "attachments": [
+                {
+                  "isActive": true,
+                  "type": "METRIC_SNAPSHOT"
+                }
+              ],
+              "digests": [
+                {
+                  "isActive": true,
+                  "type": "ERROR_AND_CRITICAL_LOGS"
+                }
+              ]
+            },
+            "type": "SLACK",
+            "url": "https://hooks.slack.com/services/baseline"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the digest and the attachment",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "slack": {
+          "attachments": [
+            {
+              "isActive": true,
+              "type": "Logs"
+            }
+          ],
+          "digests": [
+            {
+              "isActive": false,
+              "type": "DataUsage"
+            }
+          ],
+          "url": "https://hooks.slack.com/services/baseline"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "slack": {
+              "attachments": [
+                {
+                  "isActive": true,
+                  "type": "LOGS"
+                }
+              ],
+              "digests": [
+                {
+                  "isActive": false,
+                  "type": "DATA_USAGE"
+                }
+              ]
+            },
+            "type": "SLACK",
+            "url": "https://hooks.slack.com/services/baseline"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "empty lists",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "slack": {
+          "attachments": [],
+          "digests": [],
+          "url": "https://hooks.slack.com/services/baseline"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "slack": {
+              "attachments": [],
+              "digests": []
+            },
+            "type": "SLACK",
+            "url": "https://hooks.slack.com/services/baseline"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the lists are empty",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "externalId": 1001,
+        "id": "<id-1>",
+        "name": "baseline-webhook",
+        "slack": {
+          "attachments": [],
+          "digests": []
+        },
+        "type": "SLACK",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "url": "https://hooks.slack.com/services/baseline"
+      }
+    }
+  },
+  {
+    "step": "set the lists again",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "slack": {
+          "attachments": [
+            {
+              "isActive": true,
+              "type": "MetricSnapshot"
+            }
+          ],
+          "digests": [
+            {
+              "isActive": true,
+              "type": "SpikeAnomalies"
+            }
+          ],
+          "url": "https://hooks.slack.com/services/baseline"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "slack": {
+              "attachments": [
+                {
+                  "isActive": true,
+                  "type": "METRIC_SNAPSHOT"
+                }
+              ],
+              "digests": [
+                {
+                  "isActive": true,
+                  "type": "SPIKE_ANOMALIES"
+                }
+              ]
+            },
+            "type": "SLACK",
+            "url": "https://hooks.slack.com/services/baseline"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "leave the lists out",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "slack": {
+          "url": "https://hooks.slack.com/services/baseline"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "slack": {
+              "attachments": [],
+              "digests": []
+            },
+            "type": "SLACK",
+            "url": "https://hooks.slack.com/services/baseline"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 5,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the lists are empty again",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 5,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "externalId": 1001,
+        "id": "<id-1>",
+        "name": "baseline-webhook",
+        "slack": {
+          "attachments": [],
+          "digests": []
+        },
+        "type": "SLACK",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "url": "https://hooks.slack.com/services/baseline"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

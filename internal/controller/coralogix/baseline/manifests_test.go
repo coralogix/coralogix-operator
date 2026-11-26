@@ -101,6 +101,9 @@ func TestRBAC(t *testing.T) {
 			got := map[string][]rbacRule{}
 			for _, file := range rbacFiles {
 				got[file] = rulesFor(t, file, k.resource)
+				for _, extra := range k.rbacExtra {
+					got[file] = append(got[file], rulesFor(t, file, extra)...)
+				}
 			}
 			checkGolden(t, k.goldenDir(), "rbac.json", marshalGolden(t, got))
 		})

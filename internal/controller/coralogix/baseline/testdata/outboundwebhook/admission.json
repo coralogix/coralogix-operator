@@ -1,0 +1,370 @@
+{
+  "aws": {
+    "accepted": true
+  },
+  "aws empty values": {
+    "accepted": true
+  },
+  "aws no role": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.awsEventBridge.roleName",
+        "message": "Required value"
+      }
+    ]
+  },
+  "demisto": {
+    "accepted": true
+  },
+  "demisto no payload": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.demisto.payload",
+        "message": "Required value"
+      }
+    ]
+  },
+  "demisto no uuid": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.demisto.uuid",
+        "message": "Required value"
+      }
+    ]
+  },
+  "email group": {
+    "accepted": true
+  },
+  "email group absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.emailGroup.emailAddresses",
+        "message": "Required value"
+      }
+    ]
+  },
+  "email group empty": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType",
+        "message": "Required value"
+      }
+    ]
+  },
+  "generic empty payload": {
+    "accepted": true
+  },
+  "generic empty url": {
+    "accepted": true
+  },
+  "generic header in both sources": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.genericWebhook",
+        "message": "Invalid value: \"object\": A header can have only one source"
+      }
+    ]
+  },
+  "generic header ref no key": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.genericWebhook.headersFromSecret.Authorization.key",
+        "message": "Required value"
+      }
+    ]
+  },
+  "generic method absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.genericWebhook.method",
+        "message": "Required value"
+      }
+    ]
+  },
+  "generic method other": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.outboundWebhookType.genericWebhook.method",
+        "message": "Unsupported value: \"Delete\": supported values: \"Unknown\", \"Get\", \"Post\", \"Put\""
+      }
+    ]
+  },
+  "generic method unknown": {
+    "accepted": true
+  },
+  "generic method upper case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.outboundWebhookType.genericWebhook.method",
+        "message": "Unsupported value: \"POST\": supported values: \"Unknown\", \"Get\", \"Post\", \"Put\""
+      }
+    ]
+  },
+  "generic no url": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.genericWebhook",
+        "message": "Invalid value: \"object\": Exactly one of url or urlSecretKeyRef must be set"
+      }
+    ]
+  },
+  "generic url and ref": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.genericWebhook",
+        "message": "Invalid value: \"object\": Exactly one of url or urlSecretKeyRef must be set"
+      }
+    ]
+  },
+  "generic url ref no key": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.genericWebhook.urlSecretKeyRef.key",
+        "message": "Required value"
+      }
+    ]
+  },
+  "generic url ref optional": {
+    "accepted": true
+  },
+  "jira": {
+    "accepted": true
+  },
+  "jira no email": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.jira.email",
+        "message": "Required value"
+      }
+    ]
+  },
+  "jira no project key": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.jira.projectKey",
+        "message": "Required value"
+      }
+    ]
+  },
+  "jira no token": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.jira",
+        "message": "Invalid value: \"object\": Exactly one of apiToken or apiTokenSecretKeyRef must be set"
+      }
+    ]
+  },
+  "jira token and ref": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.jira",
+        "message": "Invalid value: \"object\": Exactly one of apiToken or apiTokenSecretKeyRef must be set"
+      }
+    ]
+  },
+  "name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name empty": {
+    "accepted": true
+  },
+  "opsgenie neither": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.opsgenie",
+        "message": "Invalid value: \"object\": Exactly one of url or urlSecretKeyRef must be set"
+      }
+    ]
+  },
+  "pagerduty empty key": {
+    "accepted": true
+  },
+  "pagerduty key": {
+    "accepted": true
+  },
+  "pagerduty key and ref": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.pagerDuty",
+        "message": "Invalid value: \"object\": Exactly one of serviceKey or serviceKeySecretKeyRef must be set"
+      }
+    ]
+  },
+  "pagerduty neither": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.pagerDuty",
+        "message": "Invalid value: \"object\": Exactly one of serviceKey or serviceKeySecretKeyRef must be set"
+      }
+    ]
+  },
+  "sample": {
+    "accepted": true
+  },
+  "secret sample": {
+    "accepted": true
+  },
+  "sendlog no payload": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.sendLog.payload",
+        "message": "Required value"
+      }
+    ]
+  },
+  "sendlog no url": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.sendLog",
+        "message": "Invalid value: \"object\": Exactly one of url or urlSecretKeyRef must be set"
+      }
+    ]
+  },
+  "slack attachment empty": {
+    "accepted": true
+  },
+  "slack attachment other": {
+    "accepted": true
+  },
+  "slack digest no isActive": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType.slack.digests[0].isActive",
+        "message": "Required value"
+      }
+    ]
+  },
+  "slack digest type other": {
+    "accepted": true
+  },
+  "slack digest unknown": {
+    "accepted": true
+  },
+  "slack no url": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.slack",
+        "message": "Invalid value: \"object\": Exactly one of url or urlSecretKeyRef must be set"
+      }
+    ]
+  },
+  "slack url": {
+    "accepted": true
+  },
+  "teams neither": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType.microsoftTeams",
+        "message": "Invalid value: \"object\": Exactly one of url or urlSecretKeyRef must be set"
+      }
+    ]
+  },
+  "teams url": {
+    "accepted": true
+  },
+  "two types": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType",
+        "message": "Invalid value: \"object\": Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
+      }
+    ]
+  },
+  "type absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.outboundWebhookType",
+        "message": "Required value"
+      }
+    ]
+  },
+  "type empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType",
+        "message": "Invalid value: \"object\": Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
+      }
+    ]
+  },
+  "unknown type": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.outboundWebhookType",
+        "message": "Invalid value: \"object\": Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
+      }
+    ]
+  }
+}

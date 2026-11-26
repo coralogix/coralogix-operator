@@ -1,0 +1,118 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "name": "WebhookAlerts",
+      "outboundWebhookType": {
+        "genericWebhook": {
+          "headers": {
+            "key1": "value1",
+            "key2": "value2"
+          },
+          "method": "Post",
+          "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
+          "url": "https://example.com"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "headers": {
+                "key1": "value1",
+                "key2": "value2"
+              },
+              "method": "POST",
+              "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
+              "uuid": "<id-1>"
+            },
+            "name": "WebhookAlerts",
+            "type": "GENERIC",
+            "url": "https://example.com"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole spec",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "headers": {
+                "key1": "value1",
+                "key2": "value2"
+              },
+              "method": "POST",
+              "payload": "{\"key1\": \"value1\", \"key2\": \"value2\"}",
+              "uuid": "<id-3>"
+            },
+            "name": "WebhookAlerts",
+            "type": "GENERIC",
+            "url": "https://example.com"
+          },
+          "id": "<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

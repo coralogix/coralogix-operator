@@ -1,0 +1,416 @@
+[
+  {
+    "step": "email group",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "emailGroup": {
+          "emailAddresses": [
+            "first@example.com",
+            "second@example.com",
+            "first@example.com"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": [
+                "first@example.com",
+                "second@example.com",
+                "first@example.com"
+              ]
+            },
+            "name": "baseline-webhook",
+            "type": "EMAIL_GROUP"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "an empty email group",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "emailGroup": {
+          "emailAddresses": []
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": []
+            },
+            "name": "baseline-webhook",
+            "type": "EMAIL_GROUP"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1002",
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "opsgenie",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "opsgenie": {
+          "url": "https://api.opsgenie.com/v1/json/coralogix"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "opsgenie": {},
+            "type": "OPSGENIE",
+            "url": "https://api.opsgenie.com/v1/json/coralogix"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-3>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1003",
+        "id": "<id-3>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-3>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "demisto",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "demisto": {
+          "payload": "{}",
+          "url": "https://example.com/demisto",
+          "uuid": "00000000-0000-4000-8000-000000000001"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "demisto": {
+              "payload": "{}",
+              "uuid": "00000000-0000-4000-8000-000000000001"
+            },
+            "name": "baseline-webhook",
+            "type": "DEMISTO",
+            "url": "https://example.com/demisto"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-4>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1004",
+        "id": "<id-4>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-4>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "aws event bridge",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "awsEventBridge": {
+          "detail": "{}",
+          "detailType": "alert",
+          "eventBusArn": "arn:aws:events:us-east-1:000000000000:event-bus/default",
+          "roleName": "coralogix-role",
+          "source": "coralogix"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "awsEventBridge": {
+              "detail": "{}",
+              "detailType": "alert",
+              "eventBusArn": "arn:aws:events:us-east-1:000000000000:event-bus/default",
+              "roleName": "coralogix-role",
+              "source": "coralogix"
+            },
+            "name": "baseline-webhook",
+            "type": "AWS_EVENT_BRIDGE"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-5>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1005",
+        "id": "<id-5>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-5>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "send log without a URL",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "sendLog": {
+          "payload": "{}",
+          "url": ""
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "name": "baseline-webhook",
+            "sendLog": {
+              "payload": "{}",
+              "uuid": "<id-6>"
+            },
+            "type": "SEND_LOG",
+            "url": ""
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

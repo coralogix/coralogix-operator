@@ -1,0 +1,392 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: outboundwebhooks.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: OutboundWebhook
+    listKind: OutboundWebhookList
+    plural: outboundwebhooks
+    singular: outboundwebhook
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              name:
+                minLength: 0
+                type: string
+              outboundWebhookType:
+                properties:
+                  awsEventBridge:
+                    properties:
+                      detail:
+                        type: string
+                      detailType:
+                        type: string
+                      eventBusArn:
+                        type: string
+                      roleName:
+                        type: string
+                      source:
+                        type: string
+                    required:
+                    - detail
+                    - detailType
+                    - eventBusArn
+                    - roleName
+                    - source
+                    type: object
+                  demisto:
+                    properties:
+                      payload:
+                        type: string
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      uuid:
+                        type: string
+                    required:
+                    - payload
+                    - uuid
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                  emailGroup:
+                    properties:
+                      emailAddresses:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - emailAddresses
+                    type: object
+                  genericWebhook:
+                    properties:
+                      headers:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      headersFromSecret:
+                        additionalProperties:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              default: ""
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        type: object
+                      method:
+                        enum:
+                        - Unknown
+                        - Get
+                        - Post
+                        - Put
+                        type: string
+                      payload:
+                        type: string
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    required:
+                    - method
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                    - message: A header can have only one source
+                      rule: '!has(self.headers) || !has(self.headersFromSecret) ||
+                        self.headersFromSecret.all(k, !(k in self.headers))'
+                  jira:
+                    properties:
+                      apiToken:
+                        type: string
+                      apiTokenSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      email:
+                        type: string
+                      projectKey:
+                        type: string
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    required:
+                    - email
+                    - projectKey
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of apiToken or apiTokenSecretKeyRef must
+                        be set
+                      rule: has(self.apiToken) != has(self.apiTokenSecretKeyRef)
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                  microsoftTeams:
+                    properties:
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                  opsgenie:
+                    properties:
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                  pagerDuty:
+                    properties:
+                      serviceKey:
+                        type: string
+                      serviceKeySecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of serviceKey or serviceKeySecretKeyRef
+                        must be set
+                      rule: has(self.serviceKey) != has(self.serviceKeySecretKeyRef)
+                  sendLog:
+                    properties:
+                      payload:
+                        type: string
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    required:
+                    - payload
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                  slack:
+                    properties:
+                      attachments:
+                        items:
+                          properties:
+                            isActive:
+                              type: boolean
+                            type:
+                              type: string
+                          required:
+                          - isActive
+                          - type
+                          type: object
+                        type: array
+                      digests:
+                        items:
+                          properties:
+                            isActive:
+                              type: boolean
+                            type:
+                              type: string
+                          required:
+                          - isActive
+                          - type
+                          type: object
+                        type: array
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                type: object
+                x-kubernetes-validations:
+                - message: 'Exactly one of the following fields must be set: genericWebhook,
+                    slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie,
+                    demisto, awsEventBridge'
+                  rule: '(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1
+                    : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1
+                    : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams)
+                    ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1
+                    : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge)
+                    ? 1 : 0) == 1'
+            required:
+            - name
+            - outboundWebhookType
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              externalId:
+                type: string
+              id:
+                type: string
+              printableStatus:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
