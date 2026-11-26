@@ -1,0 +1,305 @@
+[
+  {
+    "step": "create with only acceptable flags",
+    "spec": {
+      "criteria": {
+        "acceptable": {
+          "flags": "Stays on our product."
+        }
+      },
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality",
+      "shouldIncludeSystemPrompt": false
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "Stays on our product.",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "only prohibited examples",
+    "spec": {
+      "criteria": {
+        "prohibited": {
+          "examples": [
+            "bad one"
+          ]
+        }
+      },
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "description": "",
+          "examples": [
+            {
+              "conversation": "bad one",
+              "score": "0"
+            }
+          ],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "only acceptable examples",
+    "spec": {
+      "criteria": {
+        "acceptable": {
+          "examples": [
+            "good one"
+          ]
+        }
+      },
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "description": "",
+          "examples": [
+            {
+              "conversation": "good one",
+              "score": "1"
+            }
+          ],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "empty criteria",
+    "spec": {
+      "criteria": {},
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "examples": [],
+          "updateMask": "examples"
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "empty criterion objects",
+    "spec": {
+      "criteria": {
+        "acceptable": {},
+        "prohibited": {}
+      },
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "examples": [],
+          "updateMask": "examples"
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 5,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

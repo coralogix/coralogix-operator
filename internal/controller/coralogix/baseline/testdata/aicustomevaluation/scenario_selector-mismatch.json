@@ -1,0 +1,88 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "applications": [
+        {
+          "application": "cxo-baseline-app",
+          "subsystem": "cxo-baseline-subsystem"
+        }
+      ],
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality",
+      "shouldIncludeSystemPrompt": false
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/applications/v3",
+        "query": {
+          "page_offset": [
+            "0"
+          ],
+          "page_size": [
+            "200"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "body": {
+          "applicationIds": [
+            "<id-1>"
+          ],
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile after the selector stops matching the CR",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {}
+    }
+  }
+]

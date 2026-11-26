@@ -1,0 +1,94 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality",
+      "shouldIncludeSystemPrompt": false
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "rename to the name of another custom evaluation",
+    "spec": {
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Taken name",
+      "policyType": "quality"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Taken name",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]
