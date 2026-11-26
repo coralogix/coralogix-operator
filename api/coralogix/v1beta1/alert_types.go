@@ -1002,7 +1002,11 @@ type AnalyticsThreshold struct {
 	// +optional
 	EvaluationPeriodMinutes *int32 `json:"evaluationPeriodMinutes,omitempty"`
 
-	// Whether each result row is treated as a separate permutation.
+	// Deprecated: leave this field out.
+	// It sets whether each result row is treated as a separate permutation.
+	// The API derives the value from the DataPrime query.
+	// The value is true when the query has group-by keys.
+	// The API rejects a value that disagrees with the query.
 	// +optional
 	UseRowsAsPermutations *bool `json:"useRowsAsPermutations,omitempty"`
 
