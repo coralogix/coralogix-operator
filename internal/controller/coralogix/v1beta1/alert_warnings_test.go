@@ -41,7 +41,7 @@ func analyticsTypeDefinitions(timeframe int32, period *int32) map[string]coralog
 			EvaluationPeriodMinutes: period,
 		}},
 		"threshold": {AnalyticsThreshold: &coralogixv1beta1.AnalyticsThreshold{
-			DataprimeQuery: coralogixv1beta1.DataprimeQuery{Query: "source logs | count as c"},
+			DataprimeQuery: coralogixv1beta1.DataprimeQuery{Query: "source logs | count into c"},
 			Rules: []coralogixv1beta1.AnalyticsThresholdRule{{
 				Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("1")},
 				Override:  &coralogixv1beta1.AlertOverride{Priority: coralogixv1beta1.AlertPriorityP5},

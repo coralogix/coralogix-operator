@@ -3596,9 +3596,9 @@ func expandAnalyticsThreshold(threshold *AnalyticsThreshold, priority alerts.Ale
 		TargetColumn:            threshold.TargetColumn,
 		TimeframeMinutes:        alerts.PtrInt32(threshold.TimeframeMinutes),
 		EvaluationPeriodMinutes: threshold.EvaluationPeriodMinutes,
-		UseRowsAsPermutations:   threshold.UseRowsAsPermutations,
-		EvaluationDelayMs:       threshold.EvaluationDelayMs,
-		NoDataPolicy:            expandNoDataPolicy(threshold.NoDataPolicy),
+		// UseRowsAsPermutations is not sent: the API derives it from the group-by keys of the query.
+		EvaluationDelayMs: threshold.EvaluationDelayMs,
+		NoDataPolicy:      expandNoDataPolicy(threshold.NoDataPolicy),
 	}
 
 	if threshold.Operator != nil {

@@ -65,7 +65,7 @@ func analyticsThresholdAlert(name string, rules ...coralogixv1beta1.AnalyticsThr
 	alert := minimalAlert(name)
 	alert.Spec.TypeDefinition = coralogixv1beta1.AlertTypeDefinition{
 		AnalyticsThreshold: &coralogixv1beta1.AnalyticsThreshold{
-			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count as c"},
+			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count into c"},
 			TimeframeMinutes: 15,
 			Rules:            rules,
 		},
