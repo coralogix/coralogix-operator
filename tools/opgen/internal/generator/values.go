@@ -199,8 +199,12 @@ type e2eData struct {
 	Overwrite *overwriteData
 	// Env are the environment variables that the live tests read.
 	Env []string
-	// UUID is true when a substitution names @{uuid}: the tests import the uuid package.
+	// UUID is true when a substitution names @{uuid}: the live tests import the uuid package.
 	UUID bool
+	// CoverageUUID is true when a substitution that the offline coverage test applies names
+	// @{uuid}. That test skips a substitution that names a variable of the environment, so it
+	// imports the uuid package only for another one.
+	CoverageUUID bool
 }
 
 // overwriteData is the e2e test of an overwrite resource. The spec holds one list; the test gives its
@@ -362,8 +366,10 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	for _, from := range sortedKeys(file.Substitutions) {
 		to := file.Substitutions[from]
 		hasUUID := strings.Contains(to, uuidToken)
-		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, to, hasUUID, envRef.MatchString(to)})
+		hasEnv := envRef.MatchString(to)
+		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, to, hasUUID, hasEnv})
 		e2e.UUID = e2e.UUID || hasUUID
+		e2e.CoverageUUID = e2e.CoverageUUID || hasUUID && !hasEnv
 	}
 	if file.Upgrade != nil {
 		for name := range file.Upgrade.Spec {

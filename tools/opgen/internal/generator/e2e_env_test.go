@@ -1,6 +1,9 @@
 package generator
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,4 +103,65 @@ func TestE2EEnvValueOfAnIntegerField(t *testing.T) {
 	if !strings.Contains(script, `'setpath($path; getpath($path) | tonumber)'`) {
 		t.Error("the upgrade check does not turn the values into numbers")
 	}
+}
+
+// The offline coverage test skips a substitution that names a variable of the environment, also when
+// the substitution names @{uuid} too. It imports the uuid package only when it calls it, or the
+// generated test does not compile. The live test applies every substitution and imports it then.
+// The template lists the import only when a substitution needs it, and formatSource removes an
+// unused import too; the test holds for both.
+func TestE2EEnvAndUUIDImports(t *testing.T) {
+	for name, tc := range map[string]struct {
+		to             string
+		coverage, live bool
+	}{
+		"a variable and a UUID": {"'@{env.THING_DESCRIPTION}-@{uuid}'", false, true},
+		"a UUID":                {"'d-@{uuid}'", true, true},
+		"a variable":            {"'@{env.THING_DESCRIPTION}'", false, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			root, input := syntheticRoot(t)
+			env := ""
+			if strings.Contains(tc.to, "@{env.") {
+				env = "env: [THING_DESCRIPTION]\n"
+			}
+			writeThingE2E(t, root, env+"values:\n  destinations: [https://example.com]\n  description: e2e-description\n"+
+				"substitutions:\n  e2e-description: "+tc.to+"\n")
+			if err := generateFromInput(input, root, root); err != nil {
+				t.Fatal(err)
+			}
+			for path, want := range map[string]bool{
+				"internal/controller/coralogix/v1alpha1/thing_coverage_test.go": tc.coverage,
+				"tests/e2e/thing_generated_test.go":                             tc.live,
+			} {
+				imports, calls := uuidUse(t, path, readGenerated(t, root, path))
+				if imports != want || calls != want {
+					t.Errorf("%s: imports uuid = %v, calls uuid = %v, want %v", path, imports, calls, want)
+				}
+			}
+		})
+	}
+}
+
+// uuidUse reports whether a Go file imports the uuid package and whether it calls it.
+func uuidUse(t *testing.T, name, src string) (imports, calls bool) {
+	t.Helper()
+	file, err := parser.ParseFile(token.NewFileSet(), name, src, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, spec := range file.Imports {
+		if spec.Path.Value == `"github.com/google/uuid"` {
+			imports = true
+		}
+	}
+	ast.Inspect(file, func(n ast.Node) bool {
+		if sel, ok := n.(*ast.SelectorExpr); ok {
+			if id, ok := sel.X.(*ast.Ident); ok && id.Name == "uuid" {
+				calls = true
+			}
+		}
+		return true
+	})
+	return imports, calls
 }
