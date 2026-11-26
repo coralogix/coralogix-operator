@@ -1,0 +1,83 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "configOverrides": [
+        {
+          "entityType": "alerts",
+          "fields": [
+            {
+              "fieldName": "integrationKey",
+              "template": "{% if alert.groups[0].keyValues[alertDef.groupByKeys[1]]|lower == \"sample\" %}\nsample-integration-key\n{% elif alert.groups[0].keyValues[alertDef.groupByKeys[1]]|lower == \"another\" %}\nanother-integrations-key\n{% else %}\ngeneric-integration-key\n{% endif %}\n"
+            }
+          ]
+        }
+      ],
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "integrationKey",
+            "value": "some-integration-key"
+          }
+        ]
+      },
+      "description": "This is a sample pager duty connector",
+      "name": "pager-duty-sample",
+      "type": "pagerDuty"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "configOverrides": [
+              {
+                "entityType": "ALERTS",
+                "fields": [
+                  {
+                    "fieldName": "integrationKey",
+                    "template": "{% if alert.groups[0].keyValues[alertDef.groupByKeys[1]]|lower == \"sample\" %}\nsample-integration-key\n{% elif alert.groups[0].keyValues[alertDef.groupByKeys[1]]|lower == \"another\" %}\nanother-integrations-key\n{% else %}\ngeneric-integration-key\n{% endif %}\n"
+                  }
+                ]
+              }
+            ],
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "integrationKey",
+                  "value": "some-integration-key"
+                }
+              ]
+            },
+            "description": "This is a sample pager duty connector",
+            "name": "pager-duty-sample",
+            "type": "PAGERDUTY"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

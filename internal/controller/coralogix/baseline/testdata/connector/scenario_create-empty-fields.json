@@ -1,0 +1,45 @@
+[
+  {
+    "step": "create with an empty list of fields: the API rejects it, a slack connector needs a channel",
+    "spec": {
+      "connectorConfig": {
+        "fields": []
+      },
+      "description": "Baseline description",
+      "name": "baseline-connector",
+      "type": "slack"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {},
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,1 @@
+connector.coralogix.com/finalizer

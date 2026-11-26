@@ -1,0 +1,125 @@
+[
+  {
+    "step": "create with fields and overrides in a fixed order",
+    "spec": {
+      "configOverrides": [
+        {
+          "entityType": "cases",
+          "fields": [
+            {
+              "fieldName": "url",
+              "template": "https://example.com/cases"
+            },
+            {
+              "fieldName": "additionalBodyFields",
+              "template": "{}"
+            }
+          ]
+        },
+        {
+          "entityType": "alerts",
+          "fields": [
+            {
+              "fieldName": "additionalBodyFields",
+              "template": "{\"a\": \"b\"}"
+            }
+          ]
+        }
+      ],
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "url",
+            "value": "https://example.com/hook"
+          },
+          {
+            "fieldName": "additionalBodyFields",
+            "value": "{}"
+          },
+          {
+            "fieldName": "method",
+            "value": "POST"
+          }
+        ]
+      },
+      "description": "Baseline description",
+      "name": "baseline-connector",
+      "type": "genericHttps"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "configOverrides": [
+              {
+                "entityType": "CASES",
+                "fields": [
+                  {
+                    "fieldName": "url",
+                    "template": "https://example.com/cases"
+                  },
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "template": "{}"
+                  }
+                ]
+              },
+              {
+                "entityType": "ALERTS",
+                "fields": [
+                  {
+                    "fieldName": "additionalBodyFields",
+                    "template": "{\"a\": \"b\"}"
+                  }
+                ]
+              }
+            ],
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "url",
+                  "value": "https://example.com/hook"
+                },
+                {
+                  "fieldName": "additionalBodyFields",
+                  "value": "{}"
+                },
+                {
+                  "fieldName": "method",
+                  "value": "POST"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "GENERIC_HTTPS"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "configOverrides": [],
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "emailAddresses",
+            "value": "[\"email1@example.com\",\"email2@example.com\"]"
+          }
+        ]
+      },
+      "description": "Email connector example",
+      "name": "email-sample",
+      "type": "email"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "emailAddresses",
+                  "value": "[\"email1@example.com\",\"email2@example.com\"]"
+                }
+              ]
+            },
+            "description": "Email connector example",
+            "name": "email-sample",
+            "type": "EMAIL"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

@@ -138,6 +138,47 @@ func rulesFor(t *testing.T, file, resource string) []rbacRule {
 	return out
 }
 
+// TestRBACSecretRule checks that the manifests grant the Connector's Secret access. The
+// reconciler reads field values from Secrets (connector_controller.go secrets marker), but the
+// per-kind golden above only matches "connectors" and "connectors/..." rules. The manifest rule
+// is a union with the ApiKey controller's marker, so this asserts a superset: the verbs the
+// Connector needs, not the exact merged set. The marker grep keeps the test honest if the
+// union ever hides a dropped Connector marker.
+func TestRBACSecretRule(t *testing.T) {
+	for _, file := range rbacFiles {
+		t.Run(file, func(t *testing.T) {
+			rules := rulesFor(t, file, "secrets")
+			if len(rules) != 1 {
+				t.Fatalf("%s: want one secrets rule, got %d: %v", file, len(rules), rules)
+			}
+			rule := rules[0]
+			if len(rule.APIGroups) != 1 || rule.APIGroups[0] != "" {
+				t.Fatalf("%s: want the core apiGroup, got %v", file, rule.APIGroups)
+			}
+			verbs := map[string]bool{}
+			for _, v := range rule.Verbs {
+				verbs[v] = true
+			}
+			for _, want := range []string{"get", "list", "watch"} {
+				if !verbs[want] {
+					t.Errorf("%s: the secrets rule lacks %q: %v", file, want, rule.Verbs)
+				}
+			}
+		})
+	}
+	for _, file := range []string{
+		"internal/controller/coralogix/v1alpha1/connector_controller.go",
+	} {
+		raw, err := os.ReadFile(filepath.Join(repoRoot, file))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(raw), "+kubebuilder:rbac:groups=\"\",resources=secrets,verbs=get;list;watch") {
+			t.Errorf("%s: the secrets RBAC marker is gone", file)
+		}
+	}
+}
+
 // TestFinalizer records the finalizer name. A changed name leaves old CRs with a finalizer
 // that no controller removes.
 func TestFinalizer(t *testing.T) {

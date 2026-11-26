@@ -1,0 +1,78 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "configOverrides": [],
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "instanceUrl",
+            "value": "https://your-instance.service-now.com"
+          },
+          {
+            "fieldName": "username",
+            "value": "username-example"
+          },
+          {
+            "fieldName": "password",
+            "value": "password-example"
+          }
+        ]
+      },
+      "description": "ServiceNow connector example",
+      "name": "service-now-sample",
+      "type": "serviceNow"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "instanceUrl",
+                  "value": "https://your-instance.service-now.com"
+                },
+                {
+                  "fieldName": "username",
+                  "value": "username-example"
+                },
+                {
+                  "fieldName": "password",
+                  "value": "password-example"
+                }
+              ]
+            },
+            "description": "ServiceNow connector example",
+            "name": "service-now-sample",
+            "type": "SERVICE_NOW"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

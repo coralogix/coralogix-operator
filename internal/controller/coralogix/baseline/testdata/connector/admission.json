@@ -1,0 +1,340 @@
+{
+  "connector config without fields": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.connectorConfig.fields",
+        "message": "Required value"
+      }
+    ]
+  },
+  "empty description": {
+    "accepted": true
+  },
+  "empty fields": {
+    "accepted": true
+  },
+  "empty name": {
+    "accepted": true
+  },
+  "empty overrides": {
+    "accepted": true
+  },
+  "empty secret reference": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.connectorConfig.fields[0].secretKeyRef.key",
+        "message": "Required value"
+      }
+    ]
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.connectorConfig",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.description",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.type",
+        "message": "Required value"
+      }
+    ]
+  },
+  "field with a secret reference": {
+    "accepted": true
+  },
+  "field with a value": {
+    "accepted": true
+  },
+  "field with a value and a secret reference": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.connectorConfig.fields[0]",
+        "message": "Invalid value: \"object\": Exactly one of value or secretKeyRef must be set"
+      }
+    ]
+  },
+  "field with an empty field name": {
+    "accepted": true
+  },
+  "field with an empty value": {
+    "accepted": true
+  },
+  "field with an empty value and a secret": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.connectorConfig.fields[0]",
+        "message": "Invalid value: \"object\": Exactly one of value or secretKeyRef must be set"
+      }
+    ]
+  },
+  "field with an optional secret": {
+    "accepted": true
+  },
+  "field with neither a value nor a secret": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.connectorConfig.fields[0]",
+        "message": "Invalid value: \"object\": Exactly one of value or secretKeyRef must be set"
+      }
+    ]
+  },
+  "field without a field name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.connectorConfig.fields[0].fieldName",
+        "message": "Required value"
+      }
+    ]
+  },
+  "full": {
+    "accepted": true
+  },
+  "minimal": {
+    "accepted": true
+  },
+  "no spec": {
+    "accepted": true
+  },
+  "one good field and one with neither": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.connectorConfig.fields[1]",
+        "message": "Invalid value: \"object\": Exactly one of value or secretKeyRef must be set"
+      }
+    ]
+  },
+  "override field with an empty template": {
+    "accepted": true
+  },
+  "override field without a field name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.configOverrides[0].fields[0].fieldName",
+        "message": "Required value"
+      }
+    ]
+  },
+  "override field without a template": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.configOverrides[0].fields[0].template",
+        "message": "Required value"
+      }
+    ]
+  },
+  "override for alerts": {
+    "accepted": true
+  },
+  "override for cases": {
+    "accepted": true
+  },
+  "override for testNotifications": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.configOverrides[0].entityType",
+        "message": "Unsupported value: \"testNotifications\": supported values: \"alerts\", \"cases\""
+      }
+    ]
+  },
+  "override for the API's TEST_NOTIFICATIONS": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.configOverrides[0].entityType",
+        "message": "Unsupported value: \"TEST_NOTIFICATIONS\": supported values: \"alerts\", \"cases\""
+      }
+    ]
+  },
+  "override in upper case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.configOverrides[0].entityType",
+        "message": "Unsupported value: \"ALERTS\": supported values: \"alerts\", \"cases\""
+      }
+    ]
+  },
+  "override with empty fields": {
+    "accepted": true
+  },
+  "override without an entity type": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.configOverrides[0].entityType",
+        "message": "Required value"
+      }
+    ]
+  },
+  "override without fields": {
+    "accepted": true
+  },
+  "secret field": {
+    "accepted": true
+  },
+  "secret reference with an empty key": {
+    "accepted": true
+  },
+  "secret reference without a key": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.connectorConfig.fields[0].secretKeyRef.key",
+        "message": "Required value"
+      }
+    ]
+  },
+  "secret reference without a name": {
+    "accepted": true
+  },
+  "two overrides for one entity type": {
+    "accepted": true
+  },
+  "type email": {
+    "accepted": true
+  },
+  "type eventBridge": {
+    "accepted": true
+  },
+  "type genericHttps": {
+    "accepted": true
+  },
+  "type ibmEventNotifications": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.type",
+        "message": "Unsupported value: \"ibmEventNotifications\": supported values: \"slack\", \"genericHttps\", \"pagerDuty\", \"pagerDutyIncidents\", \"email\", \"serviceNow\", \"microsoftTeams\", \"eventBridge\", \"incidentIo\""
+      }
+    ]
+  },
+  "type in upper case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.type",
+        "message": "Unsupported value: \"SLACK\": supported values: \"slack\", \"genericHttps\", \"pagerDuty\", \"pagerDutyIncidents\", \"email\", \"serviceNow\", \"microsoftTeams\", \"eventBridge\", \"incidentIo\""
+      }
+    ]
+  },
+  "type incidentIo": {
+    "accepted": true
+  },
+  "type microsoftTeams": {
+    "accepted": true
+  },
+  "type of the API": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.type",
+        "message": "Unsupported value: \"GENERIC_HTTPS\": supported values: \"slack\", \"genericHttps\", \"pagerDuty\", \"pagerDutyIncidents\", \"email\", \"serviceNow\", \"microsoftTeams\", \"eventBridge\", \"incidentIo\""
+      }
+    ]
+  },
+  "type pagerDuty": {
+    "accepted": true
+  },
+  "type pagerDutyIncidents": {
+    "accepted": true
+  },
+  "type serviceNow": {
+    "accepted": true
+  },
+  "type slack": {
+    "accepted": true
+  },
+  "type unspecified": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.type",
+        "message": "Unsupported value: \"unspecified\": supported values: \"slack\", \"genericHttps\", \"pagerDuty\", \"pagerDutyIncidents\", \"email\", \"serviceNow\", \"microsoftTeams\", \"eventBridge\", \"incidentIo\""
+      }
+    ]
+  },
+  "unknown field is not an error": {
+    "accepted": true
+  },
+  "without a connector config": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.connectorConfig",
+        "message": "Required value"
+      }
+    ]
+  },
+  "without a description": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.description",
+        "message": "Required value"
+      }
+    ]
+  },
+  "without a name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "without a type": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.type",
+        "message": "Required value"
+      }
+    ]
+  }
+}

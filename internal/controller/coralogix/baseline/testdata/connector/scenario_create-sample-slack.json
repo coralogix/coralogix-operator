@@ -1,0 +1,99 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "configOverrides": [
+        {
+          "entityType": "alerts",
+          "fields": [
+            {
+              "fieldName": "channel",
+              "template": "{{alertDef.priority}}\n"
+            }
+          ]
+        }
+      ],
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "channel",
+            "value": "general"
+          },
+          {
+            "fieldName": "integrationId",
+            "value": "some-integration-id"
+          },
+          {
+            "fieldName": "fallbackChannel",
+            "value": "fallback_general"
+          }
+        ]
+      },
+      "description": "This is a sample slack connector",
+      "name": "slack-sample",
+      "type": "slack"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "configOverrides": [
+              {
+                "entityType": "ALERTS",
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "template": "{{alertDef.priority}}\n"
+                  }
+                ]
+              }
+            ],
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "general"
+                },
+                {
+                  "fieldName": "integrationId",
+                  "value": "some-integration-id"
+                },
+                {
+                  "fieldName": "fallbackChannel",
+                  "value": "fallback_general"
+                }
+              ]
+            },
+            "description": "This is a sample slack connector",
+            "name": "slack-sample",
+            "type": "SLACK"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

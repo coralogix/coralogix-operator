@@ -1,0 +1,109 @@
+[
+  {
+    "step": "create with several fields and an override for each entity type",
+    "spec": {
+      "configOverrides": [
+        {
+          "entityType": "alerts",
+          "fields": [
+            {
+              "fieldName": "channel",
+              "template": "{{alertDef.priority}}"
+            }
+          ]
+        },
+        {
+          "entityType": "cases",
+          "fields": [
+            {
+              "fieldName": "channel",
+              "template": "cases-channel"
+            }
+          ]
+        }
+      ],
+      "connectorConfig": {
+        "fields": [
+          {
+            "fieldName": "channel",
+            "value": "team-alerts"
+          },
+          {
+            "fieldName": "fallbackChannel",
+            "value": "fallback_general"
+          }
+        ]
+      },
+      "description": "Baseline description",
+      "name": "baseline-connector",
+      "type": "slack"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/notifications/notification-center/v1/connectors",
+        "body": {
+          "connector": {
+            "configOverrides": [
+              {
+                "entityType": "ALERTS",
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "template": "{{alertDef.priority}}"
+                  }
+                ]
+              },
+              {
+                "entityType": "CASES",
+                "fields": [
+                  {
+                    "fieldName": "channel",
+                    "template": "cases-channel"
+                  }
+                ]
+              }
+            ],
+            "connectorConfig": {
+              "fields": [
+                {
+                  "fieldName": "channel",
+                  "value": "team-alerts"
+                },
+                {
+                  "fieldName": "fallbackChannel",
+                  "value": "fallback_general"
+                }
+              ]
+            },
+            "description": "Baseline description",
+            "name": "baseline-connector",
+            "type": "SLACK"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "connector.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
