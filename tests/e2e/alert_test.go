@@ -687,8 +687,7 @@ var _ = Describe("Alert", Ordered, func() {
 				Name:        alertName,
 				Description: "alert from k8s operator",
 				Priority:    coralogixv1beta1.AlertPriorityP3,
-				// The backend requires groupByKeys to be columns returned by the query.
-				GroupByKeys: []string{"applicationname"},
+				// The API rejects groupByKeys on a result count alert.
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					AnalyticsResultCount: &coralogixv1beta1.AnalyticsResultCount{
 						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
@@ -731,7 +730,7 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(err).ToNot(HaveOccurred())
 			props := resp.GetAlertDef().AlertDefProperties
 			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_RESULT_COUNT))
-			g.Expect(props.GetGroupByKeys()).To(Equal([]string{"applicationname"}))
+			g.Expect(props.GetGroupByKeys()).To(BeEmpty())
 			resultCount := props.AnalyticsResultCount
 			g.Expect(resultCount).ToNot(BeNil())
 			g.Expect(resultCount.DataprimeQuery.GetQuery()).To(Equal("source logs | groupby $l.applicationname aggregate count() as cnt"))
@@ -754,7 +753,6 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Clearing the optional fields")
 		modifiedAlert := fetchedAlert.DeepCopy()
-		modifiedAlert.Spec.GroupByKeys = nil
 		modifiedAlert.Spec.TypeDefinition.AnalyticsResultCount = &coralogixv1beta1.AnalyticsResultCount{
 			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count"},
 			TimeframeMinutes: 15,

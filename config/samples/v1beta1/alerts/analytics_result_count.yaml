@@ -13,9 +13,7 @@ spec:
   name: analytics-result-count alert example
   description: alert from k8s operator
   priority: p3
-  # groupByKeys must be columns returned by the query.
-  groupByKeys:
-    - applicationname
+  # The API rejects groupByKeys on a result count alert.
   alertType:
     analyticsResultCount:
       dataprimeQuery:
