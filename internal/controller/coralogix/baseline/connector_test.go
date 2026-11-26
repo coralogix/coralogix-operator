@@ -456,6 +456,9 @@ var connectorScenarios = map[string]func(h *harness){
 
 	// The update reads only the id of the answer, and the SDK does not require the connector. An
 	// empty answer is success.
+	// No create-empty-response twin exists here: the handwritten HandleCreation panics with a nil
+	// dereference on such an answer (connector_controller.go:80). The follow-up PR adds the
+	// scenario against the generated controller, which returns an error instead.
 	"update-empty-response": func(h *harness) {
 		h.Create("create", connectorMinimal)
 		connectorAPI(h).answerNext("PUT", map[string]any{})
