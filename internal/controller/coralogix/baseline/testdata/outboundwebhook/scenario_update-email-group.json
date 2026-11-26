@@ -1,0 +1,319 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "emailGroup": {
+          "emailAddresses": [
+            "first@example.com",
+            "second@example.com"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": [
+                "first@example.com",
+                "second@example.com"
+              ]
+            },
+            "name": "baseline-webhook",
+            "type": "EMAIL_GROUP"
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "replace an address",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "emailGroup": {
+          "emailAddresses": [
+            "second@example.com",
+            "third@example.com"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": [
+                "second@example.com",
+                "third@example.com"
+              ]
+            },
+            "name": "baseline-webhook",
+            "type": "EMAIL_GROUP"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the new addresses",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "emailGroup": {
+          "emailAddresses": [
+            "second@example.com",
+            "third@example.com"
+          ]
+        },
+        "externalId": 1001,
+        "id": "<id-1>",
+        "name": "baseline-webhook",
+        "type": "EMAIL_GROUP",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    }
+  },
+  {
+    "step": "add a duplicate",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "emailGroup": {
+          "emailAddresses": [
+            "second@example.com",
+            "third@example.com",
+            "second@example.com"
+          ]
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": [
+                "second@example.com",
+                "third@example.com",
+                "second@example.com"
+              ]
+            },
+            "name": "baseline-webhook",
+            "type": "EMAIL_GROUP"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove every address",
+    "spec": {
+      "name": "baseline-webhook",
+      "outboundWebhookType": {
+        "emailGroup": {
+          "emailAddresses": []
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "emailGroup": {
+              "emailAddresses": []
+            },
+            "name": "baseline-webhook",
+            "type": "EMAIL_GROUP"
+          },
+          "id": "<id-1>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "no address remains",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 4,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "emailGroup": {
+          "emailAddresses": []
+        },
+        "externalId": 1001,
+        "id": "<id-1>",
+        "name": "baseline-webhook",
+        "type": "EMAIL_GROUP",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

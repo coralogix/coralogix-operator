@@ -274,6 +274,17 @@ var webhookScenarios = map[string]func(h *harness){
 		h.Delete("delete")
 		h.RecordRemote("the first webhook remains", webhooks(h).snapshot())
 	},
+	"create-get-empty-id": func(h *harness) {
+		webhooks(h).answerNext(http.MethodGet, http.StatusOK, map[string]any{"webhook": map[string]any{
+			"id": "", "type": "GENERIC", "name": "baseline-webhook", "url": "https://example.com/hook", "externalId": 1001,
+			"createdAt": webhookTime, "updatedAt": webhookTime,
+			"genericWebhook": map[string]any{"uuid": fixedIDPrefix + "000000000003", "method": "POST"},
+		}})
+		h.Create("create succeeds, the GET answers a webhook with an empty id", webhookManifest(webhookGenericSpec))
+		h.Reconcile("retry")
+		h.Delete("delete")
+		h.RecordRemote("the remote webhooks", webhooks(h).snapshot())
+	},
 	"create-malformed-response": func(h *harness) {
 		webhooks(h).answerNext(http.MethodPost, http.StatusOK, "not an object")
 		h.Create("create answers a string", webhookManifest(webhookGenericSpec))
@@ -285,6 +296,46 @@ var webhookScenarios = map[string]func(h *harness){
 			"url": "https://example.com/hook-updated", "method": "Put",
 		}))
 		h.RecordRemote("the remote webhook", webhooks(h).snapshot())
+	},
+	"update-slack-lists": func(h *harness) {
+		const url = "https://hooks.slack.com/services/baseline"
+		h.Create("create with a digest and an attachment", webhookManifest(`  name: baseline-webhook
+  outboundWebhookType:
+    slack:
+      url: https://hooks.slack.com/services/baseline
+      digests:
+        - {type: ErrorAndCriticalLogs, isActive: true}
+      attachments:
+        - {type: MetricSnapshot, isActive: true}
+`))
+		h.SetSpec("change the digest and the attachment", webhookSpec("baseline-webhook", "slack", map[string]any{
+			"url":         url,
+			"digests":     []any{map[string]any{"type": "DataUsage", "isActive": false}},
+			"attachments": []any{map[string]any{"type": "Logs", "isActive": true}},
+		}))
+		h.SetSpec("empty lists", webhookSpec("baseline-webhook", "slack", map[string]any{"url": url, "digests": []any{}, "attachments": []any{}}))
+		h.RecordRemote("the lists are empty", webhooks(h).snapshot())
+		h.SetSpec("set the lists again", webhookSpec("baseline-webhook", "slack", map[string]any{
+			"url":         url,
+			"digests":     []any{map[string]any{"type": "SpikeAnomalies", "isActive": true}},
+			"attachments": []any{map[string]any{"type": "MetricSnapshot", "isActive": true}},
+		}))
+		h.SetSpec("leave the lists out", webhookSpec("baseline-webhook", "slack", map[string]any{"url": url}))
+		h.RecordRemote("the lists are empty again", webhooks(h).snapshot())
+		h.Delete("delete")
+	},
+	"update-email-group": func(h *harness) {
+		h.Create("create", webhookManifest("  name: baseline-webhook\n  outboundWebhookType:\n    emailGroup:\n      emailAddresses: [first@example.com, second@example.com]\n"))
+		h.SetSpec("replace an address", webhookSpec("baseline-webhook", "emailGroup", map[string]any{
+			"emailAddresses": []any{"second@example.com", "third@example.com"},
+		}))
+		h.RecordRemote("the new addresses", webhooks(h).snapshot())
+		h.SetSpec("add a duplicate", webhookSpec("baseline-webhook", "emailGroup", map[string]any{
+			"emailAddresses": []any{"second@example.com", "third@example.com", "second@example.com"},
+		}))
+		h.SetSpec("remove every address", webhookSpec("baseline-webhook", "emailGroup", map[string]any{"emailAddresses": []any{}}))
+		h.RecordRemote("no address remains", webhooks(h).snapshot())
+		h.Delete("delete")
 	},
 	"update-change-type": func(h *harness) {
 		h.Create("create", webhookManifest(webhookGenericSpec))
