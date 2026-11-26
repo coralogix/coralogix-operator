@@ -72,7 +72,6 @@ rules:
       - outboundwebhooks
       - recordingrulegroupsets
       - rulegroups
-      - scopes
     verbs:
       - create
       - delete
@@ -97,7 +96,6 @@ rules:
       - outboundwebhooks/finalizers
       - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
-      - scopes/finalizers
     verbs:
       - update
   - apiGroups:
@@ -116,7 +114,6 @@ rules:
       - outboundwebhooks/status
       - recordingrulegroupsets/status
       - rulegroups/status
-      - scopes/status
     verbs:
       - get
       - patch
@@ -150,6 +147,7 @@ rules:
       - savedfunnels
       - savedheatmaps
       - savedpathways
+      - scopes
       - tcologspolicies
       - tcorumpolicies
       - tcotracespolicies
@@ -183,6 +181,7 @@ rules:
       - savedfunnels/finalizers
       - savedheatmaps/finalizers
       - savedpathways/finalizers
+      - scopes/finalizers
       - tcologspolicies/finalizers
       - tcorumpolicies/finalizers
       - tcotracespolicies/finalizers
@@ -210,6 +209,7 @@ rules:
       - savedfunnels/status
       - savedheatmaps/status
       - savedpathways/status
+      - scopes/status
       - tcologspolicies/status
       - tcorumpolicies/status
       - tcotracespolicies/status

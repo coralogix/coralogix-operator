@@ -80,16 +80,21 @@ var _ = Describe("Scope", Ordered, func() {
 		newScopeName := uniqueName("scope-sample-updated")
 		modifiedScope := scope.DeepCopy()
 		modifiedScope.Spec.Name = newScopeName
+		// The generated Scope tests send only <v1>true, so this step sends the other value
+		// that the CRD accepts to the live API.
+		modifiedScope.Spec.DefaultExpression = "<v1>false"
 		Expect(crClient.Patch(ctx, modifiedScope, client.MergeFrom(scope))).To(Succeed())
 
 		By("Verifying Scope is updated in Coralogix backend")
-		Eventually(func() string {
+		Eventually(func(g Gomega) {
 			getScopeRes, err := scopesClient.Get(ctx, &cxsdk.GetTeamScopesByIDsRequest{
 				Ids: []string{scopeID},
 			})
-			Expect(err).ToNot(HaveOccurred())
-			return getScopeRes.Scopes[0].DisplayName
-		}, time.Minute, time.Second).Should(Equal(newScopeName))
+			g.Expect(err).ToNot(HaveOccurred())
+			g.Expect(getScopeRes.Scopes).To(HaveLen(1))
+			g.Expect(getScopeRes.Scopes[0].DisplayName).To(Equal(newScopeName))
+			g.Expect(getScopeRes.Scopes[0].DefaultExpression).To(Equal("<v1>false"))
+		}, time.Minute, time.Second).Should(Succeed())
 	})
 
 	It("After deleted from Coralogix backend directly, it should be recreated based on configured interval",
@@ -152,7 +157,7 @@ func getSampleScope(name, namespace string) *coralogixv1alpha1.Scope {
 		Spec: coralogixv1alpha1.ScopeSpec{
 			Name:        name,
 			Description: ptr.To("This is a sample scope"),
-			Filters: []coralogixv1alpha1.ScopeFilter{
+			Filters: []coralogixv1alpha1.ScopesV1Filter{
 				{
 					EntityType: "logs",
 					Expression: "<v1>(subsystemName == 'purchases') || (subsystemName == 'signups')",

@@ -182,13 +182,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.ScopeReconciler{
-		ScopesClient: oapiClientSet.Scopes(),
-		Interval:     cfg.ReconcileIntervals[utils.ScopeKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Scope")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.GroupReconciler{
 		GroupsClient: oapiClientSet.Groups(),
 		UsersClient:  oapiClientSet.Users(),

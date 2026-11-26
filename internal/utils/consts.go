@@ -28,7 +28,6 @@ const (
 	RecordingRuleGroupSetKind = "RecordingRuleGroupSet"
 	OutboundWebhookKind       = "OutboundWebhook"
 	ApiKeyKind                = "ApiKey"
-	ScopeKind                 = "Scope"
 	GroupKind                 = "Group"
 	PrometheusRuleKind        = "PrometheusRule"
 	ConnectorKind             = "Connector"

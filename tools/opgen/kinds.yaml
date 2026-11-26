@@ -46,3 +46,5 @@ kinds:
     resource: AlertSchedulerRule
   - kind: Integration
     resource: DeployedIntegrationInformation
+  - kind: Scope
+    resource: v1.Scope

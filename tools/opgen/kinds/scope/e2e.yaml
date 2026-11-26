@@ -1,0 +1,18 @@
+# The released CRD accepts only these default expressions, and the API needs a version tag on
+# every expression. The generated tests send <v1>true; the update step of tests/e2e/scope_test.go
+# sends <v1>false.
+values:
+  defaultExpression: '<v1>true'
+  filters.expression: "<v1>subsystemName == 'e2e'"
+update:
+  field: name
+  value: e2e-scope-updated
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    filters:
+      - {entityType: logs, expression: '<v1>true'}
+    defaultExpression: '<v1>true'
+  field: name
+  value: '@{run}-updated'

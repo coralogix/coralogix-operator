@@ -74,7 +74,7 @@
       {
         "type": "FieldValueNotSupported",
         "field": "spec.filters[0].entityType",
-        "message": "Unsupported value: \"metrics\": supported values: \"logs\", \"spans\", \"unspecified\""
+        "message": "Unsupported value: \"metrics\": supported values: \"unspecified\", \"logs\", \"spans\""
       }
     ]
   },
