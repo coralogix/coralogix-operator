@@ -1,0 +1,96 @@
+[
+  {
+    "step": "admission accepts an empty name, the API rejects it",
+    "spec": {
+      "active": true,
+      "name": "",
+      "owner": {
+        "teamId": 4013254
+      },
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

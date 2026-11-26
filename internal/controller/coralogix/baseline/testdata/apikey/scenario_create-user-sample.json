@@ -1,0 +1,186 @@
+[
+  {
+    "step": "create the released user sample (assumed: the API accepts a member of the team; not recorded)",
+    "spec": {
+      "active": true,
+      "name": "user-key-sample",
+      "owner": {
+        "userId": "<id-1>"
+      },
+      "permissions": [
+        "ALERTS-MAP:READ"
+      ],
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "permissions": [
+              "ALERTS-MAP:READ"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "user-key-sample",
+          "owner": {
+            "userId": "<id-1>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-2>",
+        "body": {
+          "isActive": true,
+          "newName": "user-key-sample",
+          "permissions": {
+            "permissions": [
+              "ALERTS-MAP:READ"
+            ]
+          },
+          "presets": {
+            "presets": [
+              "APM"
+            ]
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-2>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "a key that the user owns",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "keys": {
+        "<id-2>": {
+          "active": true,
+          "hashed": false,
+          "id": "<id-2>",
+          "keyPermissions": {
+            "permissions": [
+              "alerts:MapRead"
+            ],
+            "presets": [
+              {
+                "name": "APM",
+                "permissions": [
+                  "apm-views-folders:ReadAccessPolicy",
+                  "apm-views-folders:UpdateAccessPolicy",
+                  "serverless:Read",
+                  "service-catalog:Read",
+                  "service-catalog:ReadApdexConfig",
+                  "service-catalog:ReadDimensionsConfig",
+                  "service-catalog:ReadSLIConfig",
+                  "service-catalog:Update",
+                  "service-catalog:UpdateApdexConfig",
+                  "service-catalog:UpdateDimensionsConfig",
+                  "service-catalog:UpdateSLIConfig",
+                  "service-map:Read"
+                ]
+              }
+            ]
+          },
+          "name": "user-key-sample",
+          "owner": {
+            "userId": "<id-1>"
+          },
+          "value": "cxo-fake-key-value-1"
+        }
+      },
+      "secret": {
+        "data": {
+          "key-value": "cxo-fake-key-value-1"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "coralogix.com/v1alpha1",
+            "controller": true,
+            "kind": "ApiKey",
+            "name": "user-key-sample",
+            "uidIsTheCR": true
+          }
+        ]
+      }
+    }
+  }
+]

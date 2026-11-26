@@ -1,0 +1,101 @@
+[
+  {
+    "step": "create returns an API error",
+    "spec": {
+      "active": true,
+      "name": "baseline-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "livetail:Read"
+      ],
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "permissions": [
+              "livetail:Read"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "baseline-key",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 500
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry creates the key",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "permissions": [
+              "livetail:Read"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "baseline-key",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

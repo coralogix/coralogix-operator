@@ -1,0 +1,110 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Competitor policy",
+      "policyType": "quality",
+      "shouldIncludeSystemPrompt": false
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Competitor policy",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change the name: the custom evaluation was deleted outside the operator",
+    "spec": {
+      "instructions": "Check whether {response} names a competitor.",
+      "name": "Renamed",
+      "policyType": "quality"
+    },
+    "requests": [
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "description": "",
+          "examples": [],
+          "instructions": "Check whether {response} names a competitor.",
+          "name": "Renamed",
+          "policyType": "quality",
+          "safe": "",
+          "shouldIncludeSystemPrompt": false,
+          "violates": ""
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeue": true
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "reconcile again",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

@@ -1,0 +1,163 @@
+[
+  {
+    "step": "create the sample",
+    "spec": {
+      "applications": [
+        {
+          "application": "ai-center-demo",
+          "subsystem": "demo-runner"
+        }
+      ],
+      "criteria": {
+        "acceptable": {
+          "examples": [
+            "User: Which tool should I use?\nAssistant: Our product is a strong fit for that workflow.\n"
+          ],
+          "flags": "Does not mention competitor products.\nStays focused on our product or gives neutral guidance.\n"
+        },
+        "prohibited": {
+          "examples": [
+            "User: Which tool should I use?\nAssistant: CompetitorX is a strong fit for that workflow.\n"
+          ],
+          "flags": "Mentions a competitor product.\nRecommends a competitor as the preferred option.\n"
+        }
+      },
+      "description": "Flags assistant responses that recommend competitor products.",
+      "instructions": "Evaluate whether {response} mentions or recommends competitor products.\nUse {prompt} and {chat_history} as supporting context when they are available.\n",
+      "name": "Competitor Policy",
+      "policyType": "quality",
+      "shouldIncludeSystemPrompt": false
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/applications/v3",
+        "query": {
+          "page_offset": [
+            "0"
+          ],
+          "page_size": [
+            "200"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "body": {
+          "applicationIds": [
+            "00000000-0000-4000-8000-0000000000a5"
+          ],
+          "description": "Flags assistant responses that recommend competitor products.",
+          "examples": [
+            {
+              "conversation": "User: Which tool should I use?\nAssistant: Our product is a strong fit for that workflow.\n",
+              "score": "1"
+            },
+            {
+              "conversation": "User: Which tool should I use?\nAssistant: CompetitorX is a strong fit for that workflow.\n",
+              "score": "0"
+            }
+          ],
+          "instructions": "Evaluate whether {response} mentions or recommends competitor products.\nUse {prompt} and {chat_history} as supporting context when they are available.\n",
+          "name": "Competitor Policy",
+          "policyType": "quality",
+          "safe": "Does not mention competitor products.\nStays focused on our product or gives neutral guidance.\n",
+          "shouldIncludeSystemPrompt": false,
+          "violates": "Mentions a competitor product.\nRecommends a competitor as the preferred option.\n"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again with no change",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/applications/v3",
+        "query": {
+          "page_offset": [
+            "0"
+          ],
+          "page_size": [
+            "200"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3/<id-1>",
+        "body": {
+          "description": "Flags assistant responses that recommend competitor products.",
+          "examples": [
+            {
+              "conversation": "User: Which tool should I use?\nAssistant: Our product is a strong fit for that workflow.\n",
+              "score": "1"
+            },
+            {
+              "conversation": "User: Which tool should I use?\nAssistant: CompetitorX is a strong fit for that workflow.\n",
+              "score": "0"
+            }
+          ],
+          "instructions": "Evaluate whether {response} mentions or recommends competitor products.\nUse {prompt} and {chat_history} as supporting context when they are available.\n",
+          "name": "Competitor Policy",
+          "policyType": "quality",
+          "safe": "Does not mention competitor products.\nStays focused on our product or gives neutral guidance.\n",
+          "shouldIncludeSystemPrompt": false,
+          "violates": "Mentions a competitor product.\nRecommends a competitor as the preferred option.\n"
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/ai/custom-evaluations/v3",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "ai-custom-evaluation.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]

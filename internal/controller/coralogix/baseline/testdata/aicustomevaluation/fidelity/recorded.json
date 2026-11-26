@@ -1,0 +1,618 @@
+{
+  "cases": [
+    {
+      "name": "create with every field as the released operator, update, clear the examples, relink, delete, then act on the deleted custom evaluation",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [
+                "\u003cid\u003e"
+              ],
+              "config": {
+                "examples": [
+                  {
+                    "conversation": "good one",
+                    "score": "1"
+                  },
+                  {
+                    "conversation": "bad one",
+                    "score": "0"
+                  }
+                ],
+                "instructions": "Check whether {response} names a competitor.",
+                "policyType": "quality",
+                "safe": "Stays on our product.",
+                "shouldIncludeSystemPrompt": true,
+                "violates": "Names a competitor."
+              },
+              "description": "Flags competitors.",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-full"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "items": [
+              {
+                "applicationIds": [
+                  "\u003cid\u003e"
+                ],
+                "config": {
+                  "examples": [
+                    {
+                      "conversation": "good one",
+                      "score": "1"
+                    },
+                    {
+                      "conversation": "bad one",
+                      "score": "0"
+                    }
+                  ],
+                  "instructions": "Check whether {response} names a competitor.",
+                  "policyType": "quality",
+                  "safe": "Stays on our product.",
+                  "shouldIncludeSystemPrompt": true,
+                  "violates": "Names a competitor."
+                },
+                "description": "Flags competitors.",
+                "id": "{{id}}",
+                "name": "cxo-fidelity-{{run}}-full"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [
+                  {
+                    "conversation": "good two",
+                    "score": "1"
+                  }
+                ],
+                "instructions": "Check {prompt}.",
+                "policyType": "security",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": "Leaks a secret."
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-renamed"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [
+                  {
+                    "conversation": "good two",
+                    "score": "1"
+                  }
+                ],
+                "instructions": "Check {prompt}.",
+                "policyType": "security",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": "Leaks a secret."
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-renamed"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "Check {prompt}.",
+                "policyType": "security",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": "Leaks a secret."
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-renamed"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "items": [
+              {
+                "applicationIds": [
+                  "\u003cid\u003e"
+                ],
+                "config": {
+                  "examples": [],
+                  "instructions": "Check {prompt}.",
+                  "policyType": "security",
+                  "safe": "",
+                  "shouldIncludeSystemPrompt": false,
+                  "violates": "Leaks a secret."
+                },
+                "description": "",
+                "id": "{{id}}",
+                "name": "cxo-fidelity-{{run}}-renamed"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "applicationId": "{{applicationId}}",
+            "id": "{{id}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Custom evaluation is not linked to this application"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "applicationId": "{{applicationId}}",
+            "id": "{{id}}"
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: Custom evaluation is already linked to this application"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "items": [
+              {
+                "applicationIds": [
+                  "\u003cid\u003e"
+                ],
+                "config": {
+                  "examples": [],
+                  "instructions": "Check {prompt}.",
+                  "policyType": "security",
+                  "safe": "",
+                  "shouldIncludeSystemPrompt": false,
+                  "violates": "Leaks a secret."
+                },
+                "description": "",
+                "id": "{{id}}",
+                "name": "cxo-fidelity-{{run}}-renamed"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "items": []
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Custom evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Custom evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Custom evaluation not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Custom evaluation not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with only the required fields, as the released operator sends them empty",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "Check {response}.",
+                "policyType": "quality",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": ""
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-minimal"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "Check {response}.",
+                "policyType": "quality",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": ""
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-minimal"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "items": [
+              {
+                "applicationIds": [],
+                "config": {
+                  "examples": [],
+                  "instructions": "Check {response}.",
+                  "policyType": "quality",
+                  "safe": "",
+                  "shouldIncludeSystemPrompt": false,
+                  "violates": ""
+                },
+                "description": "",
+                "id": "{{id}}",
+                "name": "cxo-fidelity-{{run}}-minimal"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create with no fields but the name",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "",
+                "policyType": "",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": ""
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-bare"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a name is unique in the team",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "Check {response}.",
+                "policyType": "quality",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": ""
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-taken"
+            }
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: A custom evaluation with name 'cxo-fidelity-{{run}}-taken' already exists"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "Check {response}.",
+                "policyType": "quality",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": ""
+              },
+              "description": "",
+              "id": "{{other}}",
+              "name": "cxo-fidelity-{{run}}-other"
+            }
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: A custom evaluation with name 'cxo-fidelity-{{run}}-taken' already exists"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{other}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an empty name, an unknown application, and ids that are not UUIDs",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Name is required"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: AI application not found"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "items": []
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "Check {response}.",
+                "policyType": "quality",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": ""
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-links"
+            }
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: AI application not found"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: [\n  {\n    \"validation\": \"uuid\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Invalid uuid\",\n    \"path\": [\n      \"id\"\n    ]\n  }\n]"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Resource not found: invalid ID"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an update mask that names every field in camelCase: the listed fields change, and a listed field that the body leaves out is cleared",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [
+                  {
+                    "conversation": "good one",
+                    "score": "1"
+                  },
+                  {
+                    "conversation": "bad one",
+                    "score": "0"
+                  }
+                ],
+                "instructions": "Check whether {response} names a competitor.",
+                "policyType": "quality",
+                "safe": "Stays on our product.",
+                "shouldIncludeSystemPrompt": true,
+                "violates": "Names a competitor."
+              },
+              "description": "Flags competitors.",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-mask"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "item": {
+              "applicationIds": [],
+              "config": {
+                "examples": [],
+                "instructions": "Check {prompt}.",
+                "policyType": "security",
+                "safe": "",
+                "shouldIncludeSystemPrompt": false,
+                "violates": ""
+              },
+              "description": "",
+              "id": "{{id}}",
+              "name": "cxo-fidelity-{{run}}-mask-renamed"
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "items": [
+              {
+                "applicationIds": [],
+                "config": {
+                  "examples": [],
+                  "instructions": "Check {prompt}.",
+                  "policyType": "security",
+                  "safe": "",
+                  "shouldIncludeSystemPrompt": false,
+                  "violates": ""
+                },
+                "description": "",
+                "id": "{{id}}",
+                "name": "cxo-fidelity-{{run}}-mask-renamed"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the List of AI applications: page_offset counts applications, not pages. The team has 2 to 200 applications, so offset 1 of a 200 page has applications, and offset 1000 has none",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "aiApplications": [
+              {
+                "application": "\u003cstring\u003e",
+                "color": "\u003cstring\u003e",
+                "companyId": "\u003cstring\u003e",
+                "createdAt": "\u003cstring\u003e",
+                "guardrailsIntegrated": "\u003cbool\u003e",
+                "icon": "\u003cstring\u003e",
+                "id": "\u003cstring\u003e",
+                "subsystem": "\u003cstring\u003e",
+                "updatedAt": "\u003cstring\u003e"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiApplications": [
+              {
+                "application": "\u003cstring\u003e",
+                "color": "\u003cstring\u003e",
+                "companyId": "\u003cstring\u003e",
+                "createdAt": "\u003cstring\u003e",
+                "guardrailsIntegrated": "\u003cbool\u003e",
+                "icon": "\u003cstring\u003e",
+                "id": "\u003cstring\u003e",
+                "subsystem": "\u003cstring\u003e",
+                "updatedAt": "\u003cstring\u003e"
+              }
+            ]
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "aiApplications": []
+          }
+        }
+      ]
+    }
+  ]
+}

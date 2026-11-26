@@ -1,0 +1,336 @@
+{
+  "100 acceptable examples": {
+    "accepted": true
+  },
+  "100 examples on both sides together": {
+    "accepted": true
+  },
+  "101 acceptable examples": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.criteria.acceptable.examples",
+        "message": "Too many: 101: must have at most 100 items"
+      }
+    ]
+  },
+  "101 examples on both sides together": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.criteria",
+        "message": "Invalid value: \"object\": criteria can include at most 100 total examples across acceptable and prohibited criteria"
+      }
+    ]
+  },
+  "1025 applications": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooMany",
+        "field": "spec.applications",
+        "message": "Too many: 1025: must have at most 1024 items"
+      }
+    ]
+  },
+  "acceptable flags": {
+    "accepted": true
+  },
+  "application of 257 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.applications[0].application",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "application with empty name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.applications[0].application",
+        "message": "Invalid value: \"\": spec.applications[0].application in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "application without subsystem": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.applications[0].subsystem",
+        "message": "Required value"
+      }
+    ]
+  },
+  "criteria with an unknown side": {
+    "accepted": true
+  },
+  "description": {
+    "accepted": true
+  },
+  "description of 65537 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.description",
+        "message": "Too long: may not be longer than 65536"
+      }
+    ]
+  },
+  "empty acceptable flags": {
+    "accepted": true
+  },
+  "empty criteria": {
+    "accepted": true
+  },
+  "empty description": {
+    "accepted": true
+  },
+  "empty example": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.criteria.acceptable.examples[0]",
+        "message": "Invalid value: \"\": spec.criteria.acceptable.examples[0] in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "empty name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"\": spec.name in body should be at least 1 chars long"
+      }
+    ]
+  },
+  "example of 65537 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.criteria.acceptable.examples[0]",
+        "message": "Too long: may not be longer than 65536"
+      }
+    ]
+  },
+  "flags of 65537 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.criteria.prohibited.flags",
+        "message": "Too long: may not be longer than 65536"
+      }
+    ]
+  },
+  "instructions of only a placeholder": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      }
+    ]
+  },
+  "instructions with an unknown one": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.instructions",
+        "message": "Invalid value: \"Check {answer}.\": spec.instructions in body should match '\\{(prompt|response|chat_history)\\}'"
+      },
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      }
+    ]
+  },
+  "instructions with {chat_history}": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      }
+    ]
+  },
+  "instructions with {prompt}": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      }
+    ]
+  },
+  "instructions without a placeholder": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.instructions",
+        "message": "Invalid value: \"Check the answer.\": spec.instructions in body should match '\\{(prompt|response|chat_history)\\}'"
+      },
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      }
+    ]
+  },
+  "minimal": {
+    "accepted": true
+  },
+  "name of 256 characters": {
+    "accepted": true
+  },
+  "name of 257 characters": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTooLong",
+        "field": "spec.name",
+        "message": "Too long: may not be longer than 256"
+      }
+    ]
+  },
+  "name of spaces": {
+    "accepted": true
+  },
+  "no applications": {
+    "accepted": true
+  },
+  "no examples": {
+    "accepted": true
+  },
+  "no instructions": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.instructions",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      }
+    ]
+  },
+  "no name": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "no policyType": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.policyType",
+        "message": "Required value"
+      }
+    ]
+  },
+  "one application": {
+    "accepted": true
+  },
+  "one application in two subsystems": {
+    "accepted": true
+  },
+  "policyType in upper case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      },
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.policyType",
+        "message": "Unsupported value: \"QUALITY\": supported values: \"quality\", \"security\""
+      }
+    ]
+  },
+  "policyType other": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      },
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.policyType",
+        "message": "Unsupported value: \"other\": supported values: \"quality\", \"security\""
+      }
+    ]
+  },
+  "policyType security": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.name",
+        "message": "Invalid value: \"boolean\": spec.name in body must be of type string: \"boolean\""
+      }
+    ]
+  },
+  "repeated application": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueDuplicate",
+        "field": "spec.applications[1]",
+        "message": "Duplicate value: map[string]interface {}{\"application\":\"app\", \"subsystem\":\"sub\"}"
+      }
+    ]
+  },
+  "repeated example": {
+    "accepted": true
+  },
+  "shouldIncludeSystemPrompt as a string": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.shouldIncludeSystemPrompt",
+        "message": "Invalid value: \"string\": spec.shouldIncludeSystemPrompt in body must be of type boolean: \"string\""
+      }
+    ]
+  },
+  "shouldIncludeSystemPrompt true": {
+    "accepted": true
+  },
+  "unknown spec field is not an error": {
+    "accepted": true
+  }
+}

@@ -1,0 +1,163 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: aicustomevaluations.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: AICustomEvaluation
+    listKind: AICustomEvaluationList
+    plural: aicustomevaluations
+    singular: aicustomevaluation
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              applications:
+                items:
+                  properties:
+                    application:
+                      maxLength: 256
+                      minLength: 1
+                      type: string
+                    subsystem:
+                      maxLength: 256
+                      minLength: 1
+                      type: string
+                  required:
+                  - application
+                  - subsystem
+                  type: object
+                maxItems: 1024
+                type: array
+                x-kubernetes-list-map-keys:
+                - application
+                - subsystem
+                x-kubernetes-list-type: map
+              criteria:
+                properties:
+                  acceptable:
+                    properties:
+                      examples:
+                        items:
+                          maxLength: 65536
+                          minLength: 1
+                          type: string
+                        maxItems: 100
+                        type: array
+                      flags:
+                        maxLength: 65536
+                        type: string
+                    type: object
+                  prohibited:
+                    properties:
+                      examples:
+                        items:
+                          maxLength: 65536
+                          minLength: 1
+                          type: string
+                        maxItems: 100
+                        type: array
+                      flags:
+                        maxLength: 65536
+                        type: string
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: criteria can include at most 100 total examples across
+                    acceptable and prohibited criteria
+                  rule: (!has(self.acceptable) || !has(self.acceptable.examples) ||
+                    !has(self.prohibited) || !has(self.prohibited.examples)) || size(self.acceptable.examples)
+                    + size(self.prohibited.examples) <= 100
+              description:
+                maxLength: 65536
+                type: string
+              instructions:
+                maxLength: 1048576
+                minLength: 1
+                pattern: \{(prompt|response|chat_history)\}
+                type: string
+              name:
+                maxLength: 256
+                minLength: 1
+                type: string
+              policyType:
+                enum:
+                - quality
+                - security
+                maxLength: 256
+                minLength: 1
+                type: string
+              shouldIncludeSystemPrompt:
+                default: false
+                type: boolean
+            required:
+            - instructions
+            - name
+            - policyType
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              id:
+                type: string
+              printableStatus:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

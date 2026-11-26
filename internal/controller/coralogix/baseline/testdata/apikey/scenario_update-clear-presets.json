@@ -1,0 +1,174 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "active": true,
+      "name": "baseline-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "livetail:Read"
+      ],
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "permissions": [
+              "livetail:Read"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "baseline-key",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove the presets: update sends an empty presets object",
+    "spec": {
+      "active": true,
+      "name": "baseline-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "livetail:Read"
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "body": {
+          "isActive": true,
+          "newName": "baseline-key",
+          "permissions": {
+            "permissions": [
+              "livetail:Read"
+            ]
+          },
+          "presets": {}
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote key has no preset",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "keys": {
+        "<id-1>": {
+          "active": true,
+          "hashed": false,
+          "id": "<id-1>",
+          "keyPermissions": {
+            "permissions": [
+              "livetail:Read"
+            ],
+            "presets": []
+          },
+          "name": "baseline-key",
+          "owner": {
+            "teamId": 4013254
+          },
+          "value": "cxo-fake-key-value-1"
+        }
+      },
+      "secret": {
+        "data": {
+          "key-value": "cxo-fake-key-value-1"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "coralogix.com/v1alpha1",
+            "controller": true,
+            "kind": "ApiKey",
+            "name": "apikey",
+            "uidIsTheCR": true
+          }
+        ]
+      }
+    }
+  }
+]
