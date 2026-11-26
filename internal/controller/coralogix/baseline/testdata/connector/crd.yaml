@@ -45,10 +45,26 @@ spec:
                             type: string
                           template:
                             type: string
+                          templateSecretKeyRef:
+                            properties:
+                              key:
+                                type: string
+                              name:
+                                default: ""
+                                type: string
+                              optional:
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
                         required:
                         - fieldName
-                        - template
                         type: object
+                        x-kubernetes-validations:
+                        - message: Only one of template or templateSecretKeyRef can
+                            be set
+                          rule: '!(has(self.template) && has(self.templateSecretKeyRef))'
                       type: array
                   required:
                   - entityType

@@ -11974,7 +11974,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-
+TemplatedConnectorConfigField defines a templated field in a config override.
 
 <table>
     <thead>
@@ -11996,9 +11996,72 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
         <td><b>template</b></td>
         <td>string</td>
         <td>
-          Template is the template for the field.<br/>
+          Template is the literal template for the field. Conflicts with TemplateSecretKeyRef.
+Use TemplateSecretKeyRef when the template holds a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#connectorspecconfigoverridesindexfieldsindextemplatesecretkeyref">templateSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          TemplateSecretKeyRef is a reference to a secret key containing the template.
+The secret must be in the same namespace as the Connector.
+The Optional flag of the selector is ignored. A missing secret or key is an error,
+as for the SecretKeyRef of a config field.
+Conflicts with Template.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Connector.spec.configOverrides[index].fields[index].templateSecretKeyRef
+<sup><sup>[↩ Parent](#connectorspecconfigoverridesindexfieldsindex)</sup></sup>
+
+
+
+TemplateSecretKeyRef is a reference to a secret key containing the template.
+The secret must be in the same namespace as the Connector.
+The Optional flag of the selector is ignored. A missing secret or key is an error,
+as for the SecretKeyRef of a config field.
+Conflicts with Template.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

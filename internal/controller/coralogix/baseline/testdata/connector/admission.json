@@ -144,14 +144,7 @@
     ]
   },
   "override field without a template": {
-    "accepted": false,
-    "causes": [
-      {
-        "type": "FieldValueRequired",
-        "field": "spec.configOverrides[0].fields[0].template",
-        "message": "Required value"
-      }
-    ]
+    "accepted": true
   },
   "override for alerts": {
     "accepted": true

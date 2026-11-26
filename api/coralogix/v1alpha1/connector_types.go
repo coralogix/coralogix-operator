@@ -79,12 +79,24 @@ type EntityTypeConfigOverrides struct {
 	Fields []TemplatedConnectorConfigField `json:"fields,omitempty"`
 }
 
+// TemplatedConnectorConfigField defines a templated field in a config override.
+// +kubebuilder:validation:XValidation:rule="!(has(self.template) && has(self.templateSecretKeyRef))",message="Only one of template or templateSecretKeyRef can be set"
 type TemplatedConnectorConfigField struct {
 	// FieldName is the name of the field. e.g. "channel" for slack.
 	FieldName string `json:"fieldName"`
 
-	// Template is the template for the field.
-	Template string `json:"template"`
+	// Template is the literal template for the field. Conflicts with TemplateSecretKeyRef.
+	// Use TemplateSecretKeyRef when the template holds a credential.
+	// +optional
+	Template string `json:"template,omitempty"`
+
+	// TemplateSecretKeyRef is a reference to a secret key containing the template.
+	// The secret must be in the same namespace as the Connector.
+	// The Optional flag of the selector is ignored. A missing secret or key is an error,
+	// as for the SecretKeyRef of a config field.
+	// Conflicts with Template.
+	// +optional
+	TemplateSecretKeyRef *corev1.SecretKeySelector `json:"templateSecretKeyRef,omitempty"`
 }
 
 // ConnectorStatus defines the observed state of Connector.
@@ -156,7 +168,7 @@ func (c *Connector) ExtractConnector(ctx context.Context) (*connectors.Connector
 		Fields: fields,
 	}
 
-	configOverrides, err := ExtractEntityTypeConfigOverrides(c.Spec.ConfigOverrides)
+	configOverrides, err := ExtractEntityTypeConfigOverrides(ctx, c.Spec.ConfigOverrides, c.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract config overrides: %w", err)
 	}
@@ -190,7 +202,7 @@ func ExtractConnectorConfigFields(ctx context.Context, fields []ConnectorConfigF
 	return result, nil
 }
 
-func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]connectors.EntityTypeConfigOverrides, error) {
+func ExtractEntityTypeConfigOverrides(ctx context.Context, overrides []EntityTypeConfigOverrides, namespace string) ([]connectors.EntityTypeConfigOverrides, error) {
 	var result []connectors.EntityTypeConfigOverrides
 	for _, override := range overrides {
 		entityType, ok := schemaToOpenApiEntityType[override.EntityType]
@@ -202,23 +214,41 @@ func ExtractEntityTypeConfigOverrides(overrides []EntityTypeConfigOverrides) ([]
 			EntityType: entityType,
 		}
 
-		entityTypeConfigOverrides.Fields = ExtractConfigOverridesFields(override.Fields)
+		fields, err := ExtractConfigOverridesFields(ctx, override.Fields, namespace)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract fields of entity type %s: %w", override.EntityType, err)
+		}
+		entityTypeConfigOverrides.Fields = fields
 		result = append(result, entityTypeConfigOverrides)
 	}
 
 	return result, nil
 }
 
-func ExtractConfigOverridesFields(fields []TemplatedConnectorConfigField) []connectors.TemplatedConnectorConfigField {
+func ExtractConfigOverridesFields(ctx context.Context, fields []TemplatedConnectorConfigField, namespace string) ([]connectors.TemplatedConnectorConfigField, error) {
 	var result []connectors.TemplatedConnectorConfigField
 	for _, field := range fields {
+		template := field.Template
+		if field.TemplateSecretKeyRef != nil {
+			// The CRD rule rejects two sources. This check is a backstop for objects that skip admission.
+			// A typed round trip drops an empty template, so only a non-empty template counts here.
+			if template != "" {
+				return nil, fmt.Errorf("field '%s' sets both template and templateSecretKeyRef; only one source is allowed", field.FieldName)
+			}
+			secretValue, err := readSecret(ctx, *field.TemplateSecretKeyRef, namespace)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read secret for template of field '%s': %w", field.FieldName, err)
+			}
+			template = secretValue
+		}
+
 		result = append(result, connectors.TemplatedConnectorConfigField{
 			FieldName: field.FieldName,
-			Template:  connectors.PtrString(field.Template),
+			Template:  connectors.PtrString(template),
 		})
 	}
 
-	return result
+	return result, nil
 }
 
 func readSecret(ctx context.Context, secretKeyRef corev1.SecretKeySelector, namespace string) (string, error) {
