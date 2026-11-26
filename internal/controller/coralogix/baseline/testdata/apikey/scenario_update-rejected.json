@@ -227,7 +227,8 @@
             "apiVersion": "coralogix.com/v1alpha1",
             "controller": true,
             "kind": "ApiKey",
-            "name": "apikey"
+            "name": "apikey",
+            "uidIsTheCR": true
           }
         ]
       }

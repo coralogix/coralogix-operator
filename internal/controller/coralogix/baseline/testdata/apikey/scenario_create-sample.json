@@ -129,7 +129,8 @@
             "apiVersion": "coralogix.com/v1alpha1",
             "controller": true,
             "kind": "ApiKey",
-            "name": "team-key-sample"
+            "name": "team-key-sample",
+            "uidIsTheCR": true
           }
         ]
       }
@@ -256,7 +257,8 @@
             "apiVersion": "coralogix.com/v1alpha1",
             "controller": true,
             "kind": "ApiKey",
-            "name": "team-key-sample"
+            "name": "team-key-sample",
+            "uidIsTheCR": true
           }
         ]
       }

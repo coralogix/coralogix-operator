@@ -1,6 +1,6 @@
 [
   {
-    "step": "create the released user sample",
+    "step": "create the released user sample (assumed: the API accepts a member of the team; not recorded)",
     "spec": {
       "active": true,
       "name": "user-key-sample",
@@ -176,7 +176,8 @@
             "apiVersion": "coralogix.com/v1alpha1",
             "controller": true,
             "kind": "ApiKey",
-            "name": "user-key-sample"
+            "name": "user-key-sample",
+            "uidIsTheCR": true
           }
         ]
       }

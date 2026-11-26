@@ -24,7 +24,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -179,9 +181,25 @@ func apiKeySecret(h *harness) any {
 	if err != nil {
 		h.t.Fatalf("get the secret: %v", err)
 	}
+	// The UID is random on each run, so the golden records whether it is the UID of the CR. After
+	// the CR is gone there is no UID to compare, and the golden leaves the field out.
+	var crUID types.UID
+	if h.key.Name != "" {
+		cr := &unstructured.Unstructured{}
+		cr.SetGroupVersionKind(h.gvk)
+		if err := h.client.Get(context.Background(), h.key, cr); err == nil {
+			crUID = cr.GetUID()
+		} else if !apierrors.IsNotFound(err) {
+			h.t.Fatalf("get the CR: %v", err)
+		}
+	}
 	owners := []any{}
 	for _, o := range secret.OwnerReferences {
-		owners = append(owners, map[string]any{"apiVersion": o.APIVersion, "kind": o.Kind, "name": o.Name, "controller": o.Controller != nil && *o.Controller})
+		owner := map[string]any{"apiVersion": o.APIVersion, "kind": o.Kind, "name": o.Name, "controller": o.Controller != nil && *o.Controller}
+		if crUID != "" {
+			owner["uidIsTheCR"] = o.UID == crUID
+		}
+		owners = append(owners, owner)
 	}
 	data := map[string]string{}
 	for k, v := range secret.Data {
@@ -243,8 +261,11 @@ var apiKeyScenarios = map[string]func(h *harness){
 		h.Reconcile("resync: update sends every field, then get reads the value")
 		recordAPIKeyRemote(h, "the remote policy is normalized, the secret is unchanged")
 	},
+	// Assumed, not recorded: the recording key could not create a key of a user, so the success
+	// of this create is what the fake assumes from the contract. EU2 answered 403 only for a user
+	// that is not a member of the team.
 	"create-user-sample": func(h *harness) {
-		h.CreateFromFile("create the released user sample", "config/samples/v1alpha1/apikeys/user_key.yaml")
+		h.CreateFromFile("create the released user sample (assumed: the API accepts a member of the team; not recorded)", "config/samples/v1alpha1/apikeys/user_key.yaml")
 		h.Reconcile("resync")
 		recordAPIKeyRemote(h, "a key that the user owns")
 	},
@@ -258,6 +279,12 @@ var apiKeyScenarios = map[string]func(h *harness){
 		h.Create("create with presets only: active defaults to true", apiKeyManifest("  name: baseline-key\n  owner:\n    teamId: 4013254\n  presets:\n    - SendData\n"))
 		h.Reconcile("resync")
 		h.Reconcile("resync again")
+	},
+	"create-permissions-only": func(h *harness) {
+		h.Create("create with permissions only: no presets object", apiKeyManifest("  name: baseline-key\n  owner:\n    teamId: 4013254\n  permissions:\n    - livetail:Read\n"))
+		recordAPIKeyRemote(h, "the key has the permission and no preset")
+		h.Reconcile("resync: update sends an empty presets object")
+		recordAPIKeyRemote(h, "the remote key is unchanged")
 	},
 	// Create cannot set active: the key is active until the first resync sends isActive false.
 	"create-inactive": func(h *harness) {
@@ -357,6 +384,25 @@ var apiKeyScenarios = map[string]func(h *harness){
 		h.Create("create", apiKeyManifest(apiKeySpec))
 		h.SetSpec("remove the presets: update sends an empty presets object", apiKeySpecMap("baseline-key", true, nil, []any{"livetail:Read"}, nil))
 		recordAPIKeyRemote(h, "the remote key has no preset")
+	},
+	"update-clear-permissions": func(h *harness) {
+		h.Create("create", apiKeyManifest(apiKeySpec))
+		h.SetSpec("remove the permissions: update sends an empty permissions object", apiKeySpecMap("baseline-key", true, []any{"APM"}, nil, nil))
+		recordAPIKeyRemote(h, "the remote key has no permission")
+	},
+	// The update body has no owner. A changed owner is accepted by admission and never sent: the
+	// key keeps its owner, and each reconcile reports success.
+	"update-owner": func(h *harness) {
+		h.Create("create", apiKeyManifest(apiKeySpec))
+		withOwner := func(owner map[string]any) map[string]any {
+			spec := apiKeySpecMap("baseline-key", true, []any{"APM"}, []any{"livetail:Read"}, nil)
+			spec["owner"] = owner
+			return spec
+		}
+		h.SetSpec("change the owner to another team", withOwner(map[string]any{"teamId": int64(1234567)}))
+		recordAPIKeyRemote(h, "the remote key keeps its team")
+		h.SetSpec("change the owner to a user", withOwner(map[string]any{"userId": apiKeyFakeUser}))
+		recordAPIKeyRemote(h, "the remote key keeps its team")
 	},
 	"update-set-access-policy": func(h *harness) {
 		h.Create("create without a policy", apiKeyManifest(apiKeySpec))
