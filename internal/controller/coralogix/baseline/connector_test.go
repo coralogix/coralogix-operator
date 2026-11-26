@@ -401,6 +401,18 @@ var connectorScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again: the API answers as it should")
 	},
 
+	// An answer without a connector is an error, not a success: the generated HandleCreation
+	// refuses to set a status id from it, the reconciler records RemoteCreationFailed, and the
+	// next reconcile creates again. The retry only meets a clean API here because the forced
+	// answer stores nothing; an API that created the connector and then answered without the
+	// object would reject the retry as a duplicate name. The handwritten controller had no such
+	// scenario: it panicked on this answer (see the baseline PR).
+	"create-empty-response": func(h *harness) {
+		connectorAPI(h).answerNext("POST", map[string]any{})
+		h.Create("create: the answer has no connector", connectorMinimal)
+		h.Reconcile("reconcile again")
+	},
+
 	"resync": func(h *harness) {
 		h.Create("create", connectorMinimal)
 		h.Reconcile("reconcile again with no change: the operator sends a PUT")
