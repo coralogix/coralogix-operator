@@ -144,3 +144,19 @@ func TestNestedUpdateMaskChecks(t *testing.T) {
 		}
 	})
 }
+
+// A field that the CR reads from a Secret is set when the CR names only the Secret, so the mask
+// names its path then too. Otherwise the API would keep the stored value.
+func TestNestedUpdateMaskCountsTheSecretAsSet(t *testing.T) {
+	contract, err := os.ReadFile(filepath.Join("testdata", "openapi.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	override := nestedMaskOverride + "types:\n  MaskThingRule:\n    exactlyOneOf:\n      - [note, enabled]\n    fields:\n      note: {secretRef: true}\n"
+	files := checkLifecycleFixture(t, "MaskThing", string(contract), override)
+	convert := string(files["api/coralogix/v1alpha1/maskthing_convert.go"])
+	want := "if in.Spec.Rule.Note != nil || in.Spec.Rule.NoteSecretKeyRef != nil {\n\t\tpaths = append(paths, \"rule.note\")"
+	if !strings.Contains(convert, want) {
+		t.Errorf("the mask does not name rule.note for a CR that names only its Secret:\n%s", convert[strings.Index(convert, "func (in *MaskThing) UpdateMask()"):])
+	}
+}
