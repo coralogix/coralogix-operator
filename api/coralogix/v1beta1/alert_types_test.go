@@ -147,7 +147,7 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 
 	t.Run("minimal defaults override to alert priority and leaves operator unset", func(t *testing.T) {
 		props, err := analyticsAlertSpec(AlertTypeDefinition{AnalyticsThreshold: &AnalyticsThreshold{
-			DataprimeQuery:   DataprimeQuery{Query: "source logs | count as c"},
+			DataprimeQuery:   DataprimeQuery{Query: "source logs | count into c"},
 			TimeframeMinutes: 30,
 			Rules:            []AnalyticsThresholdRule{{Condition: AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("10")}}},
 		}}).ExtractAlertDefProperties(&GetResourceRefProperties{})
@@ -155,7 +155,7 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 		require.Equal(t, alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_THRESHOLD, props.GetType())
 		require.Nil(t, props.AnalyticsResultCount)
 		require.Equal(t, &alerts.AnalyticsThresholdType{
-			DataprimeQuery:   &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count as c")},
+			DataprimeQuery:   &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count into c")},
 			TimeframeMinutes: ptr.To[int32](30),
 			Rules: []alerts.AnalyticsThresholdRule{
 				{Condition: &alerts.AnalyticsThresholdRuleCondition{Threshold: ptr.To(10.0)}, Override: p3},
@@ -163,9 +163,9 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 		}, props.AnalyticsThreshold)
 	})
 
-	t.Run("full keeps rule order", func(t *testing.T) {
+	t.Run("full keeps rule order and does not send useRowsAsPermutations", func(t *testing.T) {
 		props, err := analyticsAlertSpec(AlertTypeDefinition{AnalyticsThreshold: &AnalyticsThreshold{
-			DataprimeQuery:        DataprimeQuery{Query: "source logs | count as c"},
+			DataprimeQuery:        DataprimeQuery{Query: "source logs | count into c"},
 			TimeframeMinutes:      30,
 			Operator:              ptr.To(AnalyticsThresholdOperatorLessThan),
 			TargetColumn:          ptr.To("c"),
@@ -179,13 +179,12 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 		}}).ExtractAlertDefProperties(&GetResourceRefProperties{})
 		require.NoError(t, err)
 		require.Equal(t, &alerts.AnalyticsThresholdType{
-			DataprimeQuery:        &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count as c")},
-			TimeframeMinutes:      ptr.To[int32](30),
-			Operator:              alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN.Ptr(),
-			TargetColumn:          ptr.To("c"),
-			UseRowsAsPermutations: ptr.To(false),
-			EvaluationDelayMs:     ptr.To[int32](60000),
-			NoDataPolicy:          &alerts.NoDataPolicy{State: alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST.Ptr()},
+			DataprimeQuery:    &alerts.DataprimeAlertQuery{Query: ptr.To("source logs | count into c")},
+			TimeframeMinutes:  ptr.To[int32](30),
+			Operator:          alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN.Ptr(),
+			TargetColumn:      ptr.To("c"),
+			EvaluationDelayMs: ptr.To[int32](60000),
+			NoDataPolicy:      &alerts.NoDataPolicy{State: alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST.Ptr()},
 			Rules: []alerts.AnalyticsThresholdRule{
 				{Condition: &alerts.AnalyticsThresholdRuleCondition{Threshold: ptr.To(42.5)}, Override: p1},
 				{Condition: &alerts.AnalyticsThresholdRuleCondition{Threshold: ptr.To(20.0)}, Override: p3},
@@ -196,7 +195,7 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 	t.Run("evaluation period is sent when set and left unset otherwise", func(t *testing.T) {
 		spec := func(period *int32) *AlertSpec {
 			return analyticsAlertSpec(AlertTypeDefinition{AnalyticsThreshold: &AnalyticsThreshold{
-				DataprimeQuery:          DataprimeQuery{Query: "source logs | count as c"},
+				DataprimeQuery:          DataprimeQuery{Query: "source logs | count into c"},
 				TimeframeMinutes:        15,
 				EvaluationPeriodMinutes: period,
 				Rules:                   []AnalyticsThresholdRule{{Condition: AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("1")}}},
@@ -223,7 +222,7 @@ func TestExtractAlertDefPropertiesAnalyticsThreshold(t *testing.T) {
 	} {
 		t.Run("operator "+string(operator), func(t *testing.T) {
 			props, err := analyticsAlertSpec(AlertTypeDefinition{AnalyticsThreshold: &AnalyticsThreshold{
-				DataprimeQuery:   DataprimeQuery{Query: "source logs | count as c"},
+				DataprimeQuery:   DataprimeQuery{Query: "source logs | count into c"},
 				TimeframeMinutes: 30,
 				Operator:         ptr.To(operator),
 				Rules:            []AnalyticsThresholdRule{{Condition: AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("1")}}},

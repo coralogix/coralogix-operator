@@ -687,8 +687,7 @@ var _ = Describe("Alert", Ordered, func() {
 				Name:        alertName,
 				Description: "alert from k8s operator",
 				Priority:    coralogixv1beta1.AlertPriorityP3,
-				// The backend requires groupByKeys to be columns returned by the query.
-				GroupByKeys: []string{"applicationname"},
+				// The API rejects groupByKeys on a result count alert.
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					AnalyticsResultCount: &coralogixv1beta1.AnalyticsResultCount{
 						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
@@ -731,7 +730,7 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(err).ToNot(HaveOccurred())
 			props := resp.GetAlertDef().AlertDefProperties
 			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_RESULT_COUNT))
-			g.Expect(props.GetGroupByKeys()).To(Equal([]string{"applicationname"}))
+			g.Expect(props.GetGroupByKeys()).To(BeEmpty())
 			resultCount := props.AnalyticsResultCount
 			g.Expect(resultCount).ToNot(BeNil())
 			g.Expect(resultCount.DataprimeQuery.GetQuery()).To(Equal("source logs | groupby $l.applicationname aggregate count() as cnt"))
@@ -754,7 +753,6 @@ var _ = Describe("Alert", Ordered, func() {
 
 		By("Clearing the optional fields")
 		modifiedAlert := fetchedAlert.DeepCopy()
-		modifiedAlert.Spec.GroupByKeys = nil
 		modifiedAlert.Spec.TypeDefinition.AnalyticsResultCount = &coralogixv1beta1.AnalyticsResultCount{
 			DataprimeQuery:   coralogixv1beta1.DataprimeQuery{Query: "source logs | count"},
 			TimeframeMinutes: 15,
@@ -805,7 +803,7 @@ var _ = Describe("Alert", Ordered, func() {
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					AnalyticsThreshold: &coralogixv1beta1.AnalyticsThreshold{
 						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
-							Query: "source logs | count as error_count",
+							Query: "source logs | count into error_count",
 						},
 						Rules: []coralogixv1beta1.AnalyticsThresholdRule{
 							{
@@ -820,11 +818,10 @@ var _ = Describe("Alert", Ordered, func() {
 								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("10")},
 							},
 						},
-						Operator:              ptr.To(coralogixv1beta1.AnalyticsThresholdOperatorLessThan),
-						TargetColumn:          ptr.To("error_count"),
-						TimeframeMinutes:      30,
-						UseRowsAsPermutations: ptr.To(false),
-						EvaluationDelayMs:     ptr.To(int32(60000)),
+						Operator:          ptr.To(coralogixv1beta1.AnalyticsThresholdOperatorLessThan),
+						TargetColumn:      ptr.To("error_count"),
+						TimeframeMinutes:  30,
+						EvaluationDelayMs: ptr.To(int32(60000)),
 						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
 							State: coralogixv1beta1.NoDataPolicyStateKeepLast,
 						},
@@ -852,11 +849,10 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_THRESHOLD))
 			threshold := props.AnalyticsThreshold
 			g.Expect(threshold).ToNot(BeNil())
-			g.Expect(threshold.DataprimeQuery.GetQuery()).To(Equal("source logs | count as error_count"))
+			g.Expect(threshold.DataprimeQuery.GetQuery()).To(Equal("source logs | count into error_count"))
 			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN))
 			g.Expect(threshold.GetTargetColumn()).To(Equal("error_count"))
 			g.Expect(threshold.GetTimeframeMinutes()).To(Equal(int32(30)))
-			g.Expect(threshold.UseRowsAsPermutations).To(Equal(ptr.To(false)))
 			g.Expect(threshold.EvaluationDelayMs).To(Equal(ptr.To(int32(60000))))
 			g.Expect(threshold.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST))
 			// Match rules by threshold rather than position, the API does not guarantee list order.
@@ -879,7 +875,6 @@ var _ = Describe("Alert", Ordered, func() {
 		modifiedThreshold.Rules = modifiedThreshold.Rules[:1]
 		modifiedThreshold.Operator = nil
 		modifiedThreshold.TargetColumn = nil
-		modifiedThreshold.UseRowsAsPermutations = nil
 		modifiedThreshold.EvaluationDelayMs = nil
 		modifiedThreshold.NoDataPolicy = nil
 		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
@@ -894,7 +889,6 @@ var _ = Describe("Alert", Ordered, func() {
 			// The backend reports the default operator once it is unset.
 			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_UNSPECIFIED))
 			g.Expect(threshold.TargetColumn).To(BeNil())
-			g.Expect(threshold.UseRowsAsPermutations).To(BeNil())
 			g.Expect(threshold.EvaluationDelayMs).To(BeNil())
 			g.Expect(threshold.NoDataPolicy).To(BeNil())
 		}, time.Minute, time.Second).Should(Succeed())
