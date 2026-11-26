@@ -1188,9 +1188,12 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 	}
 	groups := settableGroups(t, inlined)
 	if t.Kind == model.OneOf {
-		arms := make([]string, len(obj.Fields))
-		for i, f := range obj.Fields {
-			arms[i] = f.API
+		arms := make([]string, 0, len(obj.Fields))
+		for _, f := range obj.Fields {
+			if f.secretOf != nil {
+				continue // the Secret source of an arm is the same arm; presence() counts it
+			}
+			arms = append(arms, f.API)
 		}
 		groups = append([]model.OneOfGroup{{Arms: arms, AllowNone: t.AllowNone}}, groups...)
 	}

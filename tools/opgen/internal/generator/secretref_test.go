@@ -259,3 +259,35 @@ func TestSecretRefCountsTheSecretAsSet(t *testing.T) {
 		}
 	})
 }
+
+// In a component that is only a oneOf, the Secret source of an arm is the same arm: the rule counts
+// the arm once, whichever source the CR names.
+func TestSecretRefInAOneOfComponentIsOneArm(t *testing.T) {
+	root, input := skipRoot(t, func(api string) string {
+		return strings.Replace(api, "queue: {$ref: '#/components/schemas/QueueThingConfig'}", "queue: {type: string, x-coralogix-presence: true}", 1)
+	}, func(sdk string) string {
+		return strings.Replace(sdk, "Queue *QueueThingConfig `json:\"queue,omitempty\"`", "Queue *string `json:\"queue,omitempty\"`", 1)
+	})
+	writeThingOverrides(t, root, "types:\n  ThingConfig:\n    fields:\n      queue: {secretRef: true}\n")
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	types := readGenerated(t, root, apiDir+"/thing_types.go")
+	if !strings.Contains(types, `(has(self.http) ? 1 : 0) + ((has(self.queue) || has(self.queueSecretKeyRef)) ? 1 : 0) == 1`) {
+		t.Errorf("the oneOf rule does not count queue and queueSecretKeyRef as one arm:\n%s", grepLines(types, "self.http"))
+	}
+	if strings.Contains(types, "(has(self.queueSecretKeyRef) ? 1 : 0)") {
+		t.Error("queueSecretKeyRef is an arm of its own")
+	}
+}
+
+// grepLines returns the lines of text that hold s.
+func grepLines(text, s string) string {
+	var out []string
+	for _, line := range strings.Split(text, "\n") {
+		if strings.Contains(line, s) {
+			out = append(out, line)
+		}
+	}
+	return strings.Join(out, "\n")
+}
