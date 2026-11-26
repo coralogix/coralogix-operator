@@ -803,7 +803,7 @@ var _ = Describe("Alert", Ordered, func() {
 				TypeDefinition: coralogixv1beta1.AlertTypeDefinition{
 					AnalyticsThreshold: &coralogixv1beta1.AnalyticsThreshold{
 						DataprimeQuery: coralogixv1beta1.DataprimeQuery{
-							Query: "source logs | count as error_count",
+							Query: "source logs | count into error_count",
 						},
 						Rules: []coralogixv1beta1.AnalyticsThresholdRule{
 							{
@@ -849,7 +849,7 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(props.GetType()).To(Equal(alerts.ALERTDEFTYPE_ALERT_DEF_TYPE_ANALYTICS_THRESHOLD))
 			threshold := props.AnalyticsThreshold
 			g.Expect(threshold).ToNot(BeNil())
-			g.Expect(threshold.DataprimeQuery.GetQuery()).To(Equal("source logs | count as error_count"))
+			g.Expect(threshold.DataprimeQuery.GetQuery()).To(Equal("source logs | count into error_count"))
 			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN))
 			g.Expect(threshold.GetTargetColumn()).To(Equal("error_count"))
 			g.Expect(threshold.GetTimeframeMinutes()).To(Equal(int32(30)))
