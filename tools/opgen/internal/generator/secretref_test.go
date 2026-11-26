@@ -227,3 +227,35 @@ func TestInArmsRejectsValidationAtTheTopLevelPath(t *testing.T) {
 	}
 	wantCode(t, generateFromInput(input, root, root), codeOverrideInvalid)
 }
+
+// A secretRef field counts as set when the CR names only its Secret: in the guard of a request
+// object (requestAs with a dot), and in an exactlyOneOf rule.
+func TestSecretRefCountsTheSecretAsSet(t *testing.T) {
+	const head = "resource: WrappedThing\nmode: existing\nvalidators:\n  inferred: true\napi:\n  requestWrapper: item\n  serverSetID: true\n  idProperty: id\n  updateIDInBody: true\n  requestValues:\n    create:\n      label: {source: spec.name}\n      requestId: {source: uuid, value: \"cx-operator-create-\"}\n    update:\n      label: {source: spec.name}\n      requestId: {source: uuid, value: \"cx-operator-replace-\"}\n"
+	const fields = "types:\n  WrappedThing:\n    fields:\n      id:\n        readOnly: true\n      title: {requestAs: heading}\n      note: {requestAs: extra.note, secretRef: true}\n"
+	generate := func(t *testing.T, data string) string {
+		t.Helper()
+		root, input := syntheticRoot(t)
+		if err := os.WriteFile(filepath.Join(root, kindsDir, "wrappedthing", "behavior-overrides.yaml"), []byte(data), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := generateFromInput(input, root, root); err != nil {
+			t.Fatal(err)
+		}
+		return root
+	}
+	t.Run("request object guard", func(t *testing.T) {
+		root := generate(t, head+fields)
+		convert := readGenerated(t, root, apiDir+"/wrappedthing_convert.go")
+		if n := strings.Count(convert, "in.Note != nil || in.NoteSecretKeyRef != nil"); n != 2 {
+			t.Errorf("the extra object is guarded by the Secret in %d requests; want Create and Update", n)
+		}
+	})
+	t.Run("exactlyOneOf", func(t *testing.T) {
+		root := generate(t, head+"exactlyOneOf:\n  - [note, title]\n"+fields)
+		types := readGenerated(t, root, apiDir+"/wrappedthing_types.go")
+		if !strings.Contains(types, `((has(self.note) || has(self.noteSecretKeyRef)) ? 1 : 0) + (has(self.title) ? 1 : 0) == 1`) {
+			t.Error("the exactlyOneOf rule does not count noteSecretKeyRef as note")
+		}
+	})
+}

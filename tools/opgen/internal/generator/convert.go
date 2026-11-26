@@ -881,6 +881,14 @@ func (b *builder) requestObject(o *requestObject, parent string) string {
 
 // sentCondition is the test that the generated code uses to send a field: "" when it is always sent.
 func sentCondition(f *crField, src string) string {
+	if f.secret != nil {
+		// A CR that names only the Secret sends the field too.
+		sibling := strings.TrimSuffix(src, f.GoName) + goName(f.secret.sibling)
+		if f.secret.values {
+			return "len(" + src + ") != 0 || len(" + sibling + ") != 0"
+		}
+		return src + " != nil || " + sibling + " != nil"
+	}
 	switch {
 	case f.sendNullAsEmpty:
 		return ""

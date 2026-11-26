@@ -365,7 +365,7 @@ func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 			if i < 0 {
 				return unsupported(path+"."+arm, "a oneOf arm that the custom resource cannot set is not supported")
 			}
-			terms = append(terms, fmt.Sprintf("(has(self.%s) ? 1 : 0)", t.Fields[i].JSON))
+			terms = append(terms, fmt.Sprintf("(%s ? 1 : 0)", presence(t.Fields[i])))
 			names = append(names, t.Fields[i].JSON)
 		}
 		rule, msg := " == 1", "Exactly one of %s must be set"
@@ -375,6 +375,15 @@ func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 		t.Markers = append(t.Markers, celMarker(strings.Join(terms, " + ")+rule, fmt.Sprintf(msg, strings.Join(names, ", "))))
 	}
 	return nil
+}
+
+// presence is the CEL test that a CR sets a field. A field with a Secret source (secretRef) is set
+// also when the CR names only the Secret.
+func presence(f *crField) string {
+	if f.secret != nil {
+		return fmt.Sprintf("(has(self.%s) || has(self.%s))", f.JSON, f.secret.sibling)
+	}
+	return fmt.Sprintf("has(self.%s)", f.JSON)
 }
 
 // overrideGroups keeps a released exactly-one rule when the contract permits zero arms.
