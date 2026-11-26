@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"github.com/coralogix/coralogix-management-sdk/iac/source"
 	"os"
 	"path/filepath"
 	"strings"
@@ -156,4 +157,73 @@ func TestSecretRefAndInArmsParsing(t *testing.T) {
 			t.Errorf("%s: valid = %t, want %t: %v", tc.name, err == nil, tc.valid, err)
 		}
 	}
+}
+
+// sharedArmRoot is the synthetic root with an ArmThing whose two arms are one component.
+func sharedArmRoot(t *testing.T, validators string) (string, source.Input) {
+	t.Helper()
+	root, input := editedRoot(t, func(api string) string {
+		return strings.ReplaceAll(api, "quiet: {$ref: '#/components/schemas/ArmThingQuiet'}", "quiet: {$ref: '#/components/schemas/ArmThingHook'}")
+	}, "go/openapi/gen/arm_things_service/arm_things.go", func(sdk string) string {
+		return strings.ReplaceAll(sdk, "Quiet map[string]interface{}", "Quiet *ArmThingHook")
+	})
+	data := "resource: ArmThing\nmode: existing\napi: {updateIDInBody: true}\nvalidators:\n  inferred: true\n" + validators +
+		"types:\n  ArmThing:\n    fields:\n      url: {required: true, inArms: [hook]}\n"
+	if err := os.WriteFile(filepath.Join(root, kindsDir, "armthing", "behavior-overrides.yaml"), []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return root, input
+}
+
+// The arm hook shares its component with the arm quiet. inArms gives hook a struct of its own,
+// so the URL and its rule never reach quiet.
+func TestInArmsGivesASharedArmItsOwnType(t *testing.T) {
+	root, input := sharedArmRoot(t, "")
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	types := normalizeSpace(readGenerated(t, root, apiDir+"/armthing_types.go"))
+	if n := strings.Count(types, "Url string `json:\"url\"`"); n != 1 {
+		t.Errorf("the URL is in %d structs; want only the hook arm", n)
+	}
+	if !strings.Contains(types, "Hook *ArmThingHookAtSpecHook") || !strings.Contains(types, "Quiet *ArmThingHook `") {
+		t.Error("the hook arm has no struct of its own, or quiet lost the shared one")
+	}
+	shared := types[strings.Index(types, "type ArmThingHook struct {"):]
+	if shared = shared[:strings.Index(shared, "}")]; strings.Contains(shared, "Url") {
+		t.Error("the struct of quiet has the URL of hook")
+	}
+}
+
+// inferred: false at the arm path drops the contract limits of the copy in that arm.
+func TestInArmsInfersValidationAtTheArmPath(t *testing.T) {
+	root, input := skipRoot(t, func(api string) string {
+		return strings.ReplaceAll(api, "url: {type: string, minLength: 0, x-coralogix-presence: true, description: The URL that the thing calls.}",
+			"url: {type: string, minLength: 1, x-coralogix-presence: true, description: The URL that the thing calls.}")
+	}, nil)
+	data := "resource: ArmThing\nmode: existing\napi: {updateIDInBody: true}\n" +
+		"validators:\n  inferred: true\n  fields:\n    spec.quiet.url: {inferred: false}\n" +
+		"types:\n  ArmThing:\n    fields:\n      url: {required: true, inArms: [hook, quiet]}\n"
+	if err := os.WriteFile(filepath.Join(root, kindsDir, "armthing", "behavior-overrides.yaml"), []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	types := readGenerated(t, root, apiDir+"/armthing_types.go")
+	if n := strings.Count(types, "+kubebuilder:validation:MinLength=1\n\tUrl"); n != 1 {
+		t.Errorf("the contract limit of the URL is in %d arms; want only hook", n)
+	}
+}
+
+// A validators line at the top-level path of a field that inArms moves has no field to apply to.
+func TestInArmsRejectsValidationAtTheTopLevelPath(t *testing.T) {
+	root, input := syntheticRoot(t)
+	data := "resource: ArmThing\nmode: existing\napi: {updateIDInBody: true}\n" +
+		"validators:\n  inferred: true\n  fields:\n    spec.url: {inferred: false}\n" +
+		"types:\n  ArmThing:\n    fields:\n      url: {required: true, inArms: [hook, quiet]}\n"
+	if err := os.WriteFile(filepath.Join(root, kindsDir, "armthing", "behavior-overrides.yaml"), []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	wantCode(t, generateFromInput(input, root, root), codeOverrideInvalid)
 }

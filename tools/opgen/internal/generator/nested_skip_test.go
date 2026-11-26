@@ -15,6 +15,12 @@ const thingSDKFile = "go/openapi/gen/things_service/things.go"
 // skipRoot is the synthetic root with an edited contract and an edited stand-in SDK.
 func skipRoot(t *testing.T, editAPI, editSDK func(string) string) (string, source.Input) {
 	t.Helper()
+	return editedRoot(t, editAPI, thingSDKFile, editSDK)
+}
+
+// editedRoot is syntheticRoot with an edited contract and an edited file of the stand-in SDK.
+func editedRoot(t *testing.T, editAPI func(string) string, sdkFile string, editSDK func(string) string) (string, source.Input) {
+	t.Helper()
 	root, input := syntheticRoot(t)
 	if editAPI != nil {
 		input.OpenAPI = []byte(editAPI(string(input.OpenAPI)))
@@ -26,7 +32,7 @@ func skipRoot(t *testing.T, editAPI, editSDK func(string) string) (string, sourc
 	if err := copyTree(filepath.Join("testdata", "sdk"), sdkDir); err != nil {
 		t.Fatal(err)
 	}
-	file := filepath.Join(sdkDir, thingSDKFile)
+	file := filepath.Join(sdkDir, sdkFile)
 	data, err := os.ReadFile(file)
 	if err != nil {
 		t.Fatal(err)

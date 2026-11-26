@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"slices"
 	"strings"
@@ -119,29 +120,95 @@ func (b *builder) armFields(r *model.Resource, spec *crType) error {
 			return invalid("a oneOf arm cannot be shown in other arms")
 		}
 		field := spec.Fields[i]
+		if _, ok := b.file.ValidationAt(field.validationPath); ok {
+			return &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":validators.fields." + field.validationPath, msg: "the field is shown in its arms (inArms): state its validation at the path in each arm"}
+		}
 		spec.Fields = slices.DeleteFunc(spec.Fields, func(f *crField) bool { return f == field || f.secretOf == field })
 		for _, arm := range arms {
 			j := slices.IndexFunc(spec.Fields, func(f *crField) bool { return f.API == arm && !f.synthetic })
 			if j < 0 || !inGroup[arm] || spec.Fields[j].object == nil || strings.HasPrefix(spec.Fields[j].GoType, "[]") || strings.HasPrefix(spec.Fields[j].GoType, "map[") {
 				return invalid("%s is not an object arm of a oneOf of %s", arm, r.Name)
 			}
-			holder := spec.Fields[j].object
-			if slices.ContainsFunc(holder.Fields, func(f *crField) bool { return f.JSON == field.JSON || field.secret != nil && f.JSON == field.secret.sibling }) {
+			holder := b.ownArmType(spec, spec.Fields[j])
+			if slices.ContainsFunc(holder.Fields, func(f *crField) bool {
+				return f.JSON == field.JSON || field.secret != nil && f.JSON == field.secret.sibling
+			}) {
 				return invalid("the arm %s has a field named %s already", arm, field.JSON)
 			}
-			copied := *field
+			// Build the copy at its own path, so that its limits, its default, and its validators
+			// lines are those of the arm.
+			copied, err := b.field(holder.Name, r.Name, rf.Name, rf.Description, rf.Type, rf.Create.Required, requiredScalarWithoutPresence(rf.Create, rf.Type), spec.Fields[j].validationPath+"."+rf.Name, false)
+			if err != nil {
+				return err
+			}
+			if err := b.contractDefault(copied, rf.Create, copied.validationPath); err != nil {
+				return err
+			}
+			if rf.Behavior == model.Immutable {
+				immutable(copied, copied.validationPath)
+			}
 			copied.armOf = rf.Name
-			copied.Doc = slices.Clone(field.Doc)
-			copied.Markers = slices.Clone(field.Markers)
-			holder.Fields = append(holder.Fields, &copied)
+			holder.Fields = append(holder.Fields, copied)
 			if copied.secret != nil {
-				holder.Fields = append(holder.Fields, secretSibling(&copied))
-				holder.Markers = append(holder.Markers, secretRule(&copied))
+				holder.Fields = append(holder.Fields, secretSibling(copied))
+				holder.Markers = append(holder.Markers, secretRule(copied))
 			}
 		}
 		b.used[line] = true
 	}
 	return nil
+}
+
+// ownArmType returns the struct of an arm, after it gets a copy of its own when another CR field
+// shares it. A field that inArms adds to the arm must not reach the other places of the component.
+func (b *builder) ownArmType(spec *crType, arm *crField) *crType {
+	holder := arm.object
+	if !sharedType(spec, holder, arm, map[*crType]bool{}) {
+		return holder
+	}
+	hash := sha256.Sum256([]byte(arm.validationPath))
+	own := &crType{
+		Name:    fmt.Sprintf("%sAt%s%x", holder.Name, goName(arm.validationPath), hash[:6]),
+		Markers: slices.Clone(holder.Markers),
+		schema:  holder.schema,
+		path:    arm.validationPath,
+		groups:  slices.Clone(holder.groups),
+	}
+	own.Doc = []string{fmt.Sprintf("%s is the %s object of the API.", own.Name, holder.schema)}
+	copies := map[*crField]*crField{}
+	for _, f := range holder.Fields {
+		c := *f
+		c.Doc, c.Markers = slices.Clone(f.Doc), slices.Clone(f.Markers)
+		copies[f] = &c
+		own.Fields = append(own.Fields, &c)
+	}
+	for _, f := range own.Fields {
+		if f.secretOf != nil {
+			f.secretOf = copies[f.secretOf]
+		}
+	}
+	b.types[own.Name] = own
+	b.order = slices.Insert(b.order, slices.Index(b.order, holder)+1, own)
+	arm.object = own
+	arm.GoType = strings.TrimSuffix(arm.GoType, holder.Name) + own.Name
+	return own
+}
+
+// sharedType reports whether a field of t or below it, other than arm, holds target.
+func sharedType(t, target *crType, arm *crField, seen map[*crType]bool) bool {
+	if seen[t] {
+		return false
+	}
+	seen[t] = true
+	for _, f := range t.Fields {
+		if f != arm && f.object == target {
+			return true
+		}
+		if f.object != nil && sharedType(f.object, target, arm, seen) {
+			return true
+		}
+	}
+	return false
 }
 
 // apiFieldCount counts the fields of t that hold an API property of its own component: not the

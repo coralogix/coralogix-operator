@@ -104,8 +104,8 @@ type kindData struct {
 	HasUUID                    bool
 	// SecretRefs is set when a CR field can read its value from a Secret (secretRef): the
 	// controller reads and watches Secrets.
-	SecretRefs bool
-	HasNameLookup              bool
+	SecretRefs    bool
+	HasNameLookup bool
 	// UpdateIDInBody: Update has no id in its path (api.updateIDInBody). UpdateRequest copies the
 	// status id into the body field BodyIDField, a value when BodyIDValue is true.
 	UpdateIDInBody  bool
