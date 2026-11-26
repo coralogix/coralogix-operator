@@ -57,6 +57,16 @@ func secretSibling(f *crField) *crField {
 	return sibling
 }
 
+// secretDefault rejects a secretRef field with a Kubernetes default, from the contract or from a
+// validators line. Kubernetes would fill the literal before it checks the rule, so a CR that names
+// only the Secret would have both sources.
+func secretDefault(f *crField, path string) error {
+	if f.secret == nil || !slices.ContainsFunc(f.Markers, func(m string) bool { return strings.HasPrefix(m, "+kubebuilder:default") }) {
+		return nil
+	}
+	return &shapeError{code: codeOverrideInvalid, path: path, msg: "secretRef cannot read a field with a default: Kubernetes would set the literal next to the Secret reference"}
+}
+
 // secretRules adds the CEL rule of each secretRef field of t.
 func secretRules(t *crType) {
 	for _, f := range t.Fields {

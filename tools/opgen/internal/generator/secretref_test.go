@@ -104,6 +104,25 @@ func TestSecretRefAndInArmsRejectOtherShapes(t *testing.T) {
 		if !strings.Contains(types, `rule="!(has(self.note) && has(self.noteSecretKeyRef))",message="Only one of note or noteSecretKeyRef can be set"`) {
 			t.Error("an optional string has no at-most-one rule")
 		}
+		// The empty API default would fill note and break the rule for a CR that names only the Secret.
+		if i := strings.Index(types, "Note *string"); i < 0 || strings.Contains(types[strings.LastIndex(types[:i], "// A note"):i], "kubebuilder:default") {
+			t.Error("a secretRef string keeps its API default")
+		}
+	})
+	t.Run("secretRef on a field with a default", func(t *testing.T) {
+		// Kubernetes would fill the literal, so a CR that names only the Secret would break the rule.
+		root, input := syntheticRoot(t)
+		data := "resource: ArmThing\nmode: existing\napi: {updateIDInBody: true}\n" +
+			"validators:\n  inferred: true\n  fields:\n    spec.hook.note:\n      add: ['+kubebuilder:default=none']\n" +
+			"types:\n  ArmThing:\n    fields:\n      url: {required: true, secretRef: true, inArms: [hook, quiet]}\n  ArmThingHook:\n    fields:\n      note: {secretRef: true}\n"
+		if err := os.WriteFile(filepath.Join(root, kindsDir, "armthing", "behavior-overrides.yaml"), []byte(data), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		err := generateFromInput(input, root, root)
+		wantCode(t, err, codeOverrideInvalid)
+		if err == nil || !strings.Contains(err.Error(), "spec.hook.note") {
+			t.Errorf("the error does not name the field: %v", err)
+		}
 	})
 	t.Run("secretRef on an integer", func(t *testing.T) {
 		root, input := skipRoot(t, nil, nil)

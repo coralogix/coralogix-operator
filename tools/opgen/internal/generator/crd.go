@@ -174,6 +174,9 @@ func (b *builder) applyValidation(t *crType, path string, seen map[*crType]bool,
 		if err := b.applyValidationMarkers(&field.Markers, child); err != nil {
 			return err
 		}
+		if err := secretDefault(field, child); err != nil {
+			return err
+		}
 		if field.object != nil {
 			if strings.HasPrefix(field.GoType, "[]") {
 				child += "[]"
@@ -229,6 +232,14 @@ func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path strin
 		return nil
 	}
 	value := *attrs.Default
+	if field.secret != nil {
+		// Kubernetes would fill the literal before it checks the secretRef rule, so a CR that names
+		// only the Secret would have both sources. The API reads an omitted string as empty.
+		if value == "" {
+			return nil
+		}
+		return &shapeError{code: codeOverrideInvalid, path: path, msg: fmt.Sprintf("secretRef cannot read a field with the API default %q: Kubernetes would set the literal next to the Secret reference", value)}
+	}
 	switch field.typ.Kind {
 	case model.String:
 		value = markerString(value)
