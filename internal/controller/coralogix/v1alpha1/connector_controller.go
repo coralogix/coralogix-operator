@@ -20,9 +20,13 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/coralogix/coralogix-management-sdk/go/openapi/cxsdk"
 	connectors "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/connectors_service"
@@ -37,6 +41,8 @@ type ConnectorReconciler struct {
 	ConnectorsClient *connectors.ConnectorsServiceAPIService
 	Interval         time.Duration
 }
+
+const connectorSecretIndex = "connectorSecretNames"
 
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=coralogix.com,resources=connectors/status,verbs=get;update;patch
@@ -125,8 +131,55 @@ func (r *ConnectorReconciler) HandleDeletion(ctx context.Context, log logr.Logge
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ConnectorReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &coralogixv1alpha1.Connector{}, connectorSecretIndex, func(obj client.Object) []string {
+		return connectorSecretNames(obj.(*coralogixv1alpha1.Connector))
+	}); err != nil {
+		return fmt.Errorf("index connector Secret references: %w", err)
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&coralogixv1alpha1.Connector{}).
-		WithEventFilter(config.GetConfig().Selector.Predicate()).
+		For(&coralogixv1alpha1.Connector{}, builder.WithPredicates(config.GetConfig().Selector.Predicate())).
+		Watches(&corev1.Secret{}, handler.EnqueueRequestsFromMapFunc(r.connectorsForSecret)).
 		Complete(r)
+}
+
+func (r *ConnectorReconciler) connectorsForSecret(ctx context.Context, obj client.Object) []reconcile.Request {
+	connectorList := &coralogixv1alpha1.ConnectorList{}
+	if err := config.GetClient().List(ctx, connectorList,
+		client.InNamespace(obj.GetNamespace()),
+		client.MatchingFields{connectorSecretIndex: obj.GetName()}); err != nil {
+		ctrl.Log.Info("Failed to list connectors for Secret", "namespace", obj.GetNamespace(), "secret", obj.GetName())
+		return nil
+	}
+
+	requests := make([]reconcile.Request, 0, len(connectorList.Items))
+	for _, connector := range connectorList.Items {
+		if config.GetConfig().Selector.Matches(connector.Labels, connector.Namespace) {
+			requests = append(requests, reconcile.Request{NamespacedName: client.ObjectKeyFromObject(&connector)})
+		}
+	}
+	return requests
+}
+
+// connectorSecretNames returns the unique names of the Secrets that the connector references.
+func connectorSecretNames(connector *coralogixv1alpha1.Connector) []string {
+	var refs []*corev1.SecretKeySelector
+	for _, field := range connector.Spec.ConnectorConfig.Fields {
+		refs = append(refs, field.SecretKeyRef)
+	}
+	for _, override := range connector.Spec.ConfigOverrides {
+		for _, field := range override.Fields {
+			refs = append(refs, field.TemplateSecretKeyRef)
+		}
+	}
+
+	names := make([]string, 0, len(refs))
+	seen := make(map[string]bool, len(refs))
+	for _, ref := range refs {
+		if ref != nil && ref.Name != "" && !seen[ref.Name] {
+			names = append(names, ref.Name)
+			seen[ref.Name] = true
+		}
+	}
+	return names
 }

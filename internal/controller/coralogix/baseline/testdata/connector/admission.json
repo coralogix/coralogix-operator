@@ -147,9 +147,9 @@
     "accepted": false,
     "causes": [
       {
-        "type": "FieldValueRequired",
-        "field": "spec.configOverrides[0].fields[0].template",
-        "message": "Required value"
+        "type": "FieldValueInvalid",
+        "field": "spec.configOverrides[0].fields[0]",
+        "message": "Invalid value: \"object\": Exactly one of template or templateSecretKeyRef must be set"
       }
     ]
   },
