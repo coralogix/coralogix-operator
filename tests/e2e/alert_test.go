@@ -818,11 +818,10 @@ var _ = Describe("Alert", Ordered, func() {
 								Condition: coralogixv1beta1.AnalyticsThresholdRuleCondition{Threshold: resource.MustParse("10")},
 							},
 						},
-						Operator:              ptr.To(coralogixv1beta1.AnalyticsThresholdOperatorLessThan),
-						TargetColumn:          ptr.To("error_count"),
-						TimeframeMinutes:      30,
-						UseRowsAsPermutations: ptr.To(false),
-						EvaluationDelayMs:     ptr.To(int32(60000)),
+						Operator:          ptr.To(coralogixv1beta1.AnalyticsThresholdOperatorLessThan),
+						TargetColumn:      ptr.To("error_count"),
+						TimeframeMinutes:  30,
+						EvaluationDelayMs: ptr.To(int32(60000)),
 						NoDataPolicy: &coralogixv1beta1.NoDataPolicy{
 							State: coralogixv1beta1.NoDataPolicyStateKeepLast,
 						},
@@ -854,7 +853,6 @@ var _ = Describe("Alert", Ordered, func() {
 			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_LESS_THAN))
 			g.Expect(threshold.GetTargetColumn()).To(Equal("error_count"))
 			g.Expect(threshold.GetTimeframeMinutes()).To(Equal(int32(30)))
-			g.Expect(threshold.UseRowsAsPermutations).To(Equal(ptr.To(false)))
 			g.Expect(threshold.EvaluationDelayMs).To(Equal(ptr.To(int32(60000))))
 			g.Expect(threshold.NoDataPolicy.GetState()).To(Equal(alerts.NODATAPOLICYSTATE_NO_DATA_POLICY_STATE_KEEP_LAST))
 			// Match rules by threshold rather than position, the API does not guarantee list order.
@@ -877,7 +875,6 @@ var _ = Describe("Alert", Ordered, func() {
 		modifiedThreshold.Rules = modifiedThreshold.Rules[:1]
 		modifiedThreshold.Operator = nil
 		modifiedThreshold.TargetColumn = nil
-		modifiedThreshold.UseRowsAsPermutations = nil
 		modifiedThreshold.EvaluationDelayMs = nil
 		modifiedThreshold.NoDataPolicy = nil
 		Expect(crClient.Patch(ctx, modifiedAlert, client.MergeFrom(fetchedAlert))).To(Succeed())
@@ -892,7 +889,6 @@ var _ = Describe("Alert", Ordered, func() {
 			// The backend reports the default operator once it is unset.
 			g.Expect(threshold.GetOperator()).To(Equal(alerts.ANALYTICSTHRESHOLDOPERATOR_ANALYTICS_THRESHOLD_OPERATOR_MORE_THAN_OR_UNSPECIFIED))
 			g.Expect(threshold.TargetColumn).To(BeNil())
-			g.Expect(threshold.UseRowsAsPermutations).To(BeNil())
 			g.Expect(threshold.EvaluationDelayMs).To(BeNil())
 			g.Expect(threshold.NoDataPolicy).To(BeNil())
 		}, time.Minute, time.Second).Should(Succeed())
