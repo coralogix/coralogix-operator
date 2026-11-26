@@ -33,11 +33,80 @@
 # BatchThing: a kind that users already have, as the team scopes API has it. Get takes the id in a
 # list of ids in its query and answers a list of the resource (api.getByIDs). Replace is a PUT on
 # the Create path with the id in the body, and Create and Replace wrap the resource in "thing".
+# ListThing: a kind that users already have, as the AI custom evaluations API has it. No operation
+# reads one ListThing by its id: Get is the List (api.getFromList). Get nests note and level in
+# settings, an optional $ref with a description of its own, which Create and Update send at the top
+# level (inline, with required: true on the line). Update is a PATCH.
 openapi: 3.1.0
 info:
   title: Synthetic things API
   version: 1.0.0
 paths:
+  /list-things:
+    get:
+      tags: [List Things Service]
+      operationId: ListThingsService_GetListThings
+      responses:
+        '200':
+          description: Listed
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GetListThingsResponse'}
+    post:
+      tags: [List Things Service]
+      operationId: ListThingsService_CreateListThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateListThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1}
+                note: {type: string}
+                level: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CreateListThingResponse'}
+  /list-things/{id}:
+    patch:
+      tags: [List Things Service]
+      operationId: ListThingsService_UpdateListThing
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: UpdateListThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                note: {type: string, x-coralogix-presence: true}
+                level: {type: integer, format: int64, x-coralogix-presence: true}
+                updateMask: {type: string, pattern: '^[a-zA-Z_][a-zA-Z0-9_]*(,[a-zA-Z_][a-zA-Z0-9_]*)*$', x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/UpdateListThingResponse'}
+    delete:
+      tags: [List Things Service]
+      operationId: ListThingsService_DeleteListThing
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
   /batch-things:
     get:
       tags: [Batch Things Service]
@@ -778,6 +847,40 @@ paths:
               schema: {$ref: '#/components/schemas/SetSettingThingResponse'}
 components:
   schemas:
+    ListThing:
+      type: object
+      properties:
+        id: {type: string, minLength: 1}
+        name: {type: string, minLength: 1, description: The name.}
+        settings:
+          allOf:
+            - $ref: '#/components/schemas/ListThingSettings'
+          description: The settings, which the requests send at the top level.
+    ListThingSettings:
+      type: object
+      properties:
+        note: {type: string, description: A note.}
+        level: {type: integer, format: int64, description: The level.}
+    GetListThingsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ListThing'}
+    CreateListThingResponse:
+      type: object
+      properties:
+        item:
+          allOf:
+            - $ref: '#/components/schemas/ListThing'
+          description: The new ListThing.
+    UpdateListThingResponse:
+      type: object
+      properties:
+        item:
+          allOf:
+            - $ref: '#/components/schemas/ListThing'
+          description: The ListThing.
     BatchThing:
       type: object
       required: [id, name]

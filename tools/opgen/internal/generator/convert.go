@@ -151,6 +151,11 @@ func (b *builder) operations(r *model.Resource, d *kindData) error {
 		}
 		d.GetByIDs = setter.Name
 	}
+	if r.GetFromList {
+		if err := b.getFromList(r, d); err != nil {
+			return err
+		}
+	}
 	if r.Policy.RequestWrapper != "" {
 		for _, request := range []struct {
 			body  string
@@ -1383,4 +1388,40 @@ func specGoName(spec *crType, api string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// getFromList reads the SDK names of a resource that no operation reads by its id: Get is the List
+// (api.getFromList). Only the e2e test calls Get. It reads the List and selects the item with the id,
+// so the List must hold every resource in one answer: the generator supports no paging, filter,
+// or query parameter of the List yet.
+func (b *builder) getFromList(r *model.Resource, d *kindData) error {
+	switch {
+	case len(r.PageParameters) != 0 || r.NextPage != nil:
+		return unsupported("api.getFromList", "the List of %s has paging parameters; the e2e test reads one page", r.Name)
+	case len(r.ListFilters) != 0:
+		return unsupported("api.getFromList.filters", "the e2e test sends no filter of the List")
+	case len(r.GetQuery) != 0:
+		return unsupported("api.getFromList.query", "the e2e test sends no query value of the List")
+	case !r.Get.Response.Items || d.GetResponseField == "":
+		return unsupported("api.getFromList", "Get does not return a list of the resource")
+	}
+	resource, err := b.ix.typeRef("fields")
+	if err != nil {
+		return err
+	}
+	response, err := b.ix.typeRef("get.response")
+	if err != nil {
+		return err
+	}
+	field, err := b.ix.field(response.Name, r.Get.Response.Field)
+	if err != nil {
+		return err
+	}
+	if field.Want != "[]"+resource.Name {
+		return unsupported("api.getFromList", "the List field %s is %s, not a slice of %s", field.Name, field.Want, resource.Name)
+	}
+	d.GetFromList, d.GetListField, d.GetItemType = true, field.Name, resource.Name
+	// The e2e test reads the item that the List holds, not a field of a Get response.
+	d.GetResponseField, d.GetResponseValue = "", false
+	return nil
 }

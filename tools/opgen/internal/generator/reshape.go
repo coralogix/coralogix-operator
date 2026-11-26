@@ -180,8 +180,9 @@ func inlineIssue(resource, format string, args ...any) error {
 }
 
 // inlineResponse replaces each inlined object of the resource component by its fields, in place and
-// in order. The object must be required, so that its fields are always in the response, and no
-// Create or Update body may hold it: the requests send its fields at the top level.
+// in order. The object must be required, so that its fields are always in the response, by the
+// contract or by required: true on the line, and no Create or Update body may hold it: the requests
+// send its fields at the top level.
 func inlineResponse(doc, schemas *yaml.Node, resource string, inlined []string, file *overrides.File) (map[string]overrides.InlineParent, error) {
 	s := mapValue(schemas, resource)
 	props := mapValue(s, "properties")
@@ -223,7 +224,11 @@ func inlineResponse(doc, schemas *yaml.Node, resource string, inlined []string, 
 			}
 			continue
 		}
+		// A $ref with a description of its own is a one-item allOf.
 		component := refName(value)
+		if all := nodeContent(mapValue(value, "allOf")); component == "" && len(all) == 1 && len(nodeContent(mapValue(value, "properties"))) == 0 {
+			component = refName(all[0])
+		}
 		object := mapValue(schemas, component)
 		objectProps := mapValue(object, "properties")
 		switch {
@@ -235,8 +240,8 @@ func inlineResponse(doc, schemas *yaml.Node, resource string, inlined []string, 
 			return nil, inlineIssue(resource, "inline: %s must be an object without oneOf, allOf, or anyOf", name)
 		case slices.Contains(arms, name):
 			return nil, inlineIssue(resource, "inline: %s is an arm of a oneOf group, so the response does not always have it", name)
-		case !slices.Contains(required, name):
-			return nil, inlineIssue(resource, "inline: %s must be required, so that its fields are always in the response", name)
+		case !slices.Contains(required, name) && !file.Types[resource].Fields[name].Required:
+			return nil, inlineIssue(resource, "inline: %s must be required, so that its fields are always in the response; when the API always returns it, state that with required: true on the line", name)
 		}
 		objectRequired := stringList(mapValue(object, "required"))
 		for j := 0; j+1 < len(objectProps.Content); j += 2 {

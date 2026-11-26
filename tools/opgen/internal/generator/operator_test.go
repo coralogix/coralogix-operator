@@ -80,7 +80,7 @@ func TestGeneratedKindsBuildInTheOperator(t *testing.T) {
 	run(t, sandbox, "go", "vet", "./api/...", "./internal/controller/...", "./internal/utils/...", "./cmd/...", "./tests/e2e/")
 
 	golden := filepath.Join("testdata", "crd")
-	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml", "coralogix.com_refthings.yaml", "coralogix.com_bodyidthings.yaml", "coralogix.com_wrappedthings.yaml", "coralogix.com_hookthings.yaml", "coralogix.com_hookdeletethings.yaml", "coralogix.com_thingpolicies.yaml", "coralogix.com_contentthings.yaml", "coralogix.com_maskthings.yaml", "coralogix.com_settingthings.yaml", "coralogix.com_batchthings.yaml"} {
+	for _, name := range []string{"coralogix.com_things.yaml", "coralogix.com_patchthings.yaml", "coralogix.com_refthings.yaml", "coralogix.com_bodyidthings.yaml", "coralogix.com_wrappedthings.yaml", "coralogix.com_hookthings.yaml", "coralogix.com_hookdeletethings.yaml", "coralogix.com_thingpolicies.yaml", "coralogix.com_contentthings.yaml", "coralogix.com_maskthings.yaml", "coralogix.com_settingthings.yaml", "coralogix.com_batchthings.yaml", "coralogix.com_listthings.yaml"} {
 		got, err := os.ReadFile(filepath.Join(sandbox, "config", "crd", "bases", name))
 		if err != nil {
 			t.Fatal(err)
@@ -190,7 +190,7 @@ func overlaySDK(t *testing.T, pinned, dir string) {
 	linkExcept(t, filepath.Join(pinned, openapi), filepath.Join(dir, openapi), "gen", "cxsdk")
 	linkExcept(t, filepath.Join(pinned, openapi, "gen"), filepath.Join(dir, openapi, "gen"))
 	linkExcept(t, filepath.Join(pinned, openapi, "cxsdk"), filepath.Join(dir, openapi, "cxsdk"))
-	for _, pkg := range []string{"things_service", "patch_things_service", "ref_things_service", "body_id_things_service", "wrapped_things_service", "hook_things_service", "hook_delete_things_service", "thing_policies_service", "content_things_service", "mask_things_service", "setting_things_service", "batch_things_service"} {
+	for _, pkg := range []string{"things_service", "patch_things_service", "ref_things_service", "body_id_things_service", "wrapped_things_service", "hook_things_service", "hook_delete_things_service", "thing_policies_service", "content_things_service", "mask_things_service", "setting_things_service", "batch_things_service", "list_things_service"} {
 		if err := copyTree(filepath.Join("testdata", "sdk", openapi, "gen", pkg), filepath.Join(dir, openapi, "gen", pkg)); err != nil {
 			t.Fatal(err)
 		}
@@ -203,6 +203,7 @@ func overlaySDK(t *testing.T, pinned, dir string) {
 
 import (
 	batchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/batch_things_service"
+	listthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/list_things_service"
 	bodyidthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/body_id_things_service"
 	contentthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/content_things_service"
 	hookdeletethings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_delete_things_service"
@@ -236,6 +237,10 @@ func (c *ClientSet) SettingThings() *settingthings.SettingThingsServiceAPIServic
 
 func (c *ClientSet) BatchThings() *batchthings.BatchThingsServiceAPIService {
 	return batchthings.NewBatchThingsServiceAPIService()
+}
+
+func (c *ClientSet) ListThings() *listthings.ListThingsServiceAPIService {
+	return listthings.NewListThingsServiceAPIService()
 }
 
 func (c *ClientSet) BodyIDThings() *bodyidthings.BodyIDThingsServiceAPIService {

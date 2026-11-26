@@ -1,0 +1,20 @@
+# ListThing: Get is the List (api.getFromList), as the AI custom evaluations API has it. Get nests
+# settings, which the contract marks optional and the API always returns.
+resource: ListThing
+mode: existing
+validators:
+  inferred: true
+api:
+  operations:
+    create: ListThingsService_CreateListThing
+    get: ListThingsService_GetListThings
+    update: ListThingsService_UpdateListThing
+    delete: ListThingsService_DeleteListThing
+  idProperty: id
+  serverSetID: true
+  updateMaskInBody: true
+  getFromList: {}
+types:
+  ListThing:
+    fields:
+      settings: {inline: true, required: true}

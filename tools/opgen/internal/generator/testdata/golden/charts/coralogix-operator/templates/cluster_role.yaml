@@ -19,6 +19,7 @@ rules:
       - contentthings
       - hookdeletethings
       - hookthings
+      - listthings
       - maskthings
       - patchthings
       - refthings
@@ -42,6 +43,7 @@ rules:
       - contentthings/finalizers
       - hookdeletethings/finalizers
       - hookthings/finalizers
+      - listthings/finalizers
       - maskthings/finalizers
       - patchthings/finalizers
       - refthings/finalizers
@@ -59,6 +61,7 @@ rules:
       - contentthings/status
       - hookdeletethings/status
       - hookthings/status
+      - listthings/status
       - maskthings/status
       - patchthings/status
       - refthings/status

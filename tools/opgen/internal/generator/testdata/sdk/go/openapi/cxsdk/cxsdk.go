@@ -4,6 +4,7 @@ package cxsdk
 import (
 	"errors"
 	batchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/batch_things_service"
+	listthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/list_things_service"
 	"net/http"
 
 	bodyidthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/body_id_things_service"
@@ -91,6 +92,10 @@ func (c *ClientSet) HookDeleteThings() *hookdeletethings.HookDeleteThingsService
 
 func (c *ClientSet) BatchThings() *batchthings.BatchThingsServiceAPIService {
 	return batchthings.NewBatchThingsServiceAPIService()
+}
+
+func (c *ClientSet) ListThings() *listthings.ListThingsServiceAPIService {
+	return listthings.NewListThingsServiceAPIService()
 }
 
 func (c *ClientSet) SettingThings() *settingthings.SettingThingsServiceAPIService {

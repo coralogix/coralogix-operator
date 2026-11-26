@@ -696,7 +696,12 @@ func (f *File) check() error {
 			if f.Mode != ModeExisting {
 				return fmt.Errorf("%s.inline: a new kind follows the contract", line)
 			}
-			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest {
+			// required states that the response always has an object that the contract marks
+			// optional. It applies only to an object of the resource, whose fields the CR shows flat.
+			if field.Required && line.Component != f.Resource {
+				return fmt.Errorf("%s.inline: required applies only to an object of the resource", line)
+			}
+			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest {
 				return fmt.Errorf("%s.inline: the line cannot set another key", line)
 			}
 		}
@@ -1117,7 +1122,7 @@ func (f *File) checkAPI() error {
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
 		switch key {
-		case "updateIDInBody", "operations", "methods", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask", "getByIDs":
+		case "updateIDInBody", "operations", "methods", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask", "getByIDs", "getFromList":
 		default:
 			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}

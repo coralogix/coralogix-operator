@@ -23,3 +23,5 @@ kinds:
     resource: SettingThing
   - kind: BatchThing
     resource: BatchThing
+  - kind: ListThing
+    resource: ListThing
