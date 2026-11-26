@@ -1,0 +1,113 @@
+[
+  {
+    "step": "create: a direct reconcile does not run the event predicate",
+    "spec": {
+      "active": true,
+      "name": "baseline-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "livetail:Read"
+      ],
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "permissions": [
+              "livetail:Read"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "baseline-key",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the selector does not match: delete the remote key and clear the status",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {}
+    }
+  },
+  {
+    "step": "the secret stays",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {}
+    },
+    "remote": {
+      "keys": {},
+      "secret": {
+        "data": {
+          "key-value": "cxo-fake-key-value-1"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "coralogix.com/v1alpha1",
+            "controller": true,
+            "kind": "ApiKey",
+            "name": "apikey",
+            "uidIsTheCR": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

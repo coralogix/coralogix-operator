@@ -1,0 +1,142 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "active": true,
+      "name": "baseline-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "livetail:Read"
+      ],
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "permissions": [
+              "livetail:Read"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "baseline-key",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update after remote deletion: the 404 removes status.id",
+    "spec": {
+      "active": true,
+      "name": "renamed-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "body": {
+          "isActive": true,
+          "newName": "renamed-key",
+          "permissions": {},
+          "presets": {
+            "presets": [
+              "APM"
+            ]
+          }
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeue": true
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete a CR that has a finalizer and no status id: no key is created",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "no remote key exists",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null,
+    "remote": {
+      "keys": {},
+      "secret": {
+        "data": {
+          "key-value": "cxo-fake-key-value-1"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "coralogix.com/v1alpha1",
+            "controller": true,
+            "kind": "ApiKey",
+            "name": "apikey"
+          }
+        ]
+      }
+    }
+  }
+]

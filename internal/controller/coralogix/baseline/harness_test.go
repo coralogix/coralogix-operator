@@ -47,6 +47,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -149,9 +150,12 @@ func startEnv(t *testing.T) client.Client {
 			return
 		}
 		// A direct client, with no cache, so each step reads what the previous step wrote.
-		if k8sClient, envErr = client.New(cfg, client.Options{Scheme: scheme}); envErr != nil {
+		direct, err := client.New(cfg, client.Options{Scheme: scheme})
+		if err != nil {
+			envErr = err
 			return
 		}
+		k8sClient = cacheLikeClient{Client: direct}
 		config.InitScheme(scheme)
 		config.InitClient(k8sClient)
 	})
@@ -159,6 +163,28 @@ func startEnv(t *testing.T) client.Client {
 		t.Fatalf("start envtest: %v\nRun `make unit-tests`, or set KUBEBUILDER_ASSETS.", envErr)
 	}
 	return k8sClient
+}
+
+// cacheLikeClient sets the kind of a typed object that Get reads, as the cached client of the
+// manager does. A direct client leaves apiVersion and kind empty, and a controller that reads
+// them, such as for an owner reference, would act differently than in a cluster.
+type cacheLikeClient struct {
+	client.Client
+}
+
+func (c cacheLikeClient) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
+	if err := c.Client.Get(ctx, key, obj, opts...); err != nil {
+		return err
+	}
+	if _, untyped := obj.(*unstructured.Unstructured); untyped {
+		return nil
+	}
+	gvk, err := apiutil.GVKForObject(obj, c.Scheme())
+	if err != nil {
+		return err
+	}
+	obj.GetObjectKind().SetGroupVersionKind(gvk)
+	return nil
 }
 
 // harness runs one scenario: one CR, the real reconciler, and a fake Coralogix API.

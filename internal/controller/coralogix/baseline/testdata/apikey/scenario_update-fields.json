@@ -1,0 +1,197 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "active": true,
+      "name": "baseline-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "livetail:Read"
+      ],
+      "presets": [
+        "APM"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3",
+        "body": {
+          "keyPermissions": {
+            "permissions": [
+              "livetail:Read"
+            ],
+            "presets": [
+              "APM"
+            ]
+          },
+          "name": "baseline-key",
+          "owner": {
+            "teamId": 4013254
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "rename, deactivate, replace presets and permissions",
+    "spec": {
+      "active": false,
+      "name": "renamed-key",
+      "owner": {
+        "teamId": 4013254
+      },
+      "permissions": [
+        "serverless:Read",
+        "alerts:MapRead"
+      ],
+      "presets": [
+        "SendData"
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "body": {
+          "isActive": false,
+          "newName": "renamed-key",
+          "permissions": {
+            "permissions": [
+              "serverless:Read",
+              "alerts:MapRead"
+            ]
+          },
+          "presets": {
+            "presets": [
+              "SendData"
+            ]
+          }
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/api-keys/v3/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote key",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "api-key.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "keys": {
+        "<id-1>": {
+          "active": false,
+          "hashed": false,
+          "id": "<id-1>",
+          "keyPermissions": {
+            "permissions": [
+              "serverless:Read",
+              "alerts:MapRead"
+            ],
+            "presets": [
+              {
+                "name": "SendData",
+                "permissions": [
+                  "cloud-metadata-ingress:SendData",
+                  "contextual-data:SendData",
+                  "logs.data-ingress:SendData",
+                  "metrics.data-ingress:SendData",
+                  "profiles-data-ingress:SendData",
+                  "profiles.data-ingress:SendData",
+                  "spans.data-ingress:SendData"
+                ]
+              }
+            ]
+          },
+          "name": "renamed-key",
+          "owner": {
+            "teamId": 4013254
+          },
+          "value": "cxo-fake-key-value-1"
+        }
+      },
+      "secret": {
+        "data": {
+          "key-value": "cxo-fake-key-value-1"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "coralogix.com/v1alpha1",
+            "controller": true,
+            "kind": "ApiKey",
+            "name": "apikey",
+            "uidIsTheCR": true
+          }
+        ]
+      }
+    }
+  }
+]

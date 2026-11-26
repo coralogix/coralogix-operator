@@ -1,0 +1,135 @@
+{
+  "access policy empty": {
+    "accepted": true
+  },
+  "access policy not json": {
+    "accepted": true
+  },
+  "active false": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.owner",
+        "message": "Required value"
+      }
+    ]
+  },
+  "hashed": {
+    "accepted": true
+  },
+  "name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name empty": {
+    "accepted": true
+  },
+  "no presets or permissions": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec",
+        "message": "Invalid value: \"object\": At least one of presets or permissions must be set"
+      }
+    ]
+  },
+  "owner absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.owner",
+        "message": "Required value"
+      }
+    ]
+  },
+  "owner empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.owner",
+        "message": "Invalid value: \"object\": Exactly one of userId or teamId must be set"
+      }
+    ]
+  },
+  "owner organisation": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.owner",
+        "message": "Invalid value: \"object\": Exactly one of userId or teamId must be set"
+      }
+    ]
+  },
+  "owner team and user": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.owner",
+        "message": "Invalid value: \"object\": Exactly one of userId or teamId must be set"
+      }
+    ]
+  },
+  "owner user": {
+    "accepted": true
+  },
+  "owner user empty": {
+    "accepted": true
+  },
+  "permissions only": {
+    "accepted": true
+  },
+  "preset empty string": {
+    "accepted": true
+  },
+  "presets and permissions": {
+    "accepted": true
+  },
+  "presets empty": {
+    "accepted": true
+  },
+  "sample": {
+    "accepted": true
+  },
+  "team id above uint32": {
+    "accepted": true
+  },
+  "team id as text": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.owner.teamId",
+        "message": "Invalid value: \"string\": spec.owner.teamId in body must be of type integer: \"string\""
+      }
+    ]
+  },
+  "team id negative": {
+    "accepted": true
+  },
+  "team id zero": {
+    "accepted": true
+  },
+  "without spec": {
+    "accepted": true
+  }
+}
