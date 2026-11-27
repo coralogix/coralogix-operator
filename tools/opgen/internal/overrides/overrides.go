@@ -472,6 +472,15 @@ type Field struct {
 	// the days of a week. The CR accepts only these names, in this order. Create and Update send the
 	// integer of each name. Mode existing only.
 	IntegerNames []IntegerName `yaml:"integerNames"`
+	// SecretRef lets the CR read a string field, or the values of a map of strings, from a Secret
+	// in the namespace of the CR. A string gets the sibling <name>SecretKeyRef, and a map gets
+	// <name>FromSecret. The literal stays as it is, and is optional. Create and Update read the
+	// Secret on every write, and the controller watches the Secrets that a CR names.
+	SecretRef bool `yaml:"secretRef"`
+	// InArms shows a top-level field of the resource in each listed oneOf arm instead of at the top
+	// of the spec, as a released CR does. Create and Update send the value of the arm that the CR
+	// sets. Mode existing only.
+	InArms []string `yaml:"inArms"`
 }
 
 // IntegerName is one CR spelling of an integer API value.
@@ -630,10 +639,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && field.UpdateDefault == "" && field.ItemName == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 && !field.SetByHook {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && field.UpdateDefault == "" && field.ItemName == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 && !field.SetByHook && !field.SecretRef && len(field.InArms) == 0 {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook) {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook || field.SecretRef || len(field.InArms) != 0) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.SetByHook {
@@ -644,7 +653,7 @@ func (f *File) check() error {
 				return fmt.Errorf("%s.setByHook: only a top-level field of the resource can be set by a hook", line)
 			case !f.HasHook(HookBeforeCreate) || !f.HasHook(HookBeforeUpdate):
 				return fmt.Errorf("%s.setByHook: declare the beforeCreate and beforeUpdate hooks that set the field", line)
-			case field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0:
+			case field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SecretRef || len(field.InArms) != 0:
 				return fmt.Errorf("%s.setByHook: the line can set only requestAs", line)
 			}
 		}
@@ -745,6 +754,26 @@ func (f *File) check() error {
 			}
 			if f.Mode != ModeExisting {
 				return fmt.Errorf("%s.integerNames: a new kind follows the contract", line)
+			}
+		}
+		if field.SecretRef && (field.Ref != nil || field.ReadOnly || field.JoinedBy != "" || len(field.IntegerNames) != 0 || field.SendNullAsEmpty || len(field.RequestValueBy) != 0 || len(field.CreateAs) != 0 || field.Immutable || field.Optional || field.Inline) {
+			return fmt.Errorf("%s.secretRef: the line cannot set ref, readOnly, joinedBy, integerNames, sendNullAsEmpty, requestValueBy, createAs, immutable, optional, or inline", line)
+		}
+		if len(field.InArms) != 0 {
+			switch {
+			case f.Mode != ModeExisting:
+				return fmt.Errorf("%s.inArms: a new kind follows the contract", line)
+			case line.Component != f.Resource:
+				return fmt.Errorf("%s.inArms: only a top-level field of the resource can be shown in arms", line)
+			case field.Ref != nil || field.ReadOnly || field.Name != "" || field.JoinedBy != "" || len(field.IntegerNames) != 0 || field.SendNullAsEmpty || len(field.RequestValueBy) != 0 || len(field.CreateAs) != 0 || field.RequestAs != "" || field.UpdateAs != "" || field.Immutable || field.Optional || field.Inline:
+				return fmt.Errorf("%s.inArms: the line can set only required, description, and secretRef", line)
+			}
+			seen := map[string]bool{}
+			for _, arm := range field.InArms {
+				if !validJSONName(arm) || seen[arm] {
+					return fmt.Errorf("%s.inArms: %q is not a new property name", line, arm)
+				}
+				seen[arm] = true
 			}
 		}
 		if field.SendNullAsEmpty && f.Mode != ModeExisting {

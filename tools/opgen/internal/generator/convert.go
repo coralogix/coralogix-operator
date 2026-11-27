@@ -358,7 +358,7 @@ func (b *builder) nestedMask(d *kindData, f *model.ResourceField) ([]string, []m
 		}
 		path := f.Name + "." + child.Name
 		if arms[child.Name] {
-			out = append(out, maskArm{Path: path, Check: "in.Spec." + owner.GoName + "." + field.GoName + " != nil"})
+			out = append(out, maskArm{Path: path, Check: setCondition(field, "in.Spec."+owner.GoName+"."+field.GoName)})
 			continue
 		}
 		paths = append(paths, path)
@@ -425,11 +425,11 @@ func (b *builder) requests(r *model.Resource, d *kindData) error {
 				// A PATCH rejects a mask path that the body does not have, and the API keeps the
 				// value of a field that the mask leaves out. So the mask names an optional field
 				// only when the spec sets it.
-				goName, ok := specGoName(d.Spec, f.Name)
-				if !ok {
+				i := slices.IndexFunc(d.Spec.Fields, func(c *crField) bool { return c.API == f.Name })
+				if i < 0 {
 					return unsupported("resource."+f.Name, "the spec has no field for the update mask")
 				}
-				d.MaskArms = append(d.MaskArms, maskArm{Path: f.Name, Check: "in.Spec." + goName + " != nil"})
+				d.MaskArms = append(d.MaskArms, maskArm{Path: f.Name, Check: setCondition(d.Spec.Fields[i], "in.Spec."+d.Spec.Fields[i].GoName)})
 			} else {
 				mask = append(mask, f.Name)
 			}
@@ -595,6 +595,16 @@ func (b *builder) conversionAs(cr *crType, sdkType string, fields []*model.Field
 			continue
 		}
 		field, src, guard := sourceField(cr, rf.Name)
+		if field == nil && cr == b.specType {
+			if arms := b.file.Field(b.file.Resource, rf.Name).InArms; len(arms) != 0 {
+				code, err := b.armValue(cr, sdkType, rf, arms, path)
+				if err != nil {
+					return "", err
+				}
+				body.WriteString(code)
+				continue
+			}
+		}
 		if field == nil {
 			component := cr.schema
 			if component == "" && b.file != nil {
@@ -869,8 +879,25 @@ func (b *builder) requestObject(o *requestObject, parent string) string {
 	return inner.String()
 }
 
+// setCondition is the test that a CR sets an optional field, for an update mask path. A field
+// that the CR reads from a Secret is set also when the CR names only the Secret.
+func setCondition(f *crField, src string) string {
+	if f.secret != nil {
+		return sentCondition(f, src)
+	}
+	return src + " != nil"
+}
+
 // sentCondition is the test that the generated code uses to send a field: "" when it is always sent.
 func sentCondition(f *crField, src string) string {
+	if f.secret != nil {
+		// A CR that names only the Secret sends the field too.
+		sibling := strings.TrimSuffix(src, f.GoName) + goName(f.secret.sibling)
+		if f.secret.values {
+			return "len(" + src + ") != 0 || len(" + sibling + ") != 0"
+		}
+		return src + " != nil || " + sibling + " != nil"
+	}
 	switch {
 	case f.sendNullAsEmpty:
 		return ""
@@ -1065,6 +1092,9 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		return "", err
 	}
 	target := b.out() + "." + ref.Name
+	if f.secret != nil {
+		return b.secretValue(f, ref.Want, target, path, src)
+	}
 	if f.joinedBy != "" {
 		if strings.TrimPrefix(ref.Want, "*") != "string" {
 			return "", unsupported(path, "joinedBy needs a string in the SDK, got %s", ref.Want)
@@ -1221,7 +1251,7 @@ func (b *builder) value(f *crField, rt *model.Type, src, want, path string) (str
 		}
 		return fmt.Sprintf("%s := make(%s, 0, len(%s))\nfor %s, %s := range %s {\n%s%s = append(%s, %s)\n}\n", v, goType, src, k, e, src, stmts, v, v, expr), v, false, nil
 	case model.Object, model.OneOf:
-		if f.object != nil && len(f.object.Fields) == 0 && len(rt.Fields) == 0 && want == "map[string]interface{}" {
+		if f.object != nil && apiFieldCount(f.object) == 0 && len(rt.Fields) == 0 && want == "map[string]interface{}" {
 			return "", "map[string]interface{}{}", false, nil
 		}
 		fields := rt.Fields
@@ -1388,16 +1418,6 @@ func arg(src string) string {
 		return strings.TrimSuffix(inner, ")")
 	}
 	return src
-}
-
-// specGoName returns the Go name of the spec field of an API property.
-func specGoName(spec *crType, api string) (string, bool) {
-	for _, f := range spec.Fields {
-		if f.API == api {
-			return f.GoName, true
-		}
-	}
-	return "", false
 }
 
 // getFromList reads the SDK names of a resource that no operation reads by its id: Get is the List

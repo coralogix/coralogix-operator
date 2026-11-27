@@ -69,6 +69,12 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		if field.refForm == "split" {
 			spec.Fields = append(spec.Fields, splitReferenceField(field))
 		}
+		if field.secret != nil {
+			spec.Fields = append(spec.Fields, secretSibling(field))
+		}
+	}
+	if err := b.armFields(r, spec); err != nil {
+		return nil, err
 	}
 	b.specType = spec
 	groups, err := b.overrideGroups(r.Name, r.Groups, spec.Fields)
@@ -88,6 +94,7 @@ func (b *builder) spec(r *model.Resource) (*crType, error) {
 		return nil, err
 	}
 	splitReferenceRules(spec)
+	secretRules(spec)
 	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
 	spec.Fields = append(spec.Fields, b.ignoredFields(r.Name)...)
 	if err := b.applyValidation(spec, "spec", map[*crType]bool{}, true); err != nil {
@@ -167,6 +174,9 @@ func (b *builder) applyValidation(t *crType, path string, seen map[*crType]bool,
 		if err := b.applyValidationMarkers(&field.Markers, child); err != nil {
 			return err
 		}
+		if err := secretDefault(field, child); err != nil {
+			return err
+		}
 		if field.object != nil {
 			if strings.HasPrefix(field.GoType, "[]") {
 				child += "[]"
@@ -222,6 +232,14 @@ func (b *builder) contractDefault(field *crField, attrs *model.Attrs, path strin
 		return nil
 	}
 	value := *attrs.Default
+	if field.secret != nil {
+		// Kubernetes would fill the literal before it checks the secretRef rule, so a CR that names
+		// only the Secret would have both sources. The API reads an omitted string as empty.
+		if value == "" {
+			return nil
+		}
+		return &shapeError{code: codeOverrideInvalid, path: path, msg: fmt.Sprintf("secretRef cannot read a field with the API default %q: Kubernetes would set the literal next to the Secret reference", value)}
+	}
 	switch field.typ.Kind {
 	case model.String:
 		value = markerString(value)
@@ -347,7 +365,7 @@ func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 			if i < 0 {
 				return unsupported(path+"."+arm, "a oneOf arm that the custom resource cannot set is not supported")
 			}
-			terms = append(terms, fmt.Sprintf("(has(self.%s) ? 1 : 0)", t.Fields[i].JSON))
+			terms = append(terms, fmt.Sprintf("(%s ? 1 : 0)", presence(t.Fields[i])))
 			names = append(names, t.Fields[i].JSON)
 		}
 		rule, msg := " == 1", "Exactly one of %s must be set"
@@ -357,6 +375,15 @@ func groupRules(t *crType, groups []model.OneOfGroup, path string) error {
 		t.Markers = append(t.Markers, celMarker(strings.Join(terms, " + ")+rule, fmt.Sprintf(msg, strings.Join(names, ", "))))
 	}
 	return nil
+}
+
+// presence is the CEL test that a CR sets a field. A field with a Secret source (secretRef) is set
+// also when the CR names only the Secret.
+func presence(f *crField) string {
+	if f.secret != nil {
+		return fmt.Sprintf("(has(self.%s) || has(self.%s))", f.JSON, f.secret.sibling)
+	}
+	return fmt.Sprintf("has(self.%s)", f.JSON)
 }
 
 // overrideGroups keeps a released exactly-one rule when the contract permits zero arms.
@@ -539,6 +566,15 @@ func (b *builder) validationPath(component, path, apiName, crName string) string
 // field builds one field of the Go type owner, which holds component. inItem is true inside a
 // list item or a map value, where kubectl cannot compare a value with its old value.
 func (b *builder) field(owner, component, name, description string, t *model.Type, required, requiredPresenceMissing bool, path string, inItem bool) (*crField, error) {
+	f, err := b.fieldShape(owner, component, name, description, t, required, requiredPresenceMissing, path, inItem)
+	if err != nil || !b.file.Field(component, name).SecretRef {
+		return f, err
+	}
+	return b.secretField(f, overrides.Line{Component: component, Field: name}, t)
+}
+
+// fieldShape builds the CR field of an API field, before a secretRef line adds its Secret source.
+func (b *builder) fieldShape(owner, component, name, description string, t *model.Type, required, requiredPresenceMissing bool, path string, inItem bool) (*crField, error) {
 	if err := wrapped(t, path); err != nil {
 		return nil, err
 	}
@@ -1143,15 +1179,21 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		if field.refForm == "split" {
 			obj.Fields = append(obj.Fields, splitReferenceField(field))
 		}
+		if field.secret != nil {
+			obj.Fields = append(obj.Fields, secretSibling(field))
+		}
 	}
 	if len(obj.Fields) == 0 && (t.Kind != model.Object || len(t.Fields) != 0) {
 		return nil, unsupported(path, "an object without fields that a request sends is not supported yet")
 	}
 	groups := settableGroups(t, inlined)
 	if t.Kind == model.OneOf {
-		arms := make([]string, len(obj.Fields))
-		for i, f := range obj.Fields {
-			arms[i] = f.API
+		arms := make([]string, 0, len(obj.Fields))
+		for _, f := range obj.Fields {
+			if f.secretOf != nil {
+				continue // the Secret source of an arm is the same arm; presence() counts it
+			}
+			arms = append(arms, f.API)
 		}
 		groups = append([]model.OneOfGroup{{Arms: arms, AllowNone: t.AllowNone}}, groups...)
 	}
@@ -1171,6 +1213,7 @@ func (b *builder) object(t *model.Type, path string, inItem bool) (*crType, erro
 		return nil, err
 	}
 	splitReferenceRules(obj)
+	secretRules(obj)
 	// Ignored fields come after the oneOf and group rules: they are never an arm of a choice.
 	obj.Fields = append(obj.Fields, b.ignoredFields(t.Schema)...)
 	return obj, nil

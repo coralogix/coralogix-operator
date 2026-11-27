@@ -14,6 +14,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - armthings
       - batchthings
       - bodyidthings
       - contentthings
@@ -39,6 +40,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - armthings/finalizers
       - batchthings/finalizers
       - bodyidthings/finalizers
       - contentthings/finalizers
@@ -58,6 +60,7 @@ rules:
   - apiGroups:
       - coralogix.com
     resources:
+      - armthings/status
       - batchthings/status
       - bodyidthings/status
       - contentthings/status

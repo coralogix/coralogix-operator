@@ -1,0 +1,17 @@
+# ArmThing: the released CR shows the URL in each arm (inArms), and reads the URL, the token, and
+# header values from a Secret (secretRef).
+resource: ArmThing
+mode: existing
+validators:
+  inferred: true
+api:
+  updateIDInBody: true   # Replace sends the id in the body
+types:
+  ArmThing:
+    fields:
+      # The released CR requires a URL in each arm, as a literal or from a Secret.
+      url: {required: true, secretRef: true, inArms: [hook, quiet]}
+  ArmThingHook:
+    fields:
+      token: {secretRef: true}
+      headers: {secretRef: true}

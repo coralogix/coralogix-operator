@@ -1,4 +1,7 @@
 # Synthetic contracts of the golden tests.
+# ArmThing: a kind that users already have, shaped like the outgoing webhooks API. The arm of a root
+# oneOf selects its type, and the URL sits beside the arms (inArms shows it in each arm). The token of
+# an arm and its header values can come from a Secret (secretRef). One arm is an empty object.
 # Thing: a full replace (PUT). Required and optional scalars, an immutable enum, a required oneOf,
 # a nested object with an immutable and a computed field, an ordered list of objects, a list with
 # a pattern, a set, a map, a 64-bit number, a server default, and computed fields.
@@ -425,6 +428,79 @@ paths:
     delete:
       tags: [Ref Things Service]
       operationId: RefThingsService_DeleteRefThing
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+  /arm-things:
+    post:
+      tags: [Arm Things Service]
+      operationId: ArmThingsService_CreateArmThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateArmThingRequest
+              type: object
+              required: [name]
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                url: {type: string, minLength: 0, x-coralogix-presence: true, description: The URL that the thing calls.}
+                hook: {$ref: '#/components/schemas/ArmThingHook'}
+                quiet: {$ref: '#/components/schemas/ArmThingQuiet'}
+              oneOf:
+                - required: [hook]
+                - required: [quiet]
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ArmThing'}
+    put:
+      tags: [Arm Things Service]
+      operationId: ArmThingsService_ReplaceArmThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: ArmThing
+              type: object
+              required: [id, name]
+              properties:
+                id: {type: string, minLength: 1, x-coralogix-presence: true}
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                url: {type: string, minLength: 0, x-coralogix-presence: true, description: The URL that the thing calls.}
+                hook: {$ref: '#/components/schemas/ArmThingHook'}
+                quiet: {$ref: '#/components/schemas/ArmThingQuiet'}
+              oneOf:
+                - required: [hook]
+                - required: [quiet]
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ArmThing'}
+  /arm-things/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    get:
+      tags: [Arm Things Service]
+      operationId: ArmThingsService_GetArmThing
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ArmThing'}
+    delete:
+      tags: [Arm Things Service]
+      operationId: ArmThingsService_DeleteArmThing
       responses:
         '200':
           description: Deleted
@@ -1181,6 +1257,32 @@ components:
         name: {type: string, minLength: 1}
         thingId: {type: string, minLength: 1, description: The id of the Thing that it uses.}
         parentId: {type: string, description: The id of the parent Thing.}
+    ArmThing:
+      type: object
+      required: [id, name]
+      oneOf:
+        - required: [hook]
+        - required: [quiet]
+      properties:
+        id: {type: string, minLength: 1, x-coralogix-presence: true}
+        name: {type: string, minLength: 1, x-coralogix-presence: true, description: The name.}
+        url: {type: string, minLength: 0, x-coralogix-presence: true, description: The URL that the thing calls.}
+        hook: {$ref: '#/components/schemas/ArmThingHook'}
+        quiet: {$ref: '#/components/schemas/ArmThingQuiet'}
+    ArmThingHook:
+      type: object
+      required: [token]
+      properties:
+        token: {type: string, minLength: 1, description: The token of the hook.}
+        note: {type: string, description: A note that is not a credential.}
+        headers:
+          type: object
+          additionalProperties: {type: string}
+          description: The headers of the call.
+    ArmThingQuiet:
+      type: object
+      additionalProperties: false
+      description: A thing that calls nothing.
     BodyIDThing:
       type: object
       required: [id, name]

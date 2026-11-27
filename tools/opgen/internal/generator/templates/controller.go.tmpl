@@ -13,9 +13,13 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"{{.CxsdkPath}}"
 	{{.SDKAlias}} "{{.SDKPath}}"
@@ -39,6 +43,9 @@ type {{.Kind}}Reconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}}/finalizers,verbs=update
 {{- if .Content}}
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
+{{- end}}
+{{- if .SecretRefs}}
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 {{- end}}
 
 func (r *{{.Kind}}Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -410,6 +417,41 @@ func (r *{{.Kind}}Reconciler) RemoteStatusFields() [][]string {
 }
 {{- end}}
 
+{{- if .SecretRefs}}
+// {{.Lower}}SecretIndex indexes each {{.Kind}} by the names of the Secrets that it reads.
+const {{.Lower}}SecretIndex = "{{.Lower}}SecretNames"
+
+// SetupWithManager sets up the controller with the Manager. A change of a Secret reconciles each
+// {{.Kind}} of its namespace that reads it, so the API gets the new value.
+func (r *{{.Kind}}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &coralogixv1alpha1.{{.Kind}}{}, {{.Lower}}SecretIndex, func(obj client.Object) []string {
+		return obj.(*coralogixv1alpha1.{{.Kind}}).SecretNames()
+	}); err != nil {
+		return fmt.Errorf("index the Secrets of {{.Kind}}: %w", err)
+	}
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&coralogixv1alpha1.{{.Kind}}{}, builder.WithPredicates(config.GetConfig().Selector.Predicate())).
+		Watches(&corev1.Secret{}, handler.EnqueueRequestsFromMapFunc(r.forSecret)).
+		Complete(r)
+}
+
+// forSecret returns a request for each {{.Kind}} of the namespace of the Secret that reads it and
+// that the selector matches.
+func (r *{{.Kind}}Reconciler) forSecret(ctx context.Context, obj client.Object) []reconcile.Request {
+	list := &coralogixv1alpha1.{{.Kind}}List{}
+	if err := config.GetClient().List(ctx, list, client.InNamespace(obj.GetNamespace()), client.MatchingFields{ {{- .Lower}}SecretIndex: obj.GetName()}); err != nil {
+		ctrl.LoggerFrom(ctx).Info("Failed to list the {{.Kind}} objects of a Secret", "namespace", obj.GetNamespace(), "secret", obj.GetName())
+		return nil
+	}
+	requests := make([]reconcile.Request, 0, len(list.Items))
+	for i := range list.Items {
+		if config.GetConfig().Selector.Matches(list.Items[i].Labels, list.Items[i].Namespace) {
+			requests = append(requests, reconcile.Request{NamespacedName: client.ObjectKeyFromObject(&list.Items[i])})
+		}
+	}
+	return requests
+}
+{{- else}}
 // SetupWithManager sets up the controller with the Manager.
 func (r *{{.Kind}}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -417,3 +459,4 @@ func (r *{{.Kind}}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
 }
+{{- end}}

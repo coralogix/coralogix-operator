@@ -102,7 +102,10 @@ type kindData struct {
 	MaskBodyValue              bool
 	CreateValues, UpdateValues []requestValueData
 	HasUUID                    bool
-	HasNameLookup              bool
+	// SecretRefs is set when a CR field can read its value from a Secret (secretRef): the
+	// controller reads and watches Secrets.
+	SecretRefs    bool
+	HasNameLookup bool
 	// UpdateIDInBody: Update has no id in its path (api.updateIDInBody). UpdateRequest copies the
 	// status id into the body field BodyIDField, a value when BodyIDValue is true.
 	UpdateIDInBody  bool
@@ -211,6 +214,24 @@ type crField struct {
 	inlineParent string
 	// joinedBy is the separator of a CR list of strings that the API holds as one string.
 	joinedBy string
+	// secret is set for a field that the CR can also read from a Secret (secretRef).
+	secret *secretSource
+	// secretOf is set on the sibling field that names the Secret of a secretRef field.
+	secretOf *crField
+	// armOf is the top-level API field that this field of a oneOf arm holds (inArms).
+	armOf string
+}
+
+// secretSource describes a CR field that holds a literal value, beside a sibling that reads the value
+// from a Secret (secretRef).
+type secretSource struct {
+	// sibling is the CR name of the field that names the Secret: <name>SecretKeyRef for a string,
+	// <name>FromSecret for a map of strings.
+	sibling string
+	// values: the field is a map of strings, and each key has its own source.
+	values bool
+	// required: the API needs a value, so the CR sets exactly one of the two fields.
+	required bool
 }
 
 // JSONTag is the json struct tag of the field.
@@ -321,6 +342,8 @@ type builder struct {
 	tmp              int
 	conversionSuffix string // separates Create and Update conversions of a wrapped resource
 	hasNameLookup    bool
+	// secretRefs: a field of the kind can read its value from a Secret (secretRef).
+	secretRefs bool
 	// droppedLimits: validators.inferred: false dropped at least one contract limit.
 	droppedLimits bool
 	// folds are the createAs folds of the top-level fields, by API field name. The spec holds the
@@ -404,8 +427,12 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 	if err := b.requests(r, d); err != nil {
 		return nil, err
 	}
+	if b.secretRefs {
+		b.code = append(b.code, secretNamesCode(d.Kind, d.Spec))
+	}
 	d.Types, d.Scalars, d.Enums, d.Convs = b.order, b.scalars, b.enumSeq, b.code
 	d.HasNameLookup = b.hasNameLookup
+	d.SecretRefs = b.secretRefs
 	if err := b.hooks(d); err != nil {
 		return nil, err
 	}
