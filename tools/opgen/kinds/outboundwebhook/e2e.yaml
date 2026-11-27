@@ -5,6 +5,7 @@ values:
   outboundWebhookType.slack.url: https://hooks.slack.com/services/sample
   outboundWebhookType.jira.url: https://example.atlassian.net
   outboundWebhookType.jira.email: user@example.com
+  outboundWebhookType.emailGroup.emailAddresses: [user@example.com]
   outboundWebhookType.opsgenie.url: https://api.opsgenie.com/v1/json/coralogix
   outboundWebhookType.demisto.url: https://example.com/demisto
   outboundWebhookType.demisto.uuid: 00000000-0000-4000-8000-000000000001

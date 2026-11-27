@@ -244,7 +244,7 @@ var outboundWebhookCoverageSteps = [][]string{
   "outboundWebhookType": {
     "emailGroup": {
       "emailAddresses": [
-        "sample-email-addresses"
+        "user@example.com"
       ]
     }
   }
