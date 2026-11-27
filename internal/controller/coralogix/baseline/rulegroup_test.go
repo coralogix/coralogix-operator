@@ -80,6 +80,53 @@ const ruleGroupSpec = `  name: baseline-rule-group
             destinationField: Category
 `
 
+// ruleGroupAllRuleTypesSpec has a rule of every type with its non-default flags, and every enum value.
+const ruleGroupAllRuleTypesSpec = `  name: baseline-rule-group
+  subgroups:
+    - rules:
+        - name: parse
+          parse: {sourceField: text, destinationField: text, regex: 'a(?P<b>\d+)'}
+        - name: block-keep
+          block: {sourceField: text, regex: secret, keepBlockedLogs: true}
+        - name: allow
+          block: {sourceField: text, regex: keep-me, blockingAllMatchingBlocks: false, keepBlockedLogs: true}
+        - name: allow-default-keep
+          block: {sourceField: text, regex: keep-me-too, blockingAllMatchingBlocks: false}
+        - name: replace
+          replace: {sourceField: text, destinationField: text, regex: 'x', replacementString: ''}
+        - name: remove-fields
+          removeFields: {excludedFields: [a, b.c]}
+        - name: stringify-keep
+          jsonStringify: {sourceField: text.a, destinationField: text.b, keepSourceField: true}
+        - name: stringify-delete
+          jsonStringify: {sourceField: text.a, destinationField: text.b}
+        - name: extract
+          extract: {sourceField: text, regex: '(?P<a>\d+)'}
+    - rules:
+        - name: parse-json-keep-both
+          parseJsonField: {sourceField: text.a, destinationField: text.b, keepSourceField: true, keepDestinationField: true}
+        - name: parse-json-keep-none
+          parseJsonField: {sourceField: text.a, destinationField: text.b, keepSourceField: false, keepDestinationField: false}
+        - name: category
+          jsonExtract: {jsonKey: a, destinationField: Category}
+        - name: class
+          jsonExtract: {jsonKey: a, destinationField: CLASSNAME}
+        - name: method
+          jsonExtract: {jsonKey: a, destinationField: METHODNAME}
+        - name: thread
+          jsonExtract: {jsonKey: a, destinationField: THREADID}
+        - name: severity
+          jsonExtract: {jsonKey: a, destinationField: SEVERITY}
+    - rules:
+        - {name: ts-strftime, extractTimestamp: {sourceField: text, fieldFormatStandard: Strftime, timeFormat: '%Y'}}
+        - {name: ts-java, extractTimestamp: {sourceField: text, fieldFormatStandard: JavaSDF, timeFormat: yyyy}}
+        - {name: ts-golang, extractTimestamp: {sourceField: text, fieldFormatStandard: Golang, timeFormat: '2006'}}
+        - {name: ts-seconds, extractTimestamp: {sourceField: text, fieldFormatStandard: SecondTS, timeFormat: ''}}
+        - {name: ts-milli, extractTimestamp: {sourceField: text, fieldFormatStandard: MilliTS, timeFormat: ''}}
+        - {name: ts-micro, extractTimestamp: {sourceField: text, fieldFormatStandard: MicroTS, timeFormat: ''}}
+        - {name: ts-nano, extractTimestamp: {sourceField: text, fieldFormatStandard: NanoTS, timeFormat: ''}}
+`
+
 func ruleGroupManifest(spec string) string {
 	return "apiVersion: coralogix.com/v1alpha1\nkind: RuleGroup\nmetadata:\n  name: rulegroup\nspec:\n" + spec
 }
@@ -174,51 +221,13 @@ func ruleGroupScenarios() map[string]func(h *harness) {
 		},
 		// Every rule type with its non-default flags, and every enum value.
 		"create-all-rule-types": func(h *harness) {
-			h.Create("create with a rule of each type", ruleGroupManifest(`  name: baseline-rule-group
-  subgroups:
-    - rules:
-        - name: parse
-          parse: {sourceField: text, destinationField: text, regex: 'a(?P<b>\d+)'}
-        - name: block-keep
-          block: {sourceField: text, regex: secret, keepBlockedLogs: true}
-        - name: allow
-          block: {sourceField: text, regex: keep-me, blockingAllMatchingBlocks: false, keepBlockedLogs: true}
-        - name: allow-default-keep
-          block: {sourceField: text, regex: keep-me-too, blockingAllMatchingBlocks: false}
-        - name: replace
-          replace: {sourceField: text, destinationField: text, regex: 'x', replacementString: ''}
-        - name: remove-fields
-          removeFields: {excludedFields: [a, b.c]}
-        - name: stringify-keep
-          jsonStringify: {sourceField: text.a, destinationField: text.b, keepSourceField: true}
-        - name: stringify-delete
-          jsonStringify: {sourceField: text.a, destinationField: text.b}
-        - name: extract
-          extract: {sourceField: text, regex: '(?P<a>\d+)'}
-    - rules:
-        - name: parse-json-keep-both
-          parseJsonField: {sourceField: text.a, destinationField: text.b, keepSourceField: true, keepDestinationField: true}
-        - name: parse-json-keep-none
-          parseJsonField: {sourceField: text.a, destinationField: text.b, keepSourceField: false, keepDestinationField: false}
-        - name: category
-          jsonExtract: {jsonKey: a, destinationField: Category}
-        - name: class
-          jsonExtract: {jsonKey: a, destinationField: CLASSNAME}
-        - name: method
-          jsonExtract: {jsonKey: a, destinationField: METHODNAME}
-        - name: thread
-          jsonExtract: {jsonKey: a, destinationField: THREADID}
-        - name: severity
-          jsonExtract: {jsonKey: a, destinationField: SEVERITY}
-    - rules:
-        - {name: ts-strftime, extractTimestamp: {sourceField: text, fieldFormatStandard: Strftime, timeFormat: '%Y'}}
-        - {name: ts-java, extractTimestamp: {sourceField: text, fieldFormatStandard: JavaSDF, timeFormat: yyyy}}
-        - {name: ts-golang, extractTimestamp: {sourceField: text, fieldFormatStandard: Golang, timeFormat: '2006'}}
-        - {name: ts-seconds, extractTimestamp: {sourceField: text, fieldFormatStandard: SecondTS, timeFormat: ''}}
-        - {name: ts-milli, extractTimestamp: {sourceField: text, fieldFormatStandard: MilliTS, timeFormat: ''}}
-        - {name: ts-micro, extractTimestamp: {sourceField: text, fieldFormatStandard: MicroTS, timeFormat: ''}}
-        - {name: ts-nano, extractTimestamp: {sourceField: text, fieldFormatStandard: NanoTS, timeFormat: ''}}
-`))
+			h.Create("create with a rule of each type", ruleGroupManifest(ruleGroupAllRuleTypesSpec))
+			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
+		},
+		// Update sends the same rules: every type, flag and enum value reaches the Update body.
+		"update-all-rule-types": func(h *harness) {
+			h.Create("create", ruleGroupManifest(ruleGroupSpec))
+			h.SetSpec("update to a rule of each type", ruleGroupSpecMap(h, ruleGroupAllRuleTypesSpec))
 			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
 		},
 		// The spec can hold an id and an order for a subgroup. The requests send neither id: the
@@ -257,6 +266,44 @@ func ruleGroupScenarios() map[string]func(h *harness) {
 `))
 			h.Reconcile("retry")
 			h.Delete("delete")
+		},
+		// Admission accepts an empty rule name and an empty removeFields list, and the API rejects
+		// both with a 400. The reconcile fails, the CR keeps no status id, and each retry sends the
+		// same POST.
+		"create-empty-rule-name": func(h *harness) {
+			h.Create("admission accepts an empty rule name, the API rejects it", ruleGroupManifest(`  name: baseline-rule-group
+  subgroups:
+    - rules:
+        - {name: "", extract: {sourceField: text, regex: 'a'}}
+`))
+			h.Reconcile("retry")
+			h.Delete("delete")
+		},
+		"create-empty-remove-fields": func(h *harness) {
+			h.Create("admission accepts an empty removeFields list, the API rejects it", ruleGroupManifest(`  name: baseline-rule-group
+  subgroups:
+    - rules:
+        - {name: a, removeFields: {excludedFields: []}}
+`))
+			h.Reconcile("retry")
+			h.Delete("delete")
+		},
+		// The same two rejections on an update: the CR keeps its status id, and the retry sends the
+		// same PUT.
+		"update-empty-rule-name-and-remove-fields": func(h *harness) {
+			h.Create("create", ruleGroupManifest(ruleGroupSpec))
+			h.SetSpec("an empty rule name", ruleGroupSpecMap(h, `name: baseline-rule-group
+subgroups:
+  - rules:
+      - {name: "", extract: {sourceField: text, regex: a}}
+`))
+			h.SetSpec("an empty removeFields list", ruleGroupSpecMap(h, `name: baseline-rule-group
+subgroups:
+  - rules:
+      - {name: a, removeFields: {excludedFields: []}}
+`))
+			h.Reconcile("retry")
+			h.RecordRemote("the remote group is unchanged", ruleGroups(h).snapshot())
 		},
 		"create-without-spec": func(h *harness) {
 			h.Create("create without spec", "apiVersion: coralogix.com/v1alpha1\nkind: RuleGroup\nmetadata:\n  name: rulegroup\n")
