@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +53,7 @@ var outboundWebhookCoverageSpecs = []outboundWebhookCoverageSpec{
       },
       "method": "Get",
       "payload": "sample-payload",
-      "uuid": "sample-uuid",
+      "uuid": "00000000-0000-4000-8000-000000000002",
       "url": "https://example.com/hook"
     }
   }
@@ -242,7 +243,7 @@ var outboundWebhookCoverageSpecs = []outboundWebhookCoverageSpec{
       },
       "method": "Post",
       "payload": "sample-payload",
-      "uuid": "sample-uuid",
+      "uuid": "00000000-0000-4000-8000-000000000002",
       "url": "https://example.com/hook"
     }
   }
@@ -263,7 +264,7 @@ var outboundWebhookCoverageSpecs = []outboundWebhookCoverageSpec{
       },
       "method": "Put",
       "payload": "sample-payload",
-      "uuid": "sample-uuid",
+      "uuid": "00000000-0000-4000-8000-000000000002",
       "url": "https://example.com/hook"
     }
   }
@@ -304,6 +305,7 @@ var _ = Describe("OutboundWebhook coverage specs (generated)", func() {
 // that the e2e test sets.
 func newOutboundWebhookCoverageCR(name, spec string) *coralogixv1alpha1.OutboundWebhook {
 	cr := &coralogixv1alpha1.OutboundWebhook{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
+	spec = strings.ReplaceAll(spec, "00000000-0000-4000-8000-000000000002", strings.ReplaceAll(strings.ReplaceAll("@{uuid}", "@{run}", name), "@{uuid}", uuid.NewString()))
 	spec = strings.ReplaceAll(spec, "outbound-webhook-sample", strings.ReplaceAll("@{run}", "@{run}", name))
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
