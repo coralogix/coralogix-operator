@@ -30,6 +30,7 @@ const (
 	DashboardsFolderKind         = "DashboardsFolder"
 	Events2MetricKind            = "Events2Metric"
 	GlobalRouterKind             = "GlobalRouter"
+	GroupKind                    = "Group"
 	IntegrationKind              = "Integration"
 	OutboundWebhookKind          = "OutboundWebhook"
 	PresetKind                   = "Preset"

@@ -26,7 +26,6 @@ const (
 	AlertKind                 = "Alert"
 	AlertSetKind              = "AlertSet"
 	RecordingRuleGroupSetKind = "RecordingRuleGroupSet"
-	GroupKind                 = "Group"
 	PrometheusRuleKind        = "PrometheusRule"
 	ConnectorKind             = "Connector"
 	ArchiveMetricsTargetKind  = "ArchiveMetricsTarget"

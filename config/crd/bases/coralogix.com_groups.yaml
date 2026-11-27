@@ -24,11 +24,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          Group is the Schema for the Groups API.
-          See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
-
-          **Added in v0.4.0**
+        description: Group is the Schema for the groups API.
         properties:
           apiVersion:
             description: |-
@@ -48,7 +44,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: GroupSpec defines the desired state of Coralogix Group.
+            description: GroupSpec defines the desired state of a Group.
             properties:
               customRole:
                 description: Custom role applied to the group.
@@ -74,7 +70,7 @@ spec:
                   (spec.customRoles) keep their role after CRD upgrade. The operator uses
                   customRole when set, otherwise the first customRoles entry.
                 items:
-                  description: Custom role reference.
+                  description: Custom role applied to the group.
                   properties:
                     resourceRef:
                       description: Reference to the custom role within the cluster.
@@ -140,7 +136,7 @@ spec:
             - name
             type: object
           status:
-            description: GroupStatus defines the observed state of Group.
+            description: GroupStatus defines the observed state of a Group.
             properties:
               conditions:
                 items:

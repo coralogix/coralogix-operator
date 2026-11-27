@@ -65,7 +65,6 @@ rules:
       - connectors
       - customenrichments
       - enrichments
-      - groups
       - ipaccesses
       - recordingrulegroupsets
       - rulegroups
@@ -86,7 +85,6 @@ rules:
       - connectors/finalizers
       - customenrichments/finalizers
       - enrichments/finalizers
-      - groups/finalizers
       - ipaccesses/finalizers
       - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
@@ -101,7 +99,6 @@ rules:
       - connectors/status
       - customenrichments/status
       - enrichments/status
-      - groups/status
       - ipaccesses/status
       - recordingrulegroupsets/status
       - rulegroups/status
@@ -132,6 +129,7 @@ rules:
       - dashboardsfolders
       - events2metrics
       - globalrouters
+      - groups
       - integrations
       - outboundwebhooks
       - presets
@@ -169,6 +167,7 @@ rules:
       - dashboardsfolders/finalizers
       - events2metrics/finalizers
       - globalrouters/finalizers
+      - groups/finalizers
       - integrations/finalizers
       - outboundwebhooks/finalizers
       - presets/finalizers
@@ -200,6 +199,7 @@ rules:
       - dashboardsfolders/status
       - events2metrics/status
       - globalrouters/status
+      - groups/status
       - integrations/status
       - outboundwebhooks/status
       - presets/status

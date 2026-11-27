@@ -138,6 +138,10 @@ jobs:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         # The key belongs to the team of the CI account, whose id the lookup exports.
         run: bash .github/scripts/ci-account.sh lookup bash scripts/upgrade-check-apikey.sh before
+      - name: Create a Group with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-group.sh before
       - name: Create a View with the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -195,6 +199,7 @@ jobs:
             --set coralogixOperator.image.tag="${{ env.IMG_TAG }}" \
             --set coralogixOperator.region="${{ env.CORALOGIX_REGION }}" \
             --set coralogixOperator.reconcileIntervalSeconds.scope=30 \
+            --set coralogixOperator.reconcileIntervalSeconds.group=30 \
             --set coralogixOperator.reconcileIntervalSeconds.connector=30 \
             --set coralogixOperator.reconcileIntervalSeconds.ipAccess=30 \
             --set coralogixOperator.reconcileIntervalSeconds.archiveLogsTarget=30 \
@@ -288,6 +293,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash .github/scripts/ci-account.sh lookup bash scripts/upgrade-check-apikey.sh after
+      - name: Check the Group of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-group.sh after
       - name: Check the View of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -388,6 +397,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash .github/scripts/ci-account.sh lookup bash scripts/upgrade-check-apikey.sh cleanup
+      - name: Delete the Group of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-group.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |

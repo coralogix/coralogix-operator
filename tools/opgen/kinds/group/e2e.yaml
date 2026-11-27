@@ -1,0 +1,15 @@
+# A group name is unique in the team.
+substitutions:
+  sample-name: '@{run}'
+update:
+  field: description
+  value: updated by the generated e2e test
+upgrade:
+  # Groups have a name and a description since chart 0.5. The members, the role, and the scope
+  # are not part of the check: they need users, a CustomRole, and a Scope of the team.
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    description: Created before the upgrade
+  field: description
+  value: Updated after the upgrade

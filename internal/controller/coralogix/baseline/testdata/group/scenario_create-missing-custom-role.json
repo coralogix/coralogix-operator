@@ -42,7 +42,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }
@@ -74,7 +74,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }

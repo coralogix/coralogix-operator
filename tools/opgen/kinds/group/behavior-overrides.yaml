@@ -1,0 +1,46 @@
+resource: TeamGroup
+mode: existing
+validators:
+  inferred: true
+api:
+  # Get is on /team-groups/v2/id/{id}, Update and Delete are on /team-groups/v2/{id}.
+  operations:
+    create: GroupsMgmtService_CreateTeamGroup
+    get: GroupsMgmtService_GetTeamGroup
+    update: GroupsMgmtService_UpdateTeamGroup
+    delete: GroupsMgmtService_DeleteTeamGroup
+  getAtOwnPath: true
+  idProperty: groupId
+  serverSetID: true
+types:
+  TeamGroup:
+    fields:
+      name: {required: true, description: Name of the group.}
+      description: {description: Description of the group.}
+      groupType: {description: Type of the group.}
+      # The released CR never had these. The API owns the team, and an identity provider sets the
+      # external id.
+      externalId: {skip: true}
+      teamId: {skip: true}
+      # The CR names the role by a CustomRole reference. Create sends the role id, and Update sends
+      # a role update that sets it. The hooks build both from spec.customRole.
+      roleId: {skip: true}
+      roleName: {skip: true}
+      roleUpdate: {skip: true}
+      # The CR names the scope by a Scope reference, and the members by user name. The hooks
+      # build scope, userIds, scopeUpdate, and userUpdates from them.
+      scope: {setByHook: true}
+      scopeUpdate: {skip: true}
+      userIds: {setByHook: true}
+      userUpdates: {skip: true}
+# The released spec fields that the hooks read (group_fields.go).
+spec:
+  members: {type: GroupMembers, value: true}
+  customRole: {type: GroupCustomRole}
+  customRoles: {type: GroupCustomRoles, value: true}
+  scope: {type: GroupScope}
+hooks: [beforeCreate, beforeUpdate]
+enums:
+  GroupType:
+    # The released CRD accepts unspecified. The API stores it as open.
+    zero: unspecified
