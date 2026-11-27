@@ -164,3 +164,35 @@ func TestSetByHookBuildsTheObjectsOfItsPath(t *testing.T) {
 		}
 	}
 }
+
+// An upgrade field with slashes is a path into a list. The check patches it with a JSON patch,
+// because a merge patch cannot name a list item.
+func TestE2EUpgradeFieldIntoAList(t *testing.T) {
+	root, input := syntheticRoot(t)
+	writeThingE2E(t, root, "values:\n  destinations: [https://example.com]\n"+
+		"upgrade:\n  from: '1.0'\n  spec: {name: '@{run}', items: [{name: first}]}\n  field: items/0/name\n  value: second\n")
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	script := readGenerated(t, root, "scripts/upgrade-check-thing.sh")
+	for _, want := range []string{
+		`--arg path '/spec/items/0/name'`,
+		`[{op:"add", path:$path, value:$value}]`,
+		`--type json -p "$patch"`,
+	} {
+		if !strings.Contains(script, want) {
+			t.Errorf("the upgrade check has no %q:\n%s", want, script)
+		}
+	}
+	for name, e2e := range map[string]string{
+		"a path outside the spec": "upgrade:\n  from: '1.0'\n  spec: {name: '@{run}'}\n  field: items/0/name\n  value: b\n",
+		"dots and slashes":        "upgrade:\n  from: '1.0'\n  spec: {name: '@{run}', items: [{name: first}]}\n  field: items/0.name\n  value: b\n",
+		"a leading slash":         "upgrade:\n  from: '1.0'\n  spec: {name: '@{run}', items: [{name: first}]}\n  field: /items/0/name\n  value: b\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			root, input := syntheticRoot(t)
+			writeThingE2E(t, root, "values:\n  destinations: [https://example.com]\n"+e2e)
+			wantCode(t, generateFromInput(input, root, root), codeE2EInvalid)
+		})
+	}
+}
