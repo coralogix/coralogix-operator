@@ -607,6 +607,189 @@
           }
         }
       ]
+    },
+    {
+      "name": "replace the scope of a group with another scope, and back",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "\u003cid\u003e"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "\u003cid\u003e"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groupId": "{{group}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "search the users of the team: a page, the next pages, and the answers without users",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "nextPageToken": 1,
+            "totalCount": "\u003ccount\u003e",
+            "userKeys": [
+              "accessType",
+              "allowedLoginMode",
+              "firstName",
+              "groupIds",
+              "lastName",
+              "status",
+              "userAccountId",
+              "userId",
+              "username"
+            ],
+            "users": "one"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "nextPageToken": 2,
+            "totalCount": "\u003ccount\u003e",
+            "userKeys": [
+              "accessType",
+              "allowedLoginMode",
+              "firstName",
+              "groupIds",
+              "lastName",
+              "status",
+              "userAccountId",
+              "userId",
+              "username"
+            ],
+            "users": "one"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": "\u003ccount\u003e",
+            "userKeys": [
+              "accessType",
+              "allowedLoginMode",
+              "firstName",
+              "groupIds",
+              "lastName",
+              "status",
+              "userAccountId",
+              "userId",
+              "username"
+            ],
+            "users": "several"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": 0,
+            "users": "none"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": 0,
+            "users": "none"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": 0,
+            "users": "none"
+          }
+        }
+      ]
     }
   ]
 }

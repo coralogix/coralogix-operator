@@ -75,7 +75,8 @@ type groupRecord struct {
 //   - A user that is not in the team is a 403. Duplicate user ids are stored once.
 //   - Update, Get, and Delete of a group that does not exist answer 404.
 //   - The users search answers no users when page_size is omitted. nextPageToken is the offset of
-//     the next page, and it is omitted on the last page.
+//     the next page, and it is omitted on the last page. totalCount is the number of users of the
+//     team, and 0 when the page has no users: no page_size, or a page_token past the last user.
 type groupFake struct {
 	mu     sync.Mutex
 	nextID int64
@@ -98,9 +99,11 @@ func newGroupFake() apiFake {
 	f.users = []groupUser{
 		{id: groupFakeUserA, username: "member-a@example.com"},
 		{id: groupFakeUserB, username: "member-b@example.com"},
+		{id: groupFakeUserC, username: "member-c@example.com"},
 	}
 	f.roles[groupFakeRole] = groupRole{name: "cxo-fidelity-group-role", description: "Fidelity role"}
 	f.scopes[groupFakeScope] = true
+	f.scopes[groupFakeOtherScope] = true
 	return f
 }
 
@@ -110,7 +113,10 @@ const (
 	groupFakeUserA = "3a1f0e55-8c1b-4f0c-9d0e-1a2b3c4d5e01"
 	groupFakeUserB = "3a1f0e55-8c1b-4f0c-9d0e-1a2b3c4d5e02"
 	groupFakeScope = "3a1f0e55-8c1b-4f0c-9d0e-1a2b3c4d5e03"
-	groupFakeRole  = int64(7001)
+	// A second scope, for the cases that switch a group to another scope.
+	groupFakeOtherScope = "3a1f0e55-8c1b-4f0c-9d0e-1a2b3c4d5e04"
+	groupFakeUserC      = "3a1f0e55-8c1b-4f0c-9d0e-1a2b3c4d5e05"
+	groupFakeRole       = int64(7001)
 )
 
 // answerNext makes the next request with the method get this answer instead of the fake's own.
@@ -217,7 +223,7 @@ func (f *groupFake) searchUsers(query url.Values) any {
 		}
 		return out
 	}
-	return map[string]any{"users": users, "totalCount": len(f.users)}
+	return map[string]any{"users": users, "totalCount": 0}
 }
 
 func (f *groupFake) create(in map[string]any) (int, any) {

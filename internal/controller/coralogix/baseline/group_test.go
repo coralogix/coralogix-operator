@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"testing"
 
@@ -55,9 +56,11 @@ func init() {
 			numericID:    true,
 			deletePath:   func(id string) string { return groupPath + "/" + id },
 			recordVars:   groupRecordVars,
+			normalize:    normalizeGroupAnswer,
 			fakeVars: map[string]string{
 				"userA": groupFakeUserA, "userB": groupFakeUserB,
-				"scopeId": groupFakeScope, "roleId": strconv.FormatInt(groupFakeRole, 10),
+				"scopeId": groupFakeScope, "otherScopeId": groupFakeOtherScope,
+				"roleId": strconv.FormatInt(groupFakeRole, 10),
 			},
 		},
 	})
@@ -78,8 +81,8 @@ func groupRecordVars(t *testing.T, base, apiKey string) map[string]string {
 			ids = append(ids, id)
 		}
 	}
-	if len(ids) < 2 {
-		t.Fatal("the team needs two users to record the member cases")
+	if len(ids) < 3 {
+		t.Fatal("the team needs three users to record the member and the paging cases")
 	}
 
 	status, resp, err = sendRecordRequest(base, apiKey, http.MethodPost, scopePath,
@@ -89,6 +92,14 @@ func groupRecordVars(t *testing.T, base, apiKey string) map[string]string {
 	}
 	scopeID := stringAt(resp, "scope.id")
 	t.Cleanup(func() { removeGroupFixture(t, base, apiKey, scopePath+"/"+scopeID) })
+
+	status, resp, err = sendRecordRequest(base, apiKey, http.MethodPost, scopePath,
+		map[string]any{"displayName": "cxo-fidelity-group-other-scope", "defaultExpression": "<v1>true"})
+	if err != nil || !succeeded(status) {
+		t.Fatalf("create the second scope: %d %v", status, err)
+	}
+	otherScopeID := stringAt(resp, "scope.id")
+	t.Cleanup(func() { removeGroupFixture(t, base, apiKey, scopePath+"/"+otherScopeID) })
 
 	status, resp, err = sendRecordRequest(base, apiKey, http.MethodPut, customRolePath, map[string]any{
 		"name": "cxo-fidelity-group-role", "description": "Fidelity role",
@@ -101,7 +112,55 @@ func groupRecordVars(t *testing.T, base, apiKey string) map[string]string {
 	role := strconv.FormatInt(int64(roleID), 10)
 	t.Cleanup(func() { removeGroupFixture(t, base, apiKey, customRolePath+"/"+role) })
 
-	return map[string]string{"userA": ids[0], "userB": ids[1], "scopeId": scopeID, "roleId": role}
+	return map[string]string{"userA": ids[0], "userB": ids[1], "scopeId": scopeID, "otherScopeId": otherScopeID, "roleId": role}
+}
+
+// normalizeGroupAnswer reduces an answer of the users search to what the fake can repeat. The
+// users of a team, their names, and their number differ from team to team, so the answer keeps
+// only how many users came back (none, one, or several), the keys of a user, whether a next page
+// exists, and whether the team has users. The fidelity cases then check the shape of a user, the
+// paging, and the empty answers.
+func normalizeGroupAnswer(resp any) any {
+	answer, ok := resp.(map[string]any)
+	if !ok {
+		return resp
+	}
+	users, ok := answer["users"].([]any)
+	if !ok {
+		return resp
+	}
+	out := map[string]any{}
+	switch len(users) {
+	case 0:
+		out["users"] = "none"
+	case 1:
+		out["users"] = "one"
+	default:
+		out["users"] = "several"
+	}
+	if len(users) > 0 {
+		if first, ok := users[0].(map[string]any); ok {
+			keys := make([]string, 0, len(first))
+			for key := range first {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+			list := make([]any, len(keys))
+			for i, key := range keys {
+				list[i] = key
+			}
+			out["userKeys"] = list
+		}
+	}
+	if next, ok := answer["nextPageToken"]; ok {
+		out["nextPageToken"] = next
+	}
+	if total, _ := answer["totalCount"].(float64); total > 0 {
+		out["totalCount"] = "<count>"
+	} else {
+		out["totalCount"] = float64(0)
+	}
+	return out
 }
 
 func removeGroupFixture(t *testing.T, base, apiKey, path string) {
@@ -437,6 +496,15 @@ var groupScenarios = map[string]func(h *harness){
 		h.Create("create with a scope", groupManifest(groupSpec))
 		h.SetSpec("remove the scope: the remote scope is cleared", groupSpecMap("baseline-group", ptr.To("Baseline group"), ptr.To("closed"), []string{"member-a@example.com"}, "role", ""))
 		h.RecordRemote("the remote group has no scope", groups(h).snapshot())
+	},
+	"update-change-scope": func(h *harness) {
+		groupDeps(h)
+		groupDependency(h, groupScopeSample, "other-scope", h.namespace, nil, groupFakeOtherScope)
+		h.Create("create with a scope", groupManifest(groupSpec))
+		h.SetSpec("another scope: the scope update names the new id", groupSpecMap("baseline-group", ptr.To("Baseline group"), ptr.To("closed"), []string{"member-a@example.com"}, "role", "other-scope"))
+		h.RecordRemote("the remote scope is the other one", groups(h).snapshot())
+		h.SetSpec("back to the first scope", groupSpecMap("baseline-group", ptr.To("Baseline group"), ptr.To("closed"), []string{"member-a@example.com"}, "role", "scope"))
+		h.RecordRemote("the remote scope is the first one", groups(h).snapshot())
 	},
 	"update-change-custom-role": func(h *harness) {
 		groupDeps(h)

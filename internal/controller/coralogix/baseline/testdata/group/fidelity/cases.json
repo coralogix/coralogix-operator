@@ -146,6 +146,41 @@
         {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
         {"method": "DELETE", "path": "/aaa/team-groups/v2/{{group}}"}
       ]
+    },
+    {
+      "name": "replace the scope of a group with another scope, and back",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/team-groups/v2",
+          "body": {"name": "cxo-fidelity-group-{{run}}-scope", "scope": {"scopeId": "{{scopeId}}"}},
+          "capture": "group"
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {"name": "cxo-fidelity-group-{{run}}-scope", "scopeUpdate": {"action": {"actionType": "set_scope_id", "setScopeId": {"value": "{{otherScopeId}}"}}}}
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {"name": "cxo-fidelity-group-{{run}}-scope", "scopeUpdate": {"action": {"actionType": "set_scope_id", "setScopeId": {"value": "{{scopeId}}"}}}}
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/{{group}}"}
+      ]
+    },
+    {
+      "name": "search the users of the team: a page, the next pages, and the answers without users",
+      "steps": [
+        {"method": "GET", "path": "/aaa/users/v2?page_size=1"},
+        {"method": "GET", "path": "/aaa/users/v2?page_size=1&page_token=1"},
+              {"method": "GET", "path": "/aaa/users/v2?page_size=100"},
+        {"method": "GET", "path": "/aaa/users/v2?page_size=1&page_token=1000"},
+        {"method": "GET", "path": "/aaa/users/v2"},
+        {"method": "GET", "path": "/aaa/users/v2?page_size=0"}
+      ]
     }
   ]
 }
