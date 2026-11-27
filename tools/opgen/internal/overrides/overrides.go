@@ -193,6 +193,9 @@ type SpecField struct {
 	// Value makes the field the type itself with omitempty, not a pointer, as a released field of
 	// a map type or of a type that marshals its own empty value, such as runtime.RawExtension.
 	Value bool `yaml:"value"`
+	// Description is the doc of the spec field, and so its description in the CRD. A handwritten
+	// field has no contract to take it from.
+	Description string `yaml:"description"`
 }
 
 // Hook names. The generated controller calls each one in a fixed place of the lifecycle.

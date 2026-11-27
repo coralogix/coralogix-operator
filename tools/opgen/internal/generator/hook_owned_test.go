@@ -103,3 +103,20 @@ func TestSpecFieldOfAListType(t *testing.T) {
 		}
 	}
 }
+
+// A spec field can state its description, which is its doc in the type and so its description in
+// the CRD. Without it the field has none.
+func TestSpecFieldDescription(t *testing.T) {
+	file := wrappedFile(wrappedRenames) + "spec:\n  names: {type: '[]string', value: true, description: The names that the hook reads.}\n  more: {type: '[]string', value: true}\nhooks: [beforeCreate, beforeUpdate]\n"
+	files, err := renderWrapped(t, wrappedIDBeside(t), file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	types := string(files["api/coralogix/v1alpha1/wrappedthing_types.go"])
+	if !strings.Contains(types, "\t// The names that the hook reads.\n\t// +optional\n\tNames []string") {
+		t.Errorf("the field must have its description:\n%s", types)
+	}
+	if !strings.Contains(types, "\t// +optional\n\tMore []string") {
+		t.Errorf("a field without a description has only its markers:\n%s", types)
+	}
+}
