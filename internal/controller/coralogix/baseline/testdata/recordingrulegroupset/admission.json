@@ -1,0 +1,109 @@
+{
+  "duplicate group names": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.groups",
+        "message": "Required value"
+      }
+    ]
+  },
+  "expr empty": {
+    "accepted": true
+  },
+  "group name empty": {
+    "accepted": true
+  },
+  "group without name": {
+    "accepted": true
+  },
+  "group without rules": {
+    "accepted": true
+  },
+  "groups empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.groups",
+        "message": "Invalid value: 0: spec.groups in body should have at least 1 items"
+      }
+    ]
+  },
+  "interval 0": {
+    "accepted": true
+  },
+  "interval above int32": {
+    "accepted": true
+  },
+  "interval as string": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.groups[0].intervalSeconds",
+        "message": "Invalid value: \"string\": spec.groups[0].intervalSeconds in body must be of type integer: \"string\""
+      }
+    ]
+  },
+  "interval below minimum": {
+    "accepted": true
+  },
+  "interval negative": {
+    "accepted": true
+  },
+  "labels with a number": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.groups[0].rules[0].labels.team",
+        "message": "Invalid value: \"integer\": spec.groups[0].rules[0].labels.team in body must be of type string: \"integer\""
+      }
+    ]
+  },
+  "limit 0": {
+    "accepted": true
+  },
+  "limit as string": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueTypeInvalid",
+        "field": "spec.groups[0].limit",
+        "message": "Invalid value: \"string\": spec.groups[0].limit in body must be of type integer: \"string\""
+      }
+    ]
+  },
+  "limit negative": {
+    "accepted": true
+  },
+  "record empty": {
+    "accepted": true
+  },
+  "rule without expr": {
+    "accepted": true
+  },
+  "rule without record": {
+    "accepted": true
+  },
+  "rules empty": {
+    "accepted": true
+  },
+  "sample": {
+    "accepted": true
+  },
+  "unknown field of a group": {
+    "accepted": true
+  },
+  "unknown field of the spec": {
+    "accepted": true
+  },
+  "without spec": {
+    "accepted": true
+  }
+}

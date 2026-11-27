@@ -1,0 +1,411 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update without a name, rename, replace groups, delete, and use a deleted set",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{set}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groups": [
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 120,
+                "limit": "7",
+                "name": "g1",
+                "rules": [
+                  {
+                    "expr": "vector(1)",
+                    "labels": {
+                      "team": "fidelity"
+                    },
+                    "record": "cxo_fidelity_a1"
+                  }
+                ],
+                "version": 0
+              },
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "g2",
+                "rules": [
+                  {
+                    "expr": "vector(1)",
+                    "labels": {},
+                    "record": "cxo_fidelity_a2"
+                  }
+                ],
+                "version": 0
+              }
+            ],
+            "id": "{{set}}",
+            "name": "cxo-fidelity-rrgs-a-{{run}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "groups": [
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "g1",
+                "rules": [
+                  {
+                    "expr": "vector(3)",
+                    "labels": {},
+                    "record": "cxo_fidelity_a1"
+                  }
+                ],
+                "version": 1
+              },
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "g3",
+                "rules": [],
+                "version": 0
+              }
+            ],
+            "id": "{{set}}",
+            "name": "cxo-fidelity-rrgs-a-{{run}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "groups": [
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "g1",
+                "rules": [
+                  {
+                    "expr": "vector(3)",
+                    "labels": {},
+                    "record": "cxo_fidelity_a1"
+                  }
+                ],
+                "version": 2
+              }
+            ],
+            "id": "{{set}}",
+            "name": "cxo-fidelity-rrgs-a2-{{run}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {
+            "groups": [
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "x",
+                "rules": [],
+                "version": 0
+              },
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "y",
+                "rules": [],
+                "version": 0
+              },
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "z",
+                "rules": [],
+                "version": 0
+              }
+            ],
+            "id": "{{set}}",
+            "name": "cxo-fidelity-rrgs-a2-{{run}}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: No rule groups in the set"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: name: length"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No rule group set with the given id"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No rule group set with the given id"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No rule group set with the given id"
+          }
+        }
+      ]
+    },
+    {
+      "name": "create without a name takes the id as the name",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{set}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groups": [
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "g1",
+                "rules": [
+                  {
+                    "expr": "vector(1)",
+                    "labels": {},
+                    "record": "cxo_fidelity_b1"
+                  }
+                ],
+                "version": 0
+              }
+            ],
+            "id": "{{set}}",
+            "name": "{{set}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "a set name that another set has",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{first}}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: duplicate_rule_group_set_name"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "id": "{{second}}"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: duplicate_rule_group_set_name"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 200,
+          "response": {}
+        }
+      ]
+    },
+    {
+      "name": "create rules that the API rejects",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: No rule groups in the set"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: No rule groups in the set"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: No rule groups in the set"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: name: length"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: groups.0.name: length"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: groups.0.name: length"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: groups.0.rules.0.record: invalid_promql; groups.0.rules.0.record: length"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: groups.0.rules.0.expr: invalid_promql; groups.0.rules.0.expr: length"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: groups.0.interval: range"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: groups.0.interval: range"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line N:N): invalid value for uint64 field limit: \"abc\""
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: validation failed: groups: duplicate_rule_group_name"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a group without rules, and an id that is no set",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "id": "{{set}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groups": [
+              {
+                "id": "\u003cgroup-id\u003e",
+                "interval": 60,
+                "limit": "0",
+                "name": "g",
+                "rules": [],
+                "version": 0
+              }
+            ],
+            "id": "{{set}}",
+            "name": "cxo-fidelity-rrgs-e-{{run}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No rule group set with the given id"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No rule group set with the given id"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: No rule group set with the given id"
+          }
+        }
+      ]
+    }
+  ]
+}

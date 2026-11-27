@@ -1,0 +1,132 @@
+[
+  {
+    "step": "the released operator made the set: reconcile the CR",
+    "spec": {
+      "groups": [
+        {
+          "intervalSeconds": 120,
+          "limit": 100,
+          "name": "baseline.rules",
+          "rules": [
+            {
+              "expr": "vector(1)",
+              "labels": {
+                "team": "baseline"
+              },
+              "record": "baseline_record"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1/01FAKE00000000000000000001",
+        "body": {
+          "groups": [
+            {
+              "interval": 120,
+              "limit": "100",
+              "name": "baseline.rules",
+              "rules": [
+                {
+                  "expr": "vector(1)",
+                  "labels": {
+                    "team": "baseline"
+                  },
+                  "record": "baseline_record"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "01FAKE00000000000000000001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1/01FAKE00000000000000000001",
+        "body": {
+          "groups": [
+            {
+              "interval": 120,
+              "limit": "100",
+              "name": "baseline.rules",
+              "rules": [
+                {
+                  "expr": "vector(1)",
+                  "labels": {
+                    "team": "baseline"
+                  },
+                  "record": "baseline_record"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "01FAKE00000000000000000001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1/01FAKE00000000000000000001",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

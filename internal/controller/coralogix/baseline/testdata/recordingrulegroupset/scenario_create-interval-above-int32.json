@@ -1,0 +1,66 @@
+[
+  {
+    "step": "an interval above int32: the Go type cannot decode the CR, so no request is sent",
+    "spec": {
+      "groups": [
+        {
+          "intervalSeconds": 2147483648,
+          "name": "baseline.rules",
+          "rules": [
+            {
+              "expr": "vector(1)",
+              "record": "baseline_record"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "InternalK8sError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "InternalK8sError",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

@@ -1,0 +1,180 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "groups": [
+        {
+          "intervalSeconds": 120,
+          "limit": 100,
+          "name": "baseline.rules",
+          "rules": [
+            {
+              "expr": "vector(1)",
+              "labels": {
+                "team": "baseline"
+              },
+              "record": "baseline_record"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
+        "body": {
+          "groups": [
+            {
+              "interval": 120,
+              "limit": "100",
+              "name": "baseline.rules",
+              "rules": [
+                {
+                  "expr": "vector(1)",
+                  "labels": {
+                    "team": "baseline"
+                  },
+                  "record": "baseline_record"
+                }
+              ]
+            }
+          ],
+          "name": "rules"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "01FAKE00000000000000000002",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "update: the API answers 404 for an id that is no set, so the status id is cleared",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1/not-an-id",
+        "body": {
+          "groups": [
+            {
+              "interval": 120,
+              "limit": "100",
+              "name": "baseline.rules",
+              "rules": [
+                {
+                  "expr": "vector(1)",
+                  "labels": {
+                    "team": "baseline"
+                  },
+                  "record": "baseline_record"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeue": true
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "recreate: the first set still has the name, so the API answers 400",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
+        "body": {
+          "groups": [
+            {
+              "interval": 120,
+              "limit": "100",
+              "name": "baseline.rules",
+              "rules": [
+                {
+                  "expr": "vector(1)",
+                  "labels": {
+                    "team": "baseline"
+                  },
+                  "record": "baseline_record"
+                }
+              ]
+            }
+          ],
+          "name": "rules"
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete: a 404 is success",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1/not-an-id",
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]
