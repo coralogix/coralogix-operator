@@ -1,0 +1,107 @@
+[
+  {
+    "step": "the released operator made the group from customRoles",
+    "spec": {
+      "customRoles": [
+        {
+          "resourceRef": {
+            "name": "role"
+          }
+        }
+      ],
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/4243",
+        "body": {
+          "name": "baseline-group",
+          "roleUpdate": {
+            "action": {
+              "actionType": "set_role_id",
+              "setRoleId": {
+                "value": 7001
+              }
+            }
+          },
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {}
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {}
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "4243",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group has the role",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "4243",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "4243": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "groupId": 4243,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_OPEN",
+        "name": "baseline-group",
+        "role": {
+          "description": "Fidelity role",
+          "name": "cxo-fidelity-group-role",
+          "roleId": 7001
+        },
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": []
+      }
+    }
+  }
+]

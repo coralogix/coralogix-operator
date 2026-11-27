@@ -1,0 +1,76 @@
+[
+  {
+    "step": "the API does not know the scope",
+    "spec": {
+      "name": "baseline-group",
+      "scope": {
+        "resourceRef": {
+          "name": "scope"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "scope": {
+            "scopeId": "<id-1>"
+          }
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "scope": {
+            "scopeId": "<id-1>"
+          }
+        },
+        "status": 404
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

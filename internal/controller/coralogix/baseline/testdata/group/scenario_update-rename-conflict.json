@@ -1,0 +1,133 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "scope": {}
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "rename to a name that another group has: the API answers 500",
+    "spec": {
+      "name": "taken-group"
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/9001",
+        "body": {
+          "name": "taken-group",
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {}
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {}
+            }
+          }
+        },
+        "status": 500
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/9001",
+        "body": {
+          "name": "taken-group",
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {}
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {}
+            }
+          }
+        },
+        "status": 500
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteUpdateFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

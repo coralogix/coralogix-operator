@@ -1,0 +1,795 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update keeps what the body omits, replace the users, clear the role and the scope, delete, and the missing group",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "Control group",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "Control group",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": [
+                "\u003cid\u003e"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": [
+                "\u003cid\u003e"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "Updated group",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "Updated group",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": [
+                "\u003cid\u003e"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_CLOSED",
+              "name": "cxo-fidelity-group-{{run}}-updated",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groupId": "{{group}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: group with id TeamGroupId({{group}}) not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: group with id TeamGroupId({{group}}) not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: group with id TeamGroupId({{group}}) not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: group with id TeamGroupId(\u003cnumber\u003e) not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: group with id TeamGroupId(\u003cnumber\u003e) not found"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: group with id TeamGroupId(\u003cnumber\u003e) not found"
+          }
+        }
+      ]
+    },
+    {
+      "name": "defaults, group types, duplicate names, and an empty description",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{first}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-a",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 409,
+          "response": {
+            "code": 409,
+            "message": "Already Exists: Team group cxo-fidelity-group-{{run}}-a already exists for team \u003cnumber\u003e"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "groupId": "{{second}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-b",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "description": "",
+              "groupId": "{{second}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-b",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{second}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_RESTRICTED",
+              "name": "cxo-fidelity-group-{{run}}-b",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{second}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_RESTRICTED",
+              "name": "cxo-fidelity-group-{{run}}-b",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{second}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_RESTRICTED",
+              "name": "cxo-fidelity-group-{{run}}-b",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{second}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-b",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{second}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-b",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 500,
+          "response": {
+            "code": 500,
+            "message": "Internal Server Error: Internal Error - service error"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groupId": "{{first}}"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groupId": "{{second}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejected values on create and update",
+      "steps": [
+        {
+          "status": 403,
+          "response": {
+            "code": 403,
+            "message": "Permission Denied: Could not create group for team \u003cnumber\u003e. Some users, requested to be added to group, are not part of the group's team."
+          }
+        },
+        {
+          "status": 403,
+          "response": {
+            "code": 403,
+            "message": "Permission Denied: Trying to perform operation on roles which are not of type team or do not belong to this team"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Next gen scope not found"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Group name cannot be empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Group name cannot be empty"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-c",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Group name cannot be empty"
+          }
+        },
+        {
+          "status": 403,
+          "response": {
+            "code": 403,
+            "message": "Permission Denied: Trying to perform operation on roles which are not of type team or do not belong to this team"
+          }
+        },
+        {
+          "status": 403,
+          "response": {
+            "code": 403,
+            "message": "Permission Denied: Trying to perform operation on roles which are not of type team or do not belong to this team"
+          }
+        },
+        {
+          "status": 403,
+          "response": {
+            "code": 403,
+            "message": "Permission Denied: Trying to perform operation on roles which are not of type team or do not belong to this team"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: Next gen scope not found"
+          }
+        },
+        {
+          "status": 403,
+          "response": {
+            "code": 403,
+            "message": "Permission Denied: Could not update group for team \u003cnumber\u003e. Some users, requested to be added to updated group, are not part of the group's team."
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-c",
+              "role": {
+                "description": "Fidelity role",
+                "name": "cxo-fidelity-group-role",
+                "roleId": "{{roleId}}"
+              },
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groupId": "{{group}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "users listed twice are stored once, in a group without a role or a scope",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-users",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-users",
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": [
+                "\u003cid\u003e",
+                "\u003cid\u003e"
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groupId": "{{group}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "replace the scope of a group with another scope, and back",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "\u003cid\u003e"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "\u003cid\u003e"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "group": {
+              "createdAt": "\u003ctime\u003e",
+              "groupId": "{{group}}",
+              "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+              "groupType": "GROUP_TYPE_OPEN",
+              "name": "cxo-fidelity-group-{{run}}-scope",
+              "scope": {
+                "scopeId": "{{scopeId}}"
+              },
+              "teamId": "\u003credacted\u003e",
+              "updatedAt": "\u003ctime\u003e",
+              "userIds": []
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "groupId": "{{group}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "search the users of the team: a page, the next pages, and the answers without users",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "nextPageToken": 1,
+            "totalCount": "\u003ccount\u003e",
+            "userKeys": [
+              "accessType",
+              "allowedLoginMode",
+              "firstName",
+              "groupIds",
+              "lastName",
+              "status",
+              "userAccountId",
+              "userId",
+              "username"
+            ],
+            "users": "one"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "nextPageToken": 2,
+            "totalCount": "\u003ccount\u003e",
+            "userKeys": [
+              "accessType",
+              "allowedLoginMode",
+              "firstName",
+              "groupIds",
+              "lastName",
+              "status",
+              "userAccountId",
+              "userId",
+              "username"
+            ],
+            "users": "one"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": "\u003ccount\u003e",
+            "userKeys": [
+              "accessType",
+              "allowedLoginMode",
+              "firstName",
+              "groupIds",
+              "lastName",
+              "status",
+              "userAccountId",
+              "userId",
+              "username"
+            ],
+            "users": "several"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": 0,
+            "users": "none"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": 0,
+            "users": "none"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "totalCount": 0,
+            "users": "none"
+          }
+        }
+      ]
+    }
+  ]
+}

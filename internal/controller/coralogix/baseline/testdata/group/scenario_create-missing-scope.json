@@ -1,0 +1,86 @@
+[
+  {
+    "step": "the Scope does not exist: no request",
+    "spec": {
+      "customRole": {
+        "resourceRef": {
+          "name": "role"
+        }
+      },
+      "description": "Baseline group",
+      "groupType": "closed",
+      "members": [
+        {
+          "userName": "member-a@example.com"
+        }
+      ],
+      "name": "baseline-group",
+      "scope": {
+        "resourceRef": {
+          "name": "scope"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "step": "create: a direct reconcile does not run the event predicate",
+    "spec": {
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "scope": {}
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the selector does not match: delete the remote group and clear the status",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/9001",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [],
+      "status": {}
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

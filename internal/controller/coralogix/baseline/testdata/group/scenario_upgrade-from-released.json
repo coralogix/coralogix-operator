@@ -1,0 +1,189 @@
+[
+  {
+    "step": "the released operator made the group: reconcile the CR",
+    "spec": {
+      "customRole": {
+        "resourceRef": {
+          "name": "role"
+        }
+      },
+      "description": "Baseline group",
+      "groupType": "closed",
+      "members": [
+        {
+          "userName": "member-a@example.com"
+        }
+      ],
+      "name": "baseline-group",
+      "scope": {
+        "resourceRef": {
+          "name": "scope"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/4242",
+        "body": {
+          "description": "Baseline group",
+          "groupType": "GROUP_TYPE_CLOSED",
+          "name": "baseline-group",
+          "roleUpdate": {
+            "action": {
+              "actionType": "set_role_id",
+              "setRoleId": {
+                "value": 7001
+              }
+            }
+          },
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {
+                "value": "<id-1>"
+              }
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {
+                "userIds": [
+                  "<id-2>"
+                ]
+              }
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "4242",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "reconcile again",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/4242",
+        "body": {
+          "description": "Baseline group",
+          "groupType": "GROUP_TYPE_CLOSED",
+          "name": "baseline-group",
+          "roleUpdate": {
+            "action": {
+              "actionType": "set_role_id",
+              "setRoleId": {
+                "value": 7001
+              }
+            }
+          },
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {
+                "value": "<id-1>"
+              }
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {
+                "userIds": [
+                  "<id-2>"
+                ]
+              }
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "4242",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete: the group is deleted by its released id",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/4242",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "no group remains",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null,
+    "remote": {}
+  }
+]

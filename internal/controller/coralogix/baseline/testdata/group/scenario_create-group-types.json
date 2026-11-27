@@ -1,0 +1,165 @@
+[
+  {
+    "step": "restricted",
+    "spec": {
+      "groupType": "restricted",
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "groupType": "GROUP_TYPE_RESTRICTED",
+          "name": "baseline-group",
+          "scope": {}
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote type",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "9001": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "groupId": 9001,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_RESTRICTED",
+        "name": "baseline-group",
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": []
+      }
+    }
+  },
+  {
+    "step": "unspecified: the API stores open",
+    "spec": {
+      "groupType": "unspecified",
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/9001",
+        "body": {
+          "groupType": "GROUP_TYPE_UNSPECIFIED",
+          "name": "baseline-group",
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {}
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {}
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote type is open",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "9001": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "groupId": 9001,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_OPEN",
+        "name": "baseline-group",
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": []
+      }
+    }
+  }
+]

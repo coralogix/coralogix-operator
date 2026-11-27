@@ -1,0 +1,95 @@
+[
+  {
+    "step": "the name is taken: 409",
+    "spec": {
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "scope": {}
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "scope": {}
+        },
+        "status": 409
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete the CR without a remote id",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  },
+  {
+    "step": "the other group remains",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null,
+    "remote": {
+      "900": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "groupId": 900,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_OPEN",
+        "name": "baseline-group",
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": []
+      }
+    }
+  }
+]

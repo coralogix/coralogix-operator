@@ -1,0 +1,122 @@
+[
+  {
+    "step": "the member is on the third page",
+    "spec": {
+      "members": [
+        {
+          "userName": "member-a@example.com"
+        }
+      ],
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ],
+          "page_token": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ],
+          "page_token": [
+            "200"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "scope": {},
+          "userIds": [
+            "00000000-0000-4000-8000-000000000230"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "9001": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "groupId": 9001,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_OPEN",
+        "name": "baseline-group",
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": [
+          "00000000-0000-4000-8000-000000000230"
+        ]
+      }
+    }
+  }
+]

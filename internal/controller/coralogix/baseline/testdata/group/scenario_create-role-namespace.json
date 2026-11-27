@@ -1,0 +1,55 @@
+[
+  {
+    "step": "the role and the scope are in another namespace",
+    "spec": {
+      "customRole": {
+        "resourceRef": {
+          "name": "role",
+          "namespace": "group-create-role-namespace-other"
+        }
+      },
+      "name": "baseline-group",
+      "scope": {
+        "resourceRef": {
+          "name": "scope",
+          "namespace": "group-create-role-namespace-other"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "roleId": 7001,
+          "scope": {
+            "scopeId": "<id-1>"
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  }
+]
