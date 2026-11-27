@@ -193,6 +193,9 @@ type SpecField struct {
 	// Value makes the field the type itself with omitempty, not a pointer, as a released field of
 	// a map type or of a type that marshals its own empty value, such as runtime.RawExtension.
 	Value bool `yaml:"value"`
+	// Description is the doc of the spec field, and so its description in the CRD. A handwritten
+	// field has no contract to take it from.
+	Description string `yaml:"description"`
 }
 
 // Hook names. The generated controller calls each one in a fixed place of the lifecycle.
@@ -1041,8 +1044,13 @@ func (f *File) checkSpec() error {
 		if !validJSONName(name) {
 			return fmt.Errorf("spec.%s: %q is not a spec property name", name, name)
 		}
-		if !token.IsIdentifier(field.Type) || !token.IsExported(field.Type) {
-			return fmt.Errorf("spec.%s.type: %q is not an exported Go type name", name, field.Type)
+		// A list of strings or of a handwritten type keeps a released field that is a plain slice.
+		element, list := strings.CutPrefix(field.Type, "[]")
+		if !token.IsIdentifier(element) || (!token.IsExported(element) && (!list || element != "string")) {
+			return fmt.Errorf("spec.%s.type: %q is not an exported Go type name, or a list of one or of string", name, field.Type)
+		}
+		if list && !field.Value {
+			return fmt.Errorf("spec.%s.type: a list type needs value: true, because a pointer to a list marshals as the list", name)
 		}
 	}
 	return nil
@@ -1284,6 +1292,11 @@ func (f *File) Policy() model.Policy {
 		}
 		if len(f.Field(line.Component, line.Field).RequestValueBy) != 0 {
 			p.FixedRequest = append(p.FixedRequest, line.Component+"."+line.Field)
+		}
+		// An omitted optional string or list is sent as empty: the line states what the server
+		// stores for an omitted value, so the contract need not declare the default.
+		if line.Component == f.Resource && f.Field(line.Component, line.Field).SendNullAsEmpty {
+			p.Defaults = append(p.Defaults, line.Component+"."+line.Field)
 		}
 	}
 	for name := range f.Enums {

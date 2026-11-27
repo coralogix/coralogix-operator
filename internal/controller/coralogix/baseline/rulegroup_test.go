@@ -39,25 +39,25 @@ func init() {
 		name:     "rulegroup",
 		crdFile:  "coralogix.com_rulegroups.yaml",
 		resource: "rulegroups",
-		newFake:  newRuleGroupFake,
+		newFake:  newParsingRuleGroupFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
 			return &v1alpha1controllers.RuleGroupReconciler{RuleGroupClient: cs.RuleGroups(), Interval: reconcileInterval}
 		},
-		scenarios: ruleGroupScenarios(),
-		admission: ruleGroupAdmission(),
+		scenarios: parsingRuleGroupScenarios(),
+		admission: parsingRuleGroupAdmission(),
 		fidelity: fidelityConfig{
 			captureField: "ruleGroup.id",
-			deletePath:   func(id string) string { return ruleGroupPath + "/" + id },
-			normalize:    normalizeRuleGroupAnswer,
+			deletePath:   func(id string) string { return parsingRuleGroupPath + "/" + id },
+			normalize:    normalizeParsingRuleGroupAnswer,
 		},
 	})
 }
 
 var protoPosition = regexp.MustCompile(`\(line \d+:\d+\)`)
 
-// normalizeRuleGroupAnswer hides the position in the request text that a protobuf parse error
+// normalizeParsingRuleGroupAnswer hides the position in the request text that a protobuf parse error
 // names. It depends on how the client wrote the JSON, and the fake cannot know it.
-func normalizeRuleGroupAnswer(resp any) any {
+func normalizeParsingRuleGroupAnswer(resp any) any {
 	answer, ok := resp.(map[string]any)
 	if !ok {
 		return resp
@@ -68,8 +68,8 @@ func normalizeRuleGroupAnswer(resp any) any {
 	return answer
 }
 
-// ruleGroupSpec is a rule group with one subgroup of one rule.
-const ruleGroupSpec = `  name: baseline-rule-group
+// parsingRuleGroupSpec is a rule group with one subgroup of one rule.
+const parsingRuleGroupSpec = `  name: baseline-rule-group
   description: Baseline rule group
   subgroups:
     - rules:
@@ -80,8 +80,8 @@ const ruleGroupSpec = `  name: baseline-rule-group
             destinationField: Category
 `
 
-// ruleGroupAllRuleTypesSpec has a rule of every type with its non-default flags, and every enum value.
-const ruleGroupAllRuleTypesSpec = `  name: baseline-rule-group
+// parsingRuleGroupAllRuleTypesSpec has a rule of every type with its non-default flags, and every enum value.
+const parsingRuleGroupAllRuleTypesSpec = `  name: baseline-rule-group
   subgroups:
     - rules:
         - name: parse
@@ -127,21 +127,21 @@ const ruleGroupAllRuleTypesSpec = `  name: baseline-rule-group
         - {name: ts-nano, extractTimestamp: {sourceField: text, fieldFormatStandard: NanoTS, timeFormat: ''}}
 `
 
-func ruleGroupManifest(spec string) string {
+func parsingRuleGroupManifest(spec string) string {
 	return "apiVersion: coralogix.com/v1alpha1\nkind: RuleGroup\nmetadata:\n  name: rulegroup\nspec:\n" + spec
 }
 
-func ruleGroups(h *harness) *ruleGroupFake {
+func parsingRuleGroups(h *harness) *parsingRuleGroupFake {
 	h.t.Helper()
-	f, ok := h.API().(*ruleGroupFake)
+	f, ok := h.API().(*parsingRuleGroupFake)
 	if !ok {
-		h.t.Fatal("expected *ruleGroupFake")
+		h.t.Fatal("expected *parsingRuleGroupFake")
 	}
 	return f
 }
 
-// ruleGroupSpecMap parses the YAML of a whole spec.
-func ruleGroupSpecMap(h *harness, spec string) map[string]any {
+// parsingRuleGroupSpecMap parses the YAML of a whole spec.
+func parsingRuleGroupSpecMap(h *harness, spec string) map[string]any {
 	h.t.Helper()
 	var out map[string]any
 	if err := yaml.Unmarshal([]byte(spec), &out); err != nil {
@@ -150,7 +150,7 @@ func ruleGroupSpecMap(h *harness, spec string) map[string]any {
 	return out
 }
 
-func setRuleGroupStatusID(h *harness, id string) {
+func setParsingRuleGroupStatusID(h *harness, id string) {
 	h.t.Helper()
 	obj := h.get()
 	if err := unstructured.SetNestedField(obj.Object, id, "status", "id"); err != nil {
@@ -161,9 +161,9 @@ func setRuleGroupStatusID(h *harness, id string) {
 	}
 }
 
-// ruleGroupSampleScenarios makes one scenario for each released sample: create the sample, then
+// parsingRuleGroupSampleScenarios makes one scenario for each released sample: create the sample, then
 // resync, which sends the whole group again with the id in the path.
-func ruleGroupSampleScenarios() map[string]func(h *harness) {
+func parsingRuleGroupSampleScenarios() map[string]func(h *harness) {
 	files, err := filepath.Glob(filepath.Join(repoRoot, "config", "samples", "v1alpha1", "rulegroups", "*.yaml"))
 	if err != nil || len(files) == 0 {
 		panic("the RuleGroup samples are missing")
@@ -182,10 +182,10 @@ func ruleGroupSampleScenarios() map[string]func(h *harness) {
 	return out
 }
 
-func ruleGroupScenarios() map[string]func(h *harness) {
+func parsingRuleGroupScenarios() map[string]func(h *harness) {
 	scenarios := map[string]func(h *harness){
 		"create-minimal": func(h *harness) {
-			h.Create("create with the required fields only", ruleGroupManifest(`  name: baseline-rule-group
+			h.Create("create with the required fields only", parsingRuleGroupManifest(`  name: baseline-rule-group
   subgroups:
     - rules:
         - name: worker-to-category
@@ -199,7 +199,7 @@ func ruleGroupScenarios() map[string]func(h *harness) {
 		// Every field of the group. The matchers are the applications, then the subsystems, then
 		// the severities, each as its own matcher.
 		"create-all-fields": func(h *harness) {
-			h.Create("create with every group field", ruleGroupManifest(`  name: baseline-rule-group
+			h.Create("create with every group field", parsingRuleGroupManifest(`  name: baseline-rule-group
   description: Baseline rule group
   active: false
   hidden: true
@@ -217,23 +217,23 @@ func ruleGroupScenarios() map[string]func(h *harness) {
             jsonKey: worker
             destinationField: Category
 `))
-			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
+			h.RecordRemote("the remote group", parsingRuleGroups(h).snapshot())
 		},
 		// Every rule type with its non-default flags, and every enum value.
 		"create-all-rule-types": func(h *harness) {
-			h.Create("create with a rule of each type", ruleGroupManifest(ruleGroupAllRuleTypesSpec))
-			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
+			h.Create("create with a rule of each type", parsingRuleGroupManifest(parsingRuleGroupAllRuleTypesSpec))
+			h.RecordRemote("the remote group", parsingRuleGroups(h).snapshot())
 		},
 		// Update sends the same rules: every type, flag and enum value reaches the Update body.
 		"update-all-rule-types": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			h.SetSpec("update to a rule of each type", ruleGroupSpecMap(h, ruleGroupAllRuleTypesSpec))
-			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			h.SetSpec("update to a rule of each type", parsingRuleGroupSpecMap(h, parsingRuleGroupAllRuleTypesSpec))
+			h.RecordRemote("the remote group", parsingRuleGroups(h).snapshot())
 		},
 		// The spec can hold an id and an order for a subgroup. The requests send neither id: the
 		// order is the position of the subgroup, and of the rule inside it.
 		"create-ignores-subgroup-id-and-order": func(h *harness) {
-			h.Create("subgroup id and order are not sent", ruleGroupManifest(`  name: baseline-rule-group
+			h.Create("subgroup id and order are not sent", parsingRuleGroupManifest(`  name: baseline-rule-group
   subgroups:
     - id: ignored-id-1
       order: 7
@@ -245,21 +245,21 @@ func ruleGroupScenarios() map[string]func(h *harness) {
       rules:
         - {name: third, extract: {sourceField: text, regex: 'c'}}
 `))
-			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
+			h.RecordRemote("the remote group", parsingRuleGroups(h).snapshot())
 		},
 		// A group without subgroups is a 400: the API needs at least one.
 		"create-without-subgroups": func(h *harness) {
-			h.Create("create without subgroups", ruleGroupManifest("  name: baseline-rule-group\n"))
+			h.Create("create without subgroups", parsingRuleGroupManifest("  name: baseline-rule-group\n"))
 			h.Reconcile("retry")
 			h.Delete("delete")
 		},
 		"create-empty-subgroup": func(h *harness) {
-			h.Create("create with a subgroup that has no rules", ruleGroupManifest("  name: baseline-rule-group\n  subgroups:\n    - {}\n"))
+			h.Create("create with a subgroup that has no rules", parsingRuleGroupManifest("  name: baseline-rule-group\n  subgroups:\n    - {}\n"))
 			h.Reconcile("retry")
 			h.Delete("delete")
 		},
 		"create-empty-name": func(h *harness) {
-			h.Create("admission accepts an empty name, the API rejects it", ruleGroupManifest(`  name: ""
+			h.Create("admission accepts an empty name, the API rejects it", parsingRuleGroupManifest(`  name: ""
   subgroups:
     - rules:
         - {name: a, extract: {sourceField: text, regex: 'a'}}
@@ -271,7 +271,7 @@ func ruleGroupScenarios() map[string]func(h *harness) {
 		// both with a 400. The reconcile fails, the CR keeps no status id, and each retry sends the
 		// same POST.
 		"create-empty-rule-name": func(h *harness) {
-			h.Create("admission accepts an empty rule name, the API rejects it", ruleGroupManifest(`  name: baseline-rule-group
+			h.Create("admission accepts an empty rule name, the API rejects it", parsingRuleGroupManifest(`  name: baseline-rule-group
   subgroups:
     - rules:
         - {name: "", extract: {sourceField: text, regex: 'a'}}
@@ -280,7 +280,7 @@ func ruleGroupScenarios() map[string]func(h *harness) {
 			h.Delete("delete")
 		},
 		"create-empty-remove-fields": func(h *harness) {
-			h.Create("admission accepts an empty removeFields list, the API rejects it", ruleGroupManifest(`  name: baseline-rule-group
+			h.Create("admission accepts an empty removeFields list, the API rejects it", parsingRuleGroupManifest(`  name: baseline-rule-group
   subgroups:
     - rules:
         - {name: a, removeFields: {excludedFields: []}}
@@ -291,19 +291,19 @@ func ruleGroupScenarios() map[string]func(h *harness) {
 		// The same two rejections on an update: the CR keeps its status id, and the retry sends the
 		// same PUT.
 		"update-empty-rule-name-and-remove-fields": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			h.SetSpec("an empty rule name", ruleGroupSpecMap(h, `name: baseline-rule-group
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			h.SetSpec("an empty rule name", parsingRuleGroupSpecMap(h, `name: baseline-rule-group
 subgroups:
   - rules:
       - {name: "", extract: {sourceField: text, regex: a}}
 `))
-			h.SetSpec("an empty removeFields list", ruleGroupSpecMap(h, `name: baseline-rule-group
+			h.SetSpec("an empty removeFields list", parsingRuleGroupSpecMap(h, `name: baseline-rule-group
 subgroups:
   - rules:
       - {name: a, removeFields: {excludedFields: []}}
 `))
 			h.Reconcile("retry")
-			h.RecordRemote("the remote group is unchanged", ruleGroups(h).snapshot())
+			h.RecordRemote("the remote group is unchanged", parsingRuleGroups(h).snapshot())
 		},
 		"create-without-spec": func(h *harness) {
 			h.Create("create without spec", "apiVersion: coralogix.com/v1alpha1\nkind: RuleGroup\nmetadata:\n  name: rulegroup\n")
@@ -311,18 +311,18 @@ subgroups:
 			h.Delete("delete")
 		},
 		"create-rejected": func(h *harness) {
-			ruleGroups(h).answerNext(http.MethodPost, http.StatusInternalServerError, map[string]any{"code": 500, "message": "Internal Server Error: rejected"})
-			h.Create("create returns an API error", ruleGroupManifest(ruleGroupSpec))
+			parsingRuleGroups(h).answerNext(http.MethodPost, http.StatusInternalServerError, map[string]any{"code": 500, "message": "Internal Server Error: rejected"})
+			h.Create("create returns an API error", parsingRuleGroupManifest(parsingRuleGroupSpec))
 			h.Reconcile("retry creates the group")
 		},
 		"create-empty-id": func(h *harness) {
-			ruleGroups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{"ruleGroup": map[string]any{"id": ""}})
-			h.Create("create succeeds with an empty id", ruleGroupManifest(ruleGroupSpec))
+			parsingRuleGroups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{"ruleGroup": map[string]any{"id": ""}})
+			h.Create("create succeeds with an empty id", parsingRuleGroupManifest(parsingRuleGroupSpec))
 			h.Reconcile("retry")
 		},
 		"update-fields": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			h.SetSpec("rename, change the flags and the matchers, replace the subgroups", ruleGroupSpecMap(h, `name: renamed-rule-group
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			h.SetSpec("rename, change the flags and the matchers, replace the subgroups", parsingRuleGroupSpecMap(h, `name: renamed-rule-group
 description: Changed
 active: false
 hidden: true
@@ -336,11 +336,11 @@ subgroups:
   - rules:
       - {name: replace, replace: {sourceField: text, destinationField: text, regex: x, replacementString: "y"}}
 `))
-			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
+			h.RecordRemote("the remote group", parsingRuleGroups(h).snapshot())
 		},
 		// The API replaces the group, so each field that the update omits takes its default.
 		"update-clear-optional-fields": func(h *harness) {
-			h.Create("create with every optional field", ruleGroupManifest(`  name: baseline-rule-group
+			h.Create("create with every optional field", parsingRuleGroupManifest(`  name: baseline-rule-group
   description: Baseline rule group
   hidden: true
   creator: baseline
@@ -352,27 +352,27 @@ subgroups:
     - rules:
         - {name: a, description: A rule, extract: {sourceField: text, regex: 'a'}}
 `))
-			h.SetSpec("remove the optional fields: update omits the order and the matchers", ruleGroupSpecMap(h, `name: baseline-rule-group
+			h.SetSpec("remove the optional fields: update omits the order and the matchers", parsingRuleGroupSpecMap(h, `name: baseline-rule-group
 subgroups:
   - rules:
       - {name: a, extract: {sourceField: text, regex: a}}
 `))
-			h.RecordRemote("the remote group", ruleGroups(h).snapshot())
+			h.RecordRemote("the remote group", parsingRuleGroups(h).snapshot())
 		},
 		"update-rejected": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			h.SetSpec("an empty regular expression", ruleGroupSpecMap(h, `name: baseline-rule-group
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			h.SetSpec("an empty regular expression", parsingRuleGroupSpecMap(h, `name: baseline-rule-group
 subgroups:
   - rules:
       - {name: a, extract: {sourceField: text, regex: ""}}
 `))
 			h.Reconcile("retry")
-			h.RecordRemote("the remote group is unchanged", ruleGroups(h).snapshot())
+			h.RecordRemote("the remote group is unchanged", parsingRuleGroups(h).snapshot())
 		},
 		"update-when-gone": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			ruleGroups(h).forget(h.StatusID())
-			h.SetSpec("update after remote deletion: the 404 removes status.id", ruleGroupSpecMap(h, `name: renamed-rule-group
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			parsingRuleGroups(h).forget(h.StatusID())
+			h.SetSpec("update after remote deletion: the 404 removes status.id", parsingRuleGroupSpecMap(h, `name: renamed-rule-group
 subgroups:
   - rules:
       - {name: a, extract: {sourceField: text, regex: a}}
@@ -383,19 +383,19 @@ subgroups:
 		// and no status id. It names no remote resource: the shared reconciler removes the
 		// finalizer with no API call, and no new group is created.
 		"delete-after-update-gone": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			ruleGroups(h).forget(h.StatusID())
-			h.SetSpec("update after remote deletion: the 404 removes status.id", ruleGroupSpecMap(h, `name: renamed-rule-group
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			parsingRuleGroups(h).forget(h.StatusID())
+			h.SetSpec("update after remote deletion: the 404 removes status.id", parsingRuleGroupSpecMap(h, `name: renamed-rule-group
 subgroups:
   - rules:
       - {name: a, extract: {sourceField: text, regex: a}}
 `))
 			h.Delete("delete a CR that has a finalizer and no status id: no group is created")
-			h.RecordRemote("no remote group exists", ruleGroups(h).snapshot())
+			h.RecordRemote("no remote group exists", parsingRuleGroups(h).snapshot())
 		},
 		"bad-status-id": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			setRuleGroupStatusID(h, "not-a-uuid")
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			setParsingRuleGroupStatusID(h, "not-a-uuid")
 			h.Reconcile("update of an unknown id is a 404")
 			h.Reconcile("recreate")
 			h.Delete("delete")
@@ -404,7 +404,7 @@ subgroups:
 		// finalizer. The operator updates that group, creates none, and deletes it on delete.
 		"upgrade-from-released": func(h *harness) {
 			const id = "22222222-2222-4222-8222-222222222222"
-			ruleGroups(h).put(id, ruleGroupRecord{
+			parsingRuleGroups(h).put(id, parsingRuleGroupRecord{
 				name: "baseline-rule-group", description: "Baseline rule group", enabled: true, order: 1,
 				subgroups: []any{map[string]any{
 					"id": "33333333-3333-4333-8333-333333333333", "enabled": true, "order": 1,
@@ -415,79 +415,79 @@ subgroups:
 					}},
 				}},
 			})
-			h.CreateReleased("the released operator made the group: reconcile the CR", ruleGroupManifest(ruleGroupSpec),
+			h.CreateReleased("the released operator made the group: reconcile the CR", parsingRuleGroupManifest(parsingRuleGroupSpec),
 				[]string{"rulegroup.coralogix.com/finalizer"}, map[string]any{"id": id, "printableStatus": "RemoteSynced"})
 			if got := h.StatusID(); got != id {
 				h.t.Fatalf("status.id changed from %s to %s", id, got)
 			}
 			h.Reconcile("reconcile again")
 			h.Delete("delete: the group is deleted by its released id")
-			h.RecordRemote("no group remains", ruleGroups(h).snapshot())
+			h.RecordRemote("no group remains", parsingRuleGroups(h).snapshot())
 		},
 		"delete": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
 			h.Delete("delete")
 			h.Reconcile("delete again")
 		},
 		// The service reads the group before it deletes it, so a missing group is a 404, which the
 		// operator accepts.
 		"delete-when-gone": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			ruleGroups(h).forget(h.StatusID())
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			parsingRuleGroups(h).forget(h.StatusID())
 			h.Delete("delete after remote deletion: the API answers 404")
 		},
 		"delete-rejected": func(h *harness) {
-			h.Create("create", ruleGroupManifest(ruleGroupSpec))
-			ruleGroups(h).answerNext(http.MethodDelete, http.StatusInternalServerError, map[string]any{"code": 500, "message": "Internal Server Error: rejected"})
+			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			parsingRuleGroups(h).answerNext(http.MethodDelete, http.StatusInternalServerError, map[string]any{"code": 500, "message": "Internal Server Error: rejected"})
 			h.Delete("delete returns an API error")
 			h.Reconcile("retry deletes the group")
 		},
 		"selector-mismatch": func(h *harness) {
 			h.SetSelector(config.Selector{LabelSelector: labels.SelectorFromSet(labels.Set{"team": "other"})})
-			h.Create("create: a direct reconcile does not run the event predicate", ruleGroupManifest(ruleGroupSpec))
+			h.Create("create: a direct reconcile does not run the event predicate", parsingRuleGroupManifest(parsingRuleGroupSpec))
 			h.Reconcile("the selector does not match: delete the remote group and clear the status")
 			h.Delete("delete")
 		},
 	}
-	for name, scenario := range ruleGroupSampleScenarios() {
+	for name, scenario := range parsingRuleGroupSampleScenarios() {
 		scenarios[name] = scenario
 	}
 	return scenarios
 }
 
-func ruleGroupAdmission() map[string]string {
+func parsingRuleGroupAdmission() map[string]string {
 	const rule = "    - rules:\n        - name: r\n          extract: {sourceField: text, regex: a}\n"
 	one := func(arm string) string {
-		return ruleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - name: r\n          " + arm + "\n")
+		return parsingRuleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - name: r\n          " + arm + "\n")
 	}
 	return map[string]string{
-		"sample":                 ruleGroupManifest(ruleGroupSpec),
+		"sample":                 parsingRuleGroupManifest(parsingRuleGroupSpec),
 		"without spec":           "apiVersion: coralogix.com/v1alpha1\nkind: RuleGroup\nmetadata:\n  name: rulegroup\n",
-		"empty spec":             ruleGroupManifest("  {}\n"),
-		"name absent":            ruleGroupManifest("  subgroups:\n" + rule),
-		"name empty":             ruleGroupManifest("  name: \"\"\n  subgroups:\n" + rule),
-		"name only":              ruleGroupManifest("  name: g\n"),
-		"subgroups empty":        ruleGroupManifest("  name: g\n  subgroups: []\n"),
-		"subgroup without rules": ruleGroupManifest("  name: g\n  subgroups:\n    - {}\n"),
-		"description empty":      ruleGroupManifest("  name: g\n  description: \"\"\n  subgroups:\n" + rule),
-		"active false":           ruleGroupManifest("  name: g\n  active: false\n  subgroups:\n" + rule),
-		"hidden true":            ruleGroupManifest("  name: g\n  hidden: true\n  subgroups:\n" + rule),
-		"creator":                ruleGroupManifest("  name: g\n  creator: someone\n  subgroups:\n" + rule),
-		"order 0":                ruleGroupManifest("  name: g\n  order: 0\n  subgroups:\n" + rule),
-		"order 1":                ruleGroupManifest("  name: g\n  order: 1\n  subgroups:\n" + rule),
-		"order negative":         ruleGroupManifest("  name: g\n  order: -1\n  subgroups:\n" + rule),
-		"order too large":        ruleGroupManifest("  name: g\n  order: 2147483648\n  subgroups:\n" + rule),
-		"applications":           ruleGroupManifest("  name: g\n  applications: [a, \"\"]\n  subgroups:\n" + rule),
-		"subsystems":             ruleGroupManifest("  name: g\n  subsystems: [a]\n  subgroups:\n" + rule),
-		"severity warning":       ruleGroupManifest("  name: g\n  severities: [Warning]\n  subgroups:\n" + rule),
-		"severity unknown":       ruleGroupManifest("  name: g\n  severities: [Fatal]\n  subgroups:\n" + rule),
-		"severity lower case":    ruleGroupManifest("  name: g\n  severities: [warning]\n  subgroups:\n" + rule),
-		"subgroup id":            ruleGroupManifest("  name: g\n  subgroups:\n    - id: x\n      rules:\n        - {name: r, extract: {sourceField: text, regex: a}}\n"),
-		"subgroup order 0":       ruleGroupManifest("  name: g\n  subgroups:\n    - order: 0\n      rules:\n        - {name: r, extract: {sourceField: text, regex: a}}\n"),
-		"subgroup inactive":      ruleGroupManifest("  name: g\n  subgroups:\n    - active: false\n      rules:\n        - {name: r, extract: {sourceField: text, regex: a}}\n"),
-		"rule name absent":       ruleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - extract: {sourceField: text, regex: a}\n"),
-		"rule name empty":        ruleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - name: \"\"\n          extract: {sourceField: text, regex: a}\n"),
-		"rule without type":      ruleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - name: r\n"),
+		"empty spec":             parsingRuleGroupManifest("  {}\n"),
+		"name absent":            parsingRuleGroupManifest("  subgroups:\n" + rule),
+		"name empty":             parsingRuleGroupManifest("  name: \"\"\n  subgroups:\n" + rule),
+		"name only":              parsingRuleGroupManifest("  name: g\n"),
+		"subgroups empty":        parsingRuleGroupManifest("  name: g\n  subgroups: []\n"),
+		"subgroup without rules": parsingRuleGroupManifest("  name: g\n  subgroups:\n    - {}\n"),
+		"description empty":      parsingRuleGroupManifest("  name: g\n  description: \"\"\n  subgroups:\n" + rule),
+		"active false":           parsingRuleGroupManifest("  name: g\n  active: false\n  subgroups:\n" + rule),
+		"hidden true":            parsingRuleGroupManifest("  name: g\n  hidden: true\n  subgroups:\n" + rule),
+		"creator":                parsingRuleGroupManifest("  name: g\n  creator: someone\n  subgroups:\n" + rule),
+		"order 0":                parsingRuleGroupManifest("  name: g\n  order: 0\n  subgroups:\n" + rule),
+		"order 1":                parsingRuleGroupManifest("  name: g\n  order: 1\n  subgroups:\n" + rule),
+		"order negative":         parsingRuleGroupManifest("  name: g\n  order: -1\n  subgroups:\n" + rule),
+		"order too large":        parsingRuleGroupManifest("  name: g\n  order: 2147483648\n  subgroups:\n" + rule),
+		"applications":           parsingRuleGroupManifest("  name: g\n  applications: [a, \"\"]\n  subgroups:\n" + rule),
+		"subsystems":             parsingRuleGroupManifest("  name: g\n  subsystems: [a]\n  subgroups:\n" + rule),
+		"severity warning":       parsingRuleGroupManifest("  name: g\n  severities: [Warning]\n  subgroups:\n" + rule),
+		"severity unknown":       parsingRuleGroupManifest("  name: g\n  severities: [Fatal]\n  subgroups:\n" + rule),
+		"severity lower case":    parsingRuleGroupManifest("  name: g\n  severities: [warning]\n  subgroups:\n" + rule),
+		"subgroup id":            parsingRuleGroupManifest("  name: g\n  subgroups:\n    - id: x\n      rules:\n        - {name: r, extract: {sourceField: text, regex: a}}\n"),
+		"subgroup order 0":       parsingRuleGroupManifest("  name: g\n  subgroups:\n    - order: 0\n      rules:\n        - {name: r, extract: {sourceField: text, regex: a}}\n"),
+		"subgroup inactive":      parsingRuleGroupManifest("  name: g\n  subgroups:\n    - active: false\n      rules:\n        - {name: r, extract: {sourceField: text, regex: a}}\n"),
+		"rule name absent":       parsingRuleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - extract: {sourceField: text, regex: a}\n"),
+		"rule name empty":        parsingRuleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - name: \"\"\n          extract: {sourceField: text, regex: a}\n"),
+		"rule without type":      parsingRuleGroupManifest("  name: g\n  subgroups:\n    - rules:\n        - name: r\n"),
 		"rule with two types":    one("extract: {sourceField: text, regex: a}\n          parse: {sourceField: text, destinationField: text, regex: a}"),
 		"rule inactive":          one("active: false\n          extract: {sourceField: text, regex: a}"),
 		"parse":                  one("parse: {sourceField: text, destinationField: text, regex: a}"),
@@ -520,10 +520,10 @@ func ruleGroupAdmission() map[string]string {
 // it, because a panic ends the step before the golden has it.
 func TestRuleGroupCreateWithoutRuleGroup(t *testing.T) {
 	h := newHarness(t, kinds["rulegroup"], "create-without-rule-group")
-	ruleGroups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{})
+	parsingRuleGroups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{})
 	recovered := func() (value any) {
 		defer func() { value = recover() }()
-		h.Create("create answers without the ruleGroup", ruleGroupManifest(ruleGroupSpec))
+		h.Create("create answers without the ruleGroup", parsingRuleGroupManifest(parsingRuleGroupSpec))
 		return nil
 	}()
 	if recovered == nil {

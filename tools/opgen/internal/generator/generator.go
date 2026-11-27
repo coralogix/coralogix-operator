@@ -181,11 +181,11 @@ func validate(doc docType, entry kindEntry, sdkModule, module string, e2e *e2eFi
 	if err := overrideIssues(doc, entry, file); err != nil {
 		return nil, asEligibility(entry, err)
 	}
-	policy := withUpdateIDPlacement(doc, entry, withFoldKept(doc, entry, file, file.Policy()))
+	policy := withUpdateIDPlacement(doc, entry, withFoldKept(doc, entry, file, withHookEnums(doc, entry, file, file.Policy())))
 	if err := getOnlySkipIssues(doc, entry, file, policy); err != nil {
 		return nil, asEligibility(entry, err)
 	}
-	if report := maskIssues(model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy), file); len(report) != 0 {
+	if report := hookFieldIssues(maskIssues(model.ValidateWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy), file), entry, file); len(report) != 0 {
 		return nil, &EligibilityError{Report: located(entry, report)}
 	}
 	r, err := model.BuildWithPolicy(doc, entry.Resource, model.OperationIDs{}, policy)
@@ -269,6 +269,28 @@ func maskIssues(report issue.Report, file *overrides.File) issue.Report {
 	// its overrides file (updateMask: omit), not by the pattern.
 	return slices.DeleteFunc(report, func(i issue.Issue) bool {
 		return i.Code == "UPDATE_MASK_NESTED_ONEOF_UNSUPPORTED"
+	})
+}
+
+// hookFieldIssues drops the REQUIRED_VALUE_CAN_BE_EMPTY issues of a value below a field that a hook
+// sets (setByHook). The generator renders nothing for such a field: the hook builds it, and the
+// CR keeps its released type. A required string that the API accepts empty is then no rule of
+// the generated CR, and a line cannot state it: it would change no generated code.
+func hookFieldIssues(report issue.Report, entry kindEntry, file *overrides.File) issue.Report {
+	if file == nil {
+		return report
+	}
+	var prefixes []string
+	for _, line := range file.Lines() {
+		if line.Component == entry.Resource && file.Field(line.Component, line.Field).SetByHook {
+			prefixes = append(prefixes, "components.schemas."+entry.Resource+"."+line.Field+".")
+		}
+	}
+	if len(prefixes) == 0 {
+		return report
+	}
+	return slices.DeleteFunc(report, func(i issue.Issue) bool {
+		return i.Code == "REQUIRED_VALUE_CAN_BE_EMPTY" && slices.ContainsFunc(prefixes, func(prefix string) bool { return strings.HasPrefix(i.Location, prefix) })
 	})
 }
 

@@ -114,6 +114,7 @@ func (b *builder) extraSpec(r *model.Resource, d *kindData, fields []wrapperFiel
 		}
 		d.Spec.Fields = append(d.Spec.Fields, &crField{
 			API: name, JSON: name, GoName: goName(name), GoType: goType, Optional: true, synthetic: true,
+			Doc:     docLines(b.file.Spec[name].Description),
 			Markers: []string{"+optional"},
 		})
 	}
