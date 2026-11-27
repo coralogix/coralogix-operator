@@ -35,6 +35,7 @@ const (
 	PresetKind                   = "Preset"
 	ProductAnalyticsSettingsKind = "ProductAnalyticsSettings"
 	QuotaAllocationRuleSetKind   = "QuotaAllocationRuleSet"
+	RecordingRuleGroupSetKind    = "RecordingRuleGroupSet"
 	SLOKind                      = "SLO"
 	SavedFunnelKind              = "SavedFunnel"
 	SavedHeatmapKind             = "SavedHeatmap"

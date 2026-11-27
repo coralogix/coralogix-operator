@@ -4,7 +4,6 @@
     "spec": {
       "groups": [
         {
-          "intervalSeconds": 60,
           "name": "baseline.rules",
           "rules": [
             {
@@ -16,98 +15,21 @@
         }
       ]
     },
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
-        "body": {
-          "groups": [
-            {
-              "interval": 60,
-              "limit": "0",
-              "name": "baseline.rules",
-              "rules": [
-                {
-                  "expr": "",
-                  "labels": {
-                    "team": "baseline"
-                  },
-                  "record": ""
-                }
-              ]
-            }
-          ],
-          "name": "rules"
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueRequired",
+          "field": "spec.groups[0].rules[0].expr",
+          "message": "Required value"
         },
-        "status": 400
-      }
-    ],
-    "result": {
-      "error": true
+        {
+          "type": "FieldValueRequired",
+          "field": "spec.groups[0].rules[0].record",
+          "message": "Required value"
+        }
+      ]
     },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
-  },
-  {
-    "step": "retry",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
-        "body": {
-          "groups": [
-            {
-              "interval": 60,
-              "limit": "0",
-              "name": "baseline.rules",
-              "rules": [
-                {
-                  "expr": "",
-                  "labels": {
-                    "team": "baseline"
-                  },
-                  "record": ""
-                }
-              ]
-            }
-          ],
-          "name": "rules"
-        },
-        "status": 400
-      }
-    ],
-    "result": {
-      "error": true
-    },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
-  },
-  {
-    "step": "delete",
     "requests": [],
     "result": {
       "error": false

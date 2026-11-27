@@ -393,7 +393,7 @@ func prometheusAlertingRuleToAlertSpec(rule *prometheus.Rule) coralogixv1beta1.A
 }
 
 func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule *prometheus.PrometheusRule) coralogixv1alpha1.RecordingRuleGroupSetSpec {
-	groups := make([]coralogixv1alpha1.RecordingRuleGroup, 0)
+	groups := make([]coralogixv1alpha1.RecordingRuleGroupSetOutRuleGroup, 0)
 	for _, group := range prometheusRule.Spec.Groups {
 		var interval int32 = 60
 
@@ -415,9 +415,9 @@ func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule
 		}
 
 		if rules := prometheusInnerRulesToCoralogixInnerRules(group.Rules); len(rules) > 0 {
-			groups = append(groups, coralogixv1alpha1.RecordingRuleGroup{
+			groups = append(groups, coralogixv1alpha1.RecordingRuleGroupSetOutRuleGroup{
 				Name:            group.Name,
-				IntervalSeconds: interval,
+				IntervalSeconds: ptr.To(int64(interval)),
 				Rules:           rules,
 			})
 		}
@@ -428,14 +428,14 @@ func prometheusRuleToRecordingRuleToRuleGroupSet(log logr.Logger, prometheusRule
 	}
 }
 
-func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralogixv1alpha1.RecordingRule {
-	result := make([]coralogixv1alpha1.RecordingRule, 0)
+func prometheusInnerRulesToCoralogixInnerRules(rules []prometheus.Rule) []coralogixv1alpha1.RecordingRuleGroupSetOutRule {
+	result := make([]coralogixv1alpha1.RecordingRuleGroupSetOutRule, 0)
 	for _, rule := range rules {
 		if rule.Record == "" {
 			continue
 		}
 
-		result = append(result, coralogixv1alpha1.RecordingRule{
+		result = append(result, coralogixv1alpha1.RecordingRuleGroupSetOutRule{
 			Record: rule.Record,
 			Expr:   rule.Expr.StrVal,
 			Labels: rule.Labels,

@@ -18900,10 +18900,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-**Added in v0.4.0**
+RecordingRuleGroupSet is the Schema for the recordingrulegroupsets API.
 
 <table>
     <thead>
@@ -18935,14 +18932,14 @@ See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules
         <td><b><a href="#recordingrulegroupsetspec">spec</a></b></td>
         <td>object</td>
         <td>
-          RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.<br/>
+          RecordingRuleGroupSetSpec defines the desired state of a RecordingRuleGroupSet.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#recordingrulegroupsetstatus">status</a></b></td>
         <td>object</td>
         <td>
-          RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet<br/>
+          RecordingRuleGroupSetStatus defines the observed state of a RecordingRuleGroupSet.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -18954,7 +18951,7 @@ See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules
 
 
 
-RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix recording rule groups.
+RecordingRuleGroupSetSpec defines the desired state of a RecordingRuleGroupSet.
 
 <table>
     <thead>
@@ -18969,7 +18966,7 @@ RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix record
         <td><b><a href="#recordingrulegroupsetspecgroupsindex">groups</a></b></td>
         <td>[]object</td>
         <td>
-          Recording rule groups.<br/>
+          The rule groups of the set, in no particular order.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -18981,7 +18978,7 @@ RecordingRuleGroupSetSpec defines the desired state of a set of Coralogix record
 
 
 
-A Coralogix recording rule group.
+RecordingRuleGroupSetOutRuleGroup is the OutRuleGroup object of the API.
 
 <table>
     <thead>
@@ -18993,10 +18990,17 @@ A Coralogix recording rule group.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          The name of the group. Unique within the set.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>intervalSeconds</b></td>
         <td>integer</td>
         <td>
-          How often rules in the group are evaluated (in seconds).<br/>
+          How often the rules of the group are evaluated, in seconds. At least 60. An omitted interval is stored as 60, also on an update.<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Default</i>: 60<br/>
@@ -19006,23 +19010,16 @@ A Coralogix recording rule group.
         <td><b>limit</b></td>
         <td>integer</td>
         <td>
-          Limits the number of alerts an alerting rule and series a recording-rule can produce. 0 is no limit.<br/>
+          Limits the number of series that a rule of the group can produce. 0 means no limit. An omitted limit is stored as 0, also on an update.<br/>
           <br/>
             <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          The (unique) rule group name.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#recordingrulegroupsetspecgroupsindexrulesindex">rules</a></b></td>
         <td>[]object</td>
         <td>
-          Rules of this group.<br/>
+          List of rules.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19034,7 +19031,7 @@ A Coralogix recording rule group.
 
 
 
-A recording rule.
+RecordingRuleGroupSetOutRule is the OutRule object of the API.
 
 <table>
     <thead>
@@ -19049,22 +19046,32 @@ A recording rule.
         <td><b>expr</b></td>
         <td>string</td>
         <td>
-          The PromQL expression to evaluate.
-Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.<br/>
+          The PromQL expression to evaluate. Every evaluation cycle evaluates it at the current time and records the result as a new set of time series with the metric name of `record`.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>record</b></td>
+        <td>string</td>
+        <td>
+          The name of the time series to output to. Must be a valid metric name.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>evaluationDelayMs</b></td>
+        <td>integer</td>
+        <td>
+          The delay in milliseconds before evaluating the recording rule expression. Allows late-arriving data to be ingested before evaluation. An omitted delay stays omitted, and 0 is stored as 0.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+            <i>Maximum</i>: 1.8e+06<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>labels</b></td>
         <td>map[string]string</td>
         <td>
-          Labels to add or overwrite before storing the result.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>record</b></td>
-        <td>string</td>
-        <td>
-          The name of the time series to output to. Must be a valid metric name.<br/>
+          Labels to add or overwrite before storing the result. An omitted map is stored as an empty map.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19076,7 +19083,7 @@ Every evaluation cycle this is evaluated at the current time, and the result rec
 
 
 
-RecordingRuleGroupSetStatus defines the observed state of RecordingRuleGroupSet
+RecordingRuleGroupSetStatus defines the observed state of a RecordingRuleGroupSet.
 
 <table>
     <thead>

@@ -1,6 +1,13 @@
 {
   "duplicate group names": {
-    "accepted": true
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueDuplicate",
+        "field": "spec.groups[1]",
+        "message": "Duplicate value: map[string]interface {}{\"name\":\"same\"}"
+      }
+    ]
   },
   "empty spec": {
     "accepted": false,
@@ -19,7 +26,14 @@
     "accepted": true
   },
   "group without name": {
-    "accepted": true
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.groups[0].name",
+        "message": "Required value"
+      }
+    ]
   },
   "group without rules": {
     "accepted": true
@@ -86,10 +100,24 @@
     "accepted": true
   },
   "rule without expr": {
-    "accepted": true
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.groups[0].rules[0].expr",
+        "message": "Required value"
+      }
+    ]
   },
   "rule without record": {
-    "accepted": true
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.groups[0].rules[0].record",
+        "message": "Required value"
+      }
+    ]
   },
   "rules empty": {
     "accepted": true

@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -55,11 +56,11 @@ var _ = Describe("RecordingRuleGroupSet", Ordered, func() {
 				Namespace: testNamespace,
 			},
 			Spec: coralogixv1alpha1.RecordingRuleGroupSetSpec{
-				Groups: []coralogixv1alpha1.RecordingRuleGroup{
+				Groups: []coralogixv1alpha1.RecordingRuleGroupSetOutRuleGroup{
 					{
 						Name:            "rules",
-						IntervalSeconds: 60,
-						Rules: []coralogixv1alpha1.RecordingRule{
+						IntervalSeconds: ptr.To(int64(60)),
+						Rules: []coralogixv1alpha1.RecordingRuleGroupSetOutRule{
 							{
 								Expr:   "vector(1)",
 								Record: "ExampleRecord",

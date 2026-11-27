@@ -23,7 +23,6 @@
           "groups": [
             {
               "interval": 60,
-              "limit": "0",
               "name": "defaults",
               "rules": [
                 {
@@ -70,7 +69,6 @@
           "groups": [
             {
               "interval": 60,
-              "limit": "0",
               "name": "defaults",
               "rules": [
                 {

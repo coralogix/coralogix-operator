@@ -35,7 +35,7 @@ func init() {
 		resource: "recordingrulegroupsets",
 		newFake:  newRecordingRuleGroupSetFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.RecordingRuleGroupSetReconciler{RecordingRulesClient: cs.RecordingRules(), Interval: reconcileInterval}
+			return &v1alpha1controllers.RecordingRuleGroupSetReconciler{Client: cs.RecordingRules(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: recordingRuleGroupSetScenarios,
 		admission: recordingRuleGroupSetAdmission(),
@@ -67,11 +67,9 @@ func recordingRuleGroupSets(h *harness) *recordingRuleGroupSetFake {
 
 func setRecordingRuleGroupSetSuffix(h *harness, suffix string) {
 	h.t.Helper()
-	r, ok := h.reconciler.(*v1alpha1controllers.RecordingRuleGroupSetReconciler)
-	if !ok {
-		h.t.Fatal("expected *RecordingRuleGroupSetReconciler")
-	}
-	r.RecordingRuleGroupSetSuffix = suffix
+	previous := config.GetConfig().RecordingRuleGroupSetSuffix
+	config.GetConfig().RecordingRuleGroupSetSuffix = suffix
+	h.t.Cleanup(func() { config.GetConfig().RecordingRuleGroupSetSuffix = previous })
 }
 
 func setRecordingRuleGroupSetStatusID(h *harness, id string) {
@@ -132,13 +130,10 @@ var recordingRuleGroupSetScenarios = map[string]func(h *harness){
 		h.Delete("delete")
 	},
 	"create-group-without-name": func(h *harness) {
-		h.Create("a group without a name", recordingRuleGroupSetManifest("  groups:\n    - rules:\n        - record: baseline_record\n          expr: vector(1)\n"))
-		h.Delete("delete")
+		h.CreateRejected("a group without a name", recordingRuleGroupSetManifest("  groups:\n    - rules:\n        - record: baseline_record\n          expr: vector(1)\n"))
 	},
 	"create-empty-record-and-expr": func(h *harness) {
-		h.Create("a rule without record and expr", recordingRuleGroupSetManifest("  groups:\n    - name: baseline.rules\n      rules:\n        - labels:\n            team: baseline\n"))
-		h.Reconcile("retry")
-		h.Delete("delete")
+		h.CreateRejected("a rule without record and expr", recordingRuleGroupSetManifest("  groups:\n    - name: baseline.rules\n      rules:\n        - labels:\n            team: baseline\n"))
 	},
 	"create-interval-below-minimum": func(h *harness) {
 		h.Create("an interval of 30 seconds", recordingRuleGroupSetManifest("  groups:\n    - name: baseline.rules\n      intervalSeconds: 30\n      rules:\n        - record: baseline_record\n          expr: vector(1)\n"))
@@ -161,9 +156,7 @@ var recordingRuleGroupSetScenarios = map[string]func(h *harness){
 		h.Delete("delete")
 	},
 	"create-duplicate-group-names": func(h *harness) {
-		h.Create("two groups with one name", recordingRuleGroupSetManifest("  groups:\n    - name: same\n      rules:\n        - record: baseline_record\n          expr: vector(1)\n    - name: same\n      rules:\n        - record: baseline_record2\n          expr: vector(2)\n"))
-		h.Reconcile("retry")
-		h.Delete("delete")
+		h.CreateRejected("two groups with one name", recordingRuleGroupSetManifest("  groups:\n    - name: same\n      rules:\n        - record: baseline_record\n          expr: vector(1)\n    - name: same\n      rules:\n        - record: baseline_record2\n          expr: vector(2)\n"))
 	},
 	"create-duplicate-set-name": func(h *harness) {
 		recordingRuleGroupSets(h).seed("rules", "other")

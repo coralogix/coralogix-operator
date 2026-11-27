@@ -90,7 +90,6 @@
           "groups": [
             {
               "interval": 60,
-              "limit": "0",
               "name": "baseline.rules",
               "rules": [
                 {

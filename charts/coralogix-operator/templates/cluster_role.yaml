@@ -67,7 +67,6 @@ rules:
       - enrichments
       - groups
       - ipaccesses
-      - recordingrulegroupsets
       - rulegroups
     verbs:
       - create
@@ -88,7 +87,6 @@ rules:
       - enrichments/finalizers
       - groups/finalizers
       - ipaccesses/finalizers
-      - recordingrulegroupsets/finalizers
       - rulegroups/finalizers
     verbs:
       - update
@@ -103,7 +101,6 @@ rules:
       - enrichments/status
       - groups/status
       - ipaccesses/status
-      - recordingrulegroupsets/status
       - rulegroups/status
     verbs:
       - get
@@ -137,6 +134,7 @@ rules:
       - presets
       - productanalyticssettings
       - quotaallocationrulesets
+      - recordingrulegroupsets
       - slos
       - savedfunnels
       - savedheatmaps
@@ -174,6 +172,7 @@ rules:
       - presets/finalizers
       - productanalyticssettings/finalizers
       - quotaallocationrulesets/finalizers
+      - recordingrulegroupsets/finalizers
       - slos/finalizers
       - savedfunnels/finalizers
       - savedheatmaps/finalizers
@@ -205,6 +204,7 @@ rules:
       - presets/status
       - productanalyticssettings/status
       - quotaallocationrulesets/status
+      - recordingrulegroupsets/status
       - slos/status
       - savedfunnels/status
       - savedheatmaps/status

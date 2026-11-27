@@ -1,0 +1,49 @@
+resource: OutRuleGroupSet
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD has the interval as an int32 with the default 60 and no bounds. The API
+    # rejects an interval below 60 with a 400.
+    spec.groups[].intervalSeconds:
+      inferred: false
+      add: ['+kubebuilder:default=60', '+kubebuilder:validation:Format=int32']
+    # The released CRD has none of the contract limits below. The API enforces them with a 400.
+    spec.groups:
+      inferred: false
+      add: ['+kubebuilder:validation:MinItems=1']
+    spec.groups[].limit: {inferred: false}
+    spec.groups[].name: {inferred: false}
+    spec.groups[].rules: {inferred: false}
+    spec.groups[].rules[].record: {inferred: false}
+    spec.groups[].rules[].expr: {inferred: false}
+    spec.groups[].rules[].labels{}: {inferred: false}
+api:
+  operations:
+    create: RuleGroupSets_Create
+    get: RuleGroupSets_Fetch
+    update: RuleGroupSets_Update
+    delete: RuleGroupSets_Delete
+  customMethods: true
+  # Create answers {id}.
+  createResponseOnlyIDProperty: id
+# The released finalizer.
+finalizer: recordingrulegroupset.coralogix.com/finalizer
+types:
+  OutRuleGroupSet:
+    fields:
+      # The released CR has no name field: Create sends the name of the CR and the operator
+      # suffix (the beforeCreate hook), and Update sends no name, so the stored name stays.
+      name: {skip: true}
+      # The API stores a set and keeps no order. The released CR is a plain list. The name of a
+      # group is unique within the set, and identifies the item.
+      groups: {collection: list, listMapKey: name}
+  OutRuleGroup:
+    fields:
+      # The ids and the version that the server sets.
+      id: {skip: true}
+      version: {skip: true}
+      interval: {name: intervalSeconds}
+      # The API sends the limit as text. The released CR holds an integer.
+      limit: {numericString: true}
+hooks: [beforeCreate]
