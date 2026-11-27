@@ -264,6 +264,11 @@ type API struct {
 	RequestValues map[string]map[string]RequestValue `yaml:"requestValues"`
 	// UpdateMask changes the paths of the update mask of a PATCH Update.
 	UpdateMask *UpdateMask `yaml:"updateMask"`
+	// GetAtOwnPath says that Get has a path of its own, such as /things/id/{id}, while Update and
+	// Delete are on the Create path plus the id, such as /things/{id}. opgen gives the shared module
+	// a contract where Get is on the item path of Update, because the generated code calls the
+	// operations by name and never by path.
+	GetAtOwnPath bool `yaml:"getAtOwnPath"`
 }
 
 // UpdateMask changes the paths of the update mask of a PATCH Update.
@@ -287,6 +292,14 @@ type RequestValue struct {
 func (a API) Check() error {
 	if err := a.API.Check(); err != nil {
 		return err
+	}
+	if a.GetAtOwnPath {
+		switch {
+		case a.Operations == nil:
+			return errors.New("api.getAtOwnPath needs api.operations, which name Get and Update")
+		case a.UpdateIDInBody || a.GetByIDs != "" || a.GetFromList != nil || a.Overwrite != nil || a.Operations.Delete == UpsertDelete:
+			return errors.New("api.getAtOwnPath is for a resource with the id in the path of Get and Update; it cannot go with updateIDInBody, getByIDs, getFromList, overwrite, or delete: none")
+		}
 	}
 	if a.UpdateMask != nil {
 		if len(a.UpdateMask.Nested) == 0 {
@@ -1177,7 +1190,7 @@ func (f *File) checkAPI() error {
 	for i := 0; i < len(f.apiNode.Content); i += 2 {
 		key, value := f.apiNode.Content[i].Value, f.apiNode.Content[i+1]
 		switch key {
-		case "updateIDInBody", "operations", "methods", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask", "getByIDs", "getFromList":
+		case "updateIDInBody", "operations", "methods", "customMethods", "serverSetID", "idProperty", "clientSetID", "delete", "updateMaskInBody", "requestWrapper", "requestValues", "overwrite", "createResponseOnlyIDProperty", "updateMask", "getByIDs", "getFromList", "getAtOwnPath":
 		default:
 			return fmt.Errorf("api.%s: opgen does not support this api key", key)
 		}

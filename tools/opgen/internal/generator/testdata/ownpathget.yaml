@@ -1,0 +1,61 @@
+openapi: 3.1.0
+info: {title: own path get test, version: 1.0.0}
+paths:
+  /own-path-things:
+    post:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_CreateOwnPathThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateOwnPathThingRequest
+              type: object
+              required: [name]
+              properties:
+                name: {type: string, minLength: 1}
+      responses:
+        '200': {description: Created, content: {application/json: {schema: {$ref: '#/components/schemas/OwnPathThingResponse'}}}}
+  /own-path-things/id/{thing_id}:
+    parameters:
+      - {name: thing_id, in: path, required: true, schema: {type: integer, format: int64}}
+    get:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_GetOwnPathThing
+      responses:
+        '200': {description: Found, content: {application/json: {schema: {$ref: '#/components/schemas/OwnPathThingResponse'}}}}
+  /own-path-things/{thing_id}:
+    parameters:
+      - {name: thing_id, in: path, required: true, schema: {type: integer, format: int64}}
+    put:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_UpdateOwnPathThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: UpdateOwnPathThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+      responses:
+        '200': {description: Updated, content: {application/json: {schema: {$ref: '#/components/schemas/OwnPathThingResponse'}}}}
+    delete:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_DeleteOwnPathThing
+      responses:
+        '200': {description: Deleted, content: {application/json: {schema: {type: object}}}}
+components:
+  schemas:
+    OwnPathThingResponse:
+      type: object
+      properties:
+        thing: {$ref: '#/components/schemas/OwnPathThing'}
+    OwnPathThing:
+      type: object
+      required: [name]
+      properties:
+        thingId: {type: integer, format: int64}
+        name: {type: string, minLength: 1, x-coralogix-presence: true}
