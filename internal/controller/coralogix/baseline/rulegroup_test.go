@@ -21,7 +21,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"testing"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -41,7 +40,7 @@ func init() {
 		resource: "rulegroups",
 		newFake:  newParsingRuleGroupFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.RuleGroupReconciler{RuleGroupClient: cs.RuleGroups(), Interval: reconcileInterval}
+			return &v1alpha1controllers.RuleGroupReconciler{Client: cs.RuleGroups(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: parsingRuleGroupScenarios(),
 		admission: parsingRuleGroupAdmission(),
@@ -320,6 +319,13 @@ subgroups:
 			h.Create("create succeeds with an empty id", parsingRuleGroupManifest(parsingRuleGroupSpec))
 			h.Reconcile("retry")
 		},
+		// The handwritten controller panicked here: it read the id from the response without a nil
+		// check. The generated controller returns an error.
+		"create-without-rule-group": func(h *harness) {
+			parsingRuleGroups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{})
+			h.Create("create answers without the ruleGroup", parsingRuleGroupManifest(parsingRuleGroupSpec))
+			h.Reconcile("retry creates the group")
+		},
 		"update-fields": func(h *harness) {
 			h.Create("create", parsingRuleGroupManifest(parsingRuleGroupSpec))
 			h.SetSpec("rename, change the flags and the matchers, replace the subgroups", parsingRuleGroupSpecMap(h, `name: renamed-rule-group
@@ -511,22 +517,5 @@ func parsingRuleGroupAdmission() map[string]string {
 		"extract":                one("extract: {sourceField: text, regex: a}"),
 		"parse json field":       one("parseJsonField: {sourceField: text, destinationField: text, keepSourceField: true, keepDestinationField: false}"),
 		"parse json no keep":     one("parseJsonField: {sourceField: text, destinationField: text}"),
-	}
-}
-
-// TestRuleGroupCreateWithoutRuleGroup records a bug of the handwritten controller: it reads the
-// id from createResponse.RuleGroup without a nil check, so a Create answer without ruleGroup
-// panics the reconcile. controller-runtime recovers the panic and retries. A scenario cannot show
-// it, because a panic ends the step before the golden has it.
-func TestRuleGroupCreateWithoutRuleGroup(t *testing.T) {
-	h := newHarness(t, kinds["rulegroup"], "create-without-rule-group")
-	parsingRuleGroups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{})
-	recovered := func() (value any) {
-		defer func() { value = recover() }()
-		h.Create("create answers without the ruleGroup", parsingRuleGroupManifest(parsingRuleGroupSpec))
-		return nil
-	}()
-	if recovered == nil {
-		t.Fatal("the reconcile did not panic: the controller now handles a Create answer without ruleGroup. Record the new behavior in a scenario.")
 	}
 }

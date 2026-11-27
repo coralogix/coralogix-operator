@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	cxsdk "github.com/coralogix/coralogix-management-sdk/go"
@@ -52,8 +53,8 @@ var _ = Describe("RuleGroup", Ordered, func() {
 			},
 			Spec: coralogixv1alpha1.RuleGroupSpec{
 				Name:        ruleGroupName,
-				Description: "rule-group from k8s operator",
-				RuleSubgroups: []coralogixv1alpha1.RuleSubGroup{
+				Description: ptr.To("rule-group from k8s operator"),
+				Subgroups: []coralogixv1alpha1.RuleSubGroup{
 					{
 						Rules: []coralogixv1alpha1.Rule{
 							{
@@ -123,7 +124,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 	})
 
 	It("should deny creation of RuleGroup with typeless rule", func(ctx context.Context) {
-		ruleGroup.Spec.RuleSubgroups = []coralogixv1alpha1.RuleSubGroup{
+		ruleGroup.Spec.Subgroups = []coralogixv1alpha1.RuleSubGroup{
 			{
 				Rules: []coralogixv1alpha1.Rule{
 					{
@@ -139,7 +140,7 @@ var _ = Describe("RuleGroup", Ordered, func() {
 	})
 
 	It("should deny creation of RuleGroup with rule of two types", func(ctx context.Context) {
-		ruleGroup.Spec.RuleSubgroups = []coralogixv1alpha1.RuleSubGroup{
+		ruleGroup.Spec.Subgroups = []coralogixv1alpha1.RuleSubGroup{
 			{
 				Rules: []coralogixv1alpha1.Rule{
 					{

@@ -2,7 +2,6 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-  - bases/coralogix.com_rulegroups.yaml
   - bases/coralogix.com_alerts.yaml
   - bases/coralogix.com_alertsets.yaml
   - bases/coralogix.com_recordingrulegroupsets.yaml
@@ -29,6 +28,7 @@ resources:
   - bases/coralogix.com_presets.yaml
   - bases/coralogix.com_productanalyticssettings.yaml
   - bases/coralogix.com_quotaallocationrulesets.yaml
+  - bases/coralogix.com_rulegroups.yaml
   - bases/coralogix.com_slos.yaml
   - bases/coralogix.com_savedfunnels.yaml
   - bases/coralogix.com_savedheatmaps.yaml

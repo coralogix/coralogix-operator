@@ -54,3 +54,5 @@ kinds:
     resource: CustomEvaluation
   - kind: OutboundWebhook
     resource: OutgoingWebhook
+  - kind: RuleGroup
+    resource: RuleGroup

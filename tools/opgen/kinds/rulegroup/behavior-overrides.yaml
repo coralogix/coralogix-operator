@@ -1,0 +1,52 @@
+resource: RuleGroup
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD accepts an empty name. The API rejects it with a 400.
+    spec.name:
+      inferred: false
+      add: ['+kubebuilder:validation:MinLength=0']
+    # The released CRD has no default for the order: an omitted order is left out of the request,
+    # and the API stores 1. It needs a minimum of 1 and keeps the int32 format.
+    spec.order:
+      inferred: false
+      add: ['+kubebuilder:validation:Minimum=1', '+kubebuilder:validation:Format=int32']
+api:
+  operations:
+    create: RuleGroupsService_CreateRuleGroup
+    get: RuleGroupsService_GetRuleGroup
+    update: RuleGroupsService_UpdateRuleGroup
+    delete: RuleGroupsService_DeleteRuleGroup
+  customMethods: true
+  # The id of Get, Update, and Delete is the group_id path parameter.
+  idProperty: id
+finalizer: rulegroup.coralogix.com/finalizer
+types:
+  RuleGroup:
+    fields:
+      enabled: {name: active}
+      # Create and Update send the description, "" when the CR has none, as the released controller does.
+      description: {sendNullAsEmpty: true}
+      # The released requests always send the creator, "" when the CR has none.
+      creator: {sendNullAsEmpty: true}
+      # The requests carry the team id of the key.
+      teamId: {skip: true}
+      # The released CR holds the matchers as three lists and the subgroups as a list of rules of
+      # nine types, with the source field inside each. The hooks build both from the spec fields
+      # below, with the code of the released controller.
+      ruleMatchers: {setByHook: true}
+      ruleSubgroups: {setByHook: true}
+spec:
+  applications: {type: "[]string", value: true, description: Rules will execute on logs that match the these applications.}
+  subsystems: {type: "[]string", value: true, description: Rules will execute on logs that match the these subsystems.}
+  severities: {type: "[]RuleSeverity", value: true, description: Rules will execute on logs that match the these severities.}
+  subgroups:
+    type: "[]RuleSubGroup"
+    value: true
+    description: |-
+      Rules within the same subgroup have an OR relationship,
+      while rules in different subgroups have an AND relationship.
+      Refer to https://github.com/coralogix/coralogix-operator/blob/main/config/samples/v1alpha1/rulegroups/mixed_rulegroup.yaml
+      for an example.
+hooks: [beforeCreate, beforeUpdate]

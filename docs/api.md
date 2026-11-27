@@ -19196,10 +19196,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-RuleGroup is the Schema for the RuleGroups API
-See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-**Added in v0.4.0**
+RuleGroup is the Schema for the rulegroups API.
 
 <table>
     <thead>
@@ -19231,14 +19228,14 @@ See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules
         <td><b><a href="#rulegroupspec">spec</a></b></td>
         <td>object</td>
         <td>
-          RuleGroupSpec defines the Desired state of RuleGroup<br/>
+          RuleGroupSpec defines the desired state of a RuleGroup.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#rulegroupstatus">status</a></b></td>
         <td>object</td>
         <td>
-          RuleGroupStatus defines the observed state of RuleGroup<br/>
+          RuleGroupStatus defines the observed state of a RuleGroup.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -19250,7 +19247,7 @@ See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules
 
 
 
-RuleGroupSpec defines the Desired state of RuleGroup
+RuleGroupSpec defines the desired state of a RuleGroup.
 
 <table>
     <thead>
@@ -19265,14 +19262,14 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the rule-group.<br/>
+          Display name. Must not be empty.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          Whether the rule-group is active.<br/>
+          Whether the group is enabled. Defaults to true.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -19288,21 +19285,21 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>creator</b></td>
         <td>string</td>
         <td>
-          Rule-group creator<br/>
+          Free-form name of the creator, as the client sent it. A request without it stores an empty string, but a response can omit it.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          Description of the rule-group.<br/>
+          Human-readable description. Defaults to an empty string.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>hidden</b></td>
         <td>boolean</td>
         <td>
-          Hides the rule-group.<br/>
+          A free-form flag for clients, for example to hide the group in a UI. The service stores and returns it and does not act on it. Defaults to false.<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -19311,7 +19308,7 @@ RuleGroupSpec defines the Desired state of RuleGroup
         <td><b>order</b></td>
         <td>integer</td>
         <td>
-          The index of the rule-group between the other rule-groups.<br/>
+          Rank of the group among the rule groups of the company. Defaults to 1 when a request omits it. A request with 0 places the group last. Creating or updating a group does not shift the other groups, and groups can share an order: concurrent create requests can receive the same order. The service renumbers the groups later: deleting a group lowers the order of every group with a higher order by 1, and reordering the groups in the Coralogix UI sets the order of every group to its position, 1 to N. Do not treat an order that a client sent as stable: read it from a get or list response.<br/>
           <br/>
             <i>Format</i>: int32<br/>
             <i>Minimum</i>: 1<br/>
@@ -19882,7 +19879,7 @@ Replace rules are used to strings in order to fix log structure, change log seve
 
 
 
-RuleGroupStatus defines the observed state of RuleGroup
+RuleGroupStatus defines the observed state of a RuleGroup.
 
 <table>
     <thead>

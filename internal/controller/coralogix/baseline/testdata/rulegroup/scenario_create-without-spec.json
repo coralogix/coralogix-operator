@@ -8,8 +8,6 @@
         "body": {
           "creator": "",
           "description": "",
-          "enabled": false,
-          "hidden": false,
           "name": "",
           "ruleMatchers": [],
           "ruleSubgroups": []
@@ -44,8 +42,6 @@
         "body": {
           "creator": "",
           "description": "",
-          "enabled": false,
-          "hidden": false,
           "name": "",
           "ruleMatchers": [],
           "ruleSubgroups": []
