@@ -1,0 +1,504 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update without a name, rename, replace groups, delete, and use a deleted set",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-a-{{run}}",
+            "groups": [
+              {
+                "name": "g1",
+                "interval": 120,
+                "limit": "7",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_a1",
+                    "expr": "vector(1)",
+                    "labels": {
+                      "team": "fidelity"
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "g2",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_a2",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "set"
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/{{set}}",
+          "body": {
+            "groups": [
+              {
+                "name": "g1",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_a1",
+                    "expr": "vector(3)"
+                  }
+                ]
+              },
+              {
+                "name": "g3"
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/{{set}}",
+          "body": {
+            "name": "cxo-fidelity-rrgs-a2-{{run}}",
+            "groups": [
+              {
+                "name": "g1",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_a1",
+                    "expr": "vector(3)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/{{set}}",
+          "body": {
+            "groups": [
+              {
+                "name": "z"
+              },
+              {
+                "name": "y"
+              },
+              {
+                "name": "x"
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/{{set}}",
+          "body": {
+            "groups": []
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/{{set}}",
+          "body": {
+            "name": "",
+            "groups": [
+              {
+                "name": "g1"
+              }
+            ]
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/{{set}}",
+          "body": {
+            "groups": [
+              {
+                "name": "g1"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create without a name takes the id as the name",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "groups": [
+              {
+                "name": "g1",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_b1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "set"
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        }
+      ]
+    },
+    {
+      "name": "a set name that another set has",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-dup-{{run}}",
+            "groups": [
+              {
+                "name": "g1",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_c1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "first"
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-dup-{{run}}",
+            "groups": [
+              {
+                "name": "g1",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_c2",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-dup2-{{run}}",
+            "groups": [
+              {
+                "name": "g1",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_c3",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          },
+          "capture": "second"
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/{{second}}",
+          "body": {
+            "name": "cxo-fidelity-rrgs-dup-{{run}}",
+            "groups": [
+              {
+                "name": "g1"
+              }
+            ]
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/recording-rules/recording-rules/v1/{{first}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/recording-rules/recording-rules/v1/{{second}}"
+        }
+      ]
+    },
+    {
+      "name": "create rules that the API rejects",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": []
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {}
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "",
+            "groups": [
+              {
+                "name": "g"
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "name": "",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "name": "g",
+                "rules": [
+                  {
+                    "record": "",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "name": "g",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d1",
+                    "expr": ""
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "name": "g",
+                "interval": 30,
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "name": "g",
+                "interval": 0,
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "name": "g",
+                "limit": "abc",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-x-{{run}}",
+            "groups": [
+              {
+                "name": "same",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d1",
+                    "expr": "vector(1)"
+                  }
+                ]
+              },
+              {
+                "name": "same",
+                "rules": [
+                  {
+                    "record": "cxo_fidelity_d2",
+                    "expr": "vector(1)"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a group without rules, and an id that is no set",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/recording-rules/recording-rules/v1",
+          "body": {
+            "name": "cxo-fidelity-rrgs-e-{{run}}",
+            "groups": [
+              {
+                "name": "g"
+              }
+            ]
+          },
+          "capture": "set"
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/recording-rules/recording-rules/v1/{{set}}"
+        },
+        {
+          "method": "GET",
+          "path": "/recording-rules/recording-rules/v1/not-an-id"
+        },
+        {
+          "method": "PUT",
+          "path": "/recording-rules/recording-rules/v1/not-an-id",
+          "body": {
+            "groups": [
+              {
+                "name": "g"
+              }
+            ]
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/recording-rules/recording-rules/v1/not-an-id"
+        }
+      ]
+    }
+  ]
+}

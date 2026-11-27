@@ -1,0 +1,262 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "groups": [
+        {
+          "intervalSeconds": 120,
+          "limit": 100,
+          "name": "baseline.rules",
+          "rules": [
+            {
+              "expr": "vector(1)",
+              "labels": {
+                "team": "baseline"
+              },
+              "record": "baseline_record"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
+        "body": {
+          "groups": [
+            {
+              "interval": 120,
+              "limit": "100",
+              "name": "baseline.rules",
+              "rules": [
+                {
+                  "expr": "vector(1)",
+                  "labels": {
+                    "team": "baseline"
+                  },
+                  "record": "baseline_record"
+                }
+              ]
+            }
+          ],
+          "name": "rules"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "01FAKE00000000000000000002",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "change a rule, add a group, drop nothing",
+    "spec": {
+      "groups": [
+        {
+          "intervalSeconds": 180,
+          "limit": 5,
+          "name": "baseline.rules",
+          "rules": [
+            {
+              "expr": "vector(3)",
+              "labels": {
+                "team": "changed"
+              },
+              "record": "baseline_record"
+            }
+          ]
+        },
+        {
+          "name": "second.rules",
+          "rules": [
+            {
+              "expr": "vector(2)",
+              "record": "second_record"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1/01FAKE00000000000000000002",
+        "body": {
+          "groups": [
+            {
+              "interval": 180,
+              "limit": "5",
+              "name": "baseline.rules",
+              "rules": [
+                {
+                  "expr": "vector(3)",
+                  "labels": {
+                    "team": "changed"
+                  },
+                  "record": "baseline_record"
+                }
+              ]
+            },
+            {
+              "interval": 60,
+              "limit": "0",
+              "name": "second.rules",
+              "rules": [
+                {
+                  "expr": "vector(2)",
+                  "record": "second_record"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "01FAKE00000000000000000002",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "drop the first group: the API deletes it",
+    "spec": {
+      "groups": [
+        {
+          "name": "second.rules",
+          "rules": [
+            {
+              "expr": "vector(2)",
+              "record": "second_record"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1/01FAKE00000000000000000002",
+        "body": {
+          "groups": [
+            {
+              "interval": 60,
+              "limit": "0",
+              "name": "second.rules",
+              "rules": [
+                {
+                  "expr": "vector(2)",
+                  "record": "second_record"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "01FAKE00000000000000000002",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote set after the updates",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "recordingrulegroupset.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 3,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "01FAKE00000000000000000002",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "01FAKE00000000000000000002": {
+        "groups": [
+          {
+            "id": "01FAKE00000000000000000003",
+            "interval": 60,
+            "limit": "0",
+            "name": "second.rules",
+            "rules": [
+              {
+                "expr": "vector(2)",
+                "labels": {},
+                "record": "second_record"
+              }
+            ],
+            "version": 1
+          }
+        ],
+        "id": "01FAKE00000000000000000002",
+        "name": "rules"
+      }
+    }
+  }
+]
