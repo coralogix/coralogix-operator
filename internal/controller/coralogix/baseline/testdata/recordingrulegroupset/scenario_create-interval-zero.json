@@ -23,7 +23,6 @@
           "groups": [
             {
               "interval": 0,
-              "limit": "0",
               "name": "baseline.rules",
               "rules": [
                 {
@@ -66,7 +65,6 @@
           "groups": [
             {
               "interval": 0,
-              "limit": "0",
               "name": "baseline.rules",
               "rules": [
                 {
