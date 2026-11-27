@@ -6,6 +6,7 @@ resources:
   - bases/coralogix.com_contentthings.yaml
   - bases/coralogix.com_hookdeletethings.yaml
   - bases/coralogix.com_hookthings.yaml
+  - bases/coralogix.com_keythings.yaml
   - bases/coralogix.com_listthings.yaml
   - bases/coralogix.com_maskthings.yaml
   - bases/coralogix.com_patchthings.yaml

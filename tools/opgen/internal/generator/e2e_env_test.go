@@ -1,6 +1,9 @@
 package generator
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,6 +54,12 @@ func TestE2EEnvValues(t *testing.T) {
 	if strings.Contains(readGenerated(t, root, "config/samples/v1alpha1/generated/thing.yaml"), "@{env") {
 		t.Error("the sample names an environment variable")
 	}
+	// The offline coverage test reads no environment: the value keeps the sample, which stays
+	// valid JSON also where the variable would hold a number.
+	coverage := readGenerated(t, root, "internal/controller/coralogix/v1alpha1/thing_coverage_test.go")
+	if strings.Contains(coverage, "@{env.") || !strings.Contains(coverage, `// "e2e-description" keeps the sample value: the test reads no environment.`) {
+		t.Errorf("the coverage test applies the variable:\n%s", coverage)
+	}
 }
 
 func TestE2EEnvRejectsWrongNames(t *testing.T) {
@@ -67,4 +76,92 @@ func TestE2EEnvRejectsWrongNames(t *testing.T) {
 			wantCode(t, generateFromInput(input, root, root), tc.code)
 		})
 	}
+}
+
+// The upgrade check writes a variable into a string. A value that is exactly one variable and that
+// an integer field holds becomes a number, since the CRD rejects a string there. A Quantity takes a
+// string, and a string field keeps it.
+func TestE2EEnvValueOfAnIntegerField(t *testing.T) {
+	root, input := syntheticRoot(t)
+	writeThingE2E(t, root, "env: [THING_NUMBER]\nvalues:\n  destinations: [https://example.com]\n"+
+		"upgrade:\n  from: '1.0'\n  spec:\n    name: '@{run}'\n    quota: '@{env.THING_NUMBER}'\n    ratio: '@{env.THING_NUMBER}'\n"+
+		"    description: 'n-@{env.THING_NUMBER}'\n    settings: {mode: fast, retries: '@{env.THING_NUMBER}'}\n  field: description\n  value: updated\n")
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	script := readGenerated(t, root, "scripts/upgrade-check-thing.sh")
+	var paths []string
+	for _, line := range strings.Split(script, "\n") {
+		if _, rest, ok := strings.Cut(line, "--argjson path '"); ok {
+			path, _, _ := strings.Cut(rest, "'")
+			paths = append(paths, path)
+		}
+	}
+	if want := []string{`["quota"]`, `["settings","retries"]`}; strings.Join(paths, " ") != strings.Join(want, " ") {
+		t.Fatalf("number paths = %v, want %v", paths, want)
+	}
+	if !strings.Contains(script, `'setpath($path; getpath($path) | tonumber)'`) {
+		t.Error("the upgrade check does not turn the values into numbers")
+	}
+}
+
+// The offline coverage test skips a substitution that names a variable of the environment, also when
+// the substitution names @{uuid} too. It imports the uuid package only when it calls it, or the
+// generated test does not compile. The live test applies every substitution and imports it then.
+// The template lists the import only when a substitution needs it, and formatSource removes an
+// unused import too; the test holds for both.
+func TestE2EEnvAndUUIDImports(t *testing.T) {
+	for name, tc := range map[string]struct {
+		to             string
+		coverage, live bool
+	}{
+		"a variable and a UUID": {"'@{env.THING_DESCRIPTION}-@{uuid}'", false, true},
+		"a UUID":                {"'d-@{uuid}'", true, true},
+		"a variable":            {"'@{env.THING_DESCRIPTION}'", false, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			root, input := syntheticRoot(t)
+			env := ""
+			if strings.Contains(tc.to, "@{env.") {
+				env = "env: [THING_DESCRIPTION]\n"
+			}
+			writeThingE2E(t, root, env+"values:\n  destinations: [https://example.com]\n  description: e2e-description\n"+
+				"substitutions:\n  e2e-description: "+tc.to+"\n")
+			if err := generateFromInput(input, root, root); err != nil {
+				t.Fatal(err)
+			}
+			for path, want := range map[string]bool{
+				"internal/controller/coralogix/v1alpha1/thing_coverage_test.go": tc.coverage,
+				"tests/e2e/thing_generated_test.go":                             tc.live,
+			} {
+				imports, calls := uuidUse(t, path, readGenerated(t, root, path))
+				if imports != want || calls != want {
+					t.Errorf("%s: imports uuid = %v, calls uuid = %v, want %v", path, imports, calls, want)
+				}
+			}
+		})
+	}
+}
+
+// uuidUse reports whether a Go file imports the uuid package and whether it calls it.
+func uuidUse(t *testing.T, name, src string) (imports, calls bool) {
+	t.Helper()
+	file, err := parser.ParseFile(token.NewFileSet(), name, src, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, spec := range file.Imports {
+		if spec.Path.Value == `"github.com/google/uuid"` {
+			imports = true
+		}
+	}
+	ast.Inspect(file, func(n ast.Node) bool {
+		if sel, ok := n.(*ast.SelectorExpr); ok {
+			if id, ok := sel.X.(*ast.Ident); ok && id.Name == "uuid" {
+				calls = true
+			}
+		}
+		return true
+	})
+	return imports, calls
 }

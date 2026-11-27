@@ -95,8 +95,8 @@ var _ = Describe("ArchiveLogsTarget coverage specs (generated)", func() {
 // that the e2e test sets.
 func newArchiveLogsTargetCoverageCR(name, spec string) *coralogixv1alpha1.ArchiveLogsTarget {
 	cr := &coralogixv1alpha1.ArchiveLogsTarget{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
-	spec = strings.ReplaceAll(spec, "e2e-archive-logs-bucket", strings.ReplaceAll("@{env.LOGS_BUCKET}", "@{run}", name))
-	spec = strings.ReplaceAll(spec, "e2e-archive-logs-region", strings.ReplaceAll("@{env.AWS_REGION}", "@{run}", name))
+	// "e2e-archive-logs-bucket" keeps the sample value: the test reads no environment.
+	// "e2e-archive-logs-region" keeps the sample value: the test reads no environment.
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())

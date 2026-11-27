@@ -20,9 +20,9 @@ import (
 //     DELETE with the responses of the GET. The shared module then sees a singleton with every
 //     lifecycle step. upsertSDKNames maps the SDK names of the added operations to the POST and the
 //     GET. The generated code calls the POST for Create and Update, and makes no Delete call.
-//   - inline: true on a field of the resource: an object that only the API response nests, such as
+//   - inline: true on a field of the resource: an object that the API response nests, such as
 //     {spec: {isActive}} for a request {isActive}. The resource component gets the fields of
-//     the object in its place. inlineSDKNames moves their SDK names to the type of the object, and
+//     the object in its place. A request that nests them too names each one with requestAs. inlineSDKNames moves their SDK names to the type of the object, and
 //     the generated code that reads a response goes through the object.
 //   - skip: true on an arm of a oneOf group of the resource that no Create or Update body has: the
 //     group exists only in the response, where it names what the server can return. The arm and,
@@ -181,8 +181,8 @@ func inlineIssue(resource, format string, args ...any) error {
 
 // inlineResponse replaces each inlined object of the resource component by its fields, in place and
 // in order. The object must be required, so that its fields are always in the response, by the
-// contract or by required: true on the line, and no Create or Update body may hold it: the requests
-// send its fields at the top level.
+// contract or by required: true on the line. A Create or Update body that holds it too must name
+// each of its fields with requestAs (checkRequestsFlat).
 func inlineResponse(doc, schemas *yaml.Node, resource string, inlined []string, file *overrides.File) (map[string]overrides.InlineParent, error) {
 	s := mapValue(schemas, resource)
 	props := mapValue(s, "properties")
@@ -261,21 +261,41 @@ func inlineResponse(doc, schemas *yaml.Node, resource string, inlined []string, 
 	return parents, nil
 }
 
-// checkRequestsFlat reports an inlined object that a Create or Update body holds. Root inline is for
-// an object that only the response nests: the requests send its fields at the top level, so the
-// generated conversions need no change. An object that a request nests too needs the requests to
-// rebuild it, which is not supported yet.
+// checkRequestsFlat reports an inlined object that a Create or Update body holds, unless the
+// requests rebuild it. Root inline is for an object that the response nests: the requests send its
+// fields at the top level, or nest them again in an object of their own. A request that nests them
+// needs a requestAs line <object>.<field> on the resource for each field of its object, such as
+// keyPermissions.presets, so the generated request builds the object and no field of it is lost.
 func checkRequestsFlat(doc, schemas *yaml.Node, resource string, inlined []string, file *overrides.File) error {
 	ops := file.API.Operations
 	if ops == nil || ops.Create == "" || ops.Update == "" {
 		return inlineIssue(resource, "inline on the resource needs api.operations, which name the requests")
 	}
+	named := map[string]bool{}
+	for _, field := range file.Types[resource].Fields {
+		if field.RequestAs != "" {
+			named[field.RequestAs] = true
+		}
+	}
 	for _, id := range []string{ops.Create, ops.Update} {
 		_, _, op := findOperation(doc, id)
 		body := bodySchema(schemas, op)
 		for _, name := range inlined {
-			if mapValue(mapValue(body, "properties"), name) != nil {
-				return inlineIssue(resource, "inline: the request of %s holds %s too; inline on the resource supports only an object that the response alone nests", id, name)
+			held := mapValue(mapValue(body, "properties"), name)
+			if held == nil {
+				continue
+			}
+			props := mapValue(mapValue(schemas, refName(held)), "properties")
+			if props == nil {
+				props = mapValue(held, "properties")
+			}
+			if props == nil || len(props.Content) == 0 {
+				return inlineIssue(resource, "inline: the request of %s holds %s, which has no fields to name with requestAs", id, name)
+			}
+			for i := 0; i+1 < len(props.Content); i += 2 {
+				if path := name + "." + props.Content[i].Value; !named[path] {
+					return inlineIssue(resource, "inline: the request of %s holds %s too; give the field of the resource that the request holds at %s a requestAs line with that path", id, name, path)
+				}
 			}
 		}
 	}

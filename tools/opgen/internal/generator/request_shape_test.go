@@ -350,13 +350,19 @@ func TestRequestAsPathInOneRequestOnly(t *testing.T) {
 	}
 }
 
-// The model reads a path with a dot in the request wrapper. Without a wrapper it records no object
-// of the path, and the SDK check stops the run.
-func TestRequestAsWithDotsNeedsARequestWrapper(t *testing.T) {
+// The model reads the objects of a path with a dot also without a request wrapper: Create and
+// Replace build the object of the body from the fields of the CR.
+func TestRequestAsWithDotsWithoutARequestWrapper(t *testing.T) {
 	c := requestShape{bundle: true}
-	_, err := c.generate(t, "      alpha: {requestAs: bundle.alpha}\n      beta: {requestAs: bundle.beta}\n")
-	if err == nil || !strings.Contains(err.Error(), "goes through 0 objects") {
-		t.Fatalf("want the iac error, got %v", err)
+	root, err := c.generate(t, "      alpha: {requestAs: bundle.alpha}\n      beta: {requestAs: bundle.beta}\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	conversion := readGenerated(t, root, "api/coralogix/v1alpha1/thing_convert.go")
+	for _, want := range []string{"ThingBundle{}", ".Alpha = in.Alpha", ".Beta = in.Beta", "out.Bundle = "} {
+		if !strings.Contains(conversion, want) {
+			t.Errorf("the conversion misses %q:\n%s", want, conversion)
+		}
 	}
 }
 

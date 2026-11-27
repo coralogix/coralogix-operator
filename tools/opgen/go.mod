@@ -3,7 +3,7 @@ module github.com/coralogix/coralogix-operator/v2/tools/opgen
 go 1.26.10
 
 require (
-	github.com/coralogix/coralogix-management-sdk/iac v0.0.0-20261124065845-8c88012b1501
+	github.com/coralogix/coralogix-management-sdk/iac v0.0.0-20261126134422-5473a22f4785
 	github.com/pb33f/libopenapi v0.40.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/tools v0.51.0

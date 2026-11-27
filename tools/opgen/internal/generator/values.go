@@ -199,8 +199,12 @@ type e2eData struct {
 	Overwrite *overwriteData
 	// Env are the environment variables that the live tests read.
 	Env []string
-	// UUID is true when a substitution names @{uuid}: the tests import the uuid package.
+	// UUID is true when a substitution names @{uuid}: the live tests import the uuid package.
 	UUID bool
+	// CoverageUUID is true when a substitution that the offline coverage test applies names
+	// @{uuid}. That test skips a substitution that names a variable of the environment, so it
+	// imports the uuid package only for another one.
+	CoverageUUID bool
 }
 
 // overwriteData is the e2e test of an overwrite resource. The spec holds one list; the test gives its
@@ -230,12 +234,18 @@ type substitutionData struct {
 	From, To string
 	// UUID is true when To names @{uuid}.
 	UUID bool
+	// Env is true when To names a variable of the environment.
+	Env bool
 }
 
 type upgradeData struct {
 	From, SpecJSON, Field, Value string
 	// Nested is true for a dotted field: the patch sets the path below a spec field.
 	Nested bool
+	// NumberPaths are the jq paths of the spec values that are exactly one @{env.NAME} and that an
+	// integer or a number field holds. The script writes the variable into a string, then turns it
+	// into a number, because the CRD rejects a string there.
+	NumberPaths []string
 }
 
 // updateData is the update step as Go code: the field that it changes, the value that it sets,
@@ -356,8 +366,10 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 	for _, from := range sortedKeys(file.Substitutions) {
 		to := file.Substitutions[from]
 		hasUUID := strings.Contains(to, uuidToken)
-		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, to, hasUUID})
+		hasEnv := envRef.MatchString(to)
+		e2e.Substitutions = append(e2e.Substitutions, substitutionData{from, to, hasUUID, hasEnv})
 		e2e.UUID = e2e.UUID || hasUUID
+		e2e.CoverageUUID = e2e.CoverageUUID || hasUUID && !hasEnv
 	}
 	if file.Upgrade != nil {
 		for name := range file.Upgrade.Spec {
@@ -382,7 +394,8 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 				return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade.field", msg: "a dotted field must start with a field of upgrade.spec"}
 			}
 		}
-		e2e.Upgrade = &upgradeData{From: file.Upgrade.From, SpecJSON: string(encoded), Field: file.Upgrade.Field, Value: file.Upgrade.Value, Nested: nested}
+		e2e.Upgrade = &upgradeData{From: file.Upgrade.From, SpecJSON: string(encoded), Field: file.Upgrade.Field, Value: file.Upgrade.Value, Nested: nested,
+			NumberPaths: numberEnvPaths(file.Upgrade.Spec, d.Spec.Fields, nil)}
 	}
 	// The values also make the sample, which must not name a variable.
 	if envRef.MatchString(e2e.FullJSON) || envRef.MatchString(e2e.MinimalJSON) {
@@ -1672,4 +1685,35 @@ func (v *sampleValues) hasValue(path string) bool {
 	}
 	_, ok := v.fixed(path)
 	return ok
+}
+
+// numberEnvPaths returns the jq paths, as JSON arrays, of the values of spec that are exactly one
+// @{env.NAME} and that an integer or a number field of the CR holds. A value inside a list is not
+// followed: an upgrade spec names list items by position, which the paths would have to state.
+func numberEnvPaths(spec map[string]any, fields []*crField, prefix []string) []string {
+	var out []string
+	for _, name := range sortedKeys(spec) {
+		i := slices.IndexFunc(fields, func(f *crField) bool { return f.JSON == name })
+		if i < 0 {
+			continue
+		}
+		field, path := fields[i], append(slices.Clone(prefix), name)
+		switch v := spec[name].(type) {
+		case string:
+			if m := envRef.FindStringSubmatchIndex(v); m == nil || m[0] != 0 || m[1] != len(v) {
+				continue
+			}
+			if field.typ != nil && (field.typ.Kind == model.Integer || field.typ.Kind == model.Number) && field.GoType != "resource.Quantity" && field.GoType != "*resource.Quantity" {
+				encoded, err := json.Marshal(path)
+				if err == nil {
+					out = append(out, string(encoded))
+				}
+			}
+		case map[string]any:
+			if field.object != nil && !strings.HasPrefix(field.GoType, "[]") && !strings.HasPrefix(field.GoType, "map[") {
+				out = append(out, numberEnvPaths(v, field.object.Fields, path)...)
+			}
+		}
+	}
+	return out
 }

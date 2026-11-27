@@ -106,7 +106,7 @@ var _ = Describe("SettingThing coverage specs (generated)", func() {
 // that the e2e test sets.
 func newSettingThingCoverageCR(name, spec string) *coralogixv1alpha1.SettingThing {
 	cr := &coralogixv1alpha1.SettingThing{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
-	spec = strings.ReplaceAll(spec, "e2e-setting-bucket", strings.ReplaceAll("@{env.SETTING_BUCKET}", "@{run}", name))
+	// "e2e-setting-bucket" keeps the sample value: the test reads no environment.
 	decoder := json.NewDecoder(strings.NewReader(spec))
 	decoder.DisallowUnknownFields()
 	Expect(decoder.Decode(&cr.Spec)).To(Succeed())

@@ -11,6 +11,7 @@ import (
 	contentthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/content_things_service"
 	hookdeletethings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_delete_things_service"
 	hookthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/hook_things_service"
+	keythings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/key_things_service"
 	maskthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/mask_things_service"
 	patchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/patch_things_service"
 	refthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/ref_things_service"
@@ -88,6 +89,10 @@ func (c *ClientSet) HookThings() *hookthings.HookThingsServiceAPIService {
 
 func (c *ClientSet) HookDeleteThings() *hookdeletethings.HookDeleteThingsServiceAPIService {
 	return hookdeletethings.NewHookDeleteThingsServiceAPIService()
+}
+
+func (c *ClientSet) KeyThings() *keythings.KeyThingsServiceAPIService {
+	return keythings.NewKeyThingsServiceAPIService()
 }
 
 func (c *ClientSet) BatchThings() *batchthings.BatchThingsServiceAPIService {

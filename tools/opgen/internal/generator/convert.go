@@ -1094,7 +1094,17 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		code := stmts + b.set(target, ref.Want, expr, isPtr)
 		if f.sendNullAsEmpty {
 			// The API needs [] where the CR has none, not null.
-			return "if len(" + src + ") != 0 {\n" + code + "} else {\n" + target + " = " + qualify(ref.Want, b.alias) + "{}\n}\n", nil
+			empty := target + " = " + qualify(ref.Want, b.alias) + "{}\n"
+			if want := strings.TrimPrefix(ref.Want, "*"); !strings.HasPrefix(want, "[]") && !strings.HasPrefix(want, "map[") {
+				// A wrapper that only the request has holds the list: send the wrapper with an
+				// empty list, which replaces the stored list.
+				emptyStmts, emptyExpr, emptyPtr, err := b.value(f, rt, f.GoType+"{}", ref.Want, path)
+				if err != nil {
+					return "", err
+				}
+				empty = emptyStmts + b.set(target, ref.Want, emptyExpr, emptyPtr)
+			}
+			return "if len(" + src + ") != 0 {\n" + code + "} else {\n" + empty + "}\n", nil
 		}
 		if f.Optional || f.omitEmptyInRequest {
 			return "if len(" + src + ") != 0 {\n" + code + "}\n", nil

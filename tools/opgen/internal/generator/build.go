@@ -424,6 +424,11 @@ func buildKind(r *model.Resource, refs []sdkcheck.Ref, entry kindEntry, module s
 			// removes it before the renderer sees the resource.
 			b.used[line] = true
 		}
+		if file.Field(line.Component, line.Field).ItemName != "" {
+			// The shared model shows the items as strings, and refuses a line on a field that is no
+			// list of objects with the property (ITEM_NAME_UNSUPPORTED).
+			b.used[line] = true
+		}
 		if file.Field(line.Component, line.Field).Immutable {
 			// applyImmutable checked that Update had the field, and removed it.
 			b.used[line] = true
