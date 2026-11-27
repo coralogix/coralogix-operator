@@ -1,22 +1,4 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes:
-  - kind: ApiKey
-    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.owner.properties.teamId
-    before: 2a556bf1f5199d0a
-    after: 690a40e66dae28f3
-    reason: >-
-      The released CRD accepted a negative team id, which the uint32 Go type cannot decode: the
-      controller cannot read such an ApiKey, and in a cluster it fails the typed List of every
-      ApiKey (baseline scenario create-negative-team-id). The new minimum 0 is the limit of the
-      API. The int32 format of the released CRD stays.
-  - kind: ApiKey
-    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.owner
-    before: ccabcbb4a3c36e2e
-    after: 8e540b584753c01f
-    reason: >-
-      The rule that needs exactly one of teamId and userId keeps its meaning; only its message
-      changes. The owner becomes immutable: the Update request of the API has no owner, so the
-      released controller ignored a changed owner, and the CR showed an owner that the key did not
-      have.
+changes: []
