@@ -787,8 +787,8 @@ func (f *File) check() error {
 			if field.ValueFrom.Secret == field.Name || (field.Name == "" && field.ValueFrom.Secret == line.Field) {
 				return fmt.Errorf("%s.valueFrom.secret: the sibling needs a name of its own", line)
 			}
-			if len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.SendNullAsEmpty || field.OmitEmptyInRequest || len(field.RequestValueBy) != 0 || field.Unwrap != nil || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.JoinedBy != "" || field.UpdateAs != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook {
-				return fmt.Errorf("%s.valueFrom: the line cannot set ref, readOnly, required, sendNullAsEmpty, omitEmptyInRequest, createAs, requestAs, updateAs, requestValueBy, unwrap, joinedBy, immutable, integerNames, setByHook, collection, listMapKey, or emptyObject", line)
+			if len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.SendNullAsEmpty || field.OmitEmptyInRequest || len(field.RequestValueBy) != 0 || field.Unwrap != nil || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.JoinedBy != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook {
+				return fmt.Errorf("%s.valueFrom: the line cannot set ref, readOnly, required, sendNullAsEmpty, omitEmptyInRequest, createAs, requestAs, updateAs, updateDefault, itemName, requestValueBy, unwrap, joinedBy, immutable, integerNames, setByHook, collection, listMapKey, or emptyObject", line)
 			}
 		}
 		if field.SendNullAsEmpty && f.Mode != ModeExisting {

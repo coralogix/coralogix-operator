@@ -48,4 +48,4 @@ upgrade:
 skipValues:
   notification_center.ConnectorType:
     values: [PAGERDUTY_INCIDENTS, MICROSOFT_TEAMS, EVENTBRIDGE, SERVICE_NOW]
-    reason: the API answers "Integration 'some-integration-id' not found or not authorized for this team" and the e2e team has no such integration
+    reason: for PAGERDUTY_INCIDENTS, MICROSOFT_TEAMS, and EVENTBRIDGE the API answers "Integration 'some-integration-id' not found or not authorized for this team" and the e2e team has no such integration; for SERVICE_NOW it answers "Failed to resolve ServiceNow instance url"

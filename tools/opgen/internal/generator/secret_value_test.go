@@ -122,3 +122,18 @@ func TestValueFromParsing(t *testing.T) {
 		}
 	}
 }
+
+// updateDefault writes a CRD default on the string, so has(self.<field>) always holds and the
+// only-one rule would reject every CR that sets the Secret. itemName needs a list of objects.
+func TestValueFromRejectsUpdateDefaultAndItemName(t *testing.T) {
+	const resource = "resource: Thing\nmode: existing\nvalidators: {inferred: true}\ntypes:\n  Thing:\n    fields:\n"
+	for name, line := range map[string]string{
+		"updateDefault": "      value: {valueFrom: {secret: ref}, updateDefault: x}\n",
+		"itemName":      "      value: {valueFrom: {secret: ref}, itemName: name}\n",
+	} {
+		_, err := overrides.Parse([]byte(resource + line))
+		if err == nil || !strings.Contains(err.Error(), "valueFrom: the line cannot set") || !strings.Contains(err.Error(), name) {
+			t.Errorf("%s: want the valueFrom rejection that names %s, got %v", name, name, err)
+		}
+	}
+}

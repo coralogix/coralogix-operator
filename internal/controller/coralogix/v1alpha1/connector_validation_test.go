@@ -80,7 +80,7 @@ var _ = Describe("Connector override template validation", func() {
 		}}
 		Expect(k8sClient.Create(ctx, old)).To(Succeed())
 
-		// The typed object drops the empty template (omitempty). The update must still pass admission.
+		// The typed object keeps the empty template (a set *string) and writes it back. The update must still pass admission.
 		typed := &coralogixv1alpha1.Connector{}
 		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(old), typed)).To(Succeed())
 		controllerutil.AddFinalizer(typed, "connector.coralogix.com/finalizer")
