@@ -597,6 +597,14 @@ func (b *builder) fieldShape(owner, component, name, description string, t *mode
 		// The policy relaxes a required request field before the model is built.
 		b.used[line] = true
 	}
+	if change.NumericString {
+		numeric, err := numericStringType(t, line)
+		if err != nil {
+			return nil, err
+		}
+		t = numeric
+		b.used[line] = true
+	}
 	jsonName := name
 	if change.Name != "" && change.Name != name {
 		jsonName = change.Name
@@ -707,6 +715,26 @@ func (b *builder) fieldShape(owner, component, name, description string, t *mode
 		f.GoType = "*" + f.GoType
 	}
 	return f, nil
+}
+
+// numericStringType is the integer type of a string that holds a decimal number, which the model
+// reads from the digit pattern (numericString). The CR holds an int64, and the request sends its decimal text, as for an int64
+// that the API writes as text. The text limits of the contract are limits of the text, so they
+// stay out of the integer.
+func numericStringType(t *model.Type, line overrides.Line) (*model.Type, error) {
+	invalid := func(msg string) error {
+		return &shapeError{code: codeOverrideInvalid, path: overrides.FileName + ":" + line.String() + ".numericString", msg: msg}
+	}
+	if t.Kind != model.String || t.Format != "" || len(t.Wrappers) != 0 {
+		return nil, invalid("numericString needs a string field")
+	}
+	if t.DigitString == "" {
+		return nil, invalid("numericString needs a string with the pattern ^[0-9]+$ or ^-?[0-9]+$")
+	}
+	numeric := *t
+	numeric.Kind, numeric.Format, numeric.WireString = model.Integer, "int64", true
+	numeric.Pattern, numeric.MinLength, numeric.MaxLength, numeric.DigitString = "", nil, nil, ""
+	return &numeric, nil
 }
 
 // joinedField makes a string that holds several values a CR list of strings (joinedBy). The limits
