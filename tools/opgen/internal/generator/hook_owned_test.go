@@ -120,3 +120,17 @@ func TestSpecFieldDescription(t *testing.T) {
 		t.Errorf("a field without a description has only its markers:\n%s", types)
 	}
 }
+
+// An enum that is the value of a map below a hook field is exempt too.
+func TestEnumInAMapBelowAHookFieldNeedsNoEnumsLine(t *testing.T) {
+	spec := wrappedModeContract(t)
+	spec = strings.ReplaceAll(spec, "note: {$ref: '#/components/schemas/WrappedMode'}", "note: {type: object, additionalProperties: {$ref: '#/components/schemas/WrappedMode'}}")
+	_, err := renderWrapped(t, spec, setByHookFile(wrappedRenames))
+	if err == nil {
+		t.Fatal("without the hook field, the enum of the map keeps the prefix rule")
+	}
+	if _, err := renderWrapped(t, spec, setByHookFile(
+		"      title: {requestAs: heading}\n      note: {requestAs: extra.note, setByHook: true}\n      tag: {requestAs: extra.tag}\n")); err != nil {
+		t.Fatalf("an enum in a map below the hook field has any prefix: %v", err)
+	}
+}

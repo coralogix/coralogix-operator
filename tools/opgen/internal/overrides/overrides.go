@@ -1046,7 +1046,7 @@ func (f *File) checkSpec() error {
 		}
 		// A list of strings or of a handwritten type keeps a released field that is a plain slice.
 		element, list := strings.CutPrefix(field.Type, "[]")
-		if !token.IsIdentifier(element) || !(token.IsExported(element) || list && element == "string") {
+		if !token.IsIdentifier(element) || (!token.IsExported(element) && (!list || element != "string")) {
 			return fmt.Errorf("spec.%s.type: %q is not an exported Go type name, or a list of one or of string", name, field.Type)
 		}
 		if list && !field.Value {

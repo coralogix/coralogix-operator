@@ -68,6 +68,9 @@ func collectEnumComponents(proxy *base.SchemaProxy, seen, out map[string]bool) {
 			collectEnumComponents(property, seen, out)
 		}
 	}
+	if schema.AdditionalProperties != nil && schema.AdditionalProperties.IsA() {
+		collectEnumComponents(schema.AdditionalProperties.A, seen, out)
+	}
 	if schema.Items != nil && schema.Items.IsA() {
 		collectEnumComponents(schema.Items.A, seen, out)
 	}
