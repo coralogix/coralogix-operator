@@ -286,7 +286,8 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		Eventually(func(g Gomega) {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
-			expectAICustomEvaluationRemoteUnsynced(g, fetched, utils.ReasonRemoteCreationFailed)
+			// The application lookup runs in a hook, so a missing application is a hook failure.
+			expectAICustomEvaluationHookFailed(g, fetched, "create")
 		}, time.Minute, time.Second).Should(Succeed())
 
 		deleteAICustomEvaluationAndWait(ctx, crClient, resourceName)
@@ -331,7 +332,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		Eventually(func(g Gomega) {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
-			expectAICustomEvaluationRemoteUnsynced(g, fetched, utils.ReasonRemoteUpdateFailed)
+			expectAICustomEvaluationHookFailed(g, fetched, "update")
 		}, time.Minute, time.Second).Should(Succeed())
 
 		// The remote evaluation exists. Delete it here, so a later run does not find it.
@@ -568,17 +569,13 @@ func expectRemoteAICustomEvaluationExamples(
 	g.Expect(prohibited).To(ConsistOf(expectedStrings(expectedProhibited)...))
 }
 
-func expectAICustomEvaluationRemoteUnsynced(g Gomega, aiCustomEvaluation *coralogixv1alpha1.AICustomEvaluation, reason string) {
+func expectAICustomEvaluationHookFailed(g Gomega, aiCustomEvaluation *coralogixv1alpha1.AICustomEvaluation, operation string) {
 	condition := meta.FindStatusCondition(aiCustomEvaluation.Status.Conditions, utils.ConditionTypeRemoteSynced)
 	g.Expect(condition).ToNot(BeNil())
 	g.Expect(condition.ObservedGeneration).To(Equal(aiCustomEvaluation.Generation))
 	g.Expect(condition.Status).To(Equal(metav1.ConditionFalse))
-	g.Expect(condition.Reason).To(Equal(reason))
-	operation := "create"
-	if reason == utils.ReasonRemoteUpdateFailed {
-		operation = "update"
-	}
-	g.Expect(condition.Message).To(Equal(reason + " (operation=" + operation + ", category=unknown)"))
+	g.Expect(condition.Reason).To(Equal(utils.ReasonHookFailed))
+	g.Expect(condition.Message).To(Equal(utils.ReasonHookFailed + " (operation=" + operation + ", category=hook)"))
 	g.Expect(aiCustomEvaluation.Status.PrintableStatus).To(Equal("RemoteUnsynced"))
 }
 
