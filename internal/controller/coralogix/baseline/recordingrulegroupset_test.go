@@ -145,6 +145,21 @@ var recordingRuleGroupSetScenarios = map[string]func(h *harness){
 		h.Reconcile("retry")
 		h.Delete("delete")
 	},
+	"create-interval-zero": func(h *harness) {
+		h.Create("an interval of 0: Create sends it and the API answers 400", recordingRuleGroupSetManifest("  groups:\n    - name: baseline.rules\n      intervalSeconds: 0\n      rules:\n        - record: baseline_record\n          expr: vector(1)\n"))
+		h.Reconcile("retry")
+		h.Delete("delete")
+	},
+	"create-interval-above-int32": func(h *harness) {
+		h.Create("an interval above int32: the Go type cannot decode the CR, so no request is sent", recordingRuleGroupSetManifest("  groups:\n    - name: baseline.rules\n      intervalSeconds: 2147483648\n      rules:\n        - record: baseline_record\n          expr: vector(1)\n"))
+		h.Reconcile("retry")
+		h.Delete("delete")
+	},
+	"create-limit-negative": func(h *harness) {
+		h.Create("a limit of -1: Create sends it as text and the API answers 400", recordingRuleGroupSetManifest("  groups:\n    - name: baseline.rules\n      limit: -1\n      rules:\n        - record: baseline_record\n          expr: vector(1)\n"))
+		h.Reconcile("retry")
+		h.Delete("delete")
+	},
 	"create-duplicate-group-names": func(h *harness) {
 		h.Create("two groups with one name", recordingRuleGroupSetManifest("  groups:\n    - name: same\n      rules:\n        - record: baseline_record\n          expr: vector(1)\n    - name: same\n      rules:\n        - record: baseline_record2\n          expr: vector(2)\n"))
 		h.Reconcile("retry")
