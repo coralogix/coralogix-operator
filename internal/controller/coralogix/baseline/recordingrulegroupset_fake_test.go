@@ -313,8 +313,8 @@ func (s ruleGroupSetRecord) answer(id string) map[string]any {
 }
 
 // normalizeRecordingRuleGroupSetAnswer drops what the fake cannot make and the operator never
-// reads: the ids of the groups, and the text of a validation error. It keeps which rules failed,
-// by path and code.
+// reads: the ids of the groups, the order of the groups (the API keeps none), and the text of a
+// validation error. It keeps which rules failed, by path and code.
 func normalizeRecordingRuleGroupSetAnswer(resp any) any {
 	m, ok := resp.(map[string]any)
 	if !ok {
@@ -328,11 +328,19 @@ func normalizeRecordingRuleGroupSetAnswer(resp any) any {
 				}
 			}
 		}
+		// Both the fake and a recording are compared in the order of the group names.
+		sort.SliceStable(groups, func(i, j int) bool { return groupName(groups[i]) < groupName(groups[j]) })
 	}
 	if message, ok := m["message"].(string); ok {
 		m["message"] = normalizeValidationMessage(message)
 	}
 	return m
+}
+
+func groupName(v any) string {
+	group, _ := v.(map[string]any)
+	name, _ := group["name"].(string)
+	return name
 }
 
 var protoPositionPattern = regexp.MustCompile(`\(line \d+:\d+\)`)
