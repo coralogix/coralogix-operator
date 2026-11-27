@@ -734,6 +734,11 @@ func overrideIssues(doc docType, entry kindEntry, file *overrides.File) error {
 				return &shapeError{code: codeOverrideInvalid, path: location + ".names." + value, msg: "name an accepted API value"}
 			}
 		}
+		for _, value := range enum.Order {
+			if !slices.Contains(accepted, value) {
+				return &shapeError{code: codeOverrideInvalid, path: location + ".order", msg: fmt.Sprintf("%q is not an accepted API value", value)}
+			}
+		}
 		if enum.TrimPrefix != "" && !slices.ContainsFunc(accepted, func(value string) bool { return strings.HasPrefix(value, enum.TrimPrefix) }) {
 			return &shapeError{code: codeOverrideInvalid, path: location + ".trimPrefix", msg: fmt.Sprintf("%q is not a prefix of an accepted API value", enum.TrimPrefix)}
 		}

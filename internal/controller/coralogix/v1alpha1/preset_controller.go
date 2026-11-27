@@ -69,10 +69,7 @@ func (r *PresetReconciler) HandleCreation(ctx context.Context, log logr.Logger, 
 		return fmt.Errorf("error on creating remote Preset: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote Preset created")
-	if resp == nil {
-		return fmt.Errorf("the create response of Preset has no resource")
-	}
-	if resp.Preset == nil {
+	if resp == nil || resp.Preset == nil {
 		return fmt.Errorf("the create response of Preset has no resource")
 	}
 	id := ptr.Deref(resp.Preset.Id, "")

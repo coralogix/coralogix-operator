@@ -64,7 +64,6 @@ rules:
       - alertsets
       - apikeys
       - archivemetricstargets
-      - connectors
       - customenrichments
       - enrichments
       - groups
@@ -88,7 +87,6 @@ rules:
       - alertsets/finalizers
       - apikeys/finalizers
       - archivemetricstargets/finalizers
-      - connectors/finalizers
       - customenrichments/finalizers
       - enrichments/finalizers
       - groups/finalizers
@@ -106,7 +104,6 @@ rules:
       - alertsets/status
       - apikeys/status
       - archivemetricstargets/status
-      - connectors/status
       - customenrichments/status
       - enrichments/status
       - groups/status
@@ -134,6 +131,7 @@ rules:
       - alertschedulers
       - archivelogstargets
       - configurationgroups
+      - connectors
       - customroles
       - dashboards
       - dashboardsfolders
@@ -168,6 +166,7 @@ rules:
       - alertschedulers/finalizers
       - archivelogstargets/finalizers
       - configurationgroups/finalizers
+      - connectors/finalizers
       - customroles/finalizers
       - dashboards/finalizers
       - dashboardsfolders/finalizers
@@ -196,6 +195,7 @@ rules:
       - alertschedulers/status
       - archivelogstargets/status
       - configurationgroups/status
+      - connectors/status
       - customroles/status
       - dashboards/status
       - dashboardsfolders/status

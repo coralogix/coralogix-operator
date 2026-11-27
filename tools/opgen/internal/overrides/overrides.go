@@ -472,12 +472,23 @@ type Field struct {
 	// the days of a week. The CR accepts only these names, in this order. Create and Update send the
 	// integer of each name. Mode existing only.
 	IntegerNames []IntegerName `yaml:"integerNames"`
+	// ValueFrom lets a CR source a string from a Secret: the CR gets a sibling field that holds a
+	// reference, and Create and Update send the Secret value in the API string. Mode existing only.
+	ValueFrom *ValueFrom `yaml:"valueFrom"`
 }
 
 // IntegerName is one CR spelling of an integer API value.
 type IntegerName struct {
 	Name  string `yaml:"name"`
 	Value int64  `yaml:"value"`
+}
+
+// ValueFrom is the valueFrom key of a field line. The API accepts only a literal, so the Secret is
+// a feature of the custom resource: the operator reads it when it builds the request. It is not a
+// fact of the API contract, so the shared iac module does not know it.
+type ValueFrom struct {
+	// Secret is the CR property name of the new sibling field, a corev1.SecretKeySelector.
+	Secret string `yaml:"secret"`
 }
 
 // Enum records the rejected API values and the custom resource spellings of an enum. The accepted
@@ -490,7 +501,10 @@ type Enum struct {
 	TrimPrefix string            `yaml:"trimPrefix"`
 	Names      map[string]string `yaml:"names"`
 	Aliases    map[string]string `yaml:"aliases"`
-	Rejected   []RejectedValue   `yaml:"rejected"`
+	// Order lists API values in the order of the released CRD. The CR enum lists them first, in
+	// this order, then the accepted values that the line does not list, in contract order.
+	Order    []string        `yaml:"order"`
+	Rejected []RejectedValue `yaml:"rejected"`
 	// Values is the removed list of accepted values. The key is read only to tell the user to delete it.
 	Values []string `yaml:"values"`
 }
@@ -522,6 +536,22 @@ func (e Enum) RejectedAPIValues() []string {
 // IsRejected reports whether an API value is in the rejected list.
 func (e Enum) IsRejected(value string) bool {
 	return slices.ContainsFunc(e.Rejected, func(r RejectedValue) bool { return r.Value == value })
+}
+
+// Ordered returns the accepted API values in the order of the line: the values of order first, then
+// the others in the order given. A new contract value keeps its place at the end.
+func (e Enum) Ordered(accepted []string) []string {
+	if len(e.Order) == 0 {
+		return accepted
+	}
+	ordered := make([]string, 0, len(accepted))
+	ordered = append(ordered, e.Order...)
+	for _, value := range accepted {
+		if !slices.Contains(e.Order, value) {
+			ordered = append(ordered, value)
+		}
+	}
+	return ordered
 }
 
 // Ref is the ref key of a field line.
@@ -630,10 +660,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && field.UpdateDefault == "" && field.ItemName == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 && !field.SetByHook {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && field.UpdateDefault == "" && field.ItemName == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 && !field.SetByHook && field.ValueFrom == nil {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook) {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook || field.ValueFrom != nil) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.SetByHook {
@@ -727,7 +757,7 @@ func (f *File) check() error {
 			if field.Required && line.Component != f.Resource {
 				return fmt.Errorf("%s.inline: required applies only to an object of the resource", line)
 			}
-			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest {
+			if field.SendNullAsEmpty || field.Ref != nil || field.ReadOnly || field.Optional || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.JoinedBy != "" || field.OmitEmptyInRequest || field.ValueFrom != nil {
 				return fmt.Errorf("%s.inline: the line cannot set another key", line)
 			}
 		}
@@ -745,6 +775,20 @@ func (f *File) check() error {
 			}
 			if f.Mode != ModeExisting {
 				return fmt.Errorf("%s.integerNames: a new kind follows the contract", line)
+			}
+		}
+		if field.ValueFrom != nil {
+			if f.Mode != ModeExisting {
+				return fmt.Errorf("%s.valueFrom: a new kind follows the contract", line)
+			}
+			if !validJSONName(field.ValueFrom.Secret) {
+				return fmt.Errorf("%s.valueFrom.secret: %q is not a CR property name", line, field.ValueFrom.Secret)
+			}
+			if field.ValueFrom.Secret == field.Name || (field.Name == "" && field.ValueFrom.Secret == line.Field) {
+				return fmt.Errorf("%s.valueFrom.secret: the sibling needs a name of its own", line)
+			}
+			if len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.SendNullAsEmpty || field.OmitEmptyInRequest || len(field.RequestValueBy) != 0 || field.Unwrap != nil || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.JoinedBy != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook {
+				return fmt.Errorf("%s.valueFrom: the line cannot set ref, readOnly, required, sendNullAsEmpty, omitEmptyInRequest, createAs, requestAs, updateAs, updateDefault, itemName, requestValueBy, unwrap, joinedBy, immutable, integerNames, setByHook, collection, listMapKey, or emptyObject", line)
 			}
 		}
 		if field.SendNullAsEmpty && f.Mode != ModeExisting {
@@ -1119,6 +1163,13 @@ func (e Enum) check(name string) error {
 			return fmt.Errorf("enums.%s.rejected: value %q needs a reason", name, rejected.Value)
 		}
 		seen[rejected.Value] = true
+	}
+	listed := map[string]bool{}
+	for _, value := range e.Order {
+		if value == "" || listed[value] || e.IsRejected(value) {
+			return fmt.Errorf("enums.%s.order: value %q is empty, listed twice, or rejected", name, value)
+		}
+		listed[value] = true
 	}
 	for value, cr := range e.Names {
 		if e.IsRejected(value) || !validEnumValue(cr) {

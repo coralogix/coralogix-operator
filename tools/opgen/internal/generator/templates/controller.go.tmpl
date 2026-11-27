@@ -13,8 +13,14 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	{{- if .UsesSecrets}}
+	corev1 "k8s.io/api/core/v1"
+	{{- end}}
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
+	{{- if .UsesSecrets}}
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	{{- end}}
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"{{.CxsdkPath}}"
@@ -39,6 +45,9 @@ type {{.Kind}}Reconciler struct {
 // +kubebuilder:rbac:groups=coralogix.com,resources={{.Plural}}/finalizers,verbs=update
 {{- if .Content}}
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
+{{- end}}
+{{- if .UsesSecrets}}
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 {{- end}}
 
 func (r *{{.Kind}}Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -151,15 +160,14 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 		return {{$.CreateReturn}}fmt.Errorf("error on creating remote {{.Kind}}: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote {{.Kind}} created")
+{{- if and (not .CreateResponseIDField) .CreateResponseField (not .CreateResponseValue)}}
+	if resp == nil || resp.{{.CreateResponseField}} == nil {
+{{- else}}
 	if resp == nil {
+{{- end}}
 		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
 	}
 {{- if .Singleton}}
-{{- if and .CreateResponseField (not .CreateResponseValue)}}
-	if resp.{{.CreateResponseField}} == nil {
-		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
-	}
-{{- end}}
 	// The API has one {{.Kind}} per team and no id, so status.id is fixed.
 	id := "{{.SingletonID}}"
 {{- else if .CreateResponseIDField}}
@@ -182,11 +190,6 @@ func (r *{{.Kind}}Reconciler) HandleCreation(ctx context.Context, log logr.Logge
 	id := {{if .CreateResponseIDValue}}resp.{{.CreateResponseIDField}}{{else}}ptr.Deref(resp.{{.CreateResponseIDField}}, ""){{end}}
 	{{- end}}
 {{- else}}
-{{- if and .CreateResponseField (not .CreateResponseValue)}}
-	if resp.{{.CreateResponseField}} == nil {
-		return {{$.CreateReturn}}fmt.Errorf("the create response of {{.Kind}} has no resource")
-	}
-{{- end}}
 {{- if .IDBits}}
 {{- if .IDValue}}
 	idValue := resp.{{if .CreateResponseField}}{{.CreateResponseField}}.{{end}}{{.IDField}}
@@ -412,8 +415,20 @@ func (r *{{.Kind}}Reconciler) RemoteStatusFields() [][]string {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *{{.Kind}}Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+{{- if .UsesSecrets}}
+	secrets, err := watchSecrets(mgr, &coralogixv1alpha1.{{.Kind}}{}, &coralogixv1alpha1.{{.Kind}}List{})
+	if err != nil {
+		return err
+	}
+	// The selector filters the resources only: a Secret has no labels of the selector.
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&coralogixv1alpha1.{{.Kind}}{}, builder.WithPredicates(config.GetConfig().Selector.Predicate())).
+		Watches(&corev1.Secret{}, secrets).
+		Complete(r)
+{{- else}}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&coralogixv1alpha1.{{.Kind}}{}).
 		WithEventFilter(config.GetConfig().Selector.Predicate()).
 		Complete(r)
+{{- end}}
 }

@@ -129,6 +129,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-scope.sh before
+      - name: Create a Connector with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-connector.sh before
       - name: Create a View with the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -262,6 +266,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-scope.sh after
+      - name: Check the Connector of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-connector.sh after
       - name: Check the View of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -357,6 +365,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-scope.sh cleanup
+      - name: Delete the Connector of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-connector.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |

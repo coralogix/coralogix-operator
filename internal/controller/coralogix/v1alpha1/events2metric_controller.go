@@ -69,10 +69,7 @@ func (r *Events2MetricReconciler) HandleCreation(ctx context.Context, log logr.L
 		return fmt.Errorf("error on creating remote Events2Metric: %w", cxsdk.NewAPIError(httpResp, err))
 	}
 	log.Info("Remote Events2Metric created")
-	if resp == nil {
-		return fmt.Errorf("the create response of Events2Metric has no resource")
-	}
-	if resp.E2m == nil {
+	if resp == nil || resp.E2m == nil {
 		return fmt.Errorf("the create response of Events2Metric has no resource")
 	}
 	id := resp.E2m.Id

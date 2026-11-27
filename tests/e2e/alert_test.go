@@ -69,7 +69,7 @@ var _ = Describe("Alert", Ordered, func() {
 		Eventually(func(g Gomega) *string {
 			fetchedConnector := &coralogixv1alpha1.Connector{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
-			return fetchedConnector.Status.Id
+			return fetchedConnector.Status.ID
 		}, time.Minute, time.Second).ShouldNot(BeNil())
 
 		Eventually(func(g Gomega) *string {
@@ -612,7 +612,7 @@ var _ = Describe("Alert", Ordered, func() {
 		Eventually(func(g Gomega) *string {
 			fetchedConnector := &coralogixv1alpha1.Connector{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
-			return fetchedConnector.Status.Id
+			return fetchedConnector.Status.ID
 		}, time.Minute, time.Second).ShouldNot(BeNil())
 
 		By("Creating Alert")
@@ -954,8 +954,8 @@ var _ = Describe("Alert caseSettings", Ordered, func() {
 		Eventually(func(g Gomega) {
 			fetchedConnector := &coralogixv1alpha1.Connector{}
 			g.Expect(crClient.Get(ctx, client.ObjectKeyFromObject(connector), fetchedConnector)).To(Succeed())
-			g.Expect(fetchedConnector.Status.Id).ToNot(BeNil())
-			connectorID = *fetchedConnector.Status.Id
+			g.Expect(fetchedConnector.Status.ID).ToNot(BeNil())
+			connectorID = *fetchedConnector.Status.ID
 		}, time.Minute, time.Second).Should(Succeed())
 	})
 

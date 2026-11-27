@@ -44,7 +44,7 @@ func init() {
 		resource: "connectors",
 		newFake:  newConnectorFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.ConnectorReconciler{ConnectorsClient: cs.Connectors(), Interval: reconcileInterval}
+			return &v1alpha1controllers.ConnectorReconciler{Client: cs.Connectors(), Interval: reconcileInterval}
 		},
 		scenarios: connectorScenarios,
 		admission: connectorAdmission(),
@@ -401,6 +401,18 @@ var connectorScenarios = map[string]func(h *harness){
 		h.Reconcile("reconcile again: the API answers as it should")
 	},
 
+	// An answer without a connector is an error, not a success: the generated HandleCreation
+	// refuses to set a status id from it, the reconciler records RemoteCreationFailed, and the
+	// next reconcile creates again. The retry only meets a clean API here because the forced
+	// answer stores nothing; an API that created the connector and then answered without the
+	// object would reject the retry as a duplicate name. The handwritten controller had no such
+	// scenario: it panicked on this answer (see the baseline PR).
+	"create-empty-response": func(h *harness) {
+		connectorAPI(h).answerNext("POST", map[string]any{})
+		h.Create("create: the answer has no connector", connectorMinimal)
+		h.Reconcile("reconcile again")
+	},
+
 	"resync": func(h *harness) {
 		h.Create("create", connectorMinimal)
 		h.Reconcile("reconcile again with no change: the operator sends a PUT")
@@ -456,9 +468,9 @@ var connectorScenarios = map[string]func(h *harness){
 
 	// The update reads only the id of the answer, and the SDK does not require the connector. An
 	// empty answer is success.
-	// No create-empty-response twin exists here: the handwritten HandleCreation panics with a nil
-	// dereference on such an answer (connector_controller.go:80). The follow-up PR adds the
-	// scenario against the generated controller, which returns an error instead.
+	// No create-empty-response twin is frozen in the baseline PR: the handwritten HandleCreation
+	// panics with a nil dereference on such an answer (connector_controller.go:80). The generated
+	// controller's twin is create-empty-response above, which returns an error instead.
 	"update-empty-response": func(h *harness) {
 		h.Create("create", connectorMinimal)
 		connectorAPI(h).answerNext("PUT", map[string]any{})

@@ -1,0 +1,21 @@
+resource: SecretThing
+mode: existing
+validators:
+  inferred: true
+api:
+  requestWrapper: item
+  idProperty: id
+  serverSetID: true
+  updateIDInBody: true
+types:
+  SecretThing:
+    fields:
+      id: {readOnly: true}
+      apiKey: {valueFrom: {secret: apiKeySecretKeyRef}}
+      token: {valueFrom: {secret: tokenSecretKeyRef}}
+  SecretThingSettings:
+    fields:
+      fields: {collection: list}
+  SecretThingField:
+    fields:
+      value: {valueFrom: {secret: secretKeyRef}, requireOne: true}

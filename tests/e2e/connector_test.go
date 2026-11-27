@@ -74,8 +74,8 @@ var _ = Describe("Connector", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedConnector.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedConnector.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetchedConnector.Status.Id != nil {
-				connectorID = *fetchedConnector.Status.Id
+			if fetchedConnector.Status.ID != nil {
+				connectorID = *fetchedConnector.Status.ID
 				return nil
 			}
 			return fmt.Errorf("connector ID is not set")
@@ -119,10 +119,10 @@ var _ = Describe("Connector", Ordered, func() {
 			Eventually(func() bool {
 				fetchedConnector := &coralogixv1alpha1.Connector{}
 				Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
-				if fetchedConnector.Status.Id == nil {
+				if fetchedConnector.Status.ID == nil {
 					return false
 				}
-				newConnectorID = *fetchedConnector.Status.Id
+				newConnectorID = *fetchedConnector.Status.ID
 				return newConnectorID != connectorID
 			}, 2*time.Minute, time.Second).Should(BeTrue())
 
@@ -183,8 +183,8 @@ var _ = Describe("Connector with SecretKeyRef", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetchedConnector)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedConnector.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedConnector.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetchedConnector.Status.Id != nil {
-				connectorID = *fetchedConnector.Status.Id
+			if fetchedConnector.Status.ID != nil {
+				connectorID = *fetchedConnector.Status.ID
 				return nil
 			}
 			return fmt.Errorf("connector ID is not set")
@@ -225,19 +225,19 @@ func getSampleSlackConnector(name string) *coralogixv1alpha1.Connector {
 			Description: "Slack connector",
 			Type:        "slack",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "channel", Value: ptr.To(slackIntegrationChannel)},
 					{FieldName: "integrationId", Value: ptr.To(slackIntegrationId)},
 					{FieldName: "fallbackChannel", Value: ptr.To(slackIntegrationChannel)},
 				},
 			},
-			ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{
+			ConfigOverrides: []coralogixv1alpha1.ConnectorEntityTypeConfigOverrides{
 				{
 					EntityType: "alerts",
-					Fields: []coralogixv1alpha1.TemplatedConnectorConfigField{
+					Fields: []coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{
 						{
 							FieldName: "channel",
-							Template:  "{{alertDef.priority}}",
+							Template:  new("{{alertDef.priority}}"),
 						},
 					},
 				},
@@ -254,7 +254,7 @@ func getSamplePagerDutyConnectorWithSecret(name, namespace, secretName, secretKe
 			Description: "PagerDuty connector with secret integration key",
 			Type:        "pagerDuty",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{
 						FieldName: "integrationKey",
 						SecretKeyRef: &corev1.SecretKeySelector{
@@ -295,8 +295,8 @@ var _ = Describe("Connector PagerDutyIncidents", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				connectorID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				connectorID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("connector ID is not set")
@@ -344,8 +344,8 @@ var _ = Describe("Connector MicrosoftTeams", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				connectorID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				connectorID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("connector ID is not set")
@@ -393,8 +393,8 @@ var _ = Describe("Connector EventBridge", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				connectorID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				connectorID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("connector ID is not set")
@@ -442,8 +442,8 @@ var _ = Describe("Connector IncidentIO", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				connectorID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				connectorID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("connector ID is not set")
@@ -489,8 +489,8 @@ var _ = Describe("Connector with CASES config override", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: connectorName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				connectorID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				connectorID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("connector ID is not set")
@@ -519,7 +519,7 @@ func getSamplePagerDutyIncidentsConnector(name, namespace string) *coralogixv1al
 			Description: "PagerDuty Incidents connector",
 			Type:        "pagerDutyIncidents",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "integrationId", Value: ptr.To(pagerDutyIntegrationId)},
 					{FieldName: "service", Value: ptr.To("PXXXXXX")},
 				},
@@ -536,7 +536,7 @@ func getSampleMicrosoftTeamsConnector(name, namespace string) *coralogixv1alpha1
 			Description: "Microsoft Teams connector",
 			Type:        "microsoftTeams",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "integrationId", Value: ptr.To(msTeamsIntegrationId)},
 					{FieldName: "teamId", Value: ptr.To(msTeamsTeamId)},
 					{FieldName: "channelId", Value: ptr.To(msTeamsChannelId)},
@@ -554,7 +554,7 @@ func getSampleEventBridgeConnector(name, namespace string) *coralogixv1alpha1.Co
 			Description: "EventBridge connector",
 			Type:        "eventBridge",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "integrationId", Value: ptr.To(eventbridgeIntegrationId)},
 					{FieldName: "additionalDetail", Value: ptr.To(`{"pipeline_id":"p123"}`)},
 				},
@@ -571,7 +571,7 @@ func getSampleIncidentIOConnector(name, namespace string) *coralogixv1alpha1.Con
 			Description: "incident.io connector",
 			Type:        "incidentIo",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "apiKey", Value: ptr.To(incidentIOAPIKey)},
 					{FieldName: "alertEventsUrl", Value: ptr.To(incidentIOAlertEventsURL)},
 					{FieldName: "alertSourceToken", Value: ptr.To(incidentIOAlertSourceToken)},
@@ -589,16 +589,16 @@ func getSampleGenericHttpsConnectorWithCasesOverride(name, namespace string) *co
 			Description: "generic https connector with a CASES config override",
 			Type:        "genericHttps",
 			ConnectorConfig: coralogixv1alpha1.ConnectorConfig{
-				Fields: []coralogixv1alpha1.ConnectorConfigField{
+				Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{
 					{FieldName: "url", Value: ptr.To("https://httpbun.org/post")},
 					{FieldName: "method", Value: ptr.To("post")},
 				},
 			},
-			ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{
+			ConfigOverrides: []coralogixv1alpha1.ConnectorEntityTypeConfigOverrides{
 				{
 					EntityType: "cases",
-					Fields: []coralogixv1alpha1.TemplatedConnectorConfigField{
-						{FieldName: "additionalBodyFields", Template: `{"source": "cases"}`},
+					Fields: []coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{
+						{FieldName: "additionalBodyFields", Template: new(`{"source": "cases"}`)},
 					},
 				},
 			},

@@ -29,6 +29,7 @@ const (
 	MaskThingKind       = "MaskThing"
 	PatchThingKind      = "PatchThing"
 	RefThingKind        = "RefThing"
+	SecretThingKind     = "SecretThing"
 	SettingThingKind    = "SettingThing"
 	ThingKind           = "Thing"
 	ThingPoliciesKind   = "ThingPolicies"

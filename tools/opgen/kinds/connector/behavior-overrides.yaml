@@ -1,0 +1,79 @@
+resource: Connector
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.configOverrides: {inferred: false}
+    spec.configOverrides[].fields: {inferred: false}
+    spec.configOverrides[].fields[].fieldName: {inferred: false}
+    spec.configOverrides[].fields[].template: {inferred: false}
+    spec.connectorConfig.fields: {inferred: false}
+    spec.connectorConfig.fields[].fieldName: {inferred: false}
+    spec.connectorConfig.fields[].value: {inferred: false}
+    spec.description: {inferred: false}
+    spec.name: {inferred: false}
+api:
+  requestWrapper: connector
+  updateIDInBody: true
+  serverSetID: true
+types:
+  Connector:
+    fields:
+      id: {readOnly: true}
+      diagnostics: {skip: true}
+      description:
+        required: true
+        description: Description is the description of the connector.
+      name: {description: Name is the name of the connector.}
+      type: {description: 'Type is the type of the connector. Can be one of slack, genericHttps, pagerDuty, pagerDutyIncidents, email, serviceNow, microsoftTeams, eventBridge, or incidentIo (preview).'}
+      configOverrides: {description: ConfigOverrides are the entity type config overrides for the connector.}
+      connectorConfig:
+        required: true
+        description: ConnectorConfig is the configuration of the connector.
+  notification_center.ConnectorConfigField:
+    fields:
+      fieldName: {description: 'FieldName is the name of the field. e.g. "channel" for slack.'}
+      value:
+        valueFrom: {secret: secretKeyRef}
+        requireOne: true
+        description: Value is the literal value of the field. Conflicts with SecretKeyRef.
+  ConnectorConfig:
+    fields:
+      fields:
+        required: true
+        collection: list
+        omitEmptyInRequest: true
+        description: Fields are the fields of the connector config.
+  EntityTypeConfigOverrides:
+    fields:
+      entityType: {description: 'EntityType is the entity type for the config override. Can be one of alerts or cases.'}
+      fields:
+        collection: list
+        description: Fields are the templated fields for the config override.
+  TemplatedConnectorConfigField:
+    fields:
+      fieldName: {description: 'FieldName is the name of the field. e.g. "channel" for slack.'}
+      template:
+        valueFrom: {secret: templateSecretKeyRef}
+        description: Template is the literal template for the field. Conflicts with TemplateSecretKeyRef. Use TemplateSecretKeyRef when the template holds a credential.
+enums:
+  notification_center.ConnectorType:
+    zero: unspecified
+    rejectZero: true
+    order: [SLACK, GENERIC_HTTPS, PAGERDUTY, PAGERDUTY_INCIDENTS, EMAIL, SERVICE_NOW, MICROSOFT_TEAMS, EVENTBRIDGE, INCIDENT_IO]
+    rejected:
+      - {value: IBM_EVENT_NOTIFICATIONS, reason: the released CRD never accepted this value}
+    names:
+      GENERIC_HTTPS: genericHttps
+      PAGERDUTY: pagerDuty
+      PAGERDUTY_INCIDENTS: pagerDutyIncidents
+      MICROSOFT_TEAMS: microsoftTeams
+      SERVICE_NOW: serviceNow
+      EVENTBRIDGE: eventBridge
+      INCIDENT_IO: incidentIo
+  notification_center.EntityType:
+    zero: unspecified
+    rejectZero: true
+    rejected:
+      - {value: TEST_NOTIFICATIONS, reason: the released CRD never accepted this value}
+      - {value: OLLY_SCHEDULED_TASKS, reason: the released CRD never accepted this value}

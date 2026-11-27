@@ -10,5 +10,5 @@ spec:
       disabled: true
       tags:
         - sample-tags
-      level: low
+      level: high
       pattern: sample-pattern

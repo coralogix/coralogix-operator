@@ -59,8 +59,8 @@ spec:
                       type: boolean
                     level:
                       enum:
-                      - low
                       - high
+                      - low
                       type: string
                     levels:
                       items:

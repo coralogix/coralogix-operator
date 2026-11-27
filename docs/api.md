@@ -11710,9 +11710,6 @@ with respect to the current state of the instance.<br/>
 
 Connector is the Schema for the connectors API.
 
-**Added in v0.4.0**
-NOTE: This CRD exposes a new feature and may have breaking changes in future releases.
-
 <table>
     <thead>
         <tr>
@@ -11743,15 +11740,14 @@ NOTE: This CRD exposes a new feature and may have breaking changes in future rel
         <td><b><a href="#connectorspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ConnectorSpec defines the desired state of Connector.
-See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/<br/>
+          ConnectorSpec defines the desired state of a Connector.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#connectorstatus">status</a></b></td>
         <td>object</td>
         <td>
-          ConnectorStatus defines the observed state of Connector.<br/>
+          ConnectorStatus defines the observed state of a Connector.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -11763,8 +11759,7 @@ See also https://coralogix.com/docs/user-guides/notification-center/introduction
 
 
 
-ConnectorSpec defines the desired state of Connector.
-See also https://coralogix.com/docs/user-guides/notification-center/introduction/connectors-explained/
+ConnectorSpec defines the desired state of a Connector.
 
 <table>
     <thead>
@@ -11848,7 +11843,7 @@ ConnectorConfig is the configuration of the connector.
 
 
 
-ConnectorConfigField defines a field in the connector configuration.
+ConnectorNotificationCenterConnectorConfigField is the notification_center.ConnectorConfigField object of the API.
 
 <table>
     <thead>
@@ -11870,9 +11865,8 @@ ConnectorConfigField defines a field in the connector configuration.
         <td><b><a href="#connectorspecconnectorconfigfieldsindexsecretkeyref">secretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          SecretKeyRef is a reference to a secret key containing the field value.
-Use this for sensitive data like API keys, integration keys, or tokens.
-Conflicts with Value.<br/>
+          SecretKeyRef is a reference to a Secret key that holds the value of value.
+The operator reads the Secret in the namespace of the resource. Conflicts with Value.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -11891,9 +11885,8 @@ Conflicts with Value.<br/>
 
 
 
-SecretKeyRef is a reference to a secret key containing the field value.
-Use this for sensitive data like API keys, integration keys, or tokens.
-Conflicts with Value.
+SecretKeyRef is a reference to a Secret key that holds the value of value.
+The operator reads the Secret in the namespace of the resource. Conflicts with Value.
 
 <table>
     <thead>
@@ -11940,7 +11933,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-
+ConnectorEntityTypeConfigOverrides is the EntityTypeConfigOverrides object of the API.
 
 <table>
     <thead>
@@ -11976,7 +11969,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-TemplatedConnectorConfigField defines a templated field in a config override.
+ConnectorTemplatedConnectorConfigField is the TemplatedConnectorConfigField object of the API.
 
 <table>
     <thead>
@@ -11998,19 +11991,15 @@ TemplatedConnectorConfigField defines a templated field in a config override.
         <td><b>template</b></td>
         <td>string</td>
         <td>
-          Template is the literal template for the field. Conflicts with TemplateSecretKeyRef.
-Use TemplateSecretKeyRef when the template holds a credential.<br/>
+          Template is the literal template for the field. Conflicts with TemplateSecretKeyRef. Use TemplateSecretKeyRef when the template holds a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#connectorspecconfigoverridesindexfieldsindextemplatesecretkeyref">templateSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          TemplateSecretKeyRef is a reference to a secret key containing the template.
-The secret must be in the same namespace as the Connector.
-The Optional flag of the selector is ignored. A missing secret or key is an error,
-as for the SecretKeyRef of a config field.
-Conflicts with Template.<br/>
+          TemplateSecretKeyRef is a reference to a Secret key that holds the value of template.
+The operator reads the Secret in the namespace of the resource. Conflicts with Template.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -12022,11 +12011,8 @@ Conflicts with Template.<br/>
 
 
 
-TemplateSecretKeyRef is a reference to a secret key containing the template.
-The secret must be in the same namespace as the Connector.
-The Optional flag of the selector is ignored. A missing secret or key is an error,
-as for the SecretKeyRef of a config field.
-Conflicts with Template.
+TemplateSecretKeyRef is a reference to a Secret key that holds the value of template.
+The operator reads the Secret in the namespace of the resource. Conflicts with Template.
 
 <table>
     <thead>
@@ -12073,7 +12059,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-ConnectorStatus defines the observed state of Connector.
+ConnectorStatus defines the observed state of a Connector.
 
 <table>
     <thead>

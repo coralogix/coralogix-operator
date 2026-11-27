@@ -31,7 +31,7 @@ import (
 
 var _ = Describe("Connector override template validation", func() {
 	ref := &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "example-credentials"}, Key: "template"}
-	newConnector := func(name string, field coralogixv1alpha1.TemplatedConnectorConfigField) *coralogixv1alpha1.Connector {
+	newConnector := func(name string, field coralogixv1alpha1.ConnectorTemplatedConnectorConfigField) *coralogixv1alpha1.Connector {
 		value := "example-value"
 		return &coralogixv1alpha1.Connector{
 			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"},
@@ -39,21 +39,21 @@ var _ = Describe("Connector override template validation", func() {
 				Name:            name,
 				Description:     "example",
 				Type:            "pagerDuty",
-				ConnectorConfig: coralogixv1alpha1.ConnectorConfig{Fields: []coralogixv1alpha1.ConnectorConfigField{{FieldName: "integrationKey", Value: &value}}},
-				ConfigOverrides: []coralogixv1alpha1.EntityTypeConfigOverrides{{EntityType: "alerts", Fields: []coralogixv1alpha1.TemplatedConnectorConfigField{field}}},
+				ConnectorConfig: coralogixv1alpha1.ConnectorConfig{Fields: []coralogixv1alpha1.ConnectorNotificationCenterConnectorConfigField{{FieldName: "integrationKey", Value: &value}}},
+				ConfigOverrides: []coralogixv1alpha1.ConnectorEntityTypeConfigOverrides{{EntityType: "alerts", Fields: []coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{field}}},
 			},
 		}
 	}
 
 	It("accepts the old literal template and the new Secret reference", func(ctx context.Context) {
-		literal := newConnector("template-literal", coralogixv1alpha1.TemplatedConnectorConfigField{FieldName: "integrationKey", Template: "example-value"})
+		literal := newConnector("template-literal", coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{FieldName: "integrationKey", Template: new("example-value")})
 		Expect(k8sClient.Create(ctx, literal, client.DryRunAll)).To(Succeed())
-		secret := newConnector("template-secret", coralogixv1alpha1.TemplatedConnectorConfigField{FieldName: "integrationKey", TemplateSecretKeyRef: ref})
+		secret := newConnector("template-secret", coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{FieldName: "integrationKey", TemplateSecretKeyRef: ref})
 		Expect(k8sClient.Create(ctx, secret, client.DryRunAll)).To(Succeed())
 	})
 
 	It("rejects two sources with a clear message", func(ctx context.Context) {
-		both := newConnector("template-both", coralogixv1alpha1.TemplatedConnectorConfigField{FieldName: "integrationKey", Template: "example-value", TemplateSecretKeyRef: ref})
+		both := newConnector("template-both", coralogixv1alpha1.ConnectorTemplatedConnectorConfigField{FieldName: "integrationKey", Template: new("example-value"), TemplateSecretKeyRef: ref})
 		err := k8sClient.Create(ctx, both, client.DryRunAll)
 		Expect(err).To(HaveOccurred())
 		Expect(apierrors.IsInvalid(err)).To(BeTrue())
@@ -80,7 +80,7 @@ var _ = Describe("Connector override template validation", func() {
 		}}
 		Expect(k8sClient.Create(ctx, old)).To(Succeed())
 
-		// The typed object drops the empty template (omitempty). The update must still pass admission.
+		// The typed object keeps the empty template (a set *string) and writes it back. The update must still pass admission.
 		typed := &coralogixv1alpha1.Connector{}
 		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(old), typed)).To(Succeed())
 		controllerutil.AddFinalizer(typed, "connector.coralogix.com/finalizer")

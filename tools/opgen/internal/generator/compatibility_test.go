@@ -520,6 +520,9 @@ func TestCompatibilityLinesRejectInvalidValues(t *testing.T) {
 		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, trimPrefix: NOT_A_PREFIX}\n", codeOverrideInvalid},
 		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, names: {THING_PRIORITY_LOW: same, THING_PRIORITY_PAGER_DUTY_INCIDENTS: same}}\n", codeNameCollision},
 		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, rejected: [{value: THING_PRIORITY_PAGER_DUTY_INCIDENTS, reason: test reason}], aliases: {unspecified: missing}}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, order: [NOT_IN_API]}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, order: [THING_PRIORITY_UNSPECIFIED]}\n", codeOverrideInvalid},
+		{"Thing", "enums:\n  ThingPriority: {zero: unspecified, rejected: [{value: THING_PRIORITY_PAGER_DUTY_INCIDENTS, reason: test reason}], order: [THING_PRIORITY_PAGER_DUTY_INCIDENTS]}\n", codeOverrideInvalid},
 	}
 	for _, tc := range cases {
 		t.Run(tc.resource+tc.fields, func(t *testing.T) {
