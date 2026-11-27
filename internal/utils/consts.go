@@ -22,7 +22,6 @@ const (
 	V1beta1APIVersion  = "v1beta1"
 	V1APIVersion       = "v1"
 
-	RuleGroupKind             = "RuleGroup"
 	AlertKind                 = "Alert"
 	AlertSetKind              = "AlertSet"
 	RecordingRuleGroupSetKind = "RecordingRuleGroupSet"

@@ -1,0 +1,60 @@
+# The released CRD needs an order of at least 1. The values are the ones that the live API accepted
+# in the baseline recording: a rule of every type, every destination field, every timestamp
+# standard, and every severity.
+values:
+  order: 1
+  applications: [e2e-app]
+  subsystems: [e2e-subsystem]
+  severities: [Debug, Verbose, Info, Warning, Error, Critical]
+  subgroups:
+    - rules:
+        - name: parse
+          parse: {sourceField: text, destinationField: text, regex: 'a(?P<b>\d+)'}
+        - name: block
+          block: {sourceField: text, regex: secret, keepBlockedLogs: true}
+        - name: allow
+          block: {sourceField: text, regex: keep, blockingAllMatchingBlocks: false}
+        - name: replace
+          replace: {sourceField: text, destinationField: text, regex: x, replacementString: ''}
+        - name: remove-fields
+          removeFields: {excludedFields: [a, b.c]}
+        - name: stringify
+          jsonStringify: {sourceField: text.a, destinationField: text.b}
+        - name: extract
+          extract: {sourceField: text, regex: '(?P<a>\d+)'}
+        - name: parse-json
+          parseJsonField: {sourceField: text.a, destinationField: text.b, keepSourceField: true, keepDestinationField: true}
+    - active: false
+      rules:
+        - {name: category, jsonExtract: {jsonKey: k, destinationField: Category}}
+        - {name: class, jsonExtract: {jsonKey: k, destinationField: CLASSNAME}}
+        - {name: method, jsonExtract: {jsonKey: k, destinationField: METHODNAME}}
+        - {name: thread, jsonExtract: {jsonKey: k, destinationField: THREADID}}
+        - {name: severity, jsonExtract: {jsonKey: k, destinationField: SEVERITY}}
+    - rules:
+        - {name: ts-strftime, extractTimestamp: {sourceField: text, fieldFormatStandard: Strftime, timeFormat: '%Y'}}
+        - {name: ts-java, extractTimestamp: {sourceField: text, fieldFormatStandard: JavaSDF, timeFormat: yyyy}}
+        - {name: ts-golang, extractTimestamp: {sourceField: text, fieldFormatStandard: Golang, timeFormat: '2006'}}
+        - {name: ts-seconds, extractTimestamp: {sourceField: text, fieldFormatStandard: SecondTS, timeFormat: ''}}
+        - {name: ts-milli, extractTimestamp: {sourceField: text, fieldFormatStandard: MilliTS, timeFormat: ''}}
+        - {name: ts-micro, extractTimestamp: {sourceField: text, fieldFormatStandard: MicroTS, timeFormat: ''}}
+        - {name: ts-nano, extractTimestamp: {sourceField: text, fieldFormatStandard: NanoTS, timeFormat: ''}}
+minimal:
+  subgroups:
+    - rules:
+        - name: worker-to-category
+          jsonExtract:
+            jsonKey: worker
+            destinationField: Category
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    subgroups:
+      - rules:
+          - name: worker-to-category
+            jsonExtract:
+              jsonKey: worker
+              destinationField: Category
+  field: description
+  value: updated by the upgrade check

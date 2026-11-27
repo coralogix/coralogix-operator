@@ -24,11 +24,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          RuleGroup is the Schema for the RuleGroups API
-          See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-          **Added in v0.4.0**
+        description: RuleGroup is the Schema for the rulegroups API.
         properties:
           apiVersion:
             description: |-
@@ -48,11 +44,11 @@ spec:
           metadata:
             type: object
           spec:
-            description: RuleGroupSpec defines the Desired state of RuleGroup
+            description: RuleGroupSpec defines the desired state of a RuleGroup.
             properties:
               active:
                 default: true
-                description: Whether the rule-group is active.
+                description: Whether the group is enabled. Defaults to true.
                 type: boolean
               applications:
                 description: Rules will execute on logs that match the these applications.
@@ -60,21 +56,33 @@ spec:
                   type: string
                 type: array
               creator:
-                description: Rule-group creator
+                description: Free-form name of the creator, as the client sent it.
+                  A request without it stores an empty string, but a response can
+                  omit it.
                 type: string
               description:
-                description: Description of the rule-group.
+                description: Human-readable description. Defaults to an empty string.
                 type: string
               hidden:
                 default: false
-                description: Hides the rule-group.
+                description: A free-form flag for clients, for example to hide the
+                  group in a UI. The service stores and returns it and does not act
+                  on it. Defaults to false.
                 type: boolean
               name:
-                description: Name of the rule-group.
+                description: Display name. Must not be empty.
                 minLength: 0
                 type: string
               order:
-                description: The index of the rule-group between the other rule-groups.
+                description: 'Rank of the group among the rule groups of the company.
+                  Defaults to 1 when a request omits it. A request with 0 places the
+                  group last. Creating or updating a group does not shift the other
+                  groups, and groups can share an order: concurrent create requests
+                  can receive the same order. The service renumbers the groups later:
+                  deleting a group lowers the order of every group with a higher order
+                  by 1, and reordering the groups in the Coralogix UI sets the order
+                  of every group to its position, 1 to N. Do not treat an order that
+                  a client sent as stable: read it from a get or list response.'
                 format: int32
                 minimum: 1
                 type: integer
@@ -344,7 +352,7 @@ spec:
             - name
             type: object
           status:
-            description: RuleGroupStatus defines the observed state of RuleGroup
+            description: RuleGroupStatus defines the observed state of a RuleGroup.
             properties:
               conditions:
                 items:
