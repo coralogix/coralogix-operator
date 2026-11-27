@@ -45,6 +45,11 @@ spec:
                     rules:
                       items:
                         properties:
+                          evaluationDelayMs:
+                            format: int64
+                            maximum: 1800000
+                            minimum: 0
+                            type: integer
                           expr:
                             type: string
                           labels:
@@ -53,11 +58,19 @@ spec:
                             type: object
                           record:
                             type: string
+                        required:
+                        - expr
+                        - record
                         type: object
                       type: array
+                  required:
+                  - name
                   type: object
                 minItems: 1
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
             required:
             - groups
             type: object

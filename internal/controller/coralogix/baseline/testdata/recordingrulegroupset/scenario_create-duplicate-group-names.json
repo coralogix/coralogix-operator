@@ -4,7 +4,6 @@
     "spec": {
       "groups": [
         {
-          "intervalSeconds": 60,
           "name": "same",
           "rules": [
             {
@@ -14,7 +13,6 @@
           ]
         },
         {
-          "intervalSeconds": 60,
           "name": "same",
           "rules": [
             {
@@ -25,114 +23,16 @@
         }
       ]
     },
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
-        "body": {
-          "groups": [
-            {
-              "interval": 60,
-              "limit": "0",
-              "name": "same",
-              "rules": [
-                {
-                  "expr": "vector(1)",
-                  "record": "baseline_record"
-                }
-              ]
-            },
-            {
-              "interval": 60,
-              "limit": "0",
-              "name": "same",
-              "rules": [
-                {
-                  "expr": "vector(2)",
-                  "record": "baseline_record2"
-                }
-              ]
-            }
-          ],
-          "name": "rules"
-        },
-        "status": 400
-      }
-    ],
-    "result": {
-      "error": true
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueDuplicate",
+          "field": "spec.groups[1]",
+          "message": "Duplicate value: map[string]interface {}{\"name\":\"same\"}"
+        }
+      ]
     },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
-  },
-  {
-    "step": "retry",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
-        "body": {
-          "groups": [
-            {
-              "interval": 60,
-              "limit": "0",
-              "name": "same",
-              "rules": [
-                {
-                  "expr": "vector(1)",
-                  "record": "baseline_record"
-                }
-              ]
-            },
-            {
-              "interval": 60,
-              "limit": "0",
-              "name": "same",
-              "rules": [
-                {
-                  "expr": "vector(2)",
-                  "record": "baseline_record2"
-                }
-              ]
-            }
-          ],
-          "name": "rules"
-        },
-        "status": 400
-      }
-    ],
-    "result": {
-      "error": true
-    },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
-  },
-  {
-    "step": "delete",
     "requests": [],
     "result": {
       "error": false

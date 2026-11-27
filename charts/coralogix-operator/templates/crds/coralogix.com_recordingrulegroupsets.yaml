@@ -25,11 +25,8 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          RecordingRuleGroupSet is the Schema for the RecordingRuleGroupSets API
-          See also https://coralogix.com/docs/user-guides/data-transformation/metric-rules/recording-rules/
-
-          **Added in v0.4.0**
+        description: RecordingRuleGroupSet is the Schema for the recordingrulegroupsets
+          API.
         properties:
           apiVersion:
             description: |-
@@ -50,58 +47,80 @@ spec:
             type: object
           spec:
             description: RecordingRuleGroupSetSpec defines the desired state of a
-              set of Coralogix recording rule groups.
+              RecordingRuleGroupSet.
             properties:
               groups:
-                description: Recording rule groups.
+                description: The rule groups of the set, in no particular order.
                 items:
-                  description: A Coralogix recording rule group.
+                  description: RecordingRuleGroupSetOutRuleGroup is the OutRuleGroup
+                    object of the API.
                   properties:
                     intervalSeconds:
                       default: 60
-                      description: How often rules in the group are evaluated (in
-                        seconds).
+                      description: How often the rules of the group are evaluated,
+                        in seconds. At least 60. An omitted interval is stored as
+                        60, also on an update.
                       format: int32
                       type: integer
                     limit:
-                      description: Limits the number of alerts an alerting rule and
-                        series a recording-rule can produce. 0 is no limit.
+                      description: Limits the number of series that a rule of the
+                        group can produce. 0 means no limit. An omitted limit is stored
+                        as 0, also on an update.
                       format: int64
                       type: integer
                     name:
-                      description: The (unique) rule group name.
+                      description: The name of the group. Unique within the set.
                       type: string
                     rules:
-                      description: Rules of this group.
+                      description: List of rules.
                       items:
-                        description: A recording rule.
+                        description: RecordingRuleGroupSetOutRule is the OutRule object
+                          of the API.
                         properties:
+                          evaluationDelayMs:
+                            description: The delay in milliseconds before evaluating
+                              the recording rule expression. Allows late-arriving
+                              data to be ingested before evaluation. An omitted delay
+                              stays omitted, and 0 is stored as 0.
+                            format: int64
+                            maximum: 1800000
+                            minimum: 0
+                            type: integer
                           expr:
-                            description: |-
-                              The PromQL expression to evaluate.
-                              Every evaluation cycle this is evaluated at the current time, and the result recorded as a new set of time series with the metric name as given by 'record'.
+                            description: The PromQL expression to evaluate. Every
+                              evaluation cycle evaluates it at the current time and
+                              records the result as a new set of time series with
+                              the metric name of `record`.
                             type: string
                           labels:
                             additionalProperties:
                               type: string
                             description: Labels to add or overwrite before storing
-                              the result.
+                              the result. An omitted map is stored as an empty map.
                             type: object
                           record:
                             description: The name of the time series to output to.
                               Must be a valid metric name.
                             type: string
+                        required:
+                        - expr
+                        - record
                         type: object
                       type: array
+                  required:
+                  - name
                   type: object
                 minItems: 1
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
             required:
             - groups
             type: object
           status:
             description: RecordingRuleGroupSetStatus defines the observed state of
-              RecordingRuleGroupSet
+              a RecordingRuleGroupSet.
             properties:
               conditions:
                 items:

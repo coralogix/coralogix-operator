@@ -1,0 +1,19 @@
+# The API checks the PromQL of a rule and the metric name of its record, so the made-up values
+# of the contract (sample-expr, sample-record) fail with a 400.
+values:
+  groups.rules.record: cxo_e2e_record
+  groups.rules.expr: vector(1)
+update:
+  field: groups.intervalSeconds
+  value: 120
+upgrade:
+  from: '0.5'
+  spec:
+    groups:
+      - name: upgrade-check
+        intervalSeconds: 60
+        rules:
+          - record: cxo_upgrade_check
+            expr: vector(1)
+  field: groups/0/rules/0/expr
+  value: vector(2)

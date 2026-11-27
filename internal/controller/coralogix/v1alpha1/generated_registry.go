@@ -137,6 +137,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.QuotaAllocationRuleSetKind, err)
 	}
+	if err := (&RecordingRuleGroupSetReconciler{
+		Client:    clientSet.RecordingRules(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.RecordingRuleGroupSetKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.RecordingRuleGroupSetKind, err)
+	}
 	if err := (&SLOReconciler{
 		Client:    clientSet.SLOs(),
 		ClientSet: clientSet,

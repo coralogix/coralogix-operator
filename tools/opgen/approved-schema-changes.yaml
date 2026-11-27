@@ -1,4 +1,28 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes: []
+changes:
+  - kind: RecordingRuleGroupSet
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.groups
+    before: 4376b2eff65b5f2e
+    after: 794c6f7db81f4e06
+    reason: >-
+      The groups are a list-map keyed by name (x-kubernetes-list-type: map). The API needs a unique
+      name in each group of a set and answers 400 for a repeated name, so admission rejects a
+      repeated name earlier. The key is also what the generated e2e update reads an item by, because
+      the API keeps no order of the groups.
+  - kind: RecordingRuleGroupSet
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.groups[]
+    before: a2c799262a3ce3c1
+    after: fdc9a30bdf830c8a
+    reason: >-
+      name is required in each group. A list-map key must be required. The API answers 400 for a
+      group without a name (length 1 to 255), so no accepted CR is affected.
+  - kind: RecordingRuleGroupSet
+    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.groups[].properties.rules[]
+    before: a2c799262a3ce3c1
+    after: f0164344aa1dfb27
+    reason: >-
+      record and expr are required in each rule. The API answers 400 for a rule without either of
+      them (length 1 or more, and valid PromQL), so no accepted CR is affected. The new optional
+      field evaluationDelayMs is in the same object.

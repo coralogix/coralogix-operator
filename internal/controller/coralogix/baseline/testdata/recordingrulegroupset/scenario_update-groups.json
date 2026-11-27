@@ -118,7 +118,6 @@
             },
             {
               "interval": 60,
-              "limit": "0",
               "name": "second.rules",
               "rules": [
                 {
@@ -177,7 +176,6 @@
           "groups": [
             {
               "interval": 60,
-              "limit": "0",
               "name": "second.rules",
               "rules": [
                 {

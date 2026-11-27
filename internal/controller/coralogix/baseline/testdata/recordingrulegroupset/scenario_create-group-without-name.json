@@ -4,7 +4,6 @@
     "spec": {
       "groups": [
         {
-          "intervalSeconds": 60,
           "rules": [
             {
               "expr": "vector(1)",
@@ -14,49 +13,16 @@
         }
       ]
     },
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/recording-rules/recording-rules/v1",
-        "body": {
-          "groups": [
-            {
-              "interval": 60,
-              "limit": "0",
-              "name": "",
-              "rules": [
-                {
-                  "expr": "vector(1)",
-                  "record": "baseline_record"
-                }
-              ]
-            }
-          ],
-          "name": "rules"
-        },
-        "status": 400
-      }
-    ],
-    "result": {
-      "error": true
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueRequired",
+          "field": "spec.groups[0].name",
+          "message": "Required value"
+        }
+      ]
     },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
-  },
-  {
-    "step": "delete",
     "requests": [],
     "result": {
       "error": false

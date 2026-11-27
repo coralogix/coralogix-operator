@@ -17,9 +17,7 @@
           "groups": [
             {
               "interval": 60,
-              "limit": "0",
-              "name": "empty",
-              "rules": []
+              "name": "empty"
             }
           ],
           "name": "rules"
@@ -59,9 +57,7 @@
           "groups": [
             {
               "interval": 60,
-              "limit": "0",
-              "name": "empty",
-              "rules": []
+              "name": "empty"
             }
           ]
         },

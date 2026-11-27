@@ -16,6 +16,7 @@ OutboundWebhook: v0.1.0-beta.41
 Preset: v0.1.0-beta.41
 ProductAnalyticsSettings: v0.1.0-beta.41
 QuotaAllocationRuleSet: v0.1.0-beta.41
+RecordingRuleGroupSet: v0.1.0-beta.41
 SLO: v0.1.0-beta.41
 SavedFunnel: v0.1.0-beta.41
 SavedHeatmap: v0.1.0-beta.41
