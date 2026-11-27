@@ -168,13 +168,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&v1alpha1controllers.OutboundWebhookReconciler{
-		OutboundWebhooksClient: oapiClientSet.Webhooks(),
-		Interval:               cfg.ReconcileIntervals[utils.OutboundWebhookKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.GroupReconciler{
 		GroupsClient: oapiClientSet.Groups(),
 		UsersClient:  oapiClientSet.Users(),

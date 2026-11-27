@@ -111,6 +111,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.IntegrationKind, err)
 	}
+	if err := (&OutboundWebhookReconciler{
+		Client:    clientSet.Webhooks(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.OutboundWebhookKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.OutboundWebhookKind, err)
+	}
 	if err := (&PresetReconciler{
 		Client:   clientSet.Presets(),
 		Interval: intervals[utils.PresetKind],

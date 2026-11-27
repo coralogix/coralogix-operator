@@ -21,8 +21,7 @@
             "name": "pagerduty",
             "pagerDuty": {
               "serviceKey": "fake-service-key"
-            },
-            "type": "PAGERDUTY"
+            }
           }
         },
         "status": 200
@@ -67,8 +66,7 @@
             "name": "pagerduty",
             "pagerDuty": {
               "serviceKey": "fake-service-key"
-            },
-            "type": "PAGERDUTY"
+            }
           },
           "id": "<id-1>"
         },

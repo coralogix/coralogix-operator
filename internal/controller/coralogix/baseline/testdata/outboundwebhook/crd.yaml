@@ -136,15 +136,33 @@ spec:
                         - key
                         type: object
                         x-kubernetes-map-type: atomic
+                      uuid:
+                        type: string
                     required:
                     - method
                     type: object
                     x-kubernetes-validations:
-                    - message: Exactly one of url or urlSecretKeyRef must be set
-                      rule: has(self.url) != has(self.urlSecretKeyRef)
-                    - message: A header can have only one source
+                    - message: A key of headers can have only one source
                       rule: '!has(self.headers) || !has(self.headersFromSecret) ||
                         self.headersFromSecret.all(k, !(k in self.headers))'
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                  ibmEventNotifications:
+                    properties:
+                      endpointType:
+                        enum:
+                        - DefaultOrPublic
+                        - Private
+                        type: string
+                      eventNotificationsInstanceId:
+                        type: string
+                      regionId:
+                        type: string
+                      sourceId:
+                        type: string
+                      sourceName:
+                        type: string
+                    type: object
                   jira:
                     properties:
                       apiToken:
@@ -192,6 +210,27 @@ spec:
                     - message: Exactly one of url or urlSecretKeyRef must be set
                       rule: has(self.url) != has(self.urlSecretKeyRef)
                   microsoftTeams:
+                    properties:
+                      url:
+                        type: string
+                      urlSecretKeyRef:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            default: ""
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    type: object
+                    x-kubernetes-validations:
+                    - message: Exactly one of url or urlSecretKeyRef must be set
+                      rule: has(self.url) != has(self.urlSecretKeyRef)
+                  msTeamsWorkflow:
                     properties:
                       url:
                         type: string
@@ -274,6 +313,8 @@ spec:
                         - key
                         type: object
                         x-kubernetes-map-type: atomic
+                      uuid:
+                        type: string
                     required:
                     - payload
                     type: object
@@ -327,14 +368,15 @@ spec:
                       rule: has(self.url) != has(self.urlSecretKeyRef)
                 type: object
                 x-kubernetes-validations:
-                - message: 'Exactly one of the following fields must be set: genericWebhook,
-                    slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie,
-                    demisto, awsEventBridge'
+                - message: Exactly one of genericWebhook, slack, pagerDuty, sendLog,
+                    emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge,
+                    ibmEventNotifications, msTeamsWorkflow must be set
                   rule: '(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1
                     : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1
                     : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams)
                     ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1
                     : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge)
+                    ? 1 : 0) + (has(self.ibmEventNotifications) ? 1 : 0) + (has(self.msTeamsWorkflow)
                     ? 1 : 0) == 1'
             required:
             - name

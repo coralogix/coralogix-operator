@@ -29,7 +29,6 @@
               "uuid": "<id-1>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           }
         },
@@ -38,53 +37,6 @@
       {
         "method": "GET",
         "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-2>",
-        "status": 200
-      }
-    ],
-    "result": {
-      "error": true
-    },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
-  },
-  {
-    "step": "retry",
-    "requests": [
-      {
-        "method": "POST",
-        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
-        "body": {
-          "data": {
-            "genericWebhook": {
-              "headers": {
-                "X-Team": "platform"
-              },
-              "method": "POST",
-              "payload": "{\"alert\": \"$ALERT_NAME\"}",
-              "uuid": "<id-3>"
-            },
-            "name": "baseline-webhook",
-            "type": "GENERIC",
-            "url": "https://example.com/hook"
-          }
-        },
-        "status": 200
-      },
-      {
-        "method": "GET",
-        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-4>",
         "status": 200
       }
     ],
@@ -105,8 +57,55 @@
             "type": "RemoteSynced"
           }
         ],
-        "externalId": "1002",
-        "id": "<id-4>",
+        "externalId": "1001",
+        "id": "<id-2>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1",
+        "body": {
+          "data": {
+            "genericWebhook": {
+              "headers": {
+                "X-Team": "platform"
+              },
+              "method": "POST",
+              "payload": "{\"alert\": \"$ALERT_NAME\"}",
+              "uuid": "<id-3>"
+            },
+            "name": "baseline-webhook",
+            "url": "https://example.com/hook"
+          },
+          "id": "<id-2>"
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "outbound-webhook.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "externalId": "1001",
+        "id": "<id-2>",
         "printableStatus": "RemoteSynced"
       }
     }
@@ -116,7 +115,7 @@
     "requests": [
       {
         "method": "DELETE",
-        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-4>",
+        "path": "/mgmt/openapi/5/integrations/webhooks/v1/<id-2>",
         "status": 200
       }
     ],
@@ -132,24 +131,6 @@
       "error": false
     },
     "object": null,
-    "remote": {
-      "<id-2>": {
-        "createdAt": "2026-01-01T00:00:00Z",
-        "externalId": 1001,
-        "genericWebhook": {
-          "headers": {
-            "X-Team": "platform"
-          },
-          "method": "POST",
-          "payload": "{\"alert\": \"$ALERT_NAME\"}",
-          "uuid": "<id-1>"
-        },
-        "id": "<id-2>",
-        "name": "baseline-webhook",
-        "type": "GENERIC",
-        "updatedAt": "2026-01-01T00:00:00Z",
-        "url": "https://example.com/hook"
-      }
-    }
+    "remote": {}
   }
 ]

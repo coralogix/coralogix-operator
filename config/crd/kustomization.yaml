@@ -6,7 +6,6 @@ resources:
   - bases/coralogix.com_alerts.yaml
   - bases/coralogix.com_alertsets.yaml
   - bases/coralogix.com_recordingrulegroupsets.yaml
-  - bases/coralogix.com_outboundwebhooks.yaml
   - bases/coralogix.com_connectors.yaml
   - bases/coralogix.com_groups.yaml
   - bases/coralogix.com_archivemetricstargets.yaml
@@ -26,6 +25,7 @@ resources:
   - bases/coralogix.com_events2metrics.yaml
   - bases/coralogix.com_globalrouters.yaml
   - bases/coralogix.com_integrations.yaml
+  - bases/coralogix.com_outboundwebhooks.yaml
   - bases/coralogix.com_presets.yaml
   - bases/coralogix.com_productanalyticssettings.yaml
   - bases/coralogix.com_quotaallocationrulesets.yaml

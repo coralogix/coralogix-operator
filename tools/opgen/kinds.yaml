@@ -52,3 +52,5 @@ kinds:
     resource: KeyInfo
   - kind: AICustomEvaluation
     resource: CustomEvaluation
+  - kind: OutboundWebhook
+    resource: OutgoingWebhook

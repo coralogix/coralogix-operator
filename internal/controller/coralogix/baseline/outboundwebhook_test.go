@@ -37,7 +37,7 @@ func init() {
 		rbacExtra: []string{"secrets"},
 		newFake:   newWebhookFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.OutboundWebhookReconciler{OutboundWebhooksClient: cs.Webhooks(), Interval: reconcileInterval}
+			return &v1alpha1controllers.OutboundWebhookReconciler{Client: cs.Webhooks(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: webhookScenarios,
 		admission: webhookAdmission(),

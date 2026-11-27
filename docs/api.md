@@ -16566,10 +16566,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-OutboundWebhook is the Schema for the API
-See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-eventbridge-outbound-webhook/
-
-**Added in v0.4.0**
+OutboundWebhook is the Schema for the outboundwebhooks API.
 
 <table>
     <thead>
@@ -16601,14 +16598,14 @@ See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-e
         <td><b><a href="#outboundwebhookspec">spec</a></b></td>
         <td>object</td>
         <td>
-          OutboundWebhookSpec defines the desired state of an outbound webhook.<br/>
+          OutboundWebhookSpec defines the desired state of a OutboundWebhook.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookstatus">status</a></b></td>
         <td>object</td>
         <td>
-          OutboundWebhookStatus defines the observed state of OutboundWebhook<br/>
+          OutboundWebhookStatus defines the observed state of a OutboundWebhook.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16620,7 +16617,7 @@ See also https://coralogix.com/docs/user-guides/alerting/outbound-webhooks/aws-e
 
 
 
-OutboundWebhookSpec defines the desired state of an outbound webhook.
+OutboundWebhookSpec defines the desired state of a OutboundWebhook.
 
 <table>
     <thead>
@@ -16635,16 +16632,16 @@ OutboundWebhookSpec defines the desired state of an outbound webhook.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the webhook.<br/>
+          Display name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktype">outboundWebhookType</a></b></td>
         <td>object</td>
         <td>
-          Type of webhook.<br/>
+          OutboundWebhookSpecOutboundWebhookType holds the outboundWebhookType fields of the released CR.<br/>
           <br/>
-            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) == 1: Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge</li>
+            <i>Validations</i>:<li>(has(self.genericWebhook) ? 1 : 0) + (has(self.slack) ? 1 : 0) + (has(self.pagerDuty) ? 1 : 0) + (has(self.sendLog) ? 1 : 0) + (has(self.emailGroup) ? 1 : 0) + (has(self.microsoftTeams) ? 1 : 0) + (has(self.jira) ? 1 : 0) + (has(self.opsgenie) ? 1 : 0) + (has(self.demisto) ? 1 : 0) + (has(self.awsEventBridge) ? 1 : 0) + (has(self.ibmEventNotifications) ? 1 : 0) + (has(self.msTeamsWorkflow) ? 1 : 0) == 1: Exactly one of genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications, msTeamsWorkflow must be set</li>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -16656,7 +16653,7 @@ OutboundWebhookSpec defines the desired state of an outbound webhook.
 
 
 
-Type of webhook.
+OutboundWebhookSpecOutboundWebhookType holds the outboundWebhookType fields of the released CR.
 
 <table>
     <thead>
@@ -16671,14 +16668,14 @@ Type of webhook.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeawseventbridge">awsEventBridge</a></b></td>
         <td>object</td>
         <td>
-          AWS eventbridge message.<br/>
+          Aws event bridge config.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypedemisto">demisto</a></b></td>
         <td>object</td>
         <td>
-          Demisto notification.<br/>
+          Demisto config.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
@@ -16687,23 +16684,30 @@ Type of webhook.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeemailgroup">emailGroup</a></b></td>
         <td>object</td>
         <td>
-          Email notification.<br/>
+          Email group config.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhook">genericWebhook</a></b></td>
         <td>object</td>
         <td>
-          Generic HTTP(s) webhook.<br/>
+          Generic webhook config.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li><li>!has(self.headers) || !has(self.headersFromSecret) || self.headersFromSecret.all(k, !(k in self.headers)): A header can have only one source</li>
+            <i>Validations</i>:<li>!has(self.headers) || !has(self.headersFromSecret) || self.headersFromSecret.all(k, !(k in self.headers)): A key of headers can have only one source</li><li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypeibmeventnotifications">ibmEventNotifications</a></b></td>
+        <td>object</td>
+        <td>
+          Ibm event notifications config.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypejira">jira</a></b></td>
         <td>object</td>
         <td>
-          Jira issue.<br/>
+          Jira config.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.apiToken) != has(self.apiTokenSecretKeyRef): Exactly one of apiToken or apiTokenSecretKeyRef must be set</li><li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
@@ -16712,7 +16716,16 @@ Type of webhook.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypemicrosoftteams">microsoftTeams</a></b></td>
         <td>object</td>
         <td>
-          Teams message.<br/>
+          Microsoft teams config.<br/>
+          <br/>
+            <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypemsteamsworkflow">msTeamsWorkflow</a></b></td>
+        <td>object</td>
+        <td>
+          Ms teams workflow config.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
@@ -16721,7 +16734,7 @@ Type of webhook.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeopsgenie">opsgenie</a></b></td>
         <td>object</td>
         <td>
-          Opsgenie notification.<br/>
+          Opsgenie config.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
@@ -16730,7 +16743,7 @@ Type of webhook.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypepagerduty">pagerDuty</a></b></td>
         <td>object</td>
         <td>
-          PagerDuty notification.<br/>
+          Pager duty config.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.serviceKey) != has(self.serviceKeySecretKeyRef): Exactly one of serviceKey or serviceKeySecretKeyRef must be set</li>
         </td>
@@ -16739,7 +16752,7 @@ Type of webhook.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypesendlog">sendLog</a></b></td>
         <td>object</td>
         <td>
-          SendLog notification.<br/>
+          Send log config.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
@@ -16748,7 +16761,7 @@ Type of webhook.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslack">slack</a></b></td>
         <td>object</td>
         <td>
-          Slack message.<br/>
+          Slack config.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.url) != has(self.urlSecretKeyRef): Exactly one of url or urlSecretKeyRef must be set</li>
         </td>
@@ -16762,7 +16775,7 @@ Type of webhook.
 
 
 
-AWS eventbridge message.
+Aws event bridge config.
 
 <table>
     <thead>
@@ -16777,35 +16790,35 @@ AWS eventbridge message.
         <td><b>detail</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Detail.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>detailType</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The detail type.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>eventBusArn</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The event bus arn.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>roleName</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The role name.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>source</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Source.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -16817,7 +16830,7 @@ AWS eventbridge message.
 
 
 
-Demisto notification.
+Demisto config.
 
 <table>
     <thead>
@@ -16832,28 +16845,29 @@ Demisto notification.
         <td><b>payload</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Raw payload data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>uuid</b></td>
         <td>string</td>
         <td>
-          <br/>
+          UUID. Required on Create and Update.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypedemistourlsecretkeyref">urlSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -16865,7 +16879,7 @@ Demisto notification.
 
 
 
-UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -16912,7 +16926,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-Email notification.
+Email group config.
 
 <table>
     <thead>
@@ -16927,7 +16941,7 @@ Email notification.
         <td><b>emailAddresses</b></td>
         <td>[]string</td>
         <td>
-          Recipients<br/>
+          Email addresses. The service removes duplicates and keeps the first occurrence order. If omitted on update, this list is cleared.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -16939,7 +16953,7 @@ Email notification.
 
 
 
-Generic HTTP(s) webhook.
+Generic webhook config.
 
 <table>
     <thead>
@@ -16954,7 +16968,7 @@ Generic HTTP(s) webhook.
         <td><b>method</b></td>
         <td>enum</td>
         <td>
-          HTTP Method to use.<br/>
+          <br/>
           <br/>
             <i>Enum</i>: Unknown, Get, Post, Put<br/>
         </td>
@@ -16963,35 +16977,44 @@ Generic HTTP(s) webhook.
         <td><b>headers</b></td>
         <td>map[string]string</td>
         <td>
-          Attached HTTP headers. Use HeadersFromSecret for credential values.<br/>
+          The headers.
+Use headersFromSecret for the values that are credentials.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhookheadersfromsecretkey">headersFromSecret</a></b></td>
         <td>map[string]object</td>
         <td>
-          HeadersFromSecret maps header names to Secret keys in the webhook's namespace.<br/>
+          HeadersFromSecret maps a key of headers to a key of a Secret in the namespace of the custom resource. A key can have only one source.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>payload</b></td>
         <td>string</td>
         <td>
-          Payload of the webhook call.<br/>
+          Optional raw payload data. If set, it must not be empty.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          URL to call. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypegenericwebhookurlsecretkeyref">urlSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>uuid</b></td>
+        <td>string</td>
+        <td>
+          UUID. Required on Create and Update.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17050,7 +17073,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17092,12 +17115,69 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 </table>
 
 
+### OutboundWebhook.spec.outboundWebhookType.ibmEventNotifications
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktype)</sup></sup>
+
+
+
+Ibm event notifications config.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>endpointType</b></td>
+        <td>enum</td>
+        <td>
+          Endpoint type.<br/>
+          <br/>
+            <i>Enum</i>: DefaultOrPublic, Private<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>eventNotificationsInstanceId</b></td>
+        <td>string</td>
+        <td>
+          The event notifications instance id.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>regionId</b></td>
+        <td>string</td>
+        <td>
+          The region id.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sourceId</b></td>
+        <td>string</td>
+        <td>
+          The source id.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sourceName</b></td>
+        <td>string</td>
+        <td>
+          The source name.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
 ### OutboundWebhook.spec.outboundWebhookType.jira
 <sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktype)</sup></sup>
 
 
 
-Jira issue.
+Jira config.
 
 <table>
     <thead>
@@ -17112,42 +17192,44 @@ Jira issue.
         <td><b>email</b></td>
         <td>string</td>
         <td>
-          Email address associated with the token<br/>
+          Email address.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>projectKey</b></td>
         <td>string</td>
         <td>
-          Project to add it to.<br/>
+          The project key.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>apiToken</b></td>
         <td>string</td>
         <td>
-          Deprecated: use ApiTokenSecretKeyRef for the Jira API token.<br/>
+          Deprecated: use apiTokenSecretKeyRef for the Jira API token.
+Use apiTokenSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypejiraapitokensecretkeyref">apiTokenSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          ApiTokenSecretKeyRef reads the API token from a Secret in the webhook's namespace.<br/>
+          ApiTokenSecretKeyRef reads apiToken from a key of a Secret in the namespace of the custom resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Jira URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypejiraurlsecretkeyref">urlSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17159,7 +17241,7 @@ Jira issue.
 
 
 
-ApiTokenSecretKeyRef reads the API token from a Secret in the webhook's namespace.
+ApiTokenSecretKeyRef reads apiToken from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17206,7 +17288,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17253,7 +17335,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-Teams message.
+Microsoft teams config.
 
 <table>
     <thead>
@@ -17268,14 +17350,15 @@ Teams message.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Teams URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypemicrosoftteamsurlsecretkeyref">urlSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17287,7 +17370,89 @@ Teams message.
 
 
 
-UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          The key of the secret to select from.  Must be a valid secret key.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the referent.
+This field is effectively required, but due to backwards compatibility is
+allowed to be empty. Instances of this type with an empty value here are
+almost certainly wrong.
+More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>optional</b></td>
+        <td>boolean</td>
+        <td>
+          Specify whether the Secret or its key must be defined<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.msTeamsWorkflow
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktype)</sup></sup>
+
+
+
+Ms teams workflow config.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#outboundwebhookspecoutboundwebhooktypemsteamsworkflowurlsecretkeyref">urlSecretKeyRef</a></b></td>
+        <td>object</td>
+        <td>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### OutboundWebhook.spec.outboundWebhookType.msTeamsWorkflow.urlSecretKeyRef
+<sup><sup>[↩ Parent](#outboundwebhookspecoutboundwebhooktypemsteamsworkflow)</sup></sup>
+
+
+
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17334,7 +17499,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-Opsgenie notification.
+Opsgenie config.
 
 <table>
     <thead>
@@ -17349,14 +17514,15 @@ Opsgenie notification.
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeopsgenieurlsecretkeyref">urlSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17368,7 +17534,7 @@ Opsgenie notification.
 
 
 
-UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17415,7 +17581,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-PagerDuty notification.
+Pager duty config.
 
 <table>
     <thead>
@@ -17430,14 +17596,15 @@ PagerDuty notification.
         <td><b>serviceKey</b></td>
         <td>string</td>
         <td>
-          Deprecated: use ServiceKeySecretKeyRef for the PagerDuty service key.<br/>
+          Deprecated: use serviceKeySecretKeyRef for the PagerDuty service key.
+Use serviceKeySecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypepagerdutyservicekeysecretkeyref">serviceKeySecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          ServiceKeySecretKeyRef reads the service key from a Secret in the webhook's namespace.<br/>
+          ServiceKeySecretKeyRef reads serviceKey from a key of a Secret in the namespace of the custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17449,7 +17616,7 @@ PagerDuty notification.
 
 
 
-ServiceKeySecretKeyRef reads the service key from a Secret in the webhook's namespace.
+ServiceKeySecretKeyRef reads serviceKey from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17496,7 +17663,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-SendLog notification.
+Send log config.
 
 <table>
     <thead>
@@ -17511,21 +17678,29 @@ SendLog notification.
         <td><b>payload</b></td>
         <td>string</td>
         <td>
-          Payload of the notification<br/>
+          Raw payload data.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Sendlog URL. Use UrlSecretKeyRef when the URL contains a credential.<br/>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypesendlogurlsecretkeyref">urlSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>uuid</b></td>
+        <td>string</td>
+        <td>
+          UUID. Required on Create and Update.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17537,7 +17712,7 @@ SendLog notification.
 
 
 
-UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17584,7 +17759,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-Slack message.
+Slack config.
 
 <table>
     <thead>
@@ -17599,28 +17774,29 @@ Slack message.
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackattachmentsindex">attachments</a></b></td>
         <td>[]object</td>
         <td>
-          Attachments of the message.<br/>
+          Attachments. The service keeps one item per type and does not preserve order. If omitted on update, this list is cleared.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackdigestsindex">digests</a></b></td>
         <td>[]object</td>
         <td>
-          Digest configuration.<br/>
+          Digests. The service keeps one item per type and does not preserve order. If omitted on update, this list is cleared.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>url</b></td>
         <td>string</td>
         <td>
-          Use UrlSecretKeyRef when the URL contains a credential.<br/>
+          URL.
+Use urlSecretKeyRef when the value is a credential.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#outboundwebhookspecoutboundwebhooktypeslackurlsecretkeyref">urlSecretKeyRef</a></b></td>
         <td>object</td>
         <td>
-          UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.<br/>
+          UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -17632,7 +17808,7 @@ Slack message.
 
 
 
-Slack attachment
+OutboundWebhookAttachment is the Attachment object of the API.
 
 <table>
     <thead>
@@ -17647,14 +17823,14 @@ Slack attachment
         <td><b>isActive</b></td>
         <td>boolean</td>
         <td>
-          Active status.<br/>
+          Whether this attachment is active. An omitted or false value is absent from Get responses.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          Attachment to the message.<br/>
+          <br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -17666,7 +17842,7 @@ Slack attachment
 
 
 
-Digest config.
+OutboundWebhookDigest is the Digest object of the API.
 
 <table>
     <thead>
@@ -17681,14 +17857,14 @@ Digest config.
         <td><b>isActive</b></td>
         <td>boolean</td>
         <td>
-          Active status.<br/>
+          Whether this digest is active. An omitted or false value is absent from Get responses.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          Type of digest to send<br/>
+          <br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -17700,7 +17876,7 @@ Digest config.
 
 
 
-UrlSecretKeyRef reads the URL from a Secret in the webhook's namespace.
+UrlSecretKeyRef reads url from a key of a Secret in the namespace of the custom resource.
 
 <table>
     <thead>
@@ -17747,7 +17923,7 @@ More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/nam
 
 
 
-OutboundWebhookStatus defines the observed state of OutboundWebhook
+OutboundWebhookStatus defines the observed state of a OutboundWebhook.
 
 <table>
     <thead>

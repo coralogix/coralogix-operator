@@ -22,7 +22,6 @@
               "uuid": "<id-1>"
             },
             "name": "demisto-webhook",
-            "type": "DEMISTO",
             "url": "https://example.com"
           }
         },
@@ -70,7 +69,6 @@
               "uuid": "<id-1>"
             },
             "name": "demisto-webhook",
-            "type": "DEMISTO",
             "url": "https://example.com"
           },
           "id": "<id-2>"

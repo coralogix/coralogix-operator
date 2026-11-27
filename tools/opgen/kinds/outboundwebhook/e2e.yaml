@@ -1,0 +1,40 @@
+values:
+  name: outbound-webhook-sample
+  outboundWebhookType.genericWebhook.url: https://example.com/hook
+  outboundWebhookType.genericWebhook.uuid: 00000000-0000-4000-8000-000000000002
+  outboundWebhookType.slack.url: https://hooks.slack.com/services/sample
+  outboundWebhookType.jira.url: https://example.atlassian.net
+  outboundWebhookType.jira.email: user@example.com
+  outboundWebhookType.emailGroup.emailAddresses: [user@example.com]
+  outboundWebhookType.opsgenie.url: https://api.opsgenie.com/v1/json/coralogix
+  outboundWebhookType.demisto.url: https://example.com/demisto
+  outboundWebhookType.demisto.uuid: 00000000-0000-4000-8000-000000000001
+  outboundWebhookType.msTeamsWorkflow.url: https://example.webhook.office.com/workflows/sample
+  outboundWebhookType.awsEventBridge.eventBusArn: arn:aws:events:us-east-1:000000000000:event-bus/default
+substitutions:
+  outbound-webhook-sample: '@{run}'
+  00000000-0000-4000-8000-000000000002: '@{uuid}'
+skipValues:
+  MethodType:
+    values: [UNKNOWN]
+    reason: the API rejects the method UNKNOWN with 400 Unknown method type
+  DigestType:
+    values: [UNKNOWN]
+    reason: the API rejects the digest UNKNOWN with 400 Unknown digest type
+  AttachmentType:
+    values: [EMPTY]
+    reason: the API rejects the attachment EMPTY with 400 Unknown attachment type
+skipChoices:
+  OutboundWebhook:
+    choices: [microsoftTeams, sendLog, ibmEventNotifications]
+    reason: Microsoft Teams is deprecated and every write is a 400; Send Log rejects the URL that the released CR requires; IBM Event Notifications needs an instance in an IBM Cloud account
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    outboundWebhookType:
+      genericWebhook:
+        url: https://example.com/hook
+        method: Post
+  field: name
+  value: '@{run}-updated'

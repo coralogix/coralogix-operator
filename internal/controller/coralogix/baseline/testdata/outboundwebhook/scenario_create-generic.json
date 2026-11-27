@@ -29,7 +29,6 @@
               "uuid": "<id-1>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           }
         },
@@ -81,7 +80,6 @@
               "uuid": "<id-3>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           },
           "id": "<id-2>"
@@ -129,7 +127,6 @@
               "uuid": "<id-4>"
             },
             "name": "baseline-webhook",
-            "type": "GENERIC",
             "url": "https://example.com/hook"
           },
           "id": "<id-2>"

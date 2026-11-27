@@ -81,7 +81,7 @@
       {
         "type": "FieldValueInvalid",
         "field": "spec.outboundWebhookType.genericWebhook",
-        "message": "Invalid value: \"object\": A header can have only one source"
+        "message": "Invalid value: \"object\": A key of headers can have only one source"
       }
     ]
   },
@@ -333,7 +333,7 @@
       {
         "type": "FieldValueInvalid",
         "field": "spec.outboundWebhookType",
-        "message": "Invalid value: \"object\": Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
+        "message": "Invalid value: \"object\": Exactly one of genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications, msTeamsWorkflow must be set"
       }
     ]
   },
@@ -353,18 +353,11 @@
       {
         "type": "FieldValueInvalid",
         "field": "spec.outboundWebhookType",
-        "message": "Invalid value: \"object\": Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
+        "message": "Invalid value: \"object\": Exactly one of genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge, ibmEventNotifications, msTeamsWorkflow must be set"
       }
     ]
   },
   "unknown type": {
-    "accepted": false,
-    "causes": [
-      {
-        "type": "FieldValueInvalid",
-        "field": "spec.outboundWebhookType",
-        "message": "Invalid value: \"object\": Exactly one of the following fields must be set: genericWebhook, slack, pagerDuty, sendLog, emailGroup, microsoftTeams, jira, opsgenie, demisto, awsEventBridge"
-      }
-    ]
+    "accepted": true
   }
 }
