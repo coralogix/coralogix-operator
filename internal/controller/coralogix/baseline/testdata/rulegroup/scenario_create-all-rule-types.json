@@ -1,0 +1,981 @@
+[
+  {
+    "step": "create with a rule of each type",
+    "spec": {
+      "active": true,
+      "hidden": false,
+      "name": "baseline-rule-group",
+      "subgroups": [
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "name": "parse",
+              "parse": {
+                "destinationField": "text",
+                "regex": "a(?P\u003cb\u003e\\d+)",
+                "sourceField": "text"
+              }
+            },
+            {
+              "active": true,
+              "block": {
+                "blockingAllMatchingBlocks": true,
+                "keepBlockedLogs": true,
+                "regex": "secret",
+                "sourceField": "text"
+              },
+              "name": "block-keep"
+            },
+            {
+              "active": true,
+              "block": {
+                "blockingAllMatchingBlocks": false,
+                "keepBlockedLogs": true,
+                "regex": "keep-me",
+                "sourceField": "text"
+              },
+              "name": "allow"
+            },
+            {
+              "active": true,
+              "block": {
+                "blockingAllMatchingBlocks": false,
+                "keepBlockedLogs": false,
+                "regex": "keep-me-too",
+                "sourceField": "text"
+              },
+              "name": "allow-default-keep"
+            },
+            {
+              "active": true,
+              "name": "replace",
+              "replace": {
+                "destinationField": "text",
+                "regex": "x",
+                "replacementString": "",
+                "sourceField": "text"
+              }
+            },
+            {
+              "active": true,
+              "name": "remove-fields",
+              "removeFields": {
+                "excludedFields": [
+                  "a",
+                  "b.c"
+                ]
+              }
+            },
+            {
+              "active": true,
+              "jsonStringify": {
+                "destinationField": "text.b",
+                "keepSourceField": true,
+                "sourceField": "text.a"
+              },
+              "name": "stringify-keep"
+            },
+            {
+              "active": true,
+              "jsonStringify": {
+                "destinationField": "text.b",
+                "keepSourceField": false,
+                "sourceField": "text.a"
+              },
+              "name": "stringify-delete"
+            },
+            {
+              "active": true,
+              "extract": {
+                "regex": "(?P\u003ca\u003e\\d+)",
+                "sourceField": "text"
+              },
+              "name": "extract"
+            }
+          ]
+        },
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "name": "parse-json-keep-both",
+              "parseJsonField": {
+                "destinationField": "text.b",
+                "keepDestinationField": true,
+                "keepSourceField": true,
+                "sourceField": "text.a"
+              }
+            },
+            {
+              "active": true,
+              "name": "parse-json-keep-none",
+              "parseJsonField": {
+                "destinationField": "text.b",
+                "keepDestinationField": false,
+                "keepSourceField": false,
+                "sourceField": "text.a"
+              }
+            },
+            {
+              "active": true,
+              "jsonExtract": {
+                "destinationField": "Category",
+                "jsonKey": "a"
+              },
+              "name": "category"
+            },
+            {
+              "active": true,
+              "jsonExtract": {
+                "destinationField": "CLASSNAME",
+                "jsonKey": "a"
+              },
+              "name": "class"
+            },
+            {
+              "active": true,
+              "jsonExtract": {
+                "destinationField": "METHODNAME",
+                "jsonKey": "a"
+              },
+              "name": "method"
+            },
+            {
+              "active": true,
+              "jsonExtract": {
+                "destinationField": "THREADID",
+                "jsonKey": "a"
+              },
+              "name": "thread"
+            },
+            {
+              "active": true,
+              "jsonExtract": {
+                "destinationField": "SEVERITY",
+                "jsonKey": "a"
+              },
+              "name": "severity"
+            }
+          ]
+        },
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "extractTimestamp": {
+                "fieldFormatStandard": "Strftime",
+                "sourceField": "text",
+                "timeFormat": "%Y"
+              },
+              "name": "ts-strftime"
+            },
+            {
+              "active": true,
+              "extractTimestamp": {
+                "fieldFormatStandard": "JavaSDF",
+                "sourceField": "text",
+                "timeFormat": "yyyy"
+              },
+              "name": "ts-java"
+            },
+            {
+              "active": true,
+              "extractTimestamp": {
+                "fieldFormatStandard": "Golang",
+                "sourceField": "text",
+                "timeFormat": "2006"
+              },
+              "name": "ts-golang"
+            },
+            {
+              "active": true,
+              "extractTimestamp": {
+                "fieldFormatStandard": "SecondTS",
+                "sourceField": "text",
+                "timeFormat": ""
+              },
+              "name": "ts-seconds"
+            },
+            {
+              "active": true,
+              "extractTimestamp": {
+                "fieldFormatStandard": "MilliTS",
+                "sourceField": "text",
+                "timeFormat": ""
+              },
+              "name": "ts-milli"
+            },
+            {
+              "active": true,
+              "extractTimestamp": {
+                "fieldFormatStandard": "MicroTS",
+                "sourceField": "text",
+                "timeFormat": ""
+              },
+              "name": "ts-micro"
+            },
+            {
+              "active": true,
+              "extractTimestamp": {
+                "fieldFormatStandard": "NanoTS",
+                "sourceField": "text",
+                "timeFormat": ""
+              },
+              "name": "ts-nano"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "",
+          "enabled": true,
+          "hidden": false,
+          "name": "baseline-rule-group",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "parse",
+                  "order": 1,
+                  "parameters": {
+                    "parseParameters": {
+                      "destinationField": "text",
+                      "rule": "a(?P\u003cb\u003e\\d+)"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "block-keep",
+                  "order": 2,
+                  "parameters": {
+                    "blockParameters": {
+                      "keepBlockedLogs": true,
+                      "rule": "secret"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "allow",
+                  "order": 3,
+                  "parameters": {
+                    "allowParameters": {
+                      "keepBlockedLogs": true,
+                      "rule": "keep-me"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "allow-default-keep",
+                  "order": 4,
+                  "parameters": {
+                    "allowParameters": {
+                      "keepBlockedLogs": false,
+                      "rule": "keep-me-too"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "replace",
+                  "order": 5,
+                  "parameters": {
+                    "replaceParameters": {
+                      "destinationField": "text",
+                      "replaceNewVal": "",
+                      "rule": "x"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "remove-fields",
+                  "order": 6,
+                  "parameters": {
+                    "removeFieldsParameters": {
+                      "fields": [
+                        "a",
+                        "b.c"
+                      ]
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "stringify-keep",
+                  "order": 7,
+                  "parameters": {
+                    "jsonStringifyParameters": {
+                      "deleteSource": false,
+                      "destinationField": "text.b"
+                    }
+                  },
+                  "sourceField": "text.a"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "stringify-delete",
+                  "order": 8,
+                  "parameters": {
+                    "jsonStringifyParameters": {
+                      "deleteSource": true,
+                      "destinationField": "text.b"
+                    }
+                  },
+                  "sourceField": "text.a"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "extract",
+                  "order": 9,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "(?P\u003ca\u003e\\d+)"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "order": 2,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "parse-json-keep-both",
+                  "order": 1,
+                  "parameters": {
+                    "jsonParseParameters": {
+                      "deleteSource": false,
+                      "destinationField": "text.b",
+                      "escapedValue": true,
+                      "overrideDest": false
+                    }
+                  },
+                  "sourceField": "text.a"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "parse-json-keep-none",
+                  "order": 2,
+                  "parameters": {
+                    "jsonParseParameters": {
+                      "deleteSource": true,
+                      "destinationField": "text.b",
+                      "escapedValue": true,
+                      "overrideDest": true
+                    }
+                  },
+                  "sourceField": "text.a"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "category",
+                  "order": 3,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "class",
+                  "order": 4,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_CLASSNAME",
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "method",
+                  "order": 5,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_METHODNAME",
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "thread",
+                  "order": 6,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_THREADID",
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "severity",
+                  "order": 7,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_SEVERITY",
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "order": 3,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "ts-strftime",
+                  "order": 1,
+                  "parameters": {
+                    "extractTimestampParameters": {
+                      "format": "%Y",
+                      "standard": "FORMAT_STANDARD_STRFTIME_OR_UNSPECIFIED"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "ts-java",
+                  "order": 2,
+                  "parameters": {
+                    "extractTimestampParameters": {
+                      "format": "yyyy",
+                      "standard": "FORMAT_STANDARD_JAVASDF"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "ts-golang",
+                  "order": 3,
+                  "parameters": {
+                    "extractTimestampParameters": {
+                      "format": "2006",
+                      "standard": "FORMAT_STANDARD_GOLANG"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "ts-seconds",
+                  "order": 4,
+                  "parameters": {
+                    "extractTimestampParameters": {
+                      "format": "",
+                      "standard": "FORMAT_STANDARD_SECONDSTS"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "ts-milli",
+                  "order": 5,
+                  "parameters": {
+                    "extractTimestampParameters": {
+                      "format": "",
+                      "standard": "FORMAT_STANDARD_MILLITS"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "ts-micro",
+                  "order": 6,
+                  "parameters": {
+                    "extractTimestampParameters": {
+                      "format": "",
+                      "standard": "FORMAT_STANDARD_MICROTS"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "ts-nano",
+                  "order": 7,
+                  "parameters": {
+                    "extractTimestampParameters": {
+                      "format": "",
+                      "standard": "FORMAT_STANDARD_NANOTS"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "creator": "",
+        "description": "",
+        "enabled": true,
+        "hidden": false,
+        "id": "<id-1>",
+        "name": "baseline-rule-group",
+        "order": 1,
+        "ruleMatchers": [],
+        "ruleSubgroups": [
+          {
+            "enabled": true,
+            "id": "<id-2>",
+            "order": 1,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-3>",
+                "name": "parse",
+                "order": 1,
+                "parameters": {
+                  "parseParameters": {
+                    "destinationField": "text",
+                    "rule": "a(?P\u003cb\u003e\\d+)"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-4>",
+                "name": "block-keep",
+                "order": 2,
+                "parameters": {
+                  "blockParameters": {
+                    "keepBlockedLogs": true,
+                    "rule": "secret"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-5>",
+                "name": "allow",
+                "order": 3,
+                "parameters": {
+                  "allowParameters": {
+                    "keepBlockedLogs": true,
+                    "rule": "keep-me"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-6>",
+                "name": "allow-default-keep",
+                "order": 4,
+                "parameters": {
+                  "allowParameters": {
+                    "keepBlockedLogs": false,
+                    "rule": "keep-me-too"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-7>",
+                "name": "replace",
+                "order": 5,
+                "parameters": {
+                  "replaceParameters": {
+                    "destinationField": "text",
+                    "replaceNewVal": "",
+                    "rule": "x"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-8>",
+                "name": "remove-fields",
+                "order": 6,
+                "parameters": {
+                  "removeFieldsParameters": {
+                    "fields": [
+                      "a",
+                      "b.c"
+                    ]
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-9>",
+                "name": "stringify-keep",
+                "order": 7,
+                "parameters": {
+                  "jsonStringifyParameters": {
+                    "deleteSource": false,
+                    "destinationField": "text.b"
+                  }
+                },
+                "sourceField": "text.a"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-10>",
+                "name": "stringify-delete",
+                "order": 8,
+                "parameters": {
+                  "jsonStringifyParameters": {
+                    "deleteSource": true,
+                    "destinationField": "text.b"
+                  }
+                },
+                "sourceField": "text.a"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-11>",
+                "name": "extract",
+                "order": 9,
+                "parameters": {
+                  "extractParameters": {
+                    "rule": "(?P\u003ca\u003e\\d+)"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          },
+          {
+            "enabled": true,
+            "id": "<id-12>",
+            "order": 2,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-13>",
+                "name": "parse-json-keep-both",
+                "order": 1,
+                "parameters": {
+                  "jsonParseParameters": {
+                    "deleteSource": false,
+                    "destinationField": "text.b",
+                    "overrideDest": false
+                  }
+                },
+                "sourceField": "text.a"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-14>",
+                "name": "parse-json-keep-none",
+                "order": 2,
+                "parameters": {
+                  "jsonParseParameters": {
+                    "deleteSource": true,
+                    "destinationField": "text.b",
+                    "overrideDest": true
+                  }
+                },
+                "sourceField": "text.a"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-15>",
+                "name": "category",
+                "order": 3,
+                "parameters": {
+                  "jsonExtractParameters": {
+                    "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                    "rule": "a"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-16>",
+                "name": "class",
+                "order": 4,
+                "parameters": {
+                  "jsonExtractParameters": {
+                    "destinationFieldType": "DESTINATION_FIELD_CLASSNAME",
+                    "rule": "a"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-17>",
+                "name": "method",
+                "order": 5,
+                "parameters": {
+                  "jsonExtractParameters": {
+                    "destinationFieldType": "DESTINATION_FIELD_METHODNAME",
+                    "rule": "a"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-18>",
+                "name": "thread",
+                "order": 6,
+                "parameters": {
+                  "jsonExtractParameters": {
+                    "destinationFieldType": "DESTINATION_FIELD_THREADID",
+                    "rule": "a"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-19>",
+                "name": "severity",
+                "order": 7,
+                "parameters": {
+                  "jsonExtractParameters": {
+                    "destinationFieldType": "DESTINATION_FIELD_SEVERITY",
+                    "rule": "a"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          },
+          {
+            "enabled": true,
+            "id": "<id-20>",
+            "order": 3,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-21>",
+                "name": "ts-strftime",
+                "order": 1,
+                "parameters": {
+                  "extractTimestampParameters": {
+                    "format": "%Y",
+                    "standard": "FORMAT_STANDARD_STRFTIME_OR_UNSPECIFIED"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-22>",
+                "name": "ts-java",
+                "order": 2,
+                "parameters": {
+                  "extractTimestampParameters": {
+                    "format": "yyyy",
+                    "standard": "FORMAT_STANDARD_JAVASDF"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-23>",
+                "name": "ts-golang",
+                "order": 3,
+                "parameters": {
+                  "extractTimestampParameters": {
+                    "format": "2006",
+                    "standard": "FORMAT_STANDARD_GOLANG"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-24>",
+                "name": "ts-seconds",
+                "order": 4,
+                "parameters": {
+                  "extractTimestampParameters": {
+                    "format": "",
+                    "standard": "FORMAT_STANDARD_SECONDSTS"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-25>",
+                "name": "ts-milli",
+                "order": 5,
+                "parameters": {
+                  "extractTimestampParameters": {
+                    "format": "",
+                    "standard": "FORMAT_STANDARD_MILLITS"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-26>",
+                "name": "ts-micro",
+                "order": 6,
+                "parameters": {
+                  "extractTimestampParameters": {
+                    "format": "",
+                    "standard": "FORMAT_STANDARD_MICROTS"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-27>",
+                "name": "ts-nano",
+                "order": 7,
+                "parameters": {
+                  "extractTimestampParameters": {
+                    "format": "",
+                    "standard": "FORMAT_STANDARD_NANOTS"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

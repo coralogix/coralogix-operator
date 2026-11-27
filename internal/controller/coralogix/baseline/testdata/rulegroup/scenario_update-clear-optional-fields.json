@@ -1,0 +1,244 @@
+[
+  {
+    "step": "create with every optional field",
+    "spec": {
+      "active": true,
+      "applications": [
+        "shop"
+      ],
+      "creator": "baseline",
+      "description": "Baseline rule group",
+      "hidden": true,
+      "name": "baseline-rule-group",
+      "order": 3,
+      "severities": [
+        "Warning"
+      ],
+      "subgroups": [
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "description": "A rule",
+              "extract": {
+                "regex": "a",
+                "sourceField": "text"
+              },
+              "name": "a"
+            }
+          ]
+        }
+      ],
+      "subsystems": [
+        "payments"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "baseline",
+          "description": "Baseline rule group",
+          "enabled": true,
+          "hidden": true,
+          "name": "baseline-rule-group",
+          "order": 3,
+          "ruleMatchers": [
+            {
+              "applicationName": {
+                "value": "shop"
+              }
+            },
+            {
+              "subsystemName": {
+                "value": "payments"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_WARNING"
+              }
+            }
+          ],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "A rule",
+                  "enabled": true,
+                  "name": "a",
+                  "order": 1,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "remove the optional fields: update omits the order and the matchers",
+    "spec": {
+      "name": "baseline-rule-group",
+      "subgroups": [
+        {
+          "rules": [
+            {
+              "extract": {
+                "regex": "a",
+                "sourceField": "text"
+              },
+              "name": "a"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "body": {
+          "creator": "",
+          "description": "",
+          "enabled": true,
+          "hidden": false,
+          "name": "baseline-rule-group",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "a",
+                  "order": 1,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "creator": "",
+        "description": "",
+        "enabled": true,
+        "hidden": false,
+        "id": "<id-1>",
+        "name": "baseline-rule-group",
+        "order": 1,
+        "ruleMatchers": [],
+        "ruleSubgroups": [
+          {
+            "enabled": true,
+            "id": "<id-2>",
+            "order": 1,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-3>",
+                "name": "a",
+                "order": 1,
+                "parameters": {
+                  "extractParameters": {
+                    "rule": "a"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

@@ -1,0 +1,1412 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, delete, and the missing group",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "cxo-fidelity",
+              "description": "Control group",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}",
+              "order": 2,
+              "ruleMatchers": [
+                {
+                  "applicationName": {
+                    "value": "cxo-app"
+                  }
+                },
+                {
+                  "subsystemName": {
+                    "value": "cxo-sub"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_WARNING"
+                  }
+                }
+              ],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "First rule",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "first",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a(?P\u003cb\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "second",
+                      "order": 2,
+                      "parameters": {
+                        "parseParameters": {
+                          "destinationField": "text",
+                          "rule": "b(?P\u003cc\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                },
+                {
+                  "enabled": false,
+                  "id": "\u003cid\u003e",
+                  "order": 2,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": false,
+                      "id": "\u003cid\u003e",
+                      "name": "third",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "c"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "cxo-fidelity",
+              "description": "Control group",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}",
+              "order": 2,
+              "ruleMatchers": [
+                {
+                  "applicationName": {
+                    "value": "cxo-app"
+                  }
+                },
+                {
+                  "subsystemName": {
+                    "value": "cxo-sub"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_WARNING"
+                  }
+                }
+              ],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "First rule",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "first",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a(?P\u003cb\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "second",
+                      "order": 2,
+                      "parameters": {
+                        "parseParameters": {
+                          "destinationField": "text",
+                          "rule": "b(?P\u003cc\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                },
+                {
+                  "enabled": false,
+                  "id": "\u003cid\u003e",
+                  "order": 2,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": false,
+                      "id": "\u003cid\u003e",
+                      "name": "third",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "c"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}-updated",
+              "order": 1,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "z"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}-updated",
+              "order": 1,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "z"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {}
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: RuleGroup not found: {{group}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: RuleGroup not found: {{group}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: RuleGroup not found: {{group}}"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: RuleGroup not found: not-a-uuid"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: RuleGroup not found: not-a-uuid"
+          }
+        },
+        {
+          "status": 404,
+          "response": {
+            "code": 404,
+            "message": "Not Found: RuleGroup not found: not-a-uuid"
+          }
+        }
+      ]
+    },
+    {
+      "name": "every rule type and enum value",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}-types",
+              "order": 1,
+              "ruleMatchers": [
+                {
+                  "severity": {
+                    "value": "VALUE_DEBUG_OR_UNSPECIFIED"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_VERBOSE"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_INFO"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_WARNING"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_ERROR"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_CRITICAL"
+                  }
+                }
+              ],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "parse",
+                      "order": 1,
+                      "parameters": {
+                        "parseParameters": {
+                          "destinationField": "text",
+                          "rule": "a(?P\u003cb\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "block",
+                      "order": 2,
+                      "parameters": {
+                        "blockParameters": {
+                          "keepBlockedLogs": true,
+                          "rule": "secret"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "allow",
+                      "order": 3,
+                      "parameters": {
+                        "allowParameters": {
+                          "keepBlockedLogs": false,
+                          "rule": "keep"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "replace",
+                      "order": 4,
+                      "parameters": {
+                        "replaceParameters": {
+                          "destinationField": "text",
+                          "replaceNewVal": "",
+                          "rule": "x"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "remove-fields",
+                      "order": 5,
+                      "parameters": {
+                        "removeFieldsParameters": {
+                          "fields": [
+                            "a",
+                            "b.c"
+                          ]
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "stringify",
+                      "order": 6,
+                      "parameters": {
+                        "jsonStringifyParameters": {
+                          "deleteSource": true,
+                          "destinationField": "text.b"
+                        }
+                      },
+                      "sourceField": "text.a"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "extract",
+                      "order": 7,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "(?P\u003ca\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "parse-json",
+                      "order": 8,
+                      "parameters": {
+                        "jsonParseParameters": {
+                          "deleteSource": false,
+                          "destinationField": "text.b",
+                          "overrideDest": true
+                        }
+                      },
+                      "sourceField": "text.a"
+                    }
+                  ]
+                },
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 2,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_category_or_unspecified",
+                      "order": 1,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_classname",
+                      "order": 2,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_CLASSNAME",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_methodname",
+                      "order": 3,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_METHODNAME",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_threadid",
+                      "order": 4,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_THREADID",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_severity",
+                      "order": 5,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_SEVERITY",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                },
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 3,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_strftime_or_unspecified",
+                      "order": 1,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_STRFTIME_OR_UNSPECIFIED"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_javasdf",
+                      "order": 2,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_JAVASDF"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_golang",
+                      "order": 3,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_GOLANG"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_secondsts",
+                      "order": 4,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_SECONDSTS"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_millits",
+                      "order": 5,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_MILLITS"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_microts",
+                      "order": 6,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_MICROTS"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_nanots",
+                      "order": 7,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_NANOTS"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}-types",
+              "order": 1,
+              "ruleMatchers": [
+                {
+                  "severity": {
+                    "value": "VALUE_DEBUG_OR_UNSPECIFIED"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_VERBOSE"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_INFO"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_WARNING"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_ERROR"
+                  }
+                },
+                {
+                  "severity": {
+                    "value": "VALUE_CRITICAL"
+                  }
+                }
+              ],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "parse",
+                      "order": 1,
+                      "parameters": {
+                        "parseParameters": {
+                          "destinationField": "text",
+                          "rule": "a(?P\u003cb\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "block",
+                      "order": 2,
+                      "parameters": {
+                        "blockParameters": {
+                          "keepBlockedLogs": true,
+                          "rule": "secret"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "allow",
+                      "order": 3,
+                      "parameters": {
+                        "allowParameters": {
+                          "keepBlockedLogs": false,
+                          "rule": "keep"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "replace",
+                      "order": 4,
+                      "parameters": {
+                        "replaceParameters": {
+                          "destinationField": "text",
+                          "replaceNewVal": "",
+                          "rule": "x"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "remove-fields",
+                      "order": 5,
+                      "parameters": {
+                        "removeFieldsParameters": {
+                          "fields": [
+                            "a",
+                            "b.c"
+                          ]
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "stringify",
+                      "order": 6,
+                      "parameters": {
+                        "jsonStringifyParameters": {
+                          "deleteSource": true,
+                          "destinationField": "text.b"
+                        }
+                      },
+                      "sourceField": "text.a"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "extract",
+                      "order": 7,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "(?P\u003ca\u003e\\d+)"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "parse-json",
+                      "order": 8,
+                      "parameters": {
+                        "jsonParseParameters": {
+                          "deleteSource": false,
+                          "destinationField": "text.b",
+                          "overrideDest": true
+                        }
+                      },
+                      "sourceField": "text.a"
+                    }
+                  ]
+                },
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 2,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_category_or_unspecified",
+                      "order": 1,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_classname",
+                      "order": 2,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_CLASSNAME",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_methodname",
+                      "order": 3,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_METHODNAME",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_threadid",
+                      "order": 4,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_THREADID",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "json-extract-destination_field_severity",
+                      "order": 5,
+                      "parameters": {
+                        "jsonExtractParameters": {
+                          "destinationFieldType": "DESTINATION_FIELD_SEVERITY",
+                          "rule": "k"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                },
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 3,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_strftime_or_unspecified",
+                      "order": 1,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_STRFTIME_OR_UNSPECIFIED"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_javasdf",
+                      "order": 2,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_JAVASDF"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_golang",
+                      "order": 3,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_GOLANG"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_secondsts",
+                      "order": 4,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_SECONDSTS"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_millits",
+                      "order": 5,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_MILLITS"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_microts",
+                      "order": 6,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_MICROTS"
+                        }
+                      },
+                      "sourceField": "text"
+                    },
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "timestamp-format_standard_nanots",
+                      "order": 7,
+                      "parameters": {
+                        "extractTimestampParameters": {
+                          "format": "f",
+                          "standard": "FORMAT_STANDARD_NANOTS"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "defaults for omitted fields",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{minimal}}",
+              "name": "cxo-fidelity-rg-{{run}}-minimal",
+              "order": 1,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{minimal}}",
+              "name": "cxo-fidelity-rg-{{run}}-minimal",
+              "order": 1,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": false,
+              "hidden": true,
+              "id": "{{flags}}",
+              "name": "cxo-fidelity-rg-{{run}}-flags",
+              "order": 2,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": false,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": false,
+              "hidden": true,
+              "id": "{{flags}}",
+              "name": "cxo-fidelity-rg-{{run}}-flags",
+              "order": 2,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": false,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{dup}}",
+              "name": "cxo-fidelity-rg-{{run}}-minimal",
+              "order": 1,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejected creates",
+      "steps": [
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Missing CreateRuleGroup.name"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{required ParsingThemes.Name string string  }]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{min ParsingThemes.RulesGroups slice []*shared.RulesGroup [] 1}]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{min ParsingThemes.RulesGroups slice []*shared.RulesGroup [] 1}]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{min ParsingThemes.RulesGroups[0].Rules slice []*shared.Rule [] 1}]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{required ParsingThemes.RulesGroups[0].Rules[0].Name string string  }]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{source-field-validation ParsingThemes.RulesGroups[0].Rules[0].SourceField string string  }]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Missing CreateRule.RuleParameters"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Empty RuleParameters"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line N:N): error parsing \"parseParameters\", oneof com.coralogix.rules.v1.RuleParameters.rule_parameters is already set"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{required ParsingThemes.RulesGroups[0].Rules[0].Rule string string  }]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to create rule group err: [{required ParsingThemes.RulesGroups[0].Rules[0].Rule string string  }]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line N:N): invalid value for enum field value: \"VALUE_FATAL\""
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* RuleMatcher.Constraint.Empty"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: proto: (line N:N): invalid value for uint32 field value: -1"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: Request errors:\n* Missing CreateRule.order\n* Missing CreateRuleSubgroup.order"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a rejected replace leaves the group as it was",
+      "steps": [
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "Before",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}-replace",
+              "order": 1,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to validate rule group err: [{required ParsingThemes.RulesGroups[0].Rules[0].Rule string string  }]"
+          }
+        },
+        {
+          "status": 400,
+          "response": {
+            "code": 400,
+            "message": "Bad Request: statusCode: 400, response: Failed to validate rule group err: [{min ParsingThemes.RulesGroups slice []*shared.RulesGroup [] 1}]"
+          }
+        },
+        {
+          "status": 200,
+          "response": {
+            "ruleGroup": {
+              "creator": "",
+              "description": "Before",
+              "enabled": true,
+              "hidden": false,
+              "id": "{{group}}",
+              "name": "cxo-fidelity-rg-{{run}}-replace",
+              "order": 1,
+              "ruleMatchers": [],
+              "ruleSubgroups": [
+                {
+                  "enabled": true,
+                  "id": "\u003cid\u003e",
+                  "order": 1,
+                  "rules": [
+                    {
+                      "description": "",
+                      "enabled": true,
+                      "id": "\u003cid\u003e",
+                      "name": "only",
+                      "order": 1,
+                      "parameters": {
+                        "extractParameters": {
+                          "rule": "a"
+                        }
+                      },
+                      "sourceField": "text"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1000 @@
+{
+  "cases": [
+    {
+      "name": "create, get, replace, delete, and the missing group",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "group",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "first",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a(?P<b>\\d+)"
+                      }
+                    },
+                    "order": 1,
+                    "description": "First rule"
+                  },
+                  {
+                    "name": "second",
+                    "sourceField": "text",
+                    "parameters": {
+                      "parseParameters": {
+                        "destinationField": "text",
+                        "rule": "b(?P<c>\\d+)"
+                      }
+                    },
+                    "order": 2
+                  }
+                ]
+              },
+              {
+                "order": 2,
+                "rules": [
+                  {
+                    "name": "third",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "c"
+                      }
+                    },
+                    "order": 1,
+                    "enabled": false
+                  }
+                ],
+                "enabled": false
+              }
+            ],
+            "description": "Control group",
+            "creator": "cxo-fidelity",
+            "enabled": true,
+            "hidden": false,
+            "order": 2,
+            "ruleMatchers": [
+              {
+                "applicationName": {
+                  "value": "cxo-app"
+                }
+              },
+              {
+                "subsystemName": {
+                  "value": "cxo-sub"
+                }
+              },
+              {
+                "severity": {
+                  "value": "VALUE_WARNING"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-updated",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "z"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}"
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}"
+        },
+        {
+          "method": "PUT",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "z"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/not-a-uuid"
+        },
+        {
+          "method": "PUT",
+          "path": "/parsing-rules/rule-groups/v1/not-a-uuid",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "z"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/parsing-rules/rule-groups/v1/not-a-uuid"
+        }
+      ]
+    },
+    {
+      "name": "every rule type and enum value",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "group",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-types",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "parse",
+                    "sourceField": "text",
+                    "parameters": {
+                      "parseParameters": {
+                        "destinationField": "text",
+                        "rule": "a(?P<b>\\d+)"
+                      }
+                    },
+                    "order": 1
+                  },
+                  {
+                    "name": "block",
+                    "sourceField": "text",
+                    "parameters": {
+                      "blockParameters": {
+                        "keepBlockedLogs": true,
+                        "rule": "secret"
+                      }
+                    },
+                    "order": 2
+                  },
+                  {
+                    "name": "allow",
+                    "sourceField": "text",
+                    "parameters": {
+                      "allowParameters": {
+                        "keepBlockedLogs": false,
+                        "rule": "keep"
+                      }
+                    },
+                    "order": 3
+                  },
+                  {
+                    "name": "replace",
+                    "sourceField": "text",
+                    "parameters": {
+                      "replaceParameters": {
+                        "destinationField": "text",
+                        "replaceNewVal": "",
+                        "rule": "x"
+                      }
+                    },
+                    "order": 4
+                  },
+                  {
+                    "name": "remove-fields",
+                    "sourceField": "text",
+                    "parameters": {
+                      "removeFieldsParameters": {
+                        "fields": [
+                          "a",
+                          "b.c"
+                        ]
+                      }
+                    },
+                    "order": 5
+                  },
+                  {
+                    "name": "stringify",
+                    "sourceField": "text.a",
+                    "parameters": {
+                      "jsonStringifyParameters": {
+                        "destinationField": "text.b",
+                        "deleteSource": true
+                      }
+                    },
+                    "order": 6
+                  },
+                  {
+                    "name": "extract",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "(?P<a>\\d+)"
+                      }
+                    },
+                    "order": 7
+                  },
+                  {
+                    "name": "parse-json",
+                    "sourceField": "text.a",
+                    "parameters": {
+                      "jsonParseParameters": {
+                        "destinationField": "text.b",
+                        "deleteSource": false,
+                        "overrideDest": true,
+                        "escapedValue": true
+                      }
+                    },
+                    "order": 8
+                  }
+                ]
+              },
+              {
+                "order": 2,
+                "rules": [
+                  {
+                    "name": "json-extract-destination_field_category_or_unspecified",
+                    "sourceField": "text",
+                    "parameters": {
+                      "jsonExtractParameters": {
+                        "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                        "rule": "k"
+                      }
+                    },
+                    "order": 1
+                  },
+                  {
+                    "name": "json-extract-destination_field_classname",
+                    "sourceField": "text",
+                    "parameters": {
+                      "jsonExtractParameters": {
+                        "destinationFieldType": "DESTINATION_FIELD_CLASSNAME",
+                        "rule": "k"
+                      }
+                    },
+                    "order": 2
+                  },
+                  {
+                    "name": "json-extract-destination_field_methodname",
+                    "sourceField": "text",
+                    "parameters": {
+                      "jsonExtractParameters": {
+                        "destinationFieldType": "DESTINATION_FIELD_METHODNAME",
+                        "rule": "k"
+                      }
+                    },
+                    "order": 3
+                  },
+                  {
+                    "name": "json-extract-destination_field_threadid",
+                    "sourceField": "text",
+                    "parameters": {
+                      "jsonExtractParameters": {
+                        "destinationFieldType": "DESTINATION_FIELD_THREADID",
+                        "rule": "k"
+                      }
+                    },
+                    "order": 4
+                  },
+                  {
+                    "name": "json-extract-destination_field_severity",
+                    "sourceField": "text",
+                    "parameters": {
+                      "jsonExtractParameters": {
+                        "destinationFieldType": "DESTINATION_FIELD_SEVERITY",
+                        "rule": "k"
+                      }
+                    },
+                    "order": 5
+                  }
+                ]
+              },
+              {
+                "order": 3,
+                "rules": [
+                  {
+                    "name": "timestamp-format_standard_strftime_or_unspecified",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractTimestampParameters": {
+                        "standard": "FORMAT_STANDARD_STRFTIME_OR_UNSPECIFIED",
+                        "format": "f"
+                      }
+                    },
+                    "order": 1
+                  },
+                  {
+                    "name": "timestamp-format_standard_javasdf",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractTimestampParameters": {
+                        "standard": "FORMAT_STANDARD_JAVASDF",
+                        "format": "f"
+                      }
+                    },
+                    "order": 2
+                  },
+                  {
+                    "name": "timestamp-format_standard_golang",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractTimestampParameters": {
+                        "standard": "FORMAT_STANDARD_GOLANG",
+                        "format": "f"
+                      }
+                    },
+                    "order": 3
+                  },
+                  {
+                    "name": "timestamp-format_standard_secondsts",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractTimestampParameters": {
+                        "standard": "FORMAT_STANDARD_SECONDSTS",
+                        "format": "f"
+                      }
+                    },
+                    "order": 4
+                  },
+                  {
+                    "name": "timestamp-format_standard_millits",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractTimestampParameters": {
+                        "standard": "FORMAT_STANDARD_MILLITS",
+                        "format": "f"
+                      }
+                    },
+                    "order": 5
+                  },
+                  {
+                    "name": "timestamp-format_standard_microts",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractTimestampParameters": {
+                        "standard": "FORMAT_STANDARD_MICROTS",
+                        "format": "f"
+                      }
+                    },
+                    "order": 6
+                  },
+                  {
+                    "name": "timestamp-format_standard_nanots",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractTimestampParameters": {
+                        "standard": "FORMAT_STANDARD_NANOTS",
+                        "format": "f"
+                      }
+                    },
+                    "order": 7
+                  }
+                ]
+              }
+            ],
+            "ruleMatchers": [
+              {
+                "severity": {
+                  "value": "VALUE_DEBUG_OR_UNSPECIFIED"
+                }
+              },
+              {
+                "severity": {
+                  "value": "VALUE_VERBOSE"
+                }
+              },
+              {
+                "severity": {
+                  "value": "VALUE_INFO"
+                }
+              },
+              {
+                "severity": {
+                  "value": "VALUE_WARNING"
+                }
+              },
+              {
+                "severity": {
+                  "value": "VALUE_ERROR"
+                }
+              },
+              {
+                "severity": {
+                  "value": "VALUE_CRITICAL"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}"
+        }
+      ]
+    },
+    {
+      "name": "defaults for omitted fields",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "minimal",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-minimal",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/{{minimal}}"
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "flags",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-flags",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ],
+                "enabled": false
+              }
+            ],
+            "description": "",
+            "creator": "",
+            "enabled": false,
+            "hidden": true,
+            "order": 0
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/{{flags}}"
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "dup",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-minimal",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejected creates",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": []
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": []
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {},
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      },
+                      "parseParameters": {
+                        "destinationField": "text",
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": ""
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "removeFieldsParameters": {
+                        "fields": []
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ],
+            "ruleMatchers": [
+              {
+                "severity": {
+                  "value": "VALUE_FATAL"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ],
+            "ruleMatchers": [
+              {}
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ],
+            "order": -1
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "bad",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-bad",
+            "ruleSubgroups": [
+              {
+                "rules": [
+                  {
+                    "name": "a",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a rejected replace leaves the group as it was",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/parsing-rules/rule-groups/v1",
+          "capture": "group",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-replace",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": "a"
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ],
+            "description": "Before"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-replace",
+            "ruleSubgroups": [
+              {
+                "order": 1,
+                "rules": [
+                  {
+                    "name": "only",
+                    "sourceField": "text",
+                    "parameters": {
+                      "extractParameters": {
+                        "rule": ""
+                      }
+                    },
+                    "order": 1
+                  }
+                ]
+              }
+            ],
+            "description": "After"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}",
+          "body": {
+            "name": "cxo-fidelity-rg-{{run}}-replace"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/parsing-rules/rule-groups/v1/{{group}}"
+        }
+      ]
+    }
+  ]
+}

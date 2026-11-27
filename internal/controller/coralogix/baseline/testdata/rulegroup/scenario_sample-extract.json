@@ -1,0 +1,156 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "active": true,
+      "description": "rule-group from k8s operator",
+      "hidden": false,
+      "name": "extract-rule",
+      "subgroups": [
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "description": "Look for default severity text",
+              "extract": {
+                "regex": "message\\\\s*:s*(?P\u003cbytes\u003e\\\\d+)\\\\s*.*?status\\\\sis\\\\s(?P\u003cstatus\u003e\\\\[^\\\"]+)",
+                "sourceField": "text"
+              },
+              "name": "Severity Rule"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "rule-group from k8s operator",
+          "enabled": true,
+          "hidden": false,
+          "name": "extract-rule",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "Look for default severity text",
+                  "enabled": true,
+                  "name": "Severity Rule",
+                  "order": 1,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "message\\\\s*:s*(?P\u003cbytes\u003e\\\\d+)\\\\s*.*?status\\\\sis\\\\s(?P\u003cstatus\u003e\\\\[^\\\"]+)"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole group",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "body": {
+          "creator": "",
+          "description": "rule-group from k8s operator",
+          "enabled": true,
+          "hidden": false,
+          "name": "extract-rule",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "Look for default severity text",
+                  "enabled": true,
+                  "name": "Severity Rule",
+                  "order": 1,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "message\\\\s*:s*(?P\u003cbytes\u003e\\\\d+)\\\\s*.*?status\\\\sis\\\\s(?P\u003cstatus\u003e\\\\[^\\\"]+)"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

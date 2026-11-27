@@ -1,0 +1,286 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: rulegroups.coralogix.com
+spec:
+  group: coralogix.com
+  names:
+    kind: RuleGroup
+    listKind: RuleGroupList
+    plural: rulegroups
+    singular: rulegroup
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.printableStatus
+      name: Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              active:
+                default: true
+                type: boolean
+              applications:
+                items:
+                  type: string
+                type: array
+              creator:
+                type: string
+              description:
+                type: string
+              hidden:
+                default: false
+                type: boolean
+              name:
+                minLength: 0
+                type: string
+              order:
+                format: int32
+                minimum: 1
+                type: integer
+              severities:
+                items:
+                  enum:
+                  - Debug
+                  - Verbose
+                  - Info
+                  - Warning
+                  - Error
+                  - Critical
+                  type: string
+                type: array
+              subgroups:
+                items:
+                  properties:
+                    active:
+                      default: true
+                      type: boolean
+                    id:
+                      type: string
+                    order:
+                      format: int32
+                      type: integer
+                    rules:
+                      items:
+                        properties:
+                          active:
+                            default: true
+                            type: boolean
+                          block:
+                            properties:
+                              blockingAllMatchingBlocks:
+                                default: true
+                                type: boolean
+                              keepBlockedLogs:
+                                default: false
+                                type: boolean
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - regex
+                            - sourceField
+                            type: object
+                          description:
+                            type: string
+                          extract:
+                            properties:
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - regex
+                            - sourceField
+                            type: object
+                          extractTimestamp:
+                            properties:
+                              fieldFormatStandard:
+                                enum:
+                                - Strftime
+                                - JavaSDF
+                                - Golang
+                                - SecondTS
+                                - MilliTS
+                                - MicroTS
+                                - NanoTS
+                                type: string
+                              sourceField:
+                                type: string
+                              timeFormat:
+                                type: string
+                            required:
+                            - fieldFormatStandard
+                            - sourceField
+                            - timeFormat
+                            type: object
+                          jsonExtract:
+                            properties:
+                              destinationField:
+                                enum:
+                                - Category
+                                - CLASSNAME
+                                - METHODNAME
+                                - THREADID
+                                - SEVERITY
+                                type: string
+                              jsonKey:
+                                type: string
+                            required:
+                            - destinationField
+                            - jsonKey
+                            type: object
+                          jsonStringify:
+                            properties:
+                              destinationField:
+                                type: string
+                              keepSourceField:
+                                default: false
+                                type: boolean
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - sourceField
+                            type: object
+                          name:
+                            minLength: 0
+                            type: string
+                          parse:
+                            properties:
+                              destinationField:
+                                type: string
+                              regex:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - regex
+                            - sourceField
+                            type: object
+                          parseJsonField:
+                            properties:
+                              destinationField:
+                                type: string
+                              keepDestinationField:
+                                type: boolean
+                              keepSourceField:
+                                type: boolean
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - keepDestinationField
+                            - keepSourceField
+                            - sourceField
+                            type: object
+                          removeFields:
+                            properties:
+                              excludedFields:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - excludedFields
+                            type: object
+                          replace:
+                            properties:
+                              destinationField:
+                                type: string
+                              regex:
+                                type: string
+                              replacementString:
+                                type: string
+                              sourceField:
+                                type: string
+                            required:
+                            - destinationField
+                            - regex
+                            - replacementString
+                            - sourceField
+                            type: object
+                        required:
+                        - name
+                        type: object
+                        x-kubernetes-validations:
+                        - message: 'Exactly one of the following fields should be
+                            set: parse, block, jsonExtract, replace, extractTimestamp,
+                            removeFields, jsonStringify, extract, parseJsonField'
+                          rule: '(has(self.parse) ? 1 : 0) + (has(self.block) ? 1
+                            : 0) + (has(self.jsonExtract) ? 1 : 0) + (has(self.replace)
+                            ? 1 : 0) + (has(self.extractTimestamp) ? 1 : 0) + (has(self.removeFields)
+                            ? 1 : 0) + (has(self.jsonStringify) ? 1 : 0) + (has(self.extract)
+                            ? 1 : 0) + (has(self.parseJsonField) ? 1 : 0) == 1'
+                      type: array
+                  type: object
+                type: array
+              subsystems:
+                items:
+                  type: string
+                type: array
+            required:
+            - name
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              id:
+                type: string
+              printableStatus:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

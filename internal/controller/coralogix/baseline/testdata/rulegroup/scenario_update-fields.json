@@ -1,0 +1,308 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "active": true,
+      "description": "Baseline rule group",
+      "hidden": false,
+      "name": "baseline-rule-group",
+      "subgroups": [
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "description": "Extracts the worker key",
+              "jsonExtract": {
+                "destinationField": "Category",
+                "jsonKey": "worker"
+              },
+              "name": "worker-to-category"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "Baseline rule group",
+          "enabled": true,
+          "hidden": false,
+          "name": "baseline-rule-group",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "Extracts the worker key",
+                  "enabled": true,
+                  "name": "worker-to-category",
+                  "order": 1,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                      "rule": "worker"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "rename, change the flags and the matchers, replace the subgroups",
+    "spec": {
+      "active": false,
+      "applications": [
+        "shop"
+      ],
+      "creator": "someone",
+      "description": "Changed",
+      "hidden": true,
+      "name": "renamed-rule-group",
+      "order": 2,
+      "severities": [
+        "Error"
+      ],
+      "subgroups": [
+        {
+          "rules": [
+            {
+              "block": {
+                "regex": "secret",
+                "sourceField": "text"
+              },
+              "name": "block"
+            }
+          ]
+        },
+        {
+          "rules": [
+            {
+              "name": "replace",
+              "replace": {
+                "destinationField": "text",
+                "regex": "x",
+                "replacementString": "y",
+                "sourceField": "text"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "body": {
+          "creator": "someone",
+          "description": "Changed",
+          "enabled": false,
+          "hidden": true,
+          "name": "renamed-rule-group",
+          "order": 2,
+          "ruleMatchers": [
+            {
+              "applicationName": {
+                "value": "shop"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_ERROR"
+              }
+            }
+          ],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "block",
+                  "order": 1,
+                  "parameters": {
+                    "blockParameters": {
+                      "keepBlockedLogs": false,
+                      "rule": "secret"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "order": 2,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "replace",
+                  "order": 1,
+                  "parameters": {
+                    "replaceParameters": {
+                      "destinationField": "text",
+                      "replaceNewVal": "y",
+                      "rule": "x"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "creator": "someone",
+        "description": "Changed",
+        "enabled": false,
+        "hidden": true,
+        "id": "<id-1>",
+        "name": "renamed-rule-group",
+        "order": 2,
+        "ruleMatchers": [
+          {
+            "applicationName": {
+              "value": "shop"
+            }
+          },
+          {
+            "severity": {
+              "value": "VALUE_ERROR"
+            }
+          }
+        ],
+        "ruleSubgroups": [
+          {
+            "enabled": true,
+            "id": "<id-2>",
+            "order": 1,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-3>",
+                "name": "block",
+                "order": 1,
+                "parameters": {
+                  "blockParameters": {
+                    "keepBlockedLogs": false,
+                    "rule": "secret"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          },
+          {
+            "enabled": true,
+            "id": "<id-4>",
+            "order": 2,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-5>",
+                "name": "replace",
+                "order": 1,
+                "parameters": {
+                  "replaceParameters": {
+                    "destinationField": "text",
+                    "replaceNewVal": "y",
+                    "rule": "x"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

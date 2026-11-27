@@ -1,0 +1,252 @@
+[
+  {
+    "step": "create with every group field",
+    "spec": {
+      "active": false,
+      "applications": [
+        "shop",
+        "checkout"
+      ],
+      "creator": "baseline",
+      "description": "Baseline rule group",
+      "hidden": true,
+      "name": "baseline-rule-group",
+      "order": 3,
+      "severities": [
+        "Debug",
+        "Verbose",
+        "Info",
+        "Warning",
+        "Error",
+        "Critical"
+      ],
+      "subgroups": [
+        {
+          "active": false,
+          "rules": [
+            {
+              "active": false,
+              "jsonExtract": {
+                "destinationField": "Category",
+                "jsonKey": "worker"
+              },
+              "name": "worker-to-category"
+            }
+          ]
+        }
+      ],
+      "subsystems": [
+        "payments"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "baseline",
+          "description": "Baseline rule group",
+          "enabled": false,
+          "hidden": true,
+          "name": "baseline-rule-group",
+          "order": 3,
+          "ruleMatchers": [
+            {
+              "applicationName": {
+                "value": "shop"
+              }
+            },
+            {
+              "applicationName": {
+                "value": "checkout"
+              }
+            },
+            {
+              "subsystemName": {
+                "value": "payments"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_DEBUG_OR_UNSPECIFIED"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_VERBOSE"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_INFO"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_WARNING"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_ERROR"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_CRITICAL"
+              }
+            }
+          ],
+          "ruleSubgroups": [
+            {
+              "enabled": false,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": false,
+                  "name": "worker-to-category",
+                  "order": 1,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                      "rule": "worker"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "creator": "baseline",
+        "description": "Baseline rule group",
+        "enabled": false,
+        "hidden": true,
+        "id": "<id-1>",
+        "name": "baseline-rule-group",
+        "order": 3,
+        "ruleMatchers": [
+          {
+            "applicationName": {
+              "value": "shop"
+            }
+          },
+          {
+            "applicationName": {
+              "value": "checkout"
+            }
+          },
+          {
+            "subsystemName": {
+              "value": "payments"
+            }
+          },
+          {
+            "severity": {
+              "value": "VALUE_DEBUG_OR_UNSPECIFIED"
+            }
+          },
+          {
+            "severity": {
+              "value": "VALUE_VERBOSE"
+            }
+          },
+          {
+            "severity": {
+              "value": "VALUE_INFO"
+            }
+          },
+          {
+            "severity": {
+              "value": "VALUE_WARNING"
+            }
+          },
+          {
+            "severity": {
+              "value": "VALUE_ERROR"
+            }
+          },
+          {
+            "severity": {
+              "value": "VALUE_CRITICAL"
+            }
+          }
+        ],
+        "ruleSubgroups": [
+          {
+            "enabled": false,
+            "id": "<id-2>",
+            "order": 1,
+            "rules": [
+              {
+                "description": "",
+                "enabled": false,
+                "id": "<id-3>",
+                "name": "worker-to-category",
+                "order": 1,
+                "parameters": {
+                  "jsonExtractParameters": {
+                    "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                    "rule": "worker"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

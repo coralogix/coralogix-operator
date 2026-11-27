@@ -1,0 +1,370 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "active": true,
+      "applications": [
+        "application-name"
+      ],
+      "description": "rule-group from k8s operator",
+      "hidden": false,
+      "name": "mixed-rulegroup",
+      "severities": [
+        "Warning",
+        "Info"
+      ],
+      "subgroups": [
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "name": "parsing-rule",
+              "parse": {
+                "destinationField": "text",
+                "regex": "message\\\\s*:s*(?P\u003cbytes\u003e\\\\d+)\\\\s*.*?status\\\\sis\\\\s(?P\u003cstatus\u003e\\\\[^\\\"]+)",
+                "sourceField": "text"
+              }
+            },
+            {
+              "active": true,
+              "block": {
+                "blockingAllMatchingBlocks": true,
+                "keepBlockedLogs": false,
+                "regex": "sql_error_code\\\\s*=\\\\s*28000",
+                "sourceField": "text"
+              },
+              "name": "blocking-rule"
+            },
+            {
+              "active": true,
+              "jsonStringify": {
+                "destinationField": "text",
+                "keepSourceField": false,
+                "sourceField": "text"
+              },
+              "name": "Json stringify"
+            }
+          ]
+        },
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "jsonExtract": {
+                "destinationField": "Category",
+                "jsonKey": "worker"
+              },
+              "name": "json-extract-rule"
+            },
+            {
+              "active": true,
+              "name": "replacing-rule",
+              "replace": {
+                "destinationField": "text",
+                "regex": ".*{",
+                "replacementString": "{",
+                "sourceField": "text"
+              }
+            }
+          ]
+        }
+      ],
+      "subsystems": [
+        "subsystems-name"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "rule-group from k8s operator",
+          "enabled": true,
+          "hidden": false,
+          "name": "mixed-rulegroup",
+          "ruleMatchers": [
+            {
+              "applicationName": {
+                "value": "application-name"
+              }
+            },
+            {
+              "subsystemName": {
+                "value": "subsystems-name"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_WARNING"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_INFO"
+              }
+            }
+          ],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "parsing-rule",
+                  "order": 1,
+                  "parameters": {
+                    "parseParameters": {
+                      "destinationField": "text",
+                      "rule": "message\\\\s*:s*(?P\u003cbytes\u003e\\\\d+)\\\\s*.*?status\\\\sis\\\\s(?P\u003cstatus\u003e\\\\[^\\\"]+)"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "blocking-rule",
+                  "order": 2,
+                  "parameters": {
+                    "blockParameters": {
+                      "keepBlockedLogs": false,
+                      "rule": "sql_error_code\\\\s*=\\\\s*28000"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "Json stringify",
+                  "order": 3,
+                  "parameters": {
+                    "jsonStringifyParameters": {
+                      "deleteSource": true,
+                      "destinationField": "text"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "order": 2,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "json-extract-rule",
+                  "order": 1,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                      "rule": "worker"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "replacing-rule",
+                  "order": 2,
+                  "parameters": {
+                    "replaceParameters": {
+                      "destinationField": "text",
+                      "replaceNewVal": "{",
+                      "rule": ".*{"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole group",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "body": {
+          "creator": "",
+          "description": "rule-group from k8s operator",
+          "enabled": true,
+          "hidden": false,
+          "name": "mixed-rulegroup",
+          "ruleMatchers": [
+            {
+              "applicationName": {
+                "value": "application-name"
+              }
+            },
+            {
+              "subsystemName": {
+                "value": "subsystems-name"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_WARNING"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_INFO"
+              }
+            }
+          ],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "parsing-rule",
+                  "order": 1,
+                  "parameters": {
+                    "parseParameters": {
+                      "destinationField": "text",
+                      "rule": "message\\\\s*:s*(?P\u003cbytes\u003e\\\\d+)\\\\s*.*?status\\\\sis\\\\s(?P\u003cstatus\u003e\\\\[^\\\"]+)"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "blocking-rule",
+                  "order": 2,
+                  "parameters": {
+                    "blockParameters": {
+                      "keepBlockedLogs": false,
+                      "rule": "sql_error_code\\\\s*=\\\\s*28000"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "Json stringify",
+                  "order": 3,
+                  "parameters": {
+                    "jsonStringifyParameters": {
+                      "deleteSource": true,
+                      "destinationField": "text"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "order": 2,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "json-extract-rule",
+                  "order": 1,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                      "rule": "worker"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "replacing-rule",
+                  "order": 2,
+                  "parameters": {
+                    "replaceParameters": {
+                      "destinationField": "text",
+                      "replaceNewVal": "{",
+                      "rule": ".*{"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]
