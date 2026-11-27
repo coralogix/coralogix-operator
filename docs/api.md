@@ -90,8 +90,7 @@ Resource Types:
 
 
 
-AICustomEvaluation is the Schema for the AI custom evaluations API.
-See also https://coralogix.com/docs/user-guides/ai/
+AICustomEvaluation is the Schema for the aicustomevaluations API.
 
 <table>
     <thead>
@@ -123,14 +122,14 @@ See also https://coralogix.com/docs/user-guides/ai/
         <td><b><a href="#aicustomevaluationspec">spec</a></b></td>
         <td>object</td>
         <td>
-          AICustomEvaluationSpec defines the desired state of AICustomEvaluation.<br/>
+          AICustomEvaluationSpec defines the desired state of a AICustomEvaluation.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#aicustomevaluationstatus">status</a></b></td>
         <td>object</td>
         <td>
-          AICustomEvaluationStatus defines the observed state of AICustomEvaluation.<br/>
+          AICustomEvaluationStatus defines the observed state of a AICustomEvaluation.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -142,7 +141,7 @@ See also https://coralogix.com/docs/user-guides/ai/
 
 
 
-AICustomEvaluationSpec defines the desired state of AICustomEvaluation.
+AICustomEvaluationSpec defines the desired state of a AICustomEvaluation.
 
 <table>
     <thead>
@@ -353,7 +352,7 @@ Criteria and examples for prohibited responses.
 
 
 
-AICustomEvaluationStatus defines the observed state of AICustomEvaluation.
+AICustomEvaluationStatus defines the observed state of a AICustomEvaluation.
 
 <table>
     <thead>

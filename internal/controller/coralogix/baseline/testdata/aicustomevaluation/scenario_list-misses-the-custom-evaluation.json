@@ -125,7 +125,7 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteUpdateFailed",
+            "reason": "HookFailed",
             "status": "False",
             "type": "RemoteSynced"
           }

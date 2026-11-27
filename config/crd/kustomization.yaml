@@ -13,8 +13,8 @@ resources:
   - bases/coralogix.com_ipaccesses.yaml
   - bases/coralogix.com_customenrichments.yaml
   - bases/coralogix.com_enrichments.yaml
-  - bases/coralogix.com_aicustomevaluations.yaml
   # BEGIN generated kinds
+  - bases/coralogix.com_aicustomevaluations.yaml
   - bases/coralogix.com_aievaluations.yaml
   - bases/coralogix.com_alertschedulers.yaml
   - bases/coralogix.com_apikeys.yaml

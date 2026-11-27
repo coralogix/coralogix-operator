@@ -1,0 +1,39 @@
+resource: CustomEvaluation
+mode: existing
+validators:
+  inferred: true
+  fields:
+    spec.policyType:
+      add: ['+kubebuilder:validation:Enum=quality;security']
+    spec.instructions:
+      add: ['+kubebuilder:validation:Pattern=`\{(prompt|response|chat_history)\}`']
+    spec.shouldIncludeSystemPrompt:
+      add: ['+kubebuilder:default=false']
+hooks: [beforeCreate, beforeUpdate, afterUpdate]
+spec:
+  applications: {type: AICustomEvaluationApplications, value: true}
+  criteria: {type: AICustomEvaluationCriteria}
+api:
+  updateMaskInBody: true
+  idProperty: id
+  serverSetID: true
+  getFromList: {}
+  operations:
+    create: AiEvaluationsService_CreateCustomEvaluation
+    get: AiEvaluationsService_GetCustomEvaluations
+    update: AiEvaluationsService_UpdateCustomEvaluation
+    delete: AiEvaluationsService_DeleteCustomEvaluation
+updateMask: omit
+types:
+  CustomEvaluation:
+    fields:
+      config: {inline: true, required: true}
+      description: {sendNullAsEmpty: true}
+      name: {required: true}
+      instructions: {required: true, description: 'Instructions sent to the LLM evaluator. Must contain at least one of {prompt}, {response}, or {chat_history}.'}
+      shouldIncludeSystemPrompt: {description: Whether to include the system prompt in the LLM input. Defaults to false.}
+      policyType: {required: true}
+      safe: {setByHook: true}
+      violates: {setByHook: true}
+      examples: {setByHook: true}
+      applicationIds: {setByHook: true}

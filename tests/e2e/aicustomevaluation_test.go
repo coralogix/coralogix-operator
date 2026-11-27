@@ -82,8 +82,8 @@ var _ = Describe("AICustomEvaluation", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: aiCustomEvaluationName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetched.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetched.Status.Id != nil {
-				aiCustomEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiCustomEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI custom evaluation ID is not set")
@@ -221,8 +221,8 @@ var _ = Describe("AICustomEvaluation minimal", Ordered, func() {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-			if fetched.Status.Id != nil {
-				aiCustomEvaluationID = *fetched.Status.Id
+			if fetched.Status.ID != nil {
+				aiCustomEvaluationID = *fetched.Status.ID
 				return nil
 			}
 			return fmt.Errorf("AI custom evaluation ID is not set")
@@ -286,7 +286,8 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		Eventually(func(g Gomega) {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
-			expectAICustomEvaluationRemoteUnsynced(g, fetched, utils.ReasonRemoteCreationFailed)
+			// The application lookup runs in a hook, so a missing application is a hook failure.
+			expectAICustomEvaluationHookFailed(g, fetched, "create")
 		}, time.Minute, time.Second).Should(Succeed())
 
 		deleteAICustomEvaluationAndWait(ctx, crClient, resourceName)
@@ -309,7 +310,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetched.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
-			if fetched.Status.Id != nil {
+			if fetched.Status.ID != nil {
 				return nil
 			}
 			return fmt.Errorf("AI custom evaluation ID is not set")
@@ -331,7 +332,7 @@ var _ = Describe("AICustomEvaluation application resolution", Ordered, func() {
 		Eventually(func(g Gomega) {
 			fetched := &coralogixv1alpha1.AICustomEvaluation{}
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: resourceName, Namespace: testNamespace}, fetched)).To(Succeed())
-			expectAICustomEvaluationRemoteUnsynced(g, fetched, utils.ReasonRemoteUpdateFailed)
+			expectAICustomEvaluationHookFailed(g, fetched, "update")
 		}, time.Minute, time.Second).Should(Succeed())
 
 		// The remote evaluation exists. Delete it here, so a later run does not find it.
@@ -521,13 +522,13 @@ func expectRemoteAICustomEvaluation(
 	expectedApplicationIDs []string,
 ) {
 	g.Expect(customEvaluation.GetName()).To(Equal(spec.Name))
-	g.Expect(customEvaluation.GetDescription()).To(Equal(spec.DescriptionValue()))
+	g.Expect(customEvaluation.GetDescription()).To(Equal(ptr.Deref(spec.Description, "")))
 	g.Expect(customEvaluation.GetApplicationIds()).To(ConsistOf(expectedStrings(expectedApplicationIDs)...))
 
 	config := customEvaluation.GetConfig()
 	g.Expect(config.GetPolicyType()).To(Equal(spec.PolicyType))
 	g.Expect(config.GetInstructions()).To(Equal(spec.Instructions))
-	g.Expect(config.GetShouldIncludeSystemPrompt()).To(Equal(spec.ShouldIncludeSystemPromptValue()))
+	g.Expect(config.GetShouldIncludeSystemPrompt()).To(Equal(ptr.Deref(spec.ShouldIncludeSystemPrompt, false)))
 
 	acceptable := coralogixv1alpha1.AICustomEvaluationCriterion{}
 	prohibited := coralogixv1alpha1.AICustomEvaluationCriterion{}
@@ -540,8 +541,8 @@ func expectRemoteAICustomEvaluation(
 		}
 	}
 
-	g.Expect(config.GetSafe()).To(Equal(acceptable.FlagsValue()))
-	g.Expect(config.GetViolates()).To(Equal(prohibited.FlagsValue()))
+	g.Expect(config.GetSafe()).To(Equal(ptr.Deref(acceptable.Flags, "")))
+	g.Expect(config.GetViolates()).To(Equal(ptr.Deref(prohibited.Flags, "")))
 	expectRemoteAICustomEvaluationExamples(g, config.GetExamples(), acceptable.Examples, prohibited.Examples)
 }
 
@@ -568,17 +569,13 @@ func expectRemoteAICustomEvaluationExamples(
 	g.Expect(prohibited).To(ConsistOf(expectedStrings(expectedProhibited)...))
 }
 
-func expectAICustomEvaluationRemoteUnsynced(g Gomega, aiCustomEvaluation *coralogixv1alpha1.AICustomEvaluation, reason string) {
+func expectAICustomEvaluationHookFailed(g Gomega, aiCustomEvaluation *coralogixv1alpha1.AICustomEvaluation, operation string) {
 	condition := meta.FindStatusCondition(aiCustomEvaluation.Status.Conditions, utils.ConditionTypeRemoteSynced)
 	g.Expect(condition).ToNot(BeNil())
 	g.Expect(condition.ObservedGeneration).To(Equal(aiCustomEvaluation.Generation))
 	g.Expect(condition.Status).To(Equal(metav1.ConditionFalse))
-	g.Expect(condition.Reason).To(Equal(reason))
-	operation := "create"
-	if reason == utils.ReasonRemoteUpdateFailed {
-		operation = "update"
-	}
-	g.Expect(condition.Message).To(Equal(reason + " (operation=" + operation + ", category=unknown)"))
+	g.Expect(condition.Reason).To(Equal(utils.ReasonHookFailed))
+	g.Expect(condition.Message).To(Equal(utils.ReasonHookFailed + " (operation=" + operation + ", category=hook)"))
 	g.Expect(aiCustomEvaluation.Status.PrintableStatus).To(Equal("RemoteUnsynced"))
 }
 

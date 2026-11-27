@@ -1,0 +1,11 @@
+# The released CRD accepts only these policy types, and instructions that name {prompt},
+# {response}, or {chat_history}. Each CR takes the name of its test: the API keeps names unique in
+# the team.
+values:
+  instructions: 'Check whether {response} names a competitor.'
+  policyType: quality
+update:
+  field: description
+  value: AI custom evaluation updated by the e2e test
+# No upgrade check: the upgrade test installs the 2.0 chart line, and charts before 2.5 have no
+# AICustomEvaluation.
