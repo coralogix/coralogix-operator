@@ -85,7 +85,7 @@ func setRecordingRuleGroupSetStatusID(h *harness, id string) {
 	}
 }
 
-func ruleGroupSpec(name string, rules ...any) map[string]any {
+func recordingRuleGroupItem(name string, rules ...any) map[string]any {
 	return map[string]any{"name": name, "rules": rules}
 }
 
@@ -187,17 +187,17 @@ var recordingRuleGroupSetScenarios = map[string]func(h *harness){
 			map[string]any{"name": "baseline.rules", "intervalSeconds": 180, "limit": 5, "rules": []any{
 				map[string]any{"record": "baseline_record", "expr": "vector(3)", "labels": map[string]any{"team": "changed"}},
 			}},
-			ruleGroupSpec("second.rules", ruleSpec("second_record", "vector(2)")),
+			recordingRuleGroupItem("second.rules", ruleSpec("second_record", "vector(2)")),
 		))
 		h.SetSpec("drop the first group: the API deletes it", recordingRuleGroupSetSpecMap(
-			ruleGroupSpec("second.rules", ruleSpec("second_record", "vector(2)")),
+			recordingRuleGroupItem("second.rules", ruleSpec("second_record", "vector(2)")),
 		))
 		h.RecordRemote("the remote set after the updates", recordingRuleGroupSets(h).snapshot())
 	},
 	"update-remove-optional-fields": func(h *harness) {
 		h.Create("create", recordingRuleGroupSetManifest(recordingRuleGroupSetSpec))
 		h.SetSpec("remove interval, limit, and labels: the API stores 60, 0, and no labels",
-			recordingRuleGroupSetSpecMap(ruleGroupSpec("baseline.rules", ruleSpec("baseline_record", "vector(1)"))))
+			recordingRuleGroupSetSpecMap(recordingRuleGroupItem("baseline.rules", ruleSpec("baseline_record", "vector(1)"))))
 		h.RecordRemote("the remote set after the update", recordingRuleGroupSets(h).snapshot())
 	},
 	"update-clear-rules": func(h *harness) {
@@ -208,18 +208,18 @@ var recordingRuleGroupSetScenarios = map[string]func(h *harness){
 	"update-rejected": func(h *harness) {
 		h.Create("create", recordingRuleGroupSetManifest(recordingRuleGroupSetSpec))
 		recordingRuleGroupSets(h).answerNext(http.MethodPut, http.StatusBadRequest, map[string]any{"code": 400, "message": "Bad Request: rejected"})
-		h.SetSpec("update returns an API error", recordingRuleGroupSetSpecMap(ruleGroupSpec("baseline.rules", ruleSpec("baseline_record", "vector(2)"))))
+		h.SetSpec("update returns an API error", recordingRuleGroupSetSpecMap(recordingRuleGroupItem("baseline.rules", ruleSpec("baseline_record", "vector(2)"))))
 		h.Reconcile("retry")
 	},
 	"update-invalid-group": func(h *harness) {
 		h.Create("create", recordingRuleGroupSetManifest(recordingRuleGroupSetSpec))
-		h.SetSpec("update with an empty expression", recordingRuleGroupSetSpecMap(ruleGroupSpec("baseline.rules", ruleSpec("baseline_record", ""))))
+		h.SetSpec("update with an empty expression", recordingRuleGroupSetSpecMap(recordingRuleGroupItem("baseline.rules", ruleSpec("baseline_record", ""))))
 		h.RecordRemote("the remote set keeps the old rule", recordingRuleGroupSets(h).snapshot())
 	},
 	"update-when-gone": func(h *harness) {
 		h.Create("create", recordingRuleGroupSetManifest(recordingRuleGroupSetSpec))
 		recordingRuleGroupSets(h).remove(h.StatusID())
-		h.SetSpec("update after remote deletion", recordingRuleGroupSetSpecMap(ruleGroupSpec("baseline.rules", ruleSpec("baseline_record", "vector(2)"))))
+		h.SetSpec("update after remote deletion", recordingRuleGroupSetSpecMap(recordingRuleGroupItem("baseline.rules", ruleSpec("baseline_record", "vector(2)"))))
 		h.Reconcile("recreate")
 	},
 	"upgrade-from-released": func(h *harness) {

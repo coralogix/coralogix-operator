@@ -481,6 +481,11 @@ type Field struct {
 	// of the spec, as a released CR does. Create and Update send the value of the arm that the CR
 	// sets. Mode existing only.
 	InArms []string `yaml:"inArms"`
+	// NumericString shows a string that holds an unsigned decimal number (pattern ^[0-9]+$), such as
+	// a limit that the API sends as text, as an integer, as a released CR does. Create and Update
+	// send the decimal text of the integer. The text limits of the contract do not apply to the
+	// integer. Mode existing only.
+	NumericString bool `yaml:"numericString"`
 }
 
 // IntegerName is one CR spelling of an integer API value.
@@ -639,10 +644,10 @@ func (f *File) check() error {
 	}
 	for _, line := range f.Lines() {
 		field := f.Types[line.Component].Fields[line.Field]
-		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && field.UpdateDefault == "" && field.ItemName == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 && !field.SetByHook && !field.SecretRef && len(field.InArms) == 0 {
+		if !field.Skip && !field.SendNullAsEmpty && len(field.CreateAs) == 0 && field.Ref == nil && !field.ReadOnly && !field.Required && !field.Optional && !field.OmitEmptyInRequest && field.Name == "" && !field.RequireOne && field.Unwrap == nil && len(field.RequestValueBy) == 0 && field.Collection == "" && field.ListMapKey == "" && field.EmptyObject == "" && field.RequestAs == "" && field.UpdateAs == "" && field.UpdateDefault == "" && field.ItemName == "" && !field.Inline && field.JoinedBy == "" && field.Description == "" && !field.Immutable && len(field.IntegerNames) == 0 && !field.SetByHook && !field.SecretRef && len(field.InArms) == 0 && !field.NumericString {
 			return fmt.Errorf("%s: the line sets no key", line)
 		}
-		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook || field.SecretRef || len(field.InArms) != 0) {
+		if field.Skip && (field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.RequestAs != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SetByHook || field.SecretRef || len(field.InArms) != 0 || field.NumericString) {
 			return fmt.Errorf("%s.skip: skip cannot change another property of the CR field", line)
 		}
 		if field.SetByHook {
@@ -653,7 +658,7 @@ func (f *File) check() error {
 				return fmt.Errorf("%s.setByHook: only a top-level field of the resource can be set by a hook", line)
 			case !f.HasHook(HookBeforeCreate) || !f.HasHook(HookBeforeUpdate):
 				return fmt.Errorf("%s.setByHook: declare the beforeCreate and beforeUpdate hooks that set the field", line)
-			case field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SecretRef || len(field.InArms) != 0:
+			case field.SendNullAsEmpty || len(field.CreateAs) != 0 || field.Ref != nil || field.ReadOnly || field.Required || field.Optional || field.OmitEmptyInRequest || field.Name != "" || field.RequireOne || field.Unwrap != nil || len(field.RequestValueBy) != 0 || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.UpdateAs != "" || field.UpdateDefault != "" || field.ItemName != "" || field.Inline || field.JoinedBy != "" || field.Description != "" || field.Immutable || len(field.IntegerNames) != 0 || field.SecretRef || len(field.InArms) != 0 || field.NumericString:
 				return fmt.Errorf("%s.setByHook: the line can set only requestAs", line)
 			}
 		}
@@ -746,6 +751,14 @@ func (f *File) check() error {
 			}
 			if field.Ref != nil || field.ReadOnly || field.SendNullAsEmpty || len(field.RequestValueBy) != 0 || field.Unwrap != nil || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" {
 				return fmt.Errorf("%s.joinedBy: the line cannot set ref, readOnly, sendNullAsEmpty, requestValueBy, unwrap, collection, listMapKey, or emptyObject", line)
+			}
+		}
+		if field.NumericString {
+			switch {
+			case f.Mode != ModeExisting:
+				return fmt.Errorf("%s.numericString: a new kind follows the contract", line)
+			case field.Ref != nil || field.ReadOnly || field.JoinedBy != "" || len(field.IntegerNames) != 0 || field.SendNullAsEmpty || len(field.RequestValueBy) != 0 || len(field.CreateAs) != 0 || field.Unwrap != nil || field.Collection != "" || field.ListMapKey != "" || field.EmptyObject != "" || field.SecretRef || len(field.InArms) != 0 || field.ItemName != "" || field.Inline || field.SetByHook:
+				return fmt.Errorf("%s.numericString: the line can set only required, optional, name, description, requestAs, updateAs, and immutable", line)
 			}
 		}
 		if len(field.IntegerNames) != 0 {

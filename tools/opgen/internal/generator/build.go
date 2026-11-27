@@ -214,6 +214,8 @@ type crField struct {
 	inlineParent string
 	// joinedBy is the separator of a CR list of strings that the API holds as one string.
 	joinedBy string
+	// numericString is true for an integer CR field that the API holds as a digit string.
+	numericString bool
 	// secret is set for a field that the CR can also read from a Secret (secretRef).
 	secret *secretSource
 	// secretOf is set on the sibling field that names the Secret of a secretRef field.

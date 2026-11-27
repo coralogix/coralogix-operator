@@ -242,6 +242,9 @@ type upgradeData struct {
 	From, SpecJSON, Field, Value string
 	// Nested is true for a dotted field: the patch sets the path below a spec field.
 	Nested bool
+	// JSONPatch is true for a field with slashes, a path into a list such as groups/0/name: the
+	// patch is a JSON patch, because a merge patch cannot name a list item.
+	JSONPatch bool
 	// NumberPaths are the jq paths of the spec values that are exactly one @{env.NAME} and that an
 	// integer or a number field holds. The script writes the variable into a string, then turns it
 	// into a number, because the CRD rejects a string there.
@@ -394,7 +397,17 @@ func buildValues(d *kindData, ix *refIndex, file *e2eFile) (full, minimal *omap,
 				return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade.field", msg: "a dotted field must start with a field of upgrade.spec"}
 			}
 		}
-		e2e.Upgrade = &upgradeData{From: file.Upgrade.From, SpecJSON: string(encoded), Field: file.Upgrade.Field, Value: file.Upgrade.Value, Nested: nested,
+		jsonPatch := !d.Overwrite && strings.Contains(file.Upgrade.Field, "/")
+		if jsonPatch {
+			top, _, _ := strings.Cut(file.Upgrade.Field, "/")
+			if nested || strings.HasPrefix(file.Upgrade.Field, "/") {
+				return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade.field", msg: "a path into a list uses slashes only, and starts with a field of upgrade.spec"}
+			}
+			if _, ok := file.Upgrade.Spec[top]; !ok {
+				return nil, nil, nil, &shapeError{code: codeE2EInvalid, path: e2eFileName + ":upgrade.field", msg: "a path with slashes must start with a field of upgrade.spec"}
+			}
+		}
+		e2e.Upgrade = &upgradeData{From: file.Upgrade.From, SpecJSON: string(encoded), Field: file.Upgrade.Field, Value: file.Upgrade.Value, Nested: nested, JSONPatch: jsonPatch,
 			NumberPaths: numberEnvPaths(file.Upgrade.Spec, d.Spec.Fields, nil)}
 	}
 	// The values also make the sample, which must not name a variable.
