@@ -196,7 +196,8 @@ jobs:
             --set coralogixOperator.reconcileIntervalSeconds.archiveLogsTarget=30 \
             --set coralogixOperator.reconcileIntervalSeconds.archiveMetricsTarget=30
       # The old pod keeps the leader lease for a while after the upgrade. The checks of the TCO
-      # policies kinds run before the e2e tests, so they wait for the new pod themselves.
+      # policies kinds and of ArchiveLogsTarget run before the e2e tests, so they wait for the new pod
+      # themselves.
       - name: Wait for the new operator to hold the leader lease
         run: |
           ns=coralogix-operator-system
@@ -231,6 +232,19 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version == '0.5' && '0-5' || inputs.operator_version == '1.0' && '1-0' || '2-0' }}
         run: bash scripts/upgrade-check-tcotracespolicies.sh cleanup
+      # The team has one archive logs target, and the e2e tests of ArchiveLogsTarget set the same
+      # target. While the CR of the upgrade check exists, the operator keeps setting it active, so the
+      # e2e test that waits for an inactive target can time out. This check ends before the e2e tests.
+      - name: Check the ArchiveLogsTarget of the released operator
+        if: inputs.operator_version != '0.5'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-archivelogstarget.sh after
+      - name: Delete the ArchiveLogsTarget of the upgrade check
+        if: always() && inputs.operator_version != '0.5'
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash scripts/upgrade-check-archivelogstarget.sh cleanup
       - name: Run e2e Tests
         env:
           # The generated AIEvaluation tests use the last AI application of the CI preparation.
@@ -250,11 +264,6 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-customrole.sh after
-      - name: Check the ArchiveLogsTarget of the released operator
-        if: inputs.operator_version != '0.5'
-        env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
-        run: bash scripts/upgrade-check-archivelogstarget.sh after
       - name: Check the AlertScheduler of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -346,11 +355,6 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-customrole.sh cleanup
-      - name: Delete the ArchiveLogsTarget of the upgrade check
-        if: always() && inputs.operator_version != '0.5'
-        env:
-          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
-        run: bash scripts/upgrade-check-archivelogstarget.sh cleanup
       - name: Delete the AlertScheduler of the upgrade test
         if: always()
         env:
