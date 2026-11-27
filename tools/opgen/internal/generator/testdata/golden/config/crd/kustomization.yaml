@@ -10,6 +10,7 @@ resources:
   - bases/coralogix.com_keythings.yaml
   - bases/coralogix.com_listthings.yaml
   - bases/coralogix.com_maskthings.yaml
+  - bases/coralogix.com_ownpaththings.yaml
   - bases/coralogix.com_patchthings.yaml
   - bases/coralogix.com_refthings.yaml
   - bases/coralogix.com_settingthings.yaml

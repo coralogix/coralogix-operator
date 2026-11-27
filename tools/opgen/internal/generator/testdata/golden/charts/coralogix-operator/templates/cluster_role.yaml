@@ -23,6 +23,7 @@ rules:
       - keythings
       - listthings
       - maskthings
+      - ownpaththings
       - patchthings
       - refthings
       - settingthings
@@ -49,6 +50,7 @@ rules:
       - keythings/finalizers
       - listthings/finalizers
       - maskthings/finalizers
+      - ownpaththings/finalizers
       - patchthings/finalizers
       - refthings/finalizers
       - settingthings/finalizers
@@ -69,6 +71,7 @@ rules:
       - keythings/status
       - listthings/status
       - maskthings/status
+      - ownpaththings/status
       - patchthings/status
       - refthings/status
       - settingthings/status

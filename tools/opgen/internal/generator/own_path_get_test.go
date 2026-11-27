@@ -118,3 +118,32 @@ func TestGetAtOwnPathIsRejectedWhereItDoesNotApply(t *testing.T) {
 		})
 	}
 }
+
+// The golden OwnPathThing has its Get on /own-path-things/id/{thing_id}. The generated code calls
+// each operation by its SDK name, with the id as an argument, so the path of Get never shows.
+func TestGetAtOwnPathGeneratesCallsByName(t *testing.T) {
+	root, input := syntheticRoot(t)
+	if err := generateFromInput(input, root, root); err != nil {
+		t.Fatal(err)
+	}
+	controller := readGenerated(t, root, controllerDir+"/ownpaththing_controller.go")
+	for _, want := range []string{
+		"r.Client.OwnPathThingsServiceCreateOwnPathThing(ctx)",
+		"r.Client.OwnPathThingsServiceUpdateOwnPathThing(ctx, id)",
+		"r.Client.OwnPathThingsServiceDeleteOwnPathThing(ctx, id)",
+	} {
+		if !strings.Contains(controller, want) {
+			t.Errorf("the controller lacks %q:\n%s", want, controller)
+		}
+	}
+	if strings.Contains(controller, "GetOwnPathThing") {
+		t.Error("the controller must not call Get: a resync is one Update")
+	}
+	e2e := readGenerated(t, root, e2eDir+"/ownpaththing_generated_test.go")
+	if !strings.Contains(e2e, "apiClient.OwnPathThingsServiceGetOwnPathThing(ctx, ") {
+		t.Errorf("the e2e test reads the resource with Get and the id:\n%s", e2e)
+	}
+	if strings.Contains(controller+e2e, "/id/") {
+		t.Error("a generated file names the path of Get")
+	}
+}

@@ -996,6 +996,76 @@ paths:
           content:
             application/json:
               schema: {type: object}
+# OwnPathThing: a kind that users already have, as the team groups API has it. Get is on its own
+# path (/own-path-things/id/{id}), while Update and Delete are on the Create path plus the id
+# (api.getAtOwnPath). The responses wrap the resource in "thing".
+  /own-path-things:
+    post:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_CreateOwnPathThing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: CreateOwnPathThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1}
+                note: {type: string, x-coralogix-presence: true}
+              required: [name]
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/CreateOwnPathThingResponse'}
+  /own-path-things/id/{thing_id}:
+    get:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_GetOwnPathThing
+      parameters:
+        - {name: thing_id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Found
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GetOwnPathThingResponse'}
+  /own-path-things/{thing_id}:
+    put:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_UpdateOwnPathThing
+      parameters:
+        - {name: thing_id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              title: UpdateOwnPathThingRequest
+              type: object
+              properties:
+                name: {type: string, minLength: 1, x-coralogix-presence: true}
+                note: {type: string, x-coralogix-presence: true}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/UpdateOwnPathThingResponse'}
+    delete:
+      tags: [Own Path Things Service]
+      operationId: OwnPathThingsService_DeleteOwnPathThing
+      parameters:
+        - {name: thing_id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema: {type: object}
+
 components:
   schemas:
     ListThing:
@@ -1458,3 +1528,22 @@ components:
       type: object
       properties:
         permissions: {type: array, items: {type: string, minLength: 1}}
+    OwnPathThing:
+      type: object
+      required: [name]
+      properties:
+        thingId: {type: string, minLength: 1}
+        name: {type: string, minLength: 1, description: The name.}
+        note: {type: string, x-coralogix-presence: true}
+    GetOwnPathThingResponse:
+      type: object
+      properties:
+        thing: {$ref: '#/components/schemas/OwnPathThing'}
+    CreateOwnPathThingResponse:
+      type: object
+      properties:
+        thing: {$ref: '#/components/schemas/OwnPathThing'}
+    UpdateOwnPathThingResponse:
+      type: object
+      properties:
+        thing: {$ref: '#/components/schemas/OwnPathThing'}

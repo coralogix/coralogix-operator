@@ -1,0 +1,15 @@
+# OwnPathThing: Get is on a path of its own, while Update and Delete are on the Create path plus the
+# id (api.getAtOwnPath), as the team groups API has it.
+resource: OwnPathThing
+mode: existing
+validators:
+  inferred: true
+api:
+  operations:
+    create: OwnPathThingsService_CreateOwnPathThing
+    get: OwnPathThingsService_GetOwnPathThing
+    update: OwnPathThingsService_UpdateOwnPathThing
+    delete: OwnPathThingsService_DeleteOwnPathThing
+  getAtOwnPath: true
+  idProperty: thingId
+  serverSetID: true

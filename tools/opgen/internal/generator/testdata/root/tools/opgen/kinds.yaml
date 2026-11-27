@@ -29,3 +29,5 @@ kinds:
     resource: KeyThing
   - kind: ArmThing
     resource: ArmThing
+  - kind: OwnPathThing
+    resource: OwnPathThing
