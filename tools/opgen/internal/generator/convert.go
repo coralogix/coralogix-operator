@@ -1105,6 +1105,15 @@ func (b *builder) assignFrom(f *crField, rt *model.Type, owner, path, src string
 		}
 		return code, nil
 	}
+	if f.numericString {
+		if strings.TrimPrefix(ref.Want, "*") != "string" {
+			return "", unsupported(path, "numericString needs a string in the SDK, got %s", ref.Want)
+		}
+		if f.Optional {
+			return "if " + src + " != nil {\n" + b.set(target, ref.Want, "strconv.FormatInt(*"+src+", 10)", false) + "}\n", nil
+		}
+		return b.set(target, ref.Want, "strconv.FormatInt("+src+", 10)", false), nil
+	}
 	if f.refForm == "split" {
 		sibling := strings.TrimSuffix(src, f.GoName) + goName(f.refSibling)
 		resolved := b.temp("id")

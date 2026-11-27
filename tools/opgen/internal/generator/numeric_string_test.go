@@ -51,8 +51,10 @@ func TestNumericStringShowsATextNumberAsAnInteger(t *testing.T) {
 		t.Error("the default of the cap is not the integer 0")
 	}
 	convert := readGenerated(t, root, apiDir+"/thing_convert.go")
-	if !strings.Contains(convert, "strconv.FormatInt(") {
-		t.Errorf("the conversion does not write the decimal text:\n%s", convert)
+	for _, want := range []string{"if in.Cap != nil {", "strconv.FormatInt(*in.Cap, 10)"} {
+		if !strings.Contains(convert, want) {
+			t.Errorf("the conversion has no %q:\n%s", want, convert)
+		}
 	}
 }
 

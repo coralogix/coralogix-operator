@@ -614,7 +614,7 @@ func (b *builder) fieldShape(owner, component, name, description string, t *mode
 		description = change.Description
 		b.used[line] = true
 	}
-	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t}
+	f := &crField{API: name, JSON: jsonName, GoName: goName(jsonName), Optional: !required, Doc: docLines(description), typ: t, numericString: change.NumericString}
 	path = b.validationPath(component, path, name, jsonName)
 	f.validationPath = path
 	if change.OmitEmptyInRequest {
