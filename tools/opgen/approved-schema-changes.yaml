@@ -1,21 +1,4 @@
 # Reviewed changes to rules on released CRD fields. opgen check-schema compares each kind with the
 # PR base commit and fails on a change that is not listed here with its exact hashes. An entry is
 # for one PR: remove it after the PR merges, because the base then already has the change.
-changes:
-  - kind: OutboundWebhook
-    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.outboundWebhookType.properties.genericWebhook
-    before: e742f0879839b257
-    after: bbfa642109ce4a14
-    reason: >-
-      The header rule keeps its expression. Its message is the generated one, "A key of headers
-      can have only one source" instead of "A header can have only one source", and the two rules
-      of the object are in another order. The object gains the optional uuid of the API, which
-      the operator otherwise fills with a new UUID as the released kind did.
-  - kind: OutboundWebhook
-    path: spec.versions.v1alpha1.schema.openAPIV3Schema.properties.spec.properties.outboundWebhookType
-    before: 7fdc50e8a8ae8dee
-    after: 5226e9f98888252a
-    reason: >-
-      The exactly-one rule adds the two types of the API that the released CRD did not have,
-      ibmEventNotifications and msTeamsWorkflow, so it only loosens admission. Its message is the
-      generated one, which names the types in the same way as the other generated kinds.
+changes: []
