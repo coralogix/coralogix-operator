@@ -407,11 +407,13 @@ var groupScenarios = map[string]func(h *harness){
 		h.RecordRemote("the remote group", groups(h).snapshot())
 	},
 	"update-clear-description": func(h *harness) {
+		groupDeps(h)
 		h.Create("create", groupManifest(groupSpec))
 		h.SetSpec("remove the description: update omits it and the API clears it", groupSpecMap("baseline-group", nil, ptr.To("closed"), nil, "", ""))
 		h.RecordRemote("the remote description is cleared", groups(h).snapshot())
 	},
 	"update-empty-description": func(h *harness) {
+		groupDeps(h)
 		h.Create("create", groupManifest(groupSpec))
 		h.SetSpec("an empty description is sent and stored", groupSpecMap("baseline-group", ptr.To(""), ptr.To("closed"), nil, "", ""))
 		h.RecordRemote("the remote description is empty", groups(h).snapshot())
@@ -490,6 +492,7 @@ var groupScenarios = map[string]func(h *harness){
 		h.Delete("delete cannot parse status id")
 	},
 	"delete": func(h *harness) {
+		groupDeps(h)
 		h.Create("create", groupManifest(groupSpec))
 		h.Delete("delete")
 		h.Reconcile("delete again")

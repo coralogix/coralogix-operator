@@ -31,29 +31,56 @@
           ]
         },
         "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "description": "Baseline group",
+          "groupType": "GROUP_TYPE_CLOSED",
+          "name": "baseline-group",
+          "roleId": 7001,
+          "scope": {
+            "scopeId": "<id-1>"
+          },
+          "userIds": [
+            "<id-2>"
+          ]
+        },
+        "status": 200
       }
     ],
     "result": {
-      "error": true
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
-      "finalizers": [],
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
             "type": "RemoteSynced"
           }
         ],
-        "printableStatus": "RemoteUnsynced"
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
       }
     }
   },
   {
     "step": "delete",
-    "requests": [],
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/9001",
+        "status": 200
+      }
+    ],
     "result": {
       "error": false
     },
