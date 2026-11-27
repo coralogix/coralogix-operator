@@ -23,7 +23,7 @@ import (
 	"sync"
 )
 
-const ruleGroupPath = "/parsing-rules/rule-groups/v1"
+const parsingRuleGroupPath = "/parsing-rules/rule-groups/v1"
 
 // ruleParameterArms are the oneOf arms of a rule's parameters.
 var ruleParameterArms = []string{
@@ -32,9 +32,9 @@ var ruleParameterArms = []string{
 	"jsonStringifyParameters", "jsonParseParameters",
 }
 
-// ruleGroupRecord is a stored rule group. The subgroups and their rules are kept as the request
+// parsingRuleGroupRecord is a stored rule group. The subgroups and their rules are kept as the request
 // sent them, plus the ids that the service makes on every write.
-type ruleGroupRecord struct {
+type parsingRuleGroupRecord struct {
 	name        string
 	description string
 	creator     *string
@@ -45,7 +45,7 @@ type ruleGroupRecord struct {
 	subgroups   []any
 }
 
-// ruleGroupFake is the parsing rule groups API, written from the SDK's openapi.yaml and the
+// parsingRuleGroupFake is the parsing rule groups API, written from the SDK's openapi.yaml and the
 // backend (RuleGroupsServiceImpl).
 //
 //	POST   /parsing-rules/rule-groups/v1       {name, description, enabled, hidden, creator, order,
@@ -61,38 +61,38 @@ type ruleGroupRecord struct {
 //   - A name that is empty or missing, a group without a subgroup, a subgroup without a rule, a
 //     rule without a name, a source field, or exactly one parameters arm, and an empty regular
 //     expression are 400s.
-type ruleGroupFake struct {
+type parsingRuleGroupFake struct {
 	mu     sync.Mutex
-	groups map[string]ruleGroupRecord
+	groups map[string]parsingRuleGroupRecord
 	forced map[string]forcedAnswer
 }
 
-func newRuleGroupFake() apiFake {
-	return &ruleGroupFake{groups: map[string]ruleGroupRecord{}, forced: map[string]forcedAnswer{}}
+func newParsingRuleGroupFake() apiFake {
+	return &parsingRuleGroupFake{groups: map[string]parsingRuleGroupRecord{}, forced: map[string]forcedAnswer{}}
 }
 
 // answerNext makes the next request with the method get this answer instead of the fake's own.
-func (f *ruleGroupFake) answerNext(method string, status int, body any) {
+func (f *parsingRuleGroupFake) answerNext(method string, status int, body any) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.forced[method] = forcedAnswer{status: status, body: body}
 }
 
 // forget deletes a group without a request, as if it was deleted outside the operator.
-func (f *ruleGroupFake) forget(id string) {
+func (f *parsingRuleGroupFake) forget(id string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	delete(f.groups, id)
 }
 
 // put stores a group without a request, as if another client created it.
-func (f *ruleGroupFake) put(id string, group ruleGroupRecord) {
+func (f *parsingRuleGroupFake) put(id string, group parsingRuleGroupRecord) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.groups[id] = group
 }
 
-func (f *ruleGroupFake) snapshot() map[string]any {
+func (f *parsingRuleGroupFake) snapshot() map[string]any {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	out := make(map[string]any, len(f.groups))
@@ -102,7 +102,7 @@ func (f *ruleGroupFake) snapshot() map[string]any {
 	return out
 }
 
-func (f *ruleGroupFake) handle(method, path string, _ url.Values, body any) (int, any) {
+func (f *parsingRuleGroupFake) handle(method, path string, _ url.Values, body any) (int, any) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if forced, ok := f.forced[method]; ok {
@@ -111,10 +111,10 @@ func (f *ruleGroupFake) handle(method, path string, _ url.Values, body any) (int
 	}
 	in, _ := body.(map[string]any)
 
-	if path == ruleGroupPath {
+	if path == parsingRuleGroupPath {
 		switch method {
 		case http.MethodPost:
-			group, status, errBody := f.ruleGroupFromRequest(in, method)
+			group, status, errBody := f.parsingRuleGroupFromRequest(in, method)
 			if status != 0 {
 				return status, errBody
 			}
@@ -131,7 +131,7 @@ func (f *ruleGroupFake) handle(method, path string, _ url.Values, body any) (int
 		return routeNotFound()
 	}
 
-	id, ok := strings.CutPrefix(path, ruleGroupPath+"/")
+	id, ok := strings.CutPrefix(path, parsingRuleGroupPath+"/")
 	if !ok || id == "" || strings.Contains(id, "/") {
 		return routeNotFound()
 	}
@@ -139,16 +139,16 @@ func (f *ruleGroupFake) handle(method, path string, _ url.Values, body any) (int
 	switch method {
 	case http.MethodGet:
 		if !exists {
-			return ruleGroupNotFound(id)
+			return parsingRuleGroupNotFound(id)
 		}
 		return http.StatusOK, map[string]any{"ruleGroup": f.groups[id].answer(id)}
 	case http.MethodPut:
 		// The service reads the group before it writes, so a missing group is a 404 before the
 		// body is checked.
 		if !exists {
-			return ruleGroupNotFound(id)
+			return parsingRuleGroupNotFound(id)
 		}
-		group, status, errBody := f.ruleGroupFromRequest(in, method)
+		group, status, errBody := f.parsingRuleGroupFromRequest(in, method)
 		if status != 0 {
 			return status, errBody
 		}
@@ -156,7 +156,7 @@ func (f *ruleGroupFake) handle(method, path string, _ url.Values, body any) (int
 		return http.StatusOK, map[string]any{"ruleGroup": group.answer(id)}
 	case http.MethodDelete:
 		if !exists {
-			return ruleGroupNotFound(id)
+			return parsingRuleGroupNotFound(id)
 		}
 		delete(f.groups, id)
 		return http.StatusOK, map[string]any{}
@@ -164,17 +164,17 @@ func (f *ruleGroupFake) handle(method, path string, _ url.Values, body any) (int
 	return routeNotFound()
 }
 
-func ruleGroupNotFound(id string) (int, any) {
+func parsingRuleGroupNotFound(id string) (int, any) {
 	return apiError(http.StatusNotFound, "RuleGroup not found: "+id)
 }
 
-// ruleGroupFromRequest reads the group of a create or replace body, in the order that the real API
+// parsingRuleGroupFromRequest reads the group of a create or replace body, in the order that the real API
 // checks it: the gateway parses the JSON, the service converts the request, and the backend
 // validates the group. A non-zero status is an error answer.
-func (f *ruleGroupFake) ruleGroupFromRequest(in map[string]any, verb string) (ruleGroupRecord, int, any) {
-	bad := func(reason string) (ruleGroupRecord, int, any) {
+func (f *parsingRuleGroupFake) parsingRuleGroupFromRequest(in map[string]any, verb string) (parsingRuleGroupRecord, int, any) {
+	bad := func(reason string) (parsingRuleGroupRecord, int, any) {
 		status, body := apiError(http.StatusBadRequest, reason)
-		return ruleGroupRecord{}, status, body
+		return parsingRuleGroupRecord{}, status, body
 	}
 	subgroups, _ := in["ruleSubgroups"].([]any)
 	ruleOf := func(raw any) map[string]any { rule, _ := raw.(map[string]any); return rule }
@@ -288,7 +288,7 @@ func (f *ruleGroupFake) ruleGroupFromRequest(in map[string]any, verb string) (ru
 		return bad(fmt.Sprintf("statusCode: 400, response: Failed to %s rule group err: [%s]", action, strings.Join(failures, " ")))
 	}
 
-	group := ruleGroupRecord{enabled: true, order: 1}
+	group := parsingRuleGroupRecord{enabled: true, order: 1}
 	group.name, _ = in["name"].(string)
 	group.description, _ = in["description"].(string)
 	creator, _ := in["creator"].(string)
@@ -384,7 +384,7 @@ func storedParameters(parameters map[string]any) map[string]any {
 	return out
 }
 
-func (g ruleGroupRecord) answer(id string) map[string]any {
+func (g parsingRuleGroupRecord) answer(id string) map[string]any {
 	out := map[string]any{
 		"id":            id,
 		"name":          g.name,
