@@ -1,0 +1,94 @@
+[
+  {
+    "step": "customRole and customRoles: customRole is used",
+    "spec": {
+      "customRole": {
+        "resourceRef": {
+          "name": "second-role"
+        }
+      },
+      "customRoles": [
+        {
+          "resourceRef": {
+            "name": "role"
+          }
+        }
+      ],
+      "name": "baseline-group"
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "name": "baseline-group",
+          "roleId": 7002,
+          "scope": {}
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group has the role of customRole",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "9001": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "groupId": 9001,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_OPEN",
+        "name": "baseline-group",
+        "role": {
+          "description": "Second role",
+          "name": "second",
+          "roleId": 7002
+        },
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": []
+      }
+    }
+  }
+]

@@ -1,0 +1,214 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "customRole": {
+        "resourceRef": {
+          "name": "role"
+        }
+      },
+      "description": "Baseline group",
+      "groupType": "closed",
+      "members": [
+        {
+          "userName": "member-a@example.com"
+        }
+      ],
+      "name": "baseline-group",
+      "scope": {
+        "resourceRef": {
+          "name": "scope"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "description": "Baseline group",
+          "groupType": "GROUP_TYPE_CLOSED",
+          "name": "baseline-group",
+          "roleId": 7001,
+          "scope": {
+            "scopeId": "<id-1>"
+          },
+          "userIds": [
+            "<id-2>"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "another custom role",
+    "spec": {
+      "customRole": {
+        "resourceRef": {
+          "name": "second-role"
+        }
+      },
+      "description": "Baseline group",
+      "groupType": "closed",
+      "members": [
+        {
+          "userName": "member-a@example.com"
+        }
+      ],
+      "name": "baseline-group",
+      "scope": {
+        "resourceRef": {
+          "name": "scope"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/9001",
+        "body": {
+          "description": "Baseline group",
+          "groupType": "GROUP_TYPE_CLOSED",
+          "name": "baseline-group",
+          "roleUpdate": {
+            "action": {
+              "actionType": "set_role_id",
+              "setRoleId": {
+                "value": 7002
+              }
+            }
+          },
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {
+                "value": "<id-1>"
+              }
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {
+                "userIds": [
+                  "<id-2>"
+                ]
+              }
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote role",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "9001": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "description": "Baseline group",
+        "groupId": 9001,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_CLOSED",
+        "name": "baseline-group",
+        "role": {
+          "description": "Second role",
+          "name": "second",
+          "roleId": 7002
+        },
+        "scope": {
+          "scopeId": "<id-1>"
+        },
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": [
+          "<id-2>"
+        ]
+      }
+    }
+  }
+]

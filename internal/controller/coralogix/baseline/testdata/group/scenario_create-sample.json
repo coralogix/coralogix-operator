@@ -1,0 +1,200 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "customRole": {
+        "resourceRef": {
+          "name": "custom-role-sample"
+        }
+      },
+      "description": "This is a sample group",
+      "groupType": "open",
+      "members": [
+        {
+          "userName": "example@coralogix.com"
+        },
+        {
+          "userName": "example2@coralogix.com"
+        }
+      ],
+      "name": "group-sample",
+      "scope": {
+        "resourceRef": {
+          "name": "scope-sample"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2",
+        "body": {
+          "description": "This is a sample group",
+          "groupType": "GROUP_TYPE_OPEN",
+          "name": "group-sample",
+          "roleId": 7001,
+          "scope": {
+            "scopeId": "<id-1>"
+          },
+          "userIds": [
+            "<id-2>",
+            "<id-3>"
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole spec",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/mgmt/openapi/5/aaa/users/v2",
+        "query": {
+          "page_size": [
+            "100"
+          ]
+        },
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/aaa/team-groups/v2/9001",
+        "body": {
+          "description": "This is a sample group",
+          "groupType": "GROUP_TYPE_OPEN",
+          "name": "group-sample",
+          "roleUpdate": {
+            "action": {
+              "actionType": "set_role_id",
+              "setRoleId": {
+                "value": 7001
+              }
+            }
+          },
+          "scopeUpdate": {
+            "action": {
+              "actionType": "set_scope_id",
+              "setScopeId": {
+                "value": "<id-1>"
+              }
+            }
+          },
+          "userUpdates": {
+            "operation": {
+              "operationType": "set",
+              "set": {
+                "userIds": [
+                  "<id-2>",
+                  "<id-3>"
+                ]
+              }
+            }
+          }
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "group.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "9001",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "9001": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "description": "This is a sample group",
+        "groupId": 9001,
+        "groupOrigin": "GROUP_ORIGIN_USER_DEFINED",
+        "groupType": "GROUP_TYPE_OPEN",
+        "name": "group-sample",
+        "role": {
+          "description": "Fidelity role",
+          "name": "cxo-fidelity-group-role",
+          "roleId": 7001
+        },
+        "scope": {
+          "scopeId": "<id-1>"
+        },
+        "teamId": 4000001,
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "userIds": [
+          "<id-2>",
+          "<id-3>"
+        ]
+      }
+    }
+  }
+]

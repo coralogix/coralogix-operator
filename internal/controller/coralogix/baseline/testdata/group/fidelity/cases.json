@@ -1,0 +1,151 @@
+{
+  "cases": [
+    {
+      "name": "create, get, update keeps what the body omits, replace the users, clear the role and the scope, delete, and the missing group",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/team-groups/v2",
+          "body": {
+            "name": "cxo-fidelity-group-{{run}}",
+            "description": "Control group",
+            "groupType": "GROUP_TYPE_CLOSED",
+            "roleId": "{{roleId}}",
+            "scope": {"scopeId": "{{scopeId}}"},
+            "userIds": ["{{userA}}"]
+          },
+          "capture": "group"
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {"method": "PUT", "path": "/aaa/team-groups/v2/{{group}}", "body": {"name": "cxo-fidelity-group-{{run}}-updated"}},
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {
+            "name": "cxo-fidelity-group-{{run}}-updated",
+            "description": "Updated group",
+            "userUpdates": {"operation": {"operationType": "set", "set": {"userIds": ["{{userB}}"]}}}
+          }
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {
+            "name": "cxo-fidelity-group-{{run}}-updated",
+            "userUpdates": {"operation": {"operationType": "set", "set": {}}},
+            "roleUpdate": {"action": {"actionType": "clear", "clear": {}}},
+            "scopeUpdate": {"action": {"actionType": "set_scope_id", "setScopeId": {}}}
+          }
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {
+            "name": "cxo-fidelity-group-{{run}}-updated",
+            "roleUpdate": {"action": {"actionType": "set_role_id", "setRoleId": {"value": "{{roleId}}"}}},
+            "scopeUpdate": {"action": {"actionType": "set_scope_id", "setScopeId": {"value": "{{scopeId}}"}}}
+          }
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/{{group}}"},
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {"method": "PUT", "path": "/aaa/team-groups/v2/{{group}}", "body": {"name": "cxo-fidelity-group-{{run}}"}},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/{{group}}"},
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/99999999"},
+        {"method": "PUT", "path": "/aaa/team-groups/v2/99999999", "body": {"name": "cxo-fidelity-group-{{run}}"}},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/99999999"}
+      ]
+    },
+    {
+      "name": "defaults, group types, duplicate names, and an empty description",
+      "steps": [
+        {"method": "POST", "path": "/aaa/team-groups/v2", "body": {"name": "cxo-fidelity-group-{{run}}-a", "scope": {}}, "capture": "first"},
+        {"method": "POST", "path": "/aaa/team-groups/v2", "body": {"name": "cxo-fidelity-group-{{run}}-a"}},
+        {
+          "method": "POST",
+          "path": "/aaa/team-groups/v2",
+          "body": {"name": "cxo-fidelity-group-{{run}}-b", "description": "", "groupType": "GROUP_TYPE_UNSPECIFIED"},
+          "capture": "second"
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{second}}"},
+        {"method": "PUT", "path": "/aaa/team-groups/v2/{{second}}", "body": {"name": "cxo-fidelity-group-{{run}}-b", "groupType": "GROUP_TYPE_RESTRICTED"}},
+        {"method": "PUT", "path": "/aaa/team-groups/v2/{{second}}", "body": {"name": "cxo-fidelity-group-{{run}}-b"}},
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{second}}"},
+        {"method": "PUT", "path": "/aaa/team-groups/v2/{{second}}", "body": {"name": "cxo-fidelity-group-{{run}}-b", "groupType": "GROUP_TYPE_UNSPECIFIED"}},
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{second}}"},
+        {"method": "PUT", "path": "/aaa/team-groups/v2/{{second}}", "body": {"name": "cxo-fidelity-group-{{run}}-a"}},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/{{first}}"},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/{{second}}"}
+      ]
+    },
+    {
+      "name": "rejected values on create and update",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/team-groups/v2",
+          "body": {"name": "cxo-fidelity-group-{{run}}-user", "userIds": ["not-a-user"]},
+          "allowForbidden": true
+        },
+        {"method": "POST", "path": "/aaa/team-groups/v2", "body": {"name": "cxo-fidelity-group-{{run}}-role", "roleId": "99999999"}, "allowForbidden": true},
+        {"method": "POST", "path": "/aaa/team-groups/v2", "body": {"name": "cxo-fidelity-group-{{run}}-scope", "scope": {"scopeId": "not-a-scope"}}},
+        {"method": "POST", "path": "/aaa/team-groups/v2", "body": {"name": ""}},
+        {"method": "POST", "path": "/aaa/team-groups/v2", "body": {}},
+        {
+          "method": "POST",
+          "path": "/aaa/team-groups/v2",
+          "body": {"name": "cxo-fidelity-group-{{run}}-c", "roleId": "{{roleId}}", "scope": {"scopeId": "{{scopeId}}"}},
+          "capture": "group"
+        },
+        {"method": "PUT", "path": "/aaa/team-groups/v2/{{group}}", "body": {"name": ""}},
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {"name": "cxo-fidelity-group-{{run}}-c", "roleUpdate": {"action": {"actionType": "set_role_id", "setRoleId": {"value": 0}}}},
+          "allowForbidden": true
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {"name": "cxo-fidelity-group-{{run}}-c", "roleUpdate": {"action": {"actionType": "set_role_id", "setRoleId": {}}}},
+          "allowForbidden": true
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {"name": "cxo-fidelity-group-{{run}}-c", "roleUpdate": {"action": {"actionType": "set_role_id", "setRoleId": {"value": 99999999}}}},
+          "allowForbidden": true
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {"name": "cxo-fidelity-group-{{run}}-c", "scopeUpdate": {"action": {"actionType": "set_scope_id", "setScopeId": {"value": "not-a-scope"}}}}
+        },
+        {
+          "method": "PUT",
+          "path": "/aaa/team-groups/v2/{{group}}",
+          "body": {"name": "cxo-fidelity-group-{{run}}-c", "userUpdates": {"operation": {"operationType": "set", "set": {"userIds": ["not-a-user"]}}}},
+          "allowForbidden": true
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/{{group}}"}
+      ]
+    },
+    {
+      "name": "users listed twice are stored once, in a group without a role or a scope",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/aaa/team-groups/v2",
+          "body": {"name": "cxo-fidelity-group-{{run}}-users", "userIds": ["{{userA}}", "{{userA}}", "{{userB}}"]},
+          "capture": "group"
+        },
+        {"method": "GET", "path": "/aaa/team-groups/v2/id/{{group}}"},
+        {"method": "DELETE", "path": "/aaa/team-groups/v2/{{group}}"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "custom role": {
+    "accepted": true
+  },
+  "custom role and custom roles": {
+    "accepted": true
+  },
+  "custom role empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.customRole.resourceRef",
+        "message": "Required value"
+      }
+    ]
+  },
+  "custom role name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.customRole.resourceRef.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "custom role name empty": {
+    "accepted": true
+  },
+  "custom role namespace": {
+    "accepted": true
+  },
+  "custom roles": {
+    "accepted": true
+  },
+  "custom roles empty": {
+    "accepted": true
+  },
+  "description empty": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "group type closed": {
+    "accepted": true
+  },
+  "group type open": {
+    "accepted": true
+  },
+  "group type restricted": {
+    "accepted": true
+  },
+  "group type unknown": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.groupType",
+        "message": "Unsupported value: \"public\": supported values: \"unspecified\", \"open\", \"closed\", \"restricted\""
+      }
+    ]
+  },
+  "group type unspecified": {
+    "accepted": true
+  },
+  "group type upper case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.groupType",
+        "message": "Unsupported value: \"OPEN\": supported values: \"unspecified\", \"open\", \"closed\", \"restricted\""
+      }
+    ]
+  },
+  "member duplicate": {
+    "accepted": true
+  },
+  "member user name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.members[0].userName",
+        "message": "Required value"
+      }
+    ]
+  },
+  "member user name empty": {
+    "accepted": true
+  },
+  "members empty": {
+    "accepted": true
+  },
+  "name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name empty": {
+    "accepted": true
+  },
+  "sample": {
+    "accepted": true
+  },
+  "scope": {
+    "accepted": true
+  },
+  "scope empty": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.scope.resourceRef",
+        "message": "Required value"
+      }
+    ]
+  },
+  "scope name empty": {
+    "accepted": true
+  },
+  "scope namespace": {
+    "accepted": true
+  },
+  "unknown spec field": {
+    "accepted": true
+  },
+  "without spec": {
+    "accepted": true
+  }
+}
