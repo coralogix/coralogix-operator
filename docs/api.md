@@ -15581,10 +15581,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-Group is the Schema for the Groups API.
-See also https://coralogix.com/docs/user-guides/account-management/user-management/assign-user-roles-and-scopes-via-groups/
-
-**Added in v0.4.0**
+Group is the Schema for the groups API.
 
 <table>
     <thead>
@@ -15616,14 +15613,14 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
         <td><b><a href="#groupspec">spec</a></b></td>
         <td>object</td>
         <td>
-          GroupSpec defines the desired state of Coralogix Group.<br/>
+          GroupSpec defines the desired state of a Group.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#groupstatus">status</a></b></td>
         <td>object</td>
         <td>
-          GroupStatus defines the observed state of Group.<br/>
+          GroupStatus defines the observed state of a Group.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -15635,7 +15632,7 @@ See also https://coralogix.com/docs/user-guides/account-management/user-manageme
 
 
 
-GroupSpec defines the desired state of Coralogix Group.
+GroupSpec defines the desired state of a Group.
 
 <table>
     <thead>
@@ -15769,7 +15766,7 @@ Reference to the custom role within the cluster.
 
 
 
-Custom role reference.
+Custom role applied to the group.
 
 <table>
     <thead>
@@ -15918,7 +15915,7 @@ Scope reference.
 
 
 
-GroupStatus defines the observed state of Group.
+GroupStatus defines the observed state of a Group.
 
 <table>
     <thead>

@@ -104,6 +104,13 @@ func SetupGeneratedControllers(mgr ctrl.Manager, clientSet *cxsdk.ClientSet, int
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create the controller of %s: %w", utils.GlobalRouterKind, err)
 	}
+	if err := (&GroupReconciler{
+		Client:    clientSet.Groups(),
+		ClientSet: clientSet,
+		Interval:  intervals[utils.GroupKind],
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create the controller of %s: %w", utils.GroupKind, err)
+	}
 	if err := (&IntegrationReconciler{
 		Client:    clientSet.Integrations(),
 		ClientSet: clientSet,

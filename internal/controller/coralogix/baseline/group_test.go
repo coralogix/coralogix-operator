@@ -47,7 +47,7 @@ func init() {
 		rbacExtra: []string{"customroles", "scopes"},
 		newFake:   newGroupFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.GroupReconciler{GroupsClient: cs.Groups(), UsersClient: cs.Users(), Interval: reconcileInterval}
+			return &v1alpha1controllers.GroupReconciler{Client: cs.Groups(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: groupScenarios,
 		admission: groupAdmission(),
@@ -458,6 +458,13 @@ var groupScenarios = map[string]func(h *harness){
 		h.Create("create returns an API error", groupManifest(groupMinimalSpec))
 		h.Reconcile("retry creates the group")
 	},
+	// The handwritten controller read the id from the answer without a check, and a Create answer
+	// without the group was a nil dereference. The generated controller returns an error.
+	"create-without-group": func(h *harness) {
+		groups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{})
+		h.Create("create succeeds but answers without the group", groupManifest(groupMinimalSpec))
+		h.Reconcile("retry")
+	},
 	"update-fields": func(h *harness) {
 		groupDeps(h)
 		h.Create("create", groupManifest(groupSpec))
@@ -642,22 +649,4 @@ func groupAdmission() map[string]string {
 		"scope name empty":             groupManifest("  name: g\n  scope:\n    resourceRef:\n      name: \"\"\n"),
 		"unknown spec field":           groupManifest("  name: g\n  extra: true\n"),
 	}
-}
-
-// The handwritten controller reads the id from the Create answer without a check. An answer
-// without the group is a nil dereference, which the manager recovers as a failed reconcile. A
-// generated controller returns an error instead, so this test records a known bug of the
-// released code, and the migration changes it.
-func TestGroupCreateAnswerWithoutGroupPanics(t *testing.T) {
-	h := newHarness(t, kinds["group"], "create-without-group")
-	groups(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{})
-	defer func() {
-		if recover() == nil {
-			t.Fatal("the handwritten controller no longer panics on a Create answer without a group")
-		}
-		if len(h.server.takeRequests()) != 1 {
-			t.Fatal("the controller sent more than the Create request")
-		}
-	}()
-	h.Create("create succeeds but answers without the group", groupManifest(groupMinimalSpec))
 }
