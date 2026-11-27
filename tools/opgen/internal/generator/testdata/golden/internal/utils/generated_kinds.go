@@ -28,6 +28,7 @@ const (
 	KeyThingKind        = "KeyThing"
 	ListThingKind       = "ListThing"
 	MaskThingKind       = "MaskThing"
+	OwnPathThingKind    = "OwnPathThing"
 	PatchThingKind      = "PatchThing"
 	RefThingKind        = "RefThing"
 	SettingThingKind    = "SettingThing"

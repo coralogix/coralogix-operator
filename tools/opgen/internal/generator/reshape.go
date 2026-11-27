@@ -28,6 +28,10 @@ import (
 //     group exists only in the response, where it names what the server can return. The arm and,
 //     when one arm is left, the group go away, so the groups of the response and the requests agree.
 
+//   - api.getAtOwnPath: Get is on a path of its own, such as /things/id/{id}, while Update and Delete
+//     are on /things/{id}. The Get operation moves to the path of Update, so the shared module sees
+//     one item path. The generated code calls each operation by its SDK name, never by its path.
+
 // reshape returns the contract for the kind, and the object that holds each inlined field. A kind
 // without an upsert or an inline line gets raw unchanged and no parents.
 func reshape(raw []byte, resource string, file *overrides.File) ([]byte, map[string]overrides.InlineParent, error) {
@@ -47,6 +51,11 @@ func reshape(raw []byte, resource string, file *overrides.File) ([]byte, map[str
 	schemas := mappingPath(doc, "components", "schemas")
 	if file.Upserts() {
 		if err := upsertOperations(doc, file.API.Operations.Get, file.API.Operations.Create); err != nil {
+			return nil, nil, err
+		}
+	}
+	if file.API.GetAtOwnPath {
+		if err := moveGetToItemPath(doc, file.API.Operations.Get, file.API.Operations.Update); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -73,10 +82,13 @@ func reshape(raw []byte, resource string, file *overrides.File) ([]byte, map[str
 
 // needsReshape reports whether the kind has a line that changes the contract.
 func needsReshape(file *overrides.File) bool {
-	if file.Upserts() || len(file.InlinedFields()) != 0 {
+	if file == nil {
+		return false
+	}
+	if file.Upserts() || file.API.GetAtOwnPath || len(file.InlinedFields()) != 0 {
 		return true
 	}
-	if file == nil || file.API.Operations == nil {
+	if file.API.Operations == nil {
 		return false
 	}
 	for _, field := range file.Types[file.Resource].Fields {
@@ -169,6 +181,57 @@ func upsertOperations(doc *yaml.Node, getID, setID string) error {
 	}
 	setMap(item, "delete", del)
 	return nil
+}
+
+// moveGetToItemPath moves the Get operation to the path of Update, so that Get, Update, and Delete
+// share one item path. Get must have its own path, with a path parameter, and Update a path with a
+// parameter of the same name. The path of Get goes away when no other operation is on it.
+func moveGetToItemPath(doc *yaml.Node, getID, updateID string) error {
+	getPath, getMethod, get := findOperation(doc, getID)
+	updatePath, _, update := findOperation(doc, updateID)
+	switch {
+	case get == nil:
+		return getPathIssue("the contract has no operation %s", getID)
+	case update == nil:
+		return getPathIssue("the contract has no operation %s", updateID)
+	case getMethod != "get":
+		return getPathIssue("%s is %s %s, want a GET", getID, strings.ToUpper(getMethod), getPath)
+	case getPath == updatePath:
+		return getPathIssue("%s and %s are on the same path %s; the key is not needed", getID, updateID, updatePath)
+	case !strings.Contains(getPath, "{") || !strings.Contains(updatePath, "{"):
+		return getPathIssue("%s and %s must have the id in their paths: %s, %s", getID, updateID, getPath, updatePath)
+	}
+	target := mappingPath(doc, "paths", updatePath)
+	if mapValue(target, "get") != nil {
+		return getPathIssue("%s already has a GET operation", updatePath)
+	}
+	source := mappingPath(doc, "paths", getPath)
+	// The parameters of the path of Get go with it, unless the new path has parameters of its own,
+	// which Get shares there.
+	if params := mapValue(source, "parameters"); params != nil && mapValue(get, "parameters") == nil && mapValue(target, "parameters") == nil {
+		get = cloneMapping(get)
+		setMap(get, "parameters", params)
+	}
+	setMap(target, "get", get)
+	deleteMap(source, "get")
+	if !hasOperation(source) {
+		deleteMap(mapValue(doc, "paths"), getPath)
+	}
+	return nil
+}
+
+// hasOperation reports whether a path item has an operation.
+func hasOperation(item *yaml.Node) bool {
+	for _, method := range []string{"get", "put", "post", "delete", "patch", "head", "options", "trace"} {
+		if mapValue(item, method) != nil {
+			return true
+		}
+	}
+	return false
+}
+
+func getPathIssue(format string, args ...any) error {
+	return &shapeError{code: "GET_PATH_UNSUPPORTED", path: "behavior-overrides.yaml:api.getAtOwnPath", msg: fmt.Sprintf(format, args...)}
 }
 
 func upsertIssue(suffix, format string, args ...any) error {

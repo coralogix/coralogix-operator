@@ -5,6 +5,7 @@ import (
 	"errors"
 	batchthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/batch_things_service"
 	listthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/list_things_service"
+	ownpaththings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/own_path_things_service"
 	"net/http"
 
 	armthings "github.com/coralogix/coralogix-management-sdk/go/openapi/gen/arm_things_service"
@@ -115,4 +116,8 @@ func (c *ClientSet) SettingThings() *settingthings.SettingThingsServiceAPIServic
 
 func (c *ClientSet) ThingPolicies() *thingpolicies.ThingPoliciesServiceAPIService {
 	return thingpolicies.NewThingPoliciesServiceAPIService()
+}
+
+func (c *ClientSet) OwnPathThings() *ownpaththings.OwnPathThingsServiceAPIService {
+	return ownpaththings.NewOwnPathThingsServiceAPIService()
 }
