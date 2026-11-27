@@ -1,0 +1,104 @@
+[
+  {
+    "step": "create with a subgroup that has no rules",
+    "spec": {
+      "active": true,
+      "hidden": false,
+      "name": "baseline-rule-group",
+      "subgroups": [
+        {
+          "active": true
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "",
+          "enabled": true,
+          "hidden": false,
+          "name": "baseline-rule-group",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": []
+            }
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "",
+          "enabled": true,
+          "hidden": false,
+          "name": "baseline-rule-group",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": []
+            }
+          ]
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

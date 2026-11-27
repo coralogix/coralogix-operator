@@ -1,0 +1,128 @@
+[
+  {
+    "step": "create",
+    "spec": {
+      "active": true,
+      "description": "Baseline rule group",
+      "hidden": false,
+      "name": "baseline-rule-group",
+      "subgroups": [
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "description": "Extracts the worker key",
+              "jsonExtract": {
+                "destinationField": "Category",
+                "jsonKey": "worker"
+              },
+              "name": "worker-to-category"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "Baseline rule group",
+          "enabled": true,
+          "hidden": false,
+          "name": "baseline-rule-group",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "Extracts the worker key",
+                  "enabled": true,
+                  "name": "worker-to-category",
+                  "order": 1,
+                  "parameters": {
+                    "jsonExtractParameters": {
+                      "destinationFieldType": "DESTINATION_FIELD_CATEGORY_OR_UNSPECIFIED",
+                      "rule": "worker"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete returns an API error",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "status": 500
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 2,
+            "reason": "RemoteDeletionFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry deletes the group",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

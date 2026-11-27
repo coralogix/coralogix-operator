@@ -1,0 +1,82 @@
+[
+  {
+    "step": "create without spec",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "",
+          "enabled": false,
+          "hidden": false,
+          "name": "",
+          "ruleMatchers": [],
+          "ruleSubgroups": []
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "retry",
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "",
+          "enabled": false,
+          "hidden": false,
+          "name": "",
+          "ruleMatchers": [],
+          "ruleSubgroups": []
+        },
+        "status": 400
+      }
+    ],
+    "result": {
+      "error": true
+    },
+    "object": {
+      "finalizers": [],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteCreationFailed",
+            "status": "False",
+            "type": "RemoteSynced"
+          }
+        ],
+        "printableStatus": "RemoteUnsynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

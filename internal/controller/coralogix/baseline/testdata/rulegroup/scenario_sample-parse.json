@@ -1,0 +1,211 @@
+[
+  {
+    "step": "create the released sample",
+    "spec": {
+      "active": true,
+      "applications": [
+        "application-name"
+      ],
+      "description": "rule-group from k8s operator",
+      "hidden": false,
+      "name": "parsing-rule",
+      "severities": [
+        "Warning",
+        "Info"
+      ],
+      "subgroups": [
+        {
+          "active": true,
+          "rules": [
+            {
+              "active": true,
+              "description": "Parse the fields of the HTTP request - will be applied after HttpRequestParser1",
+              "name": "HttpRequestParser2",
+              "parse": {
+                "destinationField": "text",
+                "regex": "(?P\u003cremote_addr\u003e\\\\d{1,3}.\\\\d{1,3}.\\\\d{1,3}.\\\\d{1,3})\\\\s*-\\\\s*(?P\u003cuser\u003e[^ ]+)\\\\s*\\\\[(?P\u003ctimestemp\u003e\\\\d{4}-\\\\d{2}\\\\-\\\\d{2}T\\\\d{2}\\\\:\\\\d{2}\\\\:\\\\d{2}\\\\.\\\\d{1,6}Z)\\\\]\\\\s*\\\\\\\\\\\\\\\"(?P\u003cmethod\u003e[A-z]+)\\\\s[\\\\/\\\\\\\\]+(?P\u003crequest\u003e[^\\\\s]+)\\\\s*(?P\u003cprotocol\u003e[A-z0-9\\\\/\\\\.]+)\\\\\\\\\\\\\\\"\\\\s*(?P\u003cstatus\u003e\\\\d+)\\\\s*(?P\u003cbody_bytes_sent\u003e\\\\d+)?\\\\s*?\\\\\\\\\\\\\\\"(?P\u003chttp_referer\u003e[^\\\"]+)\\\\\\\"\\\\s*\\\\\\\\\\\\\\\"(?P\u003chttp_user_agent\u003e[^\\\"]+)\\\\\\\"\\\\s(?P\u003crequest_time\u003e\\\\d{1,6})\\\\s*(?P\u003cresponse_time\u003e\\\\d{1,6})",
+                "sourceField": "text"
+              }
+            }
+          ]
+        }
+      ],
+      "subsystems": [
+        "subsystems-name"
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "rule-group from k8s operator",
+          "enabled": true,
+          "hidden": false,
+          "name": "parsing-rule",
+          "ruleMatchers": [
+            {
+              "applicationName": {
+                "value": "application-name"
+              }
+            },
+            {
+              "subsystemName": {
+                "value": "subsystems-name"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_WARNING"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_INFO"
+              }
+            }
+          ],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "Parse the fields of the HTTP request - will be applied after HttpRequestParser1",
+                  "enabled": true,
+                  "name": "HttpRequestParser2",
+                  "order": 1,
+                  "parameters": {
+                    "parseParameters": {
+                      "destinationField": "text",
+                      "rule": "(?P\u003cremote_addr\u003e\\\\d{1,3}.\\\\d{1,3}.\\\\d{1,3}.\\\\d{1,3})\\\\s*-\\\\s*(?P\u003cuser\u003e[^ ]+)\\\\s*\\\\[(?P\u003ctimestemp\u003e\\\\d{4}-\\\\d{2}\\\\-\\\\d{2}T\\\\d{2}\\\\:\\\\d{2}\\\\:\\\\d{2}\\\\.\\\\d{1,6}Z)\\\\]\\\\s*\\\\\\\\\\\\\\\"(?P\u003cmethod\u003e[A-z]+)\\\\s[\\\\/\\\\\\\\]+(?P\u003crequest\u003e[^\\\\s]+)\\\\s*(?P\u003cprotocol\u003e[A-z0-9\\\\/\\\\.]+)\\\\\\\\\\\\\\\"\\\\s*(?P\u003cstatus\u003e\\\\d+)\\\\s*(?P\u003cbody_bytes_sent\u003e\\\\d+)?\\\\s*?\\\\\\\\\\\\\\\"(?P\u003chttp_referer\u003e[^\\\"]+)\\\\\\\"\\\\s*\\\\\\\\\\\\\\\"(?P\u003chttp_user_agent\u003e[^\\\"]+)\\\\\\\"\\\\s(?P\u003crequest_time\u003e\\\\d{1,6})\\\\s*(?P\u003cresponse_time\u003e\\\\d{1,6})"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "resync: update sends the whole group",
+    "requests": [
+      {
+        "method": "PUT",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "body": {
+          "creator": "",
+          "description": "rule-group from k8s operator",
+          "enabled": true,
+          "hidden": false,
+          "name": "parsing-rule",
+          "ruleMatchers": [
+            {
+              "applicationName": {
+                "value": "application-name"
+              }
+            },
+            {
+              "subsystemName": {
+                "value": "subsystems-name"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_WARNING"
+              }
+            },
+            {
+              "severity": {
+                "value": "VALUE_INFO"
+              }
+            }
+          ],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "Parse the fields of the HTTP request - will be applied after HttpRequestParser1",
+                  "enabled": true,
+                  "name": "HttpRequestParser2",
+                  "order": 1,
+                  "parameters": {
+                    "parseParameters": {
+                      "destinationField": "text",
+                      "rule": "(?P\u003cremote_addr\u003e\\\\d{1,3}.\\\\d{1,3}.\\\\d{1,3}.\\\\d{1,3})\\\\s*-\\\\s*(?P\u003cuser\u003e[^ ]+)\\\\s*\\\\[(?P\u003ctimestemp\u003e\\\\d{4}-\\\\d{2}\\\\-\\\\d{2}T\\\\d{2}\\\\:\\\\d{2}\\\\:\\\\d{2}\\\\.\\\\d{1,6}Z)\\\\]\\\\s*\\\\\\\\\\\\\\\"(?P\u003cmethod\u003e[A-z]+)\\\\s[\\\\/\\\\\\\\]+(?P\u003crequest\u003e[^\\\\s]+)\\\\s*(?P\u003cprotocol\u003e[A-z0-9\\\\/\\\\.]+)\\\\\\\\\\\\\\\"\\\\s*(?P\u003cstatus\u003e\\\\d+)\\\\s*(?P\u003cbody_bytes_sent\u003e\\\\d+)?\\\\s*?\\\\\\\\\\\\\\\"(?P\u003chttp_referer\u003e[^\\\"]+)\\\\\\\"\\\\s*\\\\\\\\\\\\\\\"(?P\u003chttp_user_agent\u003e[^\\\"]+)\\\\\\\"\\\\s(?P\u003crequest_time\u003e\\\\d{1,6})\\\\s*(?P\u003cresponse_time\u003e\\\\d{1,6})"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "delete",
+    "requests": [
+      {
+        "method": "DELETE",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1/<id-1>",
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false
+    },
+    "object": null
+  }
+]

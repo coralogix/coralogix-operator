@@ -1,0 +1,227 @@
+[
+  {
+    "step": "subgroup id and order are not sent",
+    "spec": {
+      "active": true,
+      "hidden": false,
+      "name": "baseline-rule-group",
+      "subgroups": [
+        {
+          "active": true,
+          "id": "ignored-id-1",
+          "order": 7,
+          "rules": [
+            {
+              "active": true,
+              "extract": {
+                "regex": "a",
+                "sourceField": "text"
+              },
+              "name": "first"
+            },
+            {
+              "active": true,
+              "extract": {
+                "regex": "b",
+                "sourceField": "text"
+              },
+              "name": "second"
+            }
+          ]
+        },
+        {
+          "active": true,
+          "id": "ignored-id-2",
+          "order": 3,
+          "rules": [
+            {
+              "active": true,
+              "extract": {
+                "regex": "c",
+                "sourceField": "text"
+              },
+              "name": "third"
+            }
+          ]
+        }
+      ]
+    },
+    "requests": [
+      {
+        "method": "POST",
+        "path": "/mgmt/openapi/5/parsing-rules/rule-groups/v1",
+        "body": {
+          "creator": "",
+          "description": "",
+          "enabled": true,
+          "hidden": false,
+          "name": "baseline-rule-group",
+          "ruleMatchers": [],
+          "ruleSubgroups": [
+            {
+              "enabled": true,
+              "order": 1,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "first",
+                  "order": 1,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "a"
+                    }
+                  },
+                  "sourceField": "text"
+                },
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "second",
+                  "order": 2,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "b"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "order": 2,
+              "rules": [
+                {
+                  "description": "",
+                  "enabled": true,
+                  "name": "third",
+                  "order": 1,
+                  "parameters": {
+                    "extractParameters": {
+                      "rule": "c"
+                    }
+                  },
+                  "sourceField": "text"
+                }
+              ]
+            }
+          ]
+        },
+        "status": 200
+      }
+    ],
+    "result": {
+      "error": false,
+      "requeueAfter": "10m0s"
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    }
+  },
+  {
+    "step": "the remote group",
+    "requests": [],
+    "result": {
+      "error": false
+    },
+    "object": {
+      "finalizers": [
+        "rulegroup.coralogix.com/finalizer"
+      ],
+      "status": {
+        "conditions": [
+          {
+            "observedGeneration": 1,
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
+            "type": "RemoteSynced"
+          }
+        ],
+        "id": "<id-1>",
+        "printableStatus": "RemoteSynced"
+      }
+    },
+    "remote": {
+      "<id-1>": {
+        "creator": "",
+        "description": "",
+        "enabled": true,
+        "hidden": false,
+        "id": "<id-1>",
+        "name": "baseline-rule-group",
+        "order": 1,
+        "ruleMatchers": [],
+        "ruleSubgroups": [
+          {
+            "enabled": true,
+            "id": "<id-2>",
+            "order": 1,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-3>",
+                "name": "first",
+                "order": 1,
+                "parameters": {
+                  "extractParameters": {
+                    "rule": "a"
+                  }
+                },
+                "sourceField": "text"
+              },
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-4>",
+                "name": "second",
+                "order": 2,
+                "parameters": {
+                  "extractParameters": {
+                    "rule": "b"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          },
+          {
+            "enabled": true,
+            "id": "<id-5>",
+            "order": 2,
+            "rules": [
+              {
+                "description": "",
+                "enabled": true,
+                "id": "<id-6>",
+                "name": "third",
+                "order": 1,
+                "parameters": {
+                  "extractParameters": {
+                    "rule": "c"
+                  }
+                },
+                "sourceField": "text"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

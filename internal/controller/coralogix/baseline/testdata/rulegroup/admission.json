@@ -1,0 +1,283 @@
+{
+  "active false": {
+    "accepted": true
+  },
+  "applications": {
+    "accepted": true
+  },
+  "block": {
+    "accepted": true
+  },
+  "block allow": {
+    "accepted": true
+  },
+  "block without source": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].block.sourceField",
+        "message": "Required value"
+      }
+    ]
+  },
+  "creator": {
+    "accepted": true
+  },
+  "description empty": {
+    "accepted": true
+  },
+  "empty spec": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "extract": {
+    "accepted": true
+  },
+  "extract timestamp": {
+    "accepted": true
+  },
+  "hidden true": {
+    "accepted": true
+  },
+  "json extract": {
+    "accepted": true
+  },
+  "json extract no key": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].jsonExtract.jsonKey",
+        "message": "Required value"
+      }
+    ]
+  },
+  "json extract unknown": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.subgroups[0].rules[0].jsonExtract.destinationField",
+        "message": "Unsupported value: \"Text\": supported values: \"Category\", \"CLASSNAME\", \"METHODNAME\", \"THREADID\", \"SEVERITY\""
+      }
+    ]
+  },
+  "json stringify": {
+    "accepted": true
+  },
+  "json stringify keep": {
+    "accepted": true
+  },
+  "name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "name empty": {
+    "accepted": true
+  },
+  "name only": {
+    "accepted": true
+  },
+  "order 0": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.order",
+        "message": "Invalid value: 0: spec.order in body should be greater than or equal to 1"
+      }
+    ]
+  },
+  "order 1": {
+    "accepted": true
+  },
+  "order negative": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.order",
+        "message": "Invalid value: -1: spec.order in body should be greater than or equal to 1"
+      }
+    ]
+  },
+  "order too large": {
+    "accepted": true
+  },
+  "parse": {
+    "accepted": true
+  },
+  "parse json field": {
+    "accepted": true
+  },
+  "parse json no keep": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].parseJsonField.keepDestinationField",
+        "message": "Required value"
+      },
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].parseJsonField.keepSourceField",
+        "message": "Required value"
+      }
+    ]
+  },
+  "parse without regex": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].parse.regex",
+        "message": "Required value"
+      }
+    ]
+  },
+  "remove empty fields": {
+    "accepted": true
+  },
+  "remove fields": {
+    "accepted": true
+  },
+  "remove no fields": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].removeFields.excludedFields",
+        "message": "Required value"
+      }
+    ]
+  },
+  "replace": {
+    "accepted": true
+  },
+  "replace no string": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].replace.replacementString",
+        "message": "Required value"
+      }
+    ]
+  },
+  "rule inactive": {
+    "accepted": true
+  },
+  "rule name absent": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].name",
+        "message": "Required value"
+      }
+    ]
+  },
+  "rule name empty": {
+    "accepted": true
+  },
+  "rule with two types": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.subgroups[0].rules[0]",
+        "message": "Invalid value: \"object\": Exactly one of the following fields should be set: parse, block, jsonExtract, replace, extractTimestamp, removeFields, jsonStringify, extract, parseJsonField"
+      }
+    ]
+  },
+  "rule without type": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueInvalid",
+        "field": "spec.subgroups[0].rules[0]",
+        "message": "Invalid value: \"object\": Exactly one of the following fields should be set: parse, block, jsonExtract, replace, extractTimestamp, removeFields, jsonStringify, extract, parseJsonField"
+      }
+    ]
+  },
+  "sample": {
+    "accepted": true
+  },
+  "severity lower case": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.severities[0]",
+        "message": "Unsupported value: \"warning\": supported values: \"Debug\", \"Verbose\", \"Info\", \"Warning\", \"Error\", \"Critical\""
+      }
+    ]
+  },
+  "severity unknown": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.severities[0]",
+        "message": "Unsupported value: \"Fatal\": supported values: \"Debug\", \"Verbose\", \"Info\", \"Warning\", \"Error\", \"Critical\""
+      }
+    ]
+  },
+  "severity warning": {
+    "accepted": true
+  },
+  "subgroup id": {
+    "accepted": true
+  },
+  "subgroup inactive": {
+    "accepted": true
+  },
+  "subgroup order 0": {
+    "accepted": true
+  },
+  "subgroup without rules": {
+    "accepted": true
+  },
+  "subgroups empty": {
+    "accepted": true
+  },
+  "subsystems": {
+    "accepted": true
+  },
+  "timestamp no format": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueRequired",
+        "field": "spec.subgroups[0].rules[0].extractTimestamp.timeFormat",
+        "message": "Required value"
+      }
+    ]
+  },
+  "timestamp unknown": {
+    "accepted": false,
+    "causes": [
+      {
+        "type": "FieldValueNotSupported",
+        "field": "spec.subgroups[0].rules[0].extractTimestamp.fieldFormatStandard",
+        "message": "Unsupported value: \"Unix\": supported values: \"Strftime\", \"JavaSDF\", \"Golang\", \"SecondTS\", \"MilliTS\", \"MicroTS\", \"NanoTS\""
+      }
+    ]
+  },
+  "without spec": {
+    "accepted": true
+  }
+}
