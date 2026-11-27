@@ -1,0 +1,34 @@
+# The e2e values of ApiKey that the contract cannot state.
+#
+# A key that a team owns can be created only for the team of the caller, so the CR names the team
+# of the CI account. CI exports its id as TEST_TEAM_ID.
+env: [TEST_TEAM_ID]
+values:
+  owner.teamId: 1234567
+  presets: [APM]
+  permissions: ['livetail:Read']
+  # The policy of a key that a team owns may hold only team-custom-api-keys permissions.
+  accessPolicy: '{"version":"2025-01-01","default":{"permissions":{"team-custom-api-keys:ReadConfig":"grant","team-custom-api-keys:Manage":"deny","team-custom-api-keys:ReadAccessPolicy":"grant","team-custom-api-keys:UpdateAccessPolicy":"deny"}},"rules":[]}'
+substitutions:
+  '1234567': '@{env.TEST_TEAM_ID}'
+# The CRD and the API need a preset or a permission.
+minimal:
+  presets: [APM]
+# A key of a user needs a user who is a member of the team: the API answers 403 for any other.
+skipChoices:
+  Owner:
+    choices: [userId]
+    reason: a key of a user needs a member of the team, and the CI account has no fixed member; a user that is no member answers 403
+# The API stores the policy in another form, so the update step changes the name.
+update:
+  field: name
+  value: e2e-api-key-updated
+# The spec that chart 0.5 accepts.
+upgrade:
+  from: '0.5'
+  spec:
+    name: '@{run}'
+    owner: {teamId: '@{env.TEST_TEAM_ID}'}
+    presets: [APM]
+  field: name
+  value: '@{run}-updated'

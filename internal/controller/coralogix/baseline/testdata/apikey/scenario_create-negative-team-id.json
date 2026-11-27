@@ -1,8 +1,7 @@
 [
   {
-    "step": "admission accepts -1, the controller cannot read the CR",
+    "step": "admission rejects -1",
     "spec": {
-      "active": true,
       "name": "baseline-key",
       "owner": {
         "teamId": -1
@@ -11,44 +10,20 @@
         "APM"
       ]
     },
+    "rejected": {
+      "accepted": false,
+      "causes": [
+        {
+          "type": "FieldValueInvalid",
+          "field": "spec.owner.teamId",
+          "message": "Invalid value: -1: spec.owner.teamId in body should be greater than or equal to 0"
+        }
+      ]
+    },
     "requests": [],
     "result": {
-      "error": true
+      "error": false
     },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "InternalK8sError",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
-  },
-  {
-    "step": "retry",
-    "requests": [],
-    "result": {
-      "error": true
-    },
-    "object": {
-      "finalizers": [],
-      "status": {
-        "conditions": [
-          {
-            "observedGeneration": 1,
-            "reason": "InternalK8sError",
-            "status": "False",
-            "type": "RemoteSynced"
-          }
-        ],
-        "printableStatus": "RemoteUnsynced"
-      }
-    }
+    "object": null
   }
 ]

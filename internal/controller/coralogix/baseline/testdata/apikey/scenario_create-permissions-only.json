@@ -19,7 +19,8 @@
           "keyPermissions": {
             "permissions": [
               "livetail:Read"
-            ]
+            ],
+            "presets": []
           },
           "name": "baseline-key",
           "owner": {
@@ -123,7 +124,9 @@
               "livetail:Read"
             ]
           },
-          "presets": {}
+          "presets": {
+            "presets": []
+          }
         },
         "status": 200
       },

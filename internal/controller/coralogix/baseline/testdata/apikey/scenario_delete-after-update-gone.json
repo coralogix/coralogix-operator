@@ -76,7 +76,9 @@
         "body": {
           "isActive": true,
           "newName": "renamed-key",
-          "permissions": {},
+          "permissions": {
+            "permissions": []
+          },
           "presets": {
             "presets": [
               "APM"

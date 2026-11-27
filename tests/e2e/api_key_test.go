@@ -67,9 +67,9 @@ var _ = Describe("ApiKey", Ordered, func() {
 			},
 			Spec: coralogixv1alpha1.ApiKeySpec{
 				Name:   apiKeyName,
-				Active: true,
+				Active: ptr.To(true),
 				Owner: coralogixv1alpha1.ApiKeyOwner{
-					TeamId: ptr.To(teamIDFromEnv()),
+					TeamId: ptr.To(int64(teamIDFromEnv())),
 				},
 				Presets:     []string{"APM"},
 				Permissions: []string{"ALERTS-MAP:READ"},
@@ -102,8 +102,8 @@ var _ = Describe("ApiKey", Ordered, func() {
 			g.Expect(crClient.Get(ctx, types.NamespacedName{Name: apiKeyName, Namespace: testNamespace}, fetchedApiKey)).To(Succeed())
 			g.Expect(meta.IsStatusConditionTrue(fetchedApiKey.Status.Conditions, utils.ConditionTypeRemoteSynced)).To(BeTrue())
 			g.Expect(fetchedApiKey.Status.PrintableStatus).To(Equal("RemoteSynced"))
-			if fetchedApiKey.Status.Id != nil {
-				apiKeyID = *fetchedApiKey.Status.Id
+			if fetchedApiKey.Status.ID != nil {
+				apiKeyID = *fetchedApiKey.Status.ID
 				return nil
 			}
 			return fmt.Errorf("ApiKey ID is not set")
@@ -151,9 +151,9 @@ var _ = Describe("ApiKey", Ordered, func() {
 
 	It("should deny creation of ApiKey with both userId and teamId", func(ctx context.Context) {
 		apiKey.Spec.Owner.UserId = ptr.To("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
-		apiKey.Spec.Owner.TeamId = ptr.To(uint32(12345678))
+		apiKey.Spec.Owner.TeamId = ptr.To(int64(12345678))
 		err := crClient.Create(ctx, apiKey)
-		Expect(err.Error()).To(ContainSubstring("Exactly one of userId or teamId must be set"))
+		Expect(err.Error()).To(ContainSubstring("Exactly one of teamId, userId must be set"))
 	})
 
 	It("should deny creation of ApiKey without presets and permissions", func(ctx context.Context) {

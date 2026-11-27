@@ -36,29 +36,25 @@
       }
     ],
     "result": {
-      "error": false,
-      "requeueAfter": "10m0s"
+      "error": true
     },
     "object": {
-      "finalizers": [
-        "api-key.coralogix.com/finalizer"
-      ],
+      "finalizers": [],
       "status": {
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteSyncedSuccessfully",
-            "status": "True",
+            "reason": "RemoteCreationFailed",
+            "status": "False",
             "type": "RemoteSynced"
           }
         ],
-        "id": "",
-        "printableStatus": "RemoteSynced"
+        "printableStatus": "RemoteUnsynced"
       }
     }
   },
   {
-    "step": "retry creates a key, the secret exists",
+    "step": "retry creates a key and its secret",
     "requests": [
       {
         "method": "POST",
@@ -81,7 +77,8 @@
       }
     ],
     "result": {
-      "error": true
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
       "finalizers": [
@@ -91,18 +88,18 @@
         "conditions": [
           {
             "observedGeneration": 1,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
             "type": "RemoteSynced"
           }
         ],
         "id": "<id-1>",
-        "printableStatus": "RemoteUnsynced"
+        "printableStatus": "RemoteSynced"
       }
     }
   },
   {
-    "step": "update writes the value of the new key",
+    "step": "resync",
     "requests": [
       {
         "method": "PUT",

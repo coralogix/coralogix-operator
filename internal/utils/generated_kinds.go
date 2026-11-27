@@ -21,6 +21,7 @@ package utils
 const (
 	AIEvaluationKind             = "AIEvaluation"
 	AlertSchedulerKind           = "AlertScheduler"
+	ApiKeyKind                   = "ApiKey"
 	ArchiveLogsTargetKind        = "ArchiveLogsTarget"
 	ConfigurationGroupKind       = "ConfigurationGroup"
 	CustomRoleKind               = "CustomRole"

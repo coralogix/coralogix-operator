@@ -17,6 +17,7 @@
         "path": "/mgmt/openapi/5/aaa/api-keys/v3",
         "body": {
           "keyPermissions": {
+            "permissions": [],
             "presets": [
               "SendData"
             ]
@@ -60,7 +61,9 @@
         "body": {
           "isActive": true,
           "newName": "baseline-key",
-          "permissions": {},
+          "permissions": {
+            "permissions": []
+          },
           "presets": {
             "presets": [
               "SendData"
@@ -106,7 +109,9 @@
         "body": {
           "isActive": true,
           "newName": "baseline-key",
-          "permissions": {},
+          "permissions": {
+            "permissions": []
+          },
           "presets": {
             "presets": [
               "SendData"

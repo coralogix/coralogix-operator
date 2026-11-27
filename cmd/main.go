@@ -175,13 +175,6 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "OutboundWebhook")
 		os.Exit(1)
 	}
-	if err = (&v1alpha1controllers.ApiKeyReconciler{
-		ApiKeysClient: oapiClientSet.APIKeys(),
-		Interval:      cfg.ReconcileIntervals[utils.ApiKeyKind],
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiKey")
-		os.Exit(1)
-	}
 	if err = (&v1alpha1controllers.GroupReconciler{
 		GroupsClient: oapiClientSet.Groups(),
 		UsersClient:  oapiClientSet.Users(),

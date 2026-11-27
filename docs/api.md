@@ -10352,10 +10352,7 @@ with respect to the current state of the instance.<br/>
 
 
 
-ApiKey is the Schema for the ApiKeys API.
-See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
-
-**Added in v0.4.0**
+ApiKey is the Schema for the apikeys API.
 
 <table>
     <thead>
@@ -10387,7 +10384,7 @@ See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-
         <td><b><a href="#apikeyspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ApiKeySpec defines the desired state of a Coralogix ApiKey.<br/>
+          ApiKeySpec defines the desired state of a ApiKey.<br/>
           <br/>
             <i>Validations</i>:<li>has(self.presets) || has(self.permissions): At least one of presets or permissions must be set</li>
         </td>
@@ -10396,7 +10393,7 @@ See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-
         <td><b><a href="#apikeystatus">status</a></b></td>
         <td>object</td>
         <td>
-          ApiKeyStatus defines the observed state of ApiKey.<br/>
+          ApiKeyStatus defines the observed state of a ApiKey.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10408,7 +10405,7 @@ See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-
 
 
 
-ApiKeySpec defines the desired state of a Coralogix ApiKey.
+ApiKeySpec defines the desired state of a ApiKey.
 
 <table>
     <thead>
@@ -10423,30 +10420,30 @@ ApiKeySpec defines the desired state of a Coralogix ApiKey.
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Name of the ApiKey<br/>
+          Display name. Not unique: another key can have the same name. Never empty.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b><a href="#apikeyspecowner">owner</a></b></td>
         <td>object</td>
         <td>
-          Owner of the ApiKey.<br/>
+          ApiKeyOwner is the Owner object of the API.<br/>
           <br/>
-            <i>Validations</i>:<li>has(self.userId) != has(self.teamId): Exactly one of userId or teamId must be set</li>
+            <i>Validations</i>:<li>self == oldSelf: spec.owner is immutable</li><li>(has(self.teamId) ? 1 : 0) + (has(self.userId) ? 1 : 0) == 1: Exactly one of teamId, userId must be set</li>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>accessPolicy</b></td>
         <td>string</td>
         <td>
-          JSON string representing the access policy for this API key. Defines granular permissions for users and groups.<br/>
+          JSON string representing the access policy for this API key. Defines granular permissions for users and groups. The service stores the policy as compact JSON in no stable key order, and adds the permissions of the owner type that the policy does not set, as deny, so the key can read back with more permissions than were sent. Absent when the key has no policy.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>active</b></td>
         <td>boolean</td>
         <td>
-          Whether the ApiKey Is active.<br/>
+          Whether this resource is active.<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -10455,14 +10452,14 @@ ApiKeySpec defines the desired state of a Coralogix ApiKey.
         <td><b>permissions</b></td>
         <td>[]string</td>
         <td>
-          Permissions of the ApiKey<br/>
+          Permissions that the key has besides its presets. Empty when the key has none. A permission that a preset also holds is listed here when the request named it.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>presets</b></td>
         <td>[]string</td>
         <td>
-          Permission Presets that the ApiKey uses.<br/>
+          Names of the permission presets of the key. A name matches in any case.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10474,7 +10471,7 @@ ApiKeySpec defines the desired state of a Coralogix ApiKey.
 
 
 
-Owner of the ApiKey.
+ApiKeyOwner is the Owner object of the API.
 
 <table>
     <thead>
@@ -10489,16 +10486,17 @@ Owner of the ApiKey.
         <td><b>teamId</b></td>
         <td>integer</td>
         <td>
-          Team that owns the key.<br/>
+          The team id.<br/>
           <br/>
             <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>userId</b></td>
         <td>string</td>
         <td>
-          User that owns the key.<br/>
+          User identifier of the API key owner.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10510,7 +10508,7 @@ Owner of the ApiKey.
 
 
 
-ApiKeyStatus defines the observed state of ApiKey.
+ApiKeyStatus defines the observed state of a ApiKey.
 
 <table>
     <thead>

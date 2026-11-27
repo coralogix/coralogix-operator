@@ -24,11 +24,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          ApiKey is the Schema for the ApiKeys API.
-          See also https://coralogix.com/docs/user-guides/account-management/api-keys/api-keys/
-
-          **Added in v0.4.0**
+        description: ApiKey is the Schema for the apikeys API.
         properties:
           apiVersion:
             description: |-
@@ -48,41 +44,53 @@ spec:
           metadata:
             type: object
           spec:
-            description: ApiKeySpec defines the desired state of a Coralogix ApiKey.
+            description: ApiKeySpec defines the desired state of a ApiKey.
             properties:
               accessPolicy:
                 description: JSON string representing the access policy for this API
-                  key. Defines granular permissions for users and groups.
+                  key. Defines granular permissions for users and groups. The service
+                  stores the policy as compact JSON in no stable key order, and adds
+                  the permissions of the owner type that the policy does not set,
+                  as deny, so the key can read back with more permissions than were
+                  sent. Absent when the key has no policy.
                 type: string
               active:
                 default: true
-                description: Whether the ApiKey Is active.
+                description: Whether this resource is active.
                 type: boolean
               name:
-                description: Name of the ApiKey
+                description: 'Display name. Not unique: another key can have the same
+                  name. Never empty.'
                 minLength: 0
                 type: string
               owner:
-                description: Owner of the ApiKey.
+                description: ApiKeyOwner is the Owner object of the API.
                 properties:
                   teamId:
-                    description: Team that owns the key.
+                    description: The team id.
                     format: int32
+                    minimum: 0
                     type: integer
                   userId:
-                    description: User that owns the key.
+                    description: User identifier of the API key owner.
                     type: string
                 type: object
                 x-kubernetes-validations:
-                - message: Exactly one of userId or teamId must be set
-                  rule: has(self.userId) != has(self.teamId)
+                - message: spec.owner is immutable
+                  rule: self == oldSelf
+                - message: Exactly one of teamId, userId must be set
+                  rule: '(has(self.teamId) ? 1 : 0) + (has(self.userId) ? 1 : 0) ==
+                    1'
               permissions:
-                description: Permissions of the ApiKey
+                description: Permissions that the key has besides its presets. Empty
+                  when the key has none. A permission that a preset also holds is
+                  listed here when the request named it.
                 items:
                   type: string
                 type: array
               presets:
-                description: Permission Presets that the ApiKey uses.
+                description: Names of the permission presets of the key. A name matches
+                  in any case.
                 items:
                   type: string
                 type: array
@@ -94,7 +102,7 @@ spec:
             - message: At least one of presets or permissions must be set
               rule: has(self.presets) || has(self.permissions)
           status:
-            description: ApiKeyStatus defines the observed state of ApiKey.
+            description: ApiKeyStatus defines the observed state of a ApiKey.
             properties:
               conditions:
                 items:

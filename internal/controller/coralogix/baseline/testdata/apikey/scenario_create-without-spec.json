@@ -6,7 +6,10 @@
         "method": "POST",
         "path": "/mgmt/openapi/5/aaa/api-keys/v3",
         "body": {
-          "keyPermissions": {},
+          "keyPermissions": {
+            "permissions": [],
+            "presets": []
+          },
           "name": "",
           "owner": {}
         },
@@ -38,7 +41,10 @@
         "method": "POST",
         "path": "/mgmt/openapi/5/aaa/api-keys/v3",
         "body": {
-          "keyPermissions": {},
+          "keyPermissions": {
+            "permissions": [],
+            "presets": []
+          },
           "name": "",
           "owner": {}
         },

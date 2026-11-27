@@ -129,6 +129,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-scope.sh before
+      - name: Create an ApiKey with the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        # The key belongs to the team of the CI account, whose id the lookup exports.
+        run: bash .github/scripts/ci-account.sh lookup bash scripts/upgrade-check-apikey.sh before
       - name: Create a View with the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -262,6 +267,10 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-scope.sh after
+      - name: Check the ApiKey of the released operator
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash .github/scripts/ci-account.sh lookup bash scripts/upgrade-check-apikey.sh after
       - name: Check the View of the released operator
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
@@ -357,6 +366,11 @@ jobs:
         env:
           NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
         run: bash scripts/upgrade-check-scope.sh cleanup
+      - name: Delete the ApiKey of the upgrade test
+        if: always()
+        env:
+          NAME: upgrade-test-${{ github.run_id }}-${{ inputs.operator_version }}
+        run: bash .github/scripts/ci-account.sh lookup bash scripts/upgrade-check-apikey.sh cleanup
       - name: Collect Operator Logs
         if: always()
         run: |

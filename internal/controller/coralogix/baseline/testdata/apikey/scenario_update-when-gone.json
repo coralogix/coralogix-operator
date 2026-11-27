@@ -76,7 +76,9 @@
         "body": {
           "isActive": true,
           "newName": "renamed-key",
-          "permissions": {},
+          "permissions": {
+            "permissions": []
+          },
           "presets": {
             "presets": [
               "APM"
@@ -115,6 +117,7 @@
         "path": "/mgmt/openapi/5/aaa/api-keys/v3",
         "body": {
           "keyPermissions": {
+            "permissions": [],
             "presets": [
               "APM"
             ]
@@ -128,7 +131,8 @@
       }
     ],
     "result": {
-      "error": true
+      "error": false,
+      "requeueAfter": "10m0s"
     },
     "object": {
       "finalizers": [
@@ -138,18 +142,18 @@
         "conditions": [
           {
             "observedGeneration": 2,
-            "reason": "RemoteCreationFailed",
-            "status": "False",
+            "reason": "RemoteSyncedSuccessfully",
+            "status": "True",
             "type": "RemoteSynced"
           }
         ],
         "id": "<id-2>",
-        "printableStatus": "RemoteUnsynced"
+        "printableStatus": "RemoteSynced"
       }
     }
   },
   {
-    "step": "update writes the value of the new key",
+    "step": "resync",
     "requests": [
       {
         "method": "PUT",
@@ -157,7 +161,9 @@
         "body": {
           "isActive": true,
           "newName": "renamed-key",
-          "permissions": {},
+          "permissions": {
+            "permissions": []
+          },
           "presets": {
             "presets": [
               "APM"

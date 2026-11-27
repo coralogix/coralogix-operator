@@ -43,7 +43,7 @@ func init() {
 		resource: "apikeys",
 		newFake:  newAPIKeyFake,
 		newReconciler: func(cs *openapicxsdk.ClientSet) reconcile.Reconciler {
-			return &v1alpha1controllers.ApiKeyReconciler{ApiKeysClient: cs.APIKeys(), Interval: reconcileInterval}
+			return &v1alpha1controllers.ApiKeyReconciler{Client: cs.APIKeys(), ClientSet: cs, Interval: reconcileInterval}
 		},
 		scenarios: apiKeyScenarios,
 		admission: apiKeyAdmission(),
@@ -308,39 +308,37 @@ var apiKeyScenarios = map[string]func(h *harness){
 		h.Reconcile("retry")
 		h.Delete("delete")
 	},
-	// Admission accepts a team id that is negative or above uint32, but the Go type is uint32. The
-	// controller cannot read the CR, and makes no request. In a cluster the typed list of every
-	// ApiKey fails too.
+	// The released CRD accepted a negative team id, which its uint32 Go type could not decode. The
+	// CRD has the minimum 0 of the API.
 	"create-negative-team-id": func(h *harness) {
-		h.Create("admission accepts -1, the controller cannot read the CR", apiKeyManifest("  name: baseline-key\n  owner:\n    teamId: -1\n  presets:\n    - APM\n"))
-		h.Reconcile("retry")
+		h.CreateRejected("admission rejects -1", apiKeyManifest("  name: baseline-key\n  owner:\n    teamId: -1\n  presets:\n    - APM\n"))
 	},
 	"create-rejected": func(h *harness) {
 		apiKeys(h).answerNext(http.MethodPost, http.StatusInternalServerError, map[string]any{"code": 500, "message": "Internal Server Error: rejected"})
 		h.Create("create returns an API error", apiKeyManifest(apiKeySpec))
 		h.Reconcile("retry creates the key")
 	},
-	// A 200 with an empty key id: the controller writes the secret and saves the empty id, which
-	// reads as no id. The retry creates a second key, and its secret write fails because the secret
-	// exists. The error saves the new id, so the next reconcile updates that key and its secret.
+	// A 200 with an empty key id fails the create: no id and no secret are saved. The retry creates
+	// a second key and writes its secret. The released controller saved the empty id and wrote the
+	// secret with the value of the first key.
 	"create-empty-id": func(h *harness) {
 		apiKeys(h).answerNext(http.MethodPost, http.StatusOK, map[string]any{"keyId": "", "name": "baseline-key", "value": "cxo-fake-orphan-value"})
 		h.Create("create succeeds without an id", apiKeyManifest(apiKeySpec))
-		h.Reconcile("retry creates a key, the secret exists")
-		h.Reconcile("update writes the value of the new key")
+		h.Reconcile("retry creates a key and its secret")
+		h.Reconcile("resync")
 		recordAPIKeyRemote(h, "the key and the secret")
 	},
-	// A Secret with the name exists: the key is created and the secret write fails. The error
-	// saves status.id, but no finalizer is added. The next reconcile updates the key and
-	// overwrites the secret, which keeps no owner reference. A delete then removes the CR without
-	// deleting the key.
+	// A Secret with the name exists: the key is created, status.id and the finalizer are saved, and
+	// the hook writes the value into the secret, which keeps no owner reference. A delete deletes the
+	// key. The released controller failed the secret write, added no finalizer, and left the key
+	// remote on delete.
 	"create-secret-exists": func(h *harness) {
 		putAPIKeySecret(h, "not-from-the-operator")
 		h.Create("create: the key is made, the secret exists", apiKeyManifest(apiKeySpec))
-		h.Reconcile("update writes the value of the key")
+		h.Reconcile("resync")
 		recordAPIKeyRemote(h, "one key, the secret holds its value")
-		h.Delete("delete: no finalizer, so no remote delete")
-		recordAPIKeyRemote(h, "the key remains")
+		h.Delete("delete")
+		recordAPIKeyRemote(h, "the remote key after the delete")
 	},
 	// A chart upgrade: the released operator created the key and wrote status.id, its finalizer,
 	// and the secret. The operator updates that key, creates none, and deletes it on delete.
@@ -363,8 +361,8 @@ var apiKeyScenarios = map[string]func(h *harness){
 			[]string{"api-key.coralogix.com/finalizer"}, map[string]any{"id": apiKeyReleasedID})
 		recordAPIKeyRemote(h, "the secret holds the value that get returns")
 	},
-	// A key that is hashed has no value in get. The update writes an empty value over the
-	// secret, which held the value of the create answer.
+	// A key that is hashed has no value in get. The secret keeps the value that it holds. The
+	// released controller wrote an empty value over it.
 	"hashed-key": func(h *harness) {
 		key := releasedAPIKey()
 		key.hashed = true
@@ -372,7 +370,7 @@ var apiKeyScenarios = map[string]func(h *harness){
 		putAPIKeySecret(h, "cxo-fake-released-value")
 		h.CreateReleased("reconcile a CR of a hashed key", apiKeyManifest(apiKeySpec),
 			[]string{"api-key.coralogix.com/finalizer"}, map[string]any{"id": apiKeyReleasedID})
-		recordAPIKeyRemote(h, "the secret value is empty")
+		recordAPIKeyRemote(h, "the secret keeps its value")
 	},
 	"update-fields": func(h *harness) {
 		h.Create("create", apiKeyManifest(apiKeySpec))
@@ -390,8 +388,9 @@ var apiKeyScenarios = map[string]func(h *harness){
 		h.SetSpec("remove the permissions: update sends an empty permissions object", apiKeySpecMap("baseline-key", true, []any{"APM"}, nil, nil))
 		recordAPIKeyRemote(h, "the remote key has no permission")
 	},
-	// The update body has no owner. A changed owner is accepted by admission and never sent: the
-	// key keeps its owner, and each reconcile reports success.
+	// The API cannot change the owner of a key. The CRD states it: admission refuses a changed
+	// owner, and the key keeps its team. The handwritten controller accepted the change and
+	// never sent it.
 	"update-owner": func(h *harness) {
 		h.Create("create", apiKeyManifest(apiKeySpec))
 		withOwner := func(owner map[string]any) map[string]any {
@@ -399,9 +398,8 @@ var apiKeyScenarios = map[string]func(h *harness){
 			spec["owner"] = owner
 			return spec
 		}
-		h.SetSpec("change the owner to another team", withOwner(map[string]any{"teamId": int64(1234567)}))
-		recordAPIKeyRemote(h, "the remote key keeps its team")
-		h.SetSpec("change the owner to a user", withOwner(map[string]any{"userId": apiKeyFakeUser}))
+		h.SetSpecRejected("change the owner to another team: spec.owner is immutable", withOwner(map[string]any{"teamId": int64(1234567)}))
+		h.SetSpecRejected("change the owner to a user: spec.owner is immutable", withOwner(map[string]any{"userId": apiKeyFakeUser}))
 		recordAPIKeyRemote(h, "the remote key keeps its team")
 	},
 	"update-set-access-policy": func(h *harness) {
@@ -426,15 +424,15 @@ var apiKeyScenarios = map[string]func(h *harness){
 		h.Reconcile("retry")
 		recordAPIKeyRemote(h, "the remote key is unchanged")
 	},
-	// The update 404 removes status.id. The retry creates a new key, and its secret write fails:
-	// the secret of the old key exists. The error saves the new id, so the next reconcile updates
-	// the new key and writes its value.
+	// The update 404 removes status.id. The retry creates a new key and writes its value into the
+	// secret of the old key. The released controller failed that write once, and wrote the value on
+	// the next reconcile.
 	"update-when-gone": func(h *harness) {
 		h.Create("create", apiKeyManifest(apiKeySpec))
 		apiKeys(h).forget(h.StatusID())
 		h.SetSpec("update after remote deletion", apiKeySpecMap("renamed-key", true, []any{"APM"}, nil, nil))
 		h.Reconcile("recreate: the key is made, the secret exists")
-		h.Reconcile("update writes the value of the new key")
+		h.Reconcile("resync")
 		recordAPIKeyRemote(h, "the new key and its value")
 	},
 	"update-get-fails": func(h *harness) {

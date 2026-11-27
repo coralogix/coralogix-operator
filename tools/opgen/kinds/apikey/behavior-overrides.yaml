@@ -1,0 +1,50 @@
+# Where ApiKey differs from the API contract, because users already have it.
+#
+# A field with a line here keeps its released behavior. A field without a line follows the API
+# contract.
+resource: KeyInfo
+mode: existing
+validators:
+  inferred: true
+  fields:
+    # The released CRD accepts an empty name. The API answers 400.
+    spec.name: {inferred: false, add: ['+kubebuilder:validation:MinLength=0']}
+    # The released team id was a uint32: format int32 in the CRD.
+    spec.owner.teamId:
+      add: ['+kubebuilder:validation:Format=int32']
+    # The released CRD needs a preset or a permission. The API answers 400 for a Create without both.
+    spec:
+      add: ['+kubebuilder:validation:XValidation:rule="has(self.presets) || has(self.permissions)",message="At least one of presets or permissions must be set"']
+# Create returns {keyId, name, value}, and Update returns {}.
+api:
+  operations:
+    create: ApiKeysService_CreateApiKey
+    get: ApiKeysService_GetApiKey
+    update: ApiKeysService_UpdateApiKey
+    delete: ApiKeysService_DeleteApiKey
+  idProperty: id
+  createResponseOnlyIDProperty: keyId
+# The hooks write the key value to the Secret <name>-secret.
+hooks: [afterCreate, afterUpdate]
+# Update holds each list in a one-property object; Create and Get hold the list.
+unwrap: [UpdateApiKeyRequest.Permissions, Presets]
+types:
+  KeyInfo:
+    fields:
+      # Update takes the name as newName.
+      name: {updateAs: newName}
+      # Create cannot set active: a new key is active, and Update sets it.
+      active: {updateAs: isActive, updateDefault: 'true'}
+      # Get and Create hold the lists in keyPermissions; the CR shows them at the top level.
+      keyPermissions: {inline: true}
+      # Get holds each preset as an object with its name. A removed list is sent empty, which
+      # clears it: the API keeps a list that Update omits.
+      presets: {requestAs: keyPermissions.presets, updateAs: presets, itemName: name, sendNullAsEmpty: true, description: Names of the permission presets of the key. A name matches in any case.}
+      permissions: {requestAs: keyPermissions.permissions, updateAs: permissions, sendNullAsEmpty: true}
+      # The released CR has no hashed field, and Create never sends it.
+      hashed: {readOnly: true}
+      # The released CR needs exactly one owner.
+      owner: {requireOne: true}
+  Owner:
+    unsupportedArms:
+      - {arm: organisationId, reason: 'the released CR has no organisation owner, and Create answers 400 for one'}
