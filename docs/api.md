@@ -2582,7 +2582,9 @@ The API checks the range (1-1440). May exceed timeframeMinutes, in which case da
         <td><b>useRowsAsPermutations</b></td>
         <td>boolean</td>
         <td>
-          Whether each result row is treated as a separate permutation.<br/>
+          Deprecated: leave this field out. The operator ignores it and does not send it to the API.
+The field stays so that stored objects and manifests that set it stay valid.
+The API derives the value from the DataPrime query: true when the query has group-by keys.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -27514,7 +27516,9 @@ The API checks the range (1-1440). May exceed timeframeMinutes, in which case da
         <td><b>useRowsAsPermutations</b></td>
         <td>boolean</td>
         <td>
-          Whether each result row is treated as a separate permutation.<br/>
+          Deprecated: leave this field out. The operator ignores it and does not send it to the API.
+The field stays so that stored objects and manifests that set it stay valid.
+The API derives the value from the DataPrime query: true when the query has group-by keys.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

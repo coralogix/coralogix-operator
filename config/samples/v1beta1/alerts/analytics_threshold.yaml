@@ -26,7 +26,6 @@ spec:
       # Optional. How often the query is evaluated, in minutes. Must not exceed timeframeMinutes.
       # When omitted, the API uses min(10, timeframeMinutes). Removing the line resets the period to that default.
       evaluationPeriodMinutes: 5
-      useRowsAsPermutations: true
       rules:
         - condition:
             threshold: "100"
