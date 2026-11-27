@@ -28,8 +28,8 @@ import (
 
 const recordingRulesPath = "/recording-rules/recording-rules/v1"
 
-// ruleGroupRecord is one rule group of a set, as the API stores it.
-type ruleGroupRecord struct {
+// recordingRuleGroupRecord is one rule group of a set, as the API stores it.
+type recordingRuleGroupRecord struct {
 	id       string
 	name     string
 	interval int64
@@ -38,21 +38,21 @@ type ruleGroupRecord struct {
 	version  int64
 }
 
-type ruleGroupSetRecord struct {
+type recordingRuleGroupSetRecord struct {
 	name   string
-	groups []ruleGroupRecord
+	groups []recordingRuleGroupRecord
 }
 
 // recordingRuleGroupSetFake keeps the remote state that the handwritten controller can change.
 type recordingRuleGroupSetFake struct {
 	mu     sync.Mutex
 	nextID int
-	sets   map[string]ruleGroupSetRecord
+	sets   map[string]recordingRuleGroupSetRecord
 	forced map[string]forcedAnswer
 }
 
 func newRecordingRuleGroupSetFake() apiFake {
-	return &recordingRuleGroupSetFake{nextID: 1, sets: map[string]ruleGroupSetRecord{}, forced: map[string]forcedAnswer{}}
+	return &recordingRuleGroupSetFake{nextID: 1, sets: map[string]recordingRuleGroupSetRecord{}, forced: map[string]forcedAnswer{}}
 }
 
 func (f *recordingRuleGroupSetFake) answerNext(method string, status int, body any) {
@@ -74,9 +74,9 @@ func (f *recordingRuleGroupSetFake) seed(name string, groupNames ...string) stri
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	id := f.newID()
-	set := ruleGroupSetRecord{name: name}
+	set := recordingRuleGroupSetRecord{name: name}
 	for _, groupName := range groupNames {
-		set.groups = append(set.groups, ruleGroupRecord{id: f.newID(), name: groupName, interval: 60, limit: "0", rules: []any{}})
+		set.groups = append(set.groups, recordingRuleGroupRecord{id: f.newID(), name: groupName, interval: 60, limit: "0", rules: []any{}})
 	}
 	f.sets[id] = set
 	return id
@@ -148,11 +148,11 @@ func (f *recordingRuleGroupSetFake) create(body any) (int, any) {
 	if status, answer := f.checkSetName(id, name); answer != nil {
 		return status, answer
 	}
-	f.sets[id] = ruleGroupSetRecord{name: name, groups: groups}
+	f.sets[id] = recordingRuleGroupSetRecord{name: name, groups: groups}
 	return http.StatusOK, map[string]any{"id": id}
 }
 
-func (f *recordingRuleGroupSetFake) update(id string, set ruleGroupSetRecord, body any) (int, any) {
+func (f *recordingRuleGroupSetFake) update(id string, set recordingRuleGroupSetRecord, body any) (int, any) {
 	in, _ := body.(map[string]any)
 	groups, status, answer := f.groupsOf(in, set.groups)
 	if answer != nil {
@@ -184,7 +184,7 @@ func (f *recordingRuleGroupSetFake) checkSetName(id, name string) (int, any) {
 
 // groupsOf reads and checks the groups of a request. stored holds the groups of the set that an
 // update replaces: a group with the name of a stored group keeps its id and counts a new version.
-func (f *recordingRuleGroupSetFake) groupsOf(in map[string]any, stored []ruleGroupRecord) ([]ruleGroupRecord, int, any) {
+func (f *recordingRuleGroupSetFake) groupsOf(in map[string]any, stored []recordingRuleGroupRecord) ([]recordingRuleGroupRecord, int, any) {
 	items, _ := in["groups"].([]any)
 	if len(items) == 0 {
 		status, answer := apiError(http.StatusBadRequest, "No rule groups in the set")
@@ -202,13 +202,13 @@ func (f *recordingRuleGroupSetFake) groupsOf(in map[string]any, stored []ruleGro
 			return nil, status, answer
 		}
 	}
-	byName := map[string]ruleGroupRecord{}
+	byName := map[string]recordingRuleGroupRecord{}
 	for _, group := range stored {
 		byName[group.name] = group
 	}
 	problems := map[string]any{}
 	groupProblems := map[string]any{}
-	var out []ruleGroupRecord
+	var out []recordingRuleGroupRecord
 	seen := map[string]bool{}
 	duplicate := false
 	for i, item := range items {
@@ -218,7 +218,7 @@ func (f *recordingRuleGroupSetFake) groupsOf(in map[string]any, stored []ruleGro
 		if n := len(name); n < 1 || n > 255 {
 			fieldProblems["name"] = []any{map[string]any{"code": "length"}}
 		}
-		record := ruleGroupRecord{name: name, interval: 60, limit: "0", rules: []any{}}
+		record := recordingRuleGroupRecord{name: name, interval: 60, limit: "0", rules: []any{}}
 		if interval, ok := group["interval"].(float64); ok {
 			if interval < 60 {
 				fieldProblems["interval"] = []any{map[string]any{"code": "range"}}
@@ -298,7 +298,7 @@ func validationError(problems map[string]any) (int, any) {
 	return apiError(http.StatusBadRequest, string(raw))
 }
 
-func (s ruleGroupSetRecord) answer(id string) map[string]any {
+func (s recordingRuleGroupSetRecord) answer(id string) map[string]any {
 	groups := make([]any, 0, len(s.groups))
 	for _, g := range s.groups {
 		rules := g.rules
